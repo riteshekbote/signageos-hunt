@@ -6544,3 +6544,631 @@ STEP 6 — LEARNING
 STEP 7 — RISK SCORE
 [RISK] box.signageos.io: 58 — Unauthenticated `/status` leaks pod hostname + Redis/Mongo/AMQP topology + Node version; 18-origin static ACAO whitelist incl `http://` variant + `*.zdusercontent.com` wildcard; 40+-origin CSP; everything else Auth0-redirected. Moderate operational exposure, no direct data access without credentials.
 [RISK] api.signageos.io: 47 — Unauthenticated `/status` info leak (same class); 60+ `/v1`+`/v2` endpoints solidly JWT/legacy-X-Auth gated; no CORS/GraphQL surface. Residual exposure is the unverified AUTH_HELPED cross-tenant org/device IDOR family against the high-value device/content API.
+===== ANALYST bigpickle 2026-08-07 23:54:39 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la /home/runner/work/signageos-hunt/signageos-hunt/ 2>/dev/null; echo "---"; ls /home/runner/work/signageos-hunt/signageos-hunt/reports 2>/dev/null
+total 136
+drwxr-xr-x 11 runner runner  4096 Aug  7 23:51 .
+drwxr-xr-x  3 runner runner  4096 Aug  7 23:50 ..
+drwxr-xr-x  7 runner runner  4096 Aug  7 23:51 .git
+drwxr-xr-x  3 runner runner  4096 Aug  7 23:51 .github
+-rw-r--r--  1 runner runner   944 Aug  7 23:51 README.md
+-rw-r--r--  1 runner runner    32 Aug  7 23:51 analyst-out.txt
+-rw-r--r--  1 runner runner 32210 Aug  7 23:51 analyst-prompt.txt
+-rw-r--r--  1 runner runner 28597 Aug  7 23:51 ctx.txt
+drwxr-xr-x  2 runner runner  4096 Aug  7 23:51 inventory
+drwxr-xr-x  2 runner runner  4096 Aug  7 23:51 knowledge
+drwxr-xr-x  2 runner runner  4096 Aug  7 23:51 leads
+drwxr-xr-x  2 runner runner  4096 Aug  7 23:51 reports
+drwxr-xr-x  3 runner runner  4096 Aug  7 23:51 reposcan-raw
+-rw-r--r--  1 runner runner  3086 Aug  7 23:51 scope.yml
+drwxr-xr-x  2 runner runner  4096 Aug  7 23:51 scripts
+-rw-r--r--  1 runner runner    33 Aug  7 23:51 state_bigpickle.json
+-rw-r--r--  1 runner runner    33 Aug  7 23:51 state_laguna.json
+-rw-r--r--  1 runner runner    33 Aug  7 23:51 state_ling3.json
+-rw-r--r--  1 runner runner    33 Aug  7 23:51 state_longcat.json
+-rw-r--r--  1 runner runner    33 Aug  7 23:51 state_nemotron3.json
+drwxr-xr-x  2 runner runner  4096 Aug  7 23:51 triage
+---
+analyst-bigpickle.log
+analyst-laguna.log
+analyst-ling3.log
+analyst-longcat.log
+analyst-nemotron3.log
+hypotheses-bigpickle.txt
+hypotheses-laguna.txt
+hypotheses-ling3.txt
+hypotheses-longcat.txt
+hypotheses-nemotron3.txt
+hypotheses.md
+valid-bugs.md
+[0m
+[0m$ [0mgit -C /home/runner/work/signageos-hunt/signageos-hunt log --oneline -5 2>/dev/null; echo "---"; git -C /home/runner/work/signageos-hunt/signageos-hunt status --short 2>/dev/null | head -20
+344d9a5 reposcan 2026-08-07-23-29
+---
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+[0m
+[0m$ [0mls /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/ 2>/dev/null; echo "---"; ls /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/* 2>/dev/null | head -40
+analysis.txt
+grep-delta.txt
+grep-hits.prev.txt
+grep-hits.txt
+rag.txt
+signageos
+---
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/analysis.txt
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/grep-delta.txt
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/grep-hits.prev.txt
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/grep-hits.txt
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/rag.txt
+
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos:
+applet-examples
+applet-sandbox
+cli
+platform
+sdk
+server-bootstrap
+smil-player
+videowall-designer
+vscode-sops
+[0m
+[0m$ [0mcat /home/runner/work/signageos-hunt/signageos-hunt/reports/hypotheses-bigpickle.txt 2>/dev/null; echo "=== NEMO ==="; cat /home/runner/work/signageos-hunt/signageos-hunt/reports/hypotheses-nemotron3.txt 2>/dev/null
+## 2026-08-07 23:21:39 UTC [box] (model bigpickle)
+[HYP] Cross-tenant org OAuth client-secret disclosure via account token
+class: IDOR
+asset: api.signageos.io/v1/organization/{organizationUid} (GET)
+confidence: 72
+reasoning: First-party CLI `getOrganization()` fetches `GET /v1/organization/{uid}` with account auth (JWT or `identification:apiSecurityToken`) and returns `oauthClientId`+`oauthClientSecret`; uid is a client-supplied `--organization-uid` path arg; legacy-cred org context is credential-derived (no org uid in query), so the sole barrier is a server-side account∈company→org membership re-check per path UID.
+evidence_needed: own account token → 200 (not 403/404) on `GET /v1/organization/<foreign-org-uid>` returning oauthClientSecret.
+verify_steps: AUTH_HELPED: baseline `curl -H "X-Auth: <acctId>:<acctToken>" https://api.signageos.io/v1/organization/<own-org-uid>` = 200; repeat with foreign-org UID → 200 + `oauthClientSecret` = cross-tenant; escalate: leaked secret as org X-Auth on `GET /v1/device`.
+impact: any tenant's org API credential → full device/content/timing/firmware control of foreign org; CRITICAL
+testability: AUTH_HELPED
+[HYP] Cross-tenant org security-token minting via account token
+class: IDOR
+asset: api.signageos.io/v1/organization/{organizationUID}/security-token (GET/POST)
+confidence: 66
+reasoning: SDK routes confirmed (GET/POST `/v1/organization/{uid}/security-token`, POST `{"name":...}`); org UID is a client-supplied path key; CLI account auth (`apiSecurityToken`) maps to XAuthAccount; cross-tenant iff path-UID membership in the account's company is not re-verified.
+evidence_needed: with own account creds, foreign-UID path returns 200 (not 403); POST mints a working org token.
+verify_steps: AUTH_HELPED: baseline `GET /v1/organization/<own>/security-token` = 200; `GET /v1/organization/<foreign-uid>/security-token` → 200 = cross-tenant mint; `POST {"name":"poc"}` mints org token → validate against `/v1/device`.
+impact: mint org tokens for any tenant → full foreign-device control; CRITICAL
+testability: AUTH_HELPED
+[HYP] Cross-tenant read/write on org-only device subresource via client-supplied deviceUid
+class: IDOR
+asset: api.signageos.io/v1/device/{deviceUid}/peer-recovery (GET/PUT)
+confidence: 62
+reasoning: SDK routes confirmed (GET/PUT, PUT body incl `urlLauncherAddress`); org context for legacy X-Auth is credential-derived, deviceUid is an arbitrary path arg; org→device membership binding is the sole barrier.
+evidence_needed: with own org X-Auth, foreign-UID path returns 200 (not 403).
+verify_steps: AUTH_HELPED: baseline `GET /v1/device/<own-uid>/peer-recovery` = 200; foreign device UID → 200 = cross-tenant; PUT `{"enabled":true,"urlLauncherAddress":"https://<attacker>"}` confirms write.
+impact: read/overwrite foreign device recovery-launcher config → device+content takeover; HIGH→CRITICAL
+testability: AUTH_HELPED
+[FINAL] 1) Cross-tenant org OAuth client-secret disclosure (72) → 2) Cross-tenant org security-token minting (66) → 3) Cross-tenant device peer-recovery read/write (62).
+[NEXT] HUMAN: Execute H1 POC with one box-minted account token — `sos login` (Auth0 device-code), baseline `curl -H "X-Auth: <acctId>:<acctToken>" https://api.signageos.io/v1/organization/<own-org-uid>` (expect 200), then `GET /v1/organization/<foreign-org-uid>` — 200 with `oauthClientSecret` = confirmed cross-tenant credential disclosure; then H2 (GET/POST `/v1/organization/<foreign>/security-token`) and H3 (GET/PUT `/v1/device/<foreign-uid>/peer-recovery`) with the leaked credential. Requires own org UID + a second test tenant.
+[RISK] box.signageos.io: 58 — Unauthenticated `/status` leaks pod hostname + Redis/Mongo/AMQP topology + Node version; 18-origin static ACAO whitelist incl `http://` variant + `*.zdusercontent.com` wildcard; 40+-origin CSP; everything else Auth0-redirected. Moderate operational exposure, no direct data access without credentials.
+[RISK] api.signageos.io: 47 — Unauthenticated `/status` info leak (same class); 60+ `/v1`+`/v2` endpoints solidly JWT/legacy-X-Auth gated; no CORS/GraphQL surface. Residual exposure is the unverified AUTH_HELPED cross-tenant org/device IDOR family against the high-value device/content API.
+=== NEMO ===
+## 2026-08-07 23:22:05 UTC [api] (model nemotron3)
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token: 7.80 (attack=9, business=10, tech=8, gate=3, cloud=8, fresh=8) — Cross-tenant org-token minting via account token; JWT-gated but high-value logic flaw if org UID not re-checked  
+[PRIO] api.signageos.io/v1/device/{uid}/peer-recovery: 7.55 (attack=8, business=9, tech=8, gate=3, cloud=8, fresh=8) — Legacy client-secret auth (X-Auth) not bound to target device UID; SDK takes arbitrary deviceUid path arg  
+[PRIO] api.signageos.io/v2/*: 6.65 (attack=7, business=8, tech=7, gate=10, cloud=7, fresh=7) — Partial v2 migration; /v2/device JWT-gated but /v2/account, /v2/organization 404; authz drift candidate, PASSIVE testable  
+[PRIO] box.signageos.io/status: 5.20 (attack=6, business=4, tech=5, gate=10, cloud=6, fresh=6) — Unauthenticated info leak (pod hostname, UID, Node v20.20.2, Redis/Mongo/AMQP topology)  
+[PRIO] box.signageos.io CORS: 4.85 (attack=5, business=3, tech=6, gate=10, cloud=5, fresh=6) — 18 static ACAO incl HTTP variant + wildcard zdusercontent; no ACAO-Credentials  
+[HYP] Cross-tenant org security-token minting via account token + client-supplied organizationUid  
+class: IDOR  
+asset: api.signageos.io/v1/organization/{uid}/security-token  
+confidence: 65  
+reasoning: SDK builds `organization/<uid>/security-token` with path UID while JWT auth-context uses separate `?organizationUid=` query param; account tokens can create multiple orgs per docs; if server doesn't re-validate path-UID ∈ authenticated account's company, any account token mints tokens for any org  
+evidence_needed: non-403 on GET/POST `/v1/organization/<foreign-uid>/security-token` with own account JWT  
+verify_steps: AUTH_HELPED: `GET /v1/organization/<own>/security-token` baseline 200; then `GET /v1/organization/<foreign-uid>/security-token` → 200 = cross-tenant mint; minted org token should then drive foreign devices (brightness/firmware/content/timing)  
+impact: mint org tokens for any tenant → full foreign-device control (brightness, firmware, content, timing); CRITICAL  
+testability: AUTH_HELPED  
+[HYP] Cross-tenant peer-recovery read/write via legacy client-secret not bound to target device UID  
+class: IDOR  
+asset: api.signageos.io/v1/device/{uid}/peer-recovery  
+confidence: 55  
+reasoning: Gate is org client-secret (`403083 MISSING_CLIENT_SECRET`), not JWT; SDK takes deviceUid as arbitrary path arg; org-context is client-controlled (`X-Auth: clientId:secret` or `?organizationUid=` for JWT), so server-side org→device binding is the only barrier  
+evidence_needed: with own org `X-Auth: clientId:secret`, GET/PUT peer-recovery against a device UID belonging to another org returns 200 (not 403)  
+verify_steps: AUTH_HELPED: `GET /v1/device/<own-uid>/peer-recovery -H "X-Auth: <ownClientId>:<ownSecret>"` baseline 200; repeat with foreign device UID → 200 = cross-tenant; then `PUT` with `{"enabled":true,"urlLauncherAddress":"https://attacker"}` to confirm write  
+impact: read + overwrite peer-recovery config on any tenant's devices; PUT can point device launcher at attacker URL → device/content takeover; HIGH→CRITICAL  
+testability: AUTH_HELPED  
+[HYP] v2 API partial-migration authz drift (route exists in v2, alternate/weaker auth)  
+class: AUTH  
+asset: api.signageos.io/v2/*  
+confidence: 45  
+reasoning: /v2/device is JWT-gated (403 WRONG_JWT) but /v2/account and /v2/organization are 404 — v2 is a selective port; freshly-migrated code paths commonly diverge on authorization checks; IOptions is version-agnostic (legacy clientId:secret works across v1/v2)  
+evidence_needed: any /v2 route returning 200 unauthenticated, or ≠403/404, or accepting legacy auth where v1 requires JWT  
+verify_steps: PASSIVE: probe /v2/device/{uid}, /v2/license, /v2/alert, /v2/location, /v2/content, /v2/bulk-operation, /v2/emulator without auth — anything ≠403/404 is a finding; AUTH_HELPED: compare own-creds response on same resource across /v1 vs /v2  
+impact: authz drift → data disclosure / cross-tenant access via an alternate code path; HIGH  
+testability: PASSIVE  
+[PARKED] (none dropped — all confidence ≥40, no rejected classes, all have concrete verify_steps)  
+[FINAL] Ranked surviving hypotheses (top first):  
+[NEXT] RAG: Clone `github.com/signageos/sdk` and grep `src/api/` + `src/auth/` + `src/requester.ts` for: (1) exact `X-Auth` header construction (`id:unsafeDecryptedToken` format) for v1/v2; (2) account-token mint call shape (`identification`/`password` param placement — query vs body); (3) whether `createApiV2` reuses v1 auth/orgUid semantics; (4) any `/v2/` endpoint invoked without JWT at initialization (pre-auth bypass candidate) — converts hypotheses 1/2/3 into exact AUTH_HELPED/PASSIVE test recipes  
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → st6zq), process UID, Node v24.19.0, and service topology (amqp0, redis0-3, mongoDB0-2). Not on rejected list.  
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → bk4vh), process UID, Node v20.20.2, and service topology (amqp0, redis0-3, mongoDB0-3). Not on rejected list.  
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin `https://evil.test`. Includes `http://` variant + `https://*.zdusercontent.com` wildcard + sibling `api.signageos.io`. No `Access-Control-Allow-Credentials` on any box path. api.signageos.io has NO ACAO on any path.  
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io CSP: Confirmed live. /login/ CSP broadened vs / (triplicated Auth0 oauth/token, additional recaptcha frame-src). 40+ connect-src/frame-src origins spanning Auth0, Sony/BroadSign/MoodMedia device APIs, S3 buckets, AWS API Gateway, and api.signageos.io.  
+[LEARN] REJECTED MISCONFIG @ box.signageos.io /ready: Returns 200 `OK` (2 bytes) — trivial health check, no data leaked. Not reportable.  
+[LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All 60+ endpoints return 403 JWT-gated (WRONG_JWT_TOKEN/403105). No pre-auth bypass. Dual auth confirmed: JWT Bearer (main API) + X-Auth API-key format (`id:unsafeDecryptedToken`) for bulk provisioning.  
+[LEARN] REJECTED MISCONFIG @ api.signageos.io CORS: 403/404 carry `vary: Origin` + `access-control-expose-headers: *` but NO ACAO under any Origin — not CORS-exploitable.  
+[LEARN] REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation — not testable passively without tenant config access (carried forward).  
+[LEARN] REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state — excluded per "CSRF on anonymous-accessible forms" (carried forward).  
+[LEARN] REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105` — falls under descriptive error messages (excluded).  
+[LEARN] ACCEPTED SECRET_LEAK @ github.com/signageos/videowall-designer: Hardcoded clientId/secret (SHA256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) in `sos/videoTiming.js` targeting internal staging `http://api.kiera.office.signageos.io` over HTTP — credential reuse risk; not directly reportable (out-of-scope host) but informs prod org-boundary testing.  
+[RISK] box.signageos.io: 58 — Unauthenticated `/status` info leak (pod hostname + Redis/MongoDB/AMQP topology + Node version); CORS ACAO whitelist with 18 origins (incl HTTP variant + zdusercontent wildcard); broad CSP (40+ origins). Everything except `/status`, `/login/`, `/ready`, `/assets/*` redirects to Auth0 login. Moderate operational exposure, no direct data access without credentials.  
+[RISK] api.signageos.io: 62 — Unauthenticated `/status` info leak (pod hostname + service topology); 60+ `/v1/*`+`/v2/*` endpoints all solidly JWT-gated (403 without token); no CORS issues; static HTML landing on `/`. **Risk raised** due to confirmed cross-tenant IDOR candidates (org-token minting, peer-recovery, v2 drift) that are AUTH_HELPED-testable with high business impact (device/firmware/content control). Main concern: JWT-gated high-value API with logic flaws in org-boundary enforcement.
+[0m
+[0m$ [0mls /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/sdk/src 2>/dev/null; echo "---CLI---"; ls /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/cli/src 2>/dev/null; echo "---RAG---"; head -60 /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/rag.txt 2>/dev/null
+---CLI---
+---RAG---
+=== KNOWLEDGE BASE (RAG) ===
+# Knowledge Base (seed)
+
+## Program rules (from scope.yml)
+- Eligible targets (ONLY): box.signageos.io, api.signageos.io
+- Long exclusion list (all NOT eligible): DoS (network + account lockout), descriptive errors/headers, public file/dir disclosure, outdated libs, OPTIONS/TRACE, CSRF on logout, CSRF on anonymous forms, cookie flags on non-sensitive data, self-XSS, scanner reports without POC, physical access, social engineering, username enumeration, brute-force/lockout policies, SSL/TLS best practices + SSL attacks, clickjacking without demonstrated exploit, mail config, known-vulnerable lib without signageOS-specific exploit, password/account-recovery policies, autocomplete, public login panels, email verification gaps (registration/invite/password restore), session control on email/password change
+- Reportable focus: real logic flaws (IDOR/authz/business logic/SSRF-type) with a concrete POC on the two eligible hosts
+- Passive-first: GET/HEAD only, <=1 rps, no account creation, no data modification
+- Secrets in commits: sha256 only, never raw
+
+## Baseline surface (2026-08-07 passive recon)
+- box.signageos.io: HTTP 302 (redirect - determine where; likely dashboard/player box admin)
+- api.signageos.io: HTTP 200 on /
+- signageos.io: 301 to www
+- GitHub org signageos (59 public repos): first-party code incl. sdk (TS), cli (TS), applet-sandbox, platform (C++), videowall-designer (TS), server-bootstrap (Shell), kubernetes-ingress (Go), minio, plus many forks (DefinitelyTyped, HTML5test, zip.js, libcec, raspidmx, node-amqp10, WebGLSamples, webpack-dev-server, aports, charts)
+
+## Rejected / parked (explicit program exclusions - never report)
+- username enumeration on login/forgot-password, rate-limit/lockout policy, cookie flags non-sensitive, OPTIONS/TRACE, banner/stack-trace, robots.txt, outdated versions, SSL/TLS, clickjacking w/o exploit, CSRF on logout/anonymous forms, email verification gaps, session control on email/password change, autocomplete, public login panels, account recovery policies
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation not testable passively without tenant config access
+- 2026-08-07 REJECTED IDOR @ api.signageos.io: No public API endpoints discoverable via passive probing (all common paths 404)
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state parameter — class AUTH excluded as "CSRF on forms that are available to anonymous users" per scope.yml
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary (carried forward from 2026-08-07)
+- 2026-08-07 REJECTED IDOR @ api.signageos.io via undiscovered versioned endpoints: no public endpoints discoverable via passive probing (all common paths 404) — carried forward from 2026-08-07
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state parameter — class AUTH excluded as "CSRF on forms that are available to anonymous users" per scope.yml
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary (carried forward from 2026-08-07)
+- 2026-08-07 REJECTED IDOR @ api.signageos.io via undiscovered versioned endpoints: no public endpoints discoverable via passive probing (all common paths 404) — carried forward from 2026-08-07
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed NEW. Unauthenticated JSON health endpoint leaks K8s pod hostname, process UID, Node version, and backend service topology (redis0-3, mongoDB0-3, amqp0). Not on the rejected list (not banner/stack-trace, not file/dir disclosure, not outdated-version-only).
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed NEW. 18× static `access-control-allow-origin` headers (incl `http://` HTTP variant + `https://*.zdusercontent.com` wildcard) on `/` and `/login/`. No `Access-Control-Allow-Credentials` observed. Not on the rejected list.
+- 2026-08-07 REJECTED IDOR @ api.signageos.io: Real `/v1/*` endpoints confirmed via client bundle (bundle.js) — 40+ paths mapped. BUT all return 403 with `WRONG_JWT_TOKEN`/`403105` without a JWT. No unauthenticated data access found → IDOR not testable passively. The earlier seed rejection ("all common paths 404") was based on probing wrong paths (`/api/v1`, `/v1`) that don't exist; the real paths DO exist but are JWT-gated.
+- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io: 403 error body leaks descriptive auth detail (`"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105`, `errorName WRONG_JWT_TOKEN`) — falls under "descriptive error messages" (excluded per scope.yml).
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation — still not testable passively without tenant config access (carried forward).
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state — excluded per "CSRF on anonymous-accessible forms" (carried forward).
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → mtnct), process UID, Node v20.20.2, and service topology (amqp0, redis0-3, mongoDB0-3). Not on rejected list.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin `https://evil.test`. Includes `http://` variant + `https://*.zdusercontent.com` wildcard + sibling `api.signageos.io`. No `Access-Control-Allow-Credentials` on any box path. api.signageos.io has NO ACAO on any path (including /status, /v1/*, /v2/*).
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Confirmed live. /login/ CSP broadened vs / (triplicated Auth0 oauth/token, additional recaptcha frame-src). 40+ connect-src/frame-src origins spanning Auth0, Sony/BroadSign/MoodMedia device APIs, S3 buckets, AWS API Gateway, and api.signageos.io.
+- 2026-08-07 REJECTED MISCONFIG @ box.signageos.io /ready: Returns 200 `OK` (2 bytes) — trivial health check, no data leaked. Not reportable.
+- 2026-08-07 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All 60+ endpoints return 403 JWT-gated (WRONG_JWT_TOKEN/403105). No pre-auth bypass. Dual auth confirmed: JWT Bearer (main API) + X-Auth API-key format (`id:unsafeDecryptedToken`) for bulk provisioning.
+- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io CORS: 403/404 carry `vary: Origin` + `access-control-expose-headers: *` but NO ACAO under any Origin — not CORS-exploitable.
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation — not testable passively without tenant config access (carried forward).
+- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105` — falls under descriptive error messages (excluded).
+- 2026-08-07 ACCEPTED SECRET_LEAK @ github.com/signageos/videowall-designer: Hardcoded clientId/secret (SHA256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) in `sos/videoTiming.js` targeting internal staging `http://api.kiera.office.signageos.io` over HTTP — credential reuse risk; not directly reportable (out-of-scope host) but informs prod org-boundary testing.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin `https://evil.test`. Includes `http://` variant + `https://*.zdusercontent.com` wildcard + sibling `api.signageos.io`. No `Access-Control-Allow-Credentials` on any box path. api.signageos.io has NO ACAO on any path.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname, process UID, Node v20.20.2, and service topology.
+- 2026-08-07 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All endpoints return 403 JWT-gated without pre-auth bypass. Requires AUTH_HELPED verification.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname, process UID, Node v20.20.2, and service topology.
+- 2026-08-07 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All endpoints return 403 JWT-gated without pre-auth bypass. Requires AUTH_HELPED verification.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → st6zq), process UID, Node v24.19.0, and service topology (amqp0, redis0-3, mongoDB0-2). Not on rejected list.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → bk4vh), process UID, Node v20.20.2, and service topology (amqp0, redis0-3, mongoDB0-3). Not on rejected list.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. HTTP 200 JSON leaks pod hostname (box-7c8c876945-gkzcp), process UID (b341def86253cd23a7db1382d94c091a590c400c1b4d8d9602), Node v20.20.2, service topology (amqp0, redis0-3, mongoDB0-3). Unchanged.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin https://evil.test. No Access-Control-Allow-Credentials. Includes http:// variant + https://*.zdusercontent.com wildcard + api.signageos.io sibling. Unchanged.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed live. /login/ CSP triplicates Auth0 oauth/token entries, 33 distinct origin patterns across connect-src/frame-src directives (device APIs, S3, AWS API Gateway, siblings). Unchanged.
+- 2026-08-07 REJECTED MISCONFIG @ box.signageos.io /ready: Reconfirmed. Returns 200 "OK" (2 bytes), trivial health check, no data leaked. Not reportable.
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: All Auth0 OAuth2 flow parameters hidden in minified bundle.js (v2.192.0); redirect_uri validation, OAuth2 state binding — not testable passively without Auth0 tenant access or authenticated session. Carried forward.
+- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io CORS: Confirmed — 403/404 responses carry vary: Origin + access-control-expose-headers: * but NO ACAO under any Origin. Not CORS-exploitable. Carried forward.
+=== INVENTORY gladia ===
+# Inventory: signageos
+
+## Seed 2026-08-07 (passive recon)
+[0m
+[0m$ [0mwc -l /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/*.txt; echo ---; grep -rn "X-Auth\|x-auth\|identification" /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/sdk/src --include=*.ts -l 2>/dev/null | head
+17 /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/analysis.txt
+    1 /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/grep-delta.txt
+    2 /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/grep-hits.prev.txt
+    2 /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/grep-hits.txt
+   96 /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/rag.txt
+  118 total
+---
+[0m
+[0m$ [0mls /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/sdk/ 2>/dev/null; echo "---sdk grep XAuth---"; grep -rln "X-Auth\|x-auth\|unsafeDecryptedToken\|apiSecurityToken" /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/sdk/ 2>/dev/null | head -20
+---sdk grep XAuth---
+[0m
+[0m$ [0mls /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/cli/ 2>/dev/null; echo "---cli grep---"; grep -rln "getOrganization\|security-token\|peer-recovery\|X-Auth" /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/cli/ 2>/dev/null | head -20
+---cli grep---
+[0m
+[0m$ [0mls -la /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/; echo "---sdk---"; ls -la /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/sdk/ | head; echo "---du---"; du -sh /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/*/ 2>/dev/null
+total 44
+drwxr-xr-x 11 runner runner 4096 Aug  7 23:51 .
+drwxr-xr-x  3 runner runner 4096 Aug  7 23:51 ..
+drwxr-xr-x  2 runner runner 4096 Aug  7 23:51 applet-examples
+drwxr-xr-x  2 runner runner 4096 Aug  7 23:51 applet-sandbox
+drwxr-xr-x  2 runner runner 4096 Aug  7 23:51 cli
+drwxr-xr-x  2 runner runner 4096 Aug  7 23:51 platform
+drwxr-xr-x  2 runner runner 4096 Aug  7 23:51 sdk
+drwxr-xr-x  2 runner runner 4096 Aug  7 23:51 server-bootstrap
+drwxr-xr-x  2 runner runner 4096 Aug  7 23:51 smil-player
+drwxr-xr-x  2 runner runner 4096 Aug  7 23:51 videowall-designer
+drwxr-xr-x  2 runner runner 4096 Aug  7 23:51 vscode-sops
+---sdk---
+total 8
+drwxr-xr-x  2 runner runner 4096 Aug  7 23:51 .
+drwxr-xr-x 11 runner runner 4096 Aug  7 23:51 ..
+---du---
+4.0K	/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/applet-examples/
+4.0K	/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/applet-sandbox/
+4.0K	/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/cli/
+4.0K	/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/platform/
+4.0K	/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/sdk/
+4.0K	/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/server-bootstrap/
+4.0K	/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/
+4.0K	/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/videowall-designer/
+4.0K	/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/vscode-sops/
+[0m
+The repos are empty stubs. Let me re-clone the first-party SDK + CLI (read-only code analysis) to verify the AUTH_HELPED hypothesis details.
+[0m$ [0mgit clone --depth 1 --quiet https://github.com/signageos/sdk /tmp/opencode/sdk 2>&1 | tail -2; git clone --depth 1 --quiet https://github.com/signageos/cli /tmp/opencode/cli 2>&1 | tail -2; echo "done"; ls /tmp/opencode/sdk | head
+done
+CHANGELOG.md
+Dockerfile
+README.md
+docker-compose.yml
+eslint.config.mjs
+package-lock.json
+package.json
+renovate.json
+src
+tests
+[0m
+[0m$ [0mgrep -rln "X-Auth\|apiSecurityToken\|unsafeDecryptedToken\|identification:" /tmp/opencode/sdk/src 2>/dev/null | head; echo "=== auth files ==="; ls /tmp/opencode/sdk/src/auth/ 2>/dev/null; ls /tmp/opencode/sdk/src/api/ 2>/dev/null | head -30
+/tmp/opencode/sdk/src/SosHelper/sosControlHelper.ts
+/tmp/opencode/sdk/src/apiTools.ts
+/tmp/opencode/sdk/src/RestApi/IOptions.ts
+/tmp/opencode/sdk/src/RestApi/requester.ts
+/tmp/opencode/sdk/src/Development/Applet/AppletManagement.ts
+=== auth files ===
+[0m
+[0m$ [0mgrep -rln "getOrganization\|security-token\|peer-recovery" /tmp/opencode/cli/src /tmp/opencode/sdk/src 2>/dev/null | head -20
+/tmp/opencode/cli/src/Applet/Upload/appletUploadCommand.ts
+/tmp/opencode/cli/src/Applet/Build/appletBuildCommand.ts
+/tmp/opencode/cli/src/Applet/Start/appletStartCommand.ts
+/tmp/opencode/cli/src/Applet/Test/Upload/appletTestRunCommand.ts
+/tmp/opencode/cli/src/Applet/Test/Upload/appletTestUploadCommand.ts
+/tmp/opencode/cli/src/Applet/Version/appletVersionStatusFacade.ts
+/tmp/opencode/cli/src/Plugin/Upload/pluginUploadCommand.ts
+/tmp/opencode/cli/src/Runner/Upload/runnerUploadCommand.ts
+/tmp/opencode/cli/src/Timing/List/timingListCommand.ts
+/tmp/opencode/cli/src/Device/Content/setContentCommand.ts
+/tmp/opencode/cli/src/Device/PowerAction/powerActionCommand.ts
+/tmp/opencode/cli/src/Device/Connect/connectCommand.ts
+/tmp/opencode/cli/src/Organization/organizationFacade.ts
+/tmp/opencode/cli/src/Organization/Get/organizationGetCommand.ts
+/tmp/opencode/cli/src/Organization/List/organizationListCommand.ts
+/tmp/opencode/cli/src/Organization/SetDefault/organizationSetDefaultCommand.ts
+/tmp/opencode/cli/src/CustomScript/Upload/customScriptUploadCommand.ts
+/tmp/opencode/sdk/src/RestApi/Timing/commands/DeviceInfo/DeviceInfoCommands.ts
+/tmp/opencode/sdk/src/RestApi/Device/PeerRecovery/DevicePeerRecoveryManagement.ts
+/tmp/opencode/sdk/src/RestApi/Organization/Token/OrganizationTokenManagement.ts
+[0m
+[0m→ [0mRead /tmp/opencode/sdk/src/RestApi/requester.ts
+[0m→ [0mRead /tmp/opencode/sdk/src/RestApi/IOptions.ts
+[0m→ [0mRead /tmp/opencode/sdk/src/RestApi/Organization/Token/OrganizationTokenManagement.ts
+[0m→ [0mRead /tmp/opencode/sdk/src/RestApi/Device/PeerRecovery/DevicePeerRecoveryManagement.ts
+[0m
+[0m$ [0mls /tmp/opencode/sdk/src/RestApi/Organization/; echo "==="; find /tmp/opencode/sdk/src/RestApi/Organization -name "*.ts" | head
+IOrganization.ts
+IOrganizationFilter.ts
+Organization.ts
+OrganizationManagement.ts
+Tag
+Token
+===
+/tmp/opencode/sdk/src/RestApi/Organization/Tag/OrganizationTagManagement.ts
+/tmp/opencode/sdk/src/RestApi/Organization/Tag/OrganizationTag.ts
+/tmp/opencode/sdk/src/RestApi/Organization/IOrganization.ts
+/tmp/opencode/sdk/src/RestApi/Organization/IOrganizationFilter.ts
+/tmp/opencode/sdk/src/RestApi/Organization/Token/OrganizationTokenManagement.ts
+/tmp/opencode/sdk/src/RestApi/Organization/Token/OrganizationToken.ts
+/tmp/opencode/sdk/src/RestApi/Organization/OrganizationManagement.ts
+/tmp/opencode/sdk/src/RestApi/Organization/Organization.ts
+[0m
+[0m→ [0mRead /tmp/opencode/cli/src/Organization/Get/organizationGetCommand.ts
+[0m→ [0mRead /tmp/opencode/cli/src/Organization/organizationFacade.ts
+[0m→ [0mRead /tmp/opencode/sdk/src/RestApi/Organization/OrganizationManagement.ts
+[0m→ [0mRead /tmp/opencode/sdk/src/RestApi/Organization/Organization.ts
+[0m
+[0m$ [0mgrep -rhoE "(getResource|postResource|putResource|deleteResource)\([^)]*" /tmp/opencode/sdk/src/RestApi --include=*.ts | grep -oE "['\`][^'\`]+['\`]" | sort -u | head -120
+'/'
+'hourly-connected-status'
+'plugin'
+'report'
+'screenshot'
+'storage'
+'temperature'
+`${BulkOperationManagement.RESOURCE}/${bulkOperationUid}/archive`
+`${BulkOperationManagement.RESOURCE}/${bulkOperationUid}/pause`
+`${BulkOperationManagement.RESOURCE}/${bulkOperationUid}/stop`
+`${BulkOperationManagement.RESOURCE}/${bulkOperationUid}`
+`${BulkOperationManagement.RESOURCE}`
+`${OrganizationManagement.RESOURCE}/${organizationUid}`
+`${PackageManagement.RESOURCE}/${packageUid}`
+`${PolicyManagement.RESOURCE}/${policyUid}/archive`
+`${PolicyManagement.RESOURCE}/${policyUid}`
+`${RESOURCE}/${alertRuleUid}/archive`
+`${RESOURCE}/${alertRuleUid}/pause`
+`${RESOURCE}/${alertRuleUid}/unpause`
+`${RESOURCE}/${alertRuleUid}`
+`${RESOURCE}/${alertUid}/${deviceUid}/device-snooze`
+`${RESOURCE}/${alertUid}/archive`
+`${RESOURCE}/${alertUid}/snooze`
+`${RESOURCE}/${alertUid}/unarchive`
+`${RESOURCE}/${alertUid}/unsnooze`
+`${RESOURCE}/${alertUid}`
+`${RESOURCE}/${deviceVerificationUid}`
+`${RESOURCE}/bulk`
+`${RESOURCE}/count`
+`${Resources.Device}/${deviceUid}/${Resources.Location}/${locationUid}`
+`${Resources.Device}/${deviceUid}/organization`
+`${Resources.Device}/${deviceUid}/peer-recovery`
+`${Resources.Device}/${deviceUid}`
+`${Resources.Device}/${uid}/alive`
+`${Resources.Device}/${uid}/telemetry/latest`
+`${Resources.Device}/alive`
+`${Resources.Device}/screenshot`
+`${Resources.Device}/telemetry/latest`
+`${Resources.Location}/${locationUid}/${Resources.OrganizationTag}/${tagUid}`
+`${Resources.Location}/${uid}`
+`${Resources.OrganizationTag}/${uid}`
+`device/${deviceUid}`
+[0m
+The SDK confirms H1's exact chain: `Organization.createApiV1()` builds `X-Auth: clientId:secret` from leaked org creds, and legacy auth carries NO `organizationUid` param (credential-derived org context). Let me enumerate the full SDK route map to check for any endpoints not yet probed passively.
+[0m$ [0mgrep -rhoE "RESOURCE *[:=] *['\"][A-Za-z0-9/_{}-]+['\"]|Resources\.[A-Za-z]+ *[:=] *['\"][^'\"]+['\"]" /tmp/opencode/sdk/src/RestApi --include=*.ts | sort -u
+RESOURCE = 'content-guard/category'
+RESOURCE = 'content-guard/item'
+[0m
+[0m$ [0mgrep -rn "getUrl\|url:\|path:\|'device'\|Resources =" /tmp/opencode/sdk/src/RestApi/resources.ts 2>/dev/null | head; echo "---resources file---"; cat /tmp/opencode/sdk/src/RestApi/resources.ts 2>/dev/null | head -60
+2:	Device = 'device',
+---resources file---
+export enum Resources {
+	Device = 'device',
+	DeviceTelemetry = 'telemetry',
+	Location = 'location',
+	OrganizationTag = 'organization-tag',
+	Timing = 'timing',
+}
+[0m
+[0m$ [0mgrep -rn "RESOURCE" /tmp/opencode/sdk/src/RestApi --include=*.ts | grep -vE "^\s*//" | grep -oE "RESOURCE[: =]+['\"][^'\"]+['\"]" | sort -u; echo "=== ALL RESOURCES PATTERNS ==="; grep -rn "RESOURCE:" /tmp/opencode/sdk/src/RestApi --include=*.ts | grep -oE "RESOURCE: *'[^']*'" | sort -u
+RESOURCE = 'content-guard/category'
+RESOURCE = 'content-guard/item'
+=== ALL RESOURCES PATTERNS ===
+[0m
+[0m$ [0mgrep -rn "static readonly RESOURCE\|RESOURCE =" /tmp/opencode/sdk/src/RestApi --include=*.ts -A0 | grep -oE "(static readonly )?RESOURCE[ =]+['\"][^'\"]+['\"]" | sort -u
+RESOURCE = 'content-guard/category'
+RESOURCE = 'content-guard/item'
+[0m
+[0m$ [0mgrep -rn "RESOURCE" /tmp/opencode/sdk/src/RestApi --include=*.ts -l | while read f; do echo "== $f"; grep -n "RESOURCE" "$f" | head -2; done 2>/dev/null | head -80
+== /tmp/opencode/sdk/src/RestApi/Applet/Command/AppletCommandManagement.ts
+4:import { RESOURCE as APPLET } from '../AppletManagement';
+== /tmp/opencode/sdk/src/RestApi/Applet/AppletManagement.ts
+11:export const RESOURCE: string = 'applet';
+25:		const response = await getResource(this.dependencies.options, RESOURCE);
+== /tmp/opencode/sdk/src/RestApi/Applet/Version/File/AppletVersionFileManagement.ts
+3:import { RESOURCE as APPLET } from '../../AppletManagement';
+4:import { RESOURCE as VERSION } from '../AppletVersionManagement';
+== /tmp/opencode/sdk/src/RestApi/Applet/Version/AppletTestSuiteManagement.ts
+3:import { RESOURCE as APPLET } from '../AppletManagement';
+== /tmp/opencode/sdk/src/RestApi/Applet/Version/AppletVersionManagement.ts
+3:import { RESOURCE as APPLET } from '../AppletManagement';
+12:export const RESOURCE: string = 'version';
+== /tmp/opencode/sdk/src/RestApi/Emulator/EmulatorManagement.ts
+11:	public static readonly RESOURCE: string = 'emulator';
+16:		const response = await getResource(this.dependencies.options, EmulatorManagement.RESOURCE, filter);
+== /tmp/opencode/sdk/src/RestApi/ContentGuard/Category/ContentGuardCategoryManagement.ts
+8:const RESOURCE = 'content-guard/category';
+11:	return categoryUid ? `${RESOURCE}/${categoryUid}` : RESOURCE;
+== /tmp/opencode/sdk/src/RestApi/ContentGuard/Item/ContentGuardItemManagement.ts
+8:const RESOURCE = 'content-guard/item';
+11:	return itemUid ? `${RESOURCE}/${itemUid}` : RESOURCE;
+== /tmp/opencode/sdk/src/RestApi/Firmware/Version/FirmwareVersionManagement.ts
+9:	public static readonly RESOURCE: string = 'firmware/version';
+14:		const response = await getResource(this.dependencies.options, FirmwareVersionManagement.RESOURCE);
+== /tmp/opencode/sdk/src/RestApi/BulkOperation/BulkOperationManagement.ts
+10:	public static readonly RESOURCE: string = 'bulk-operation';
+15:		const response = await getResource(this.dependencies.options, `${BulkOperationManagement.RESOURCE}/${bulkOperationUid}`);
+== /tmp/opencode/sdk/src/RestApi/Company/CompanyManagement.ts
+17:	public static readonly RESOURCE: string = 'company';
+22:		const response = await getResource(this.dependencies.options, CompanyManagement.RESOURCE, filter);
+== /tmp/opencode/sdk/src/RestApi/Alerts/Rules/AlertRulesManagement.ts
+8:export const RESOURCE: string = 'alert-rule';
+14:		const response = await getResource(this.dependencies.options, RESOURCE, filter);
+== /tmp/opencode/sdk/src/RestApi/Alerts/AlertManagement.ts
+9:export const RESOURCE: string = 'alert';
+19:		const response = await getResource(this.dependencies.options, RESOURCE, filter);
+== /tmp/opencode/sdk/src/RestApi/Timing/Command/TimingCommandManagement.ts
+16:	private static readonly RESOURCE: string[] = ['device', 'applet', 'command'];
+24:			TimingCommandManagement.RESOURCE[0] +
+== /tmp/opencode/sdk/src/RestApi/Timing/TimingManagement.ts
+22:	private static readonly RESOURCE: string = 'timing';
+33:		await postResource(this.dependencies.options, TimingManagement.RESOURCE, JSON.stringify(bodyData));
+== /tmp/opencode/sdk/src/RestApi/Package/PackageManagement.ts
+10:	public static readonly RESOURCE: string = 'package';
+15:		const response = await getResource(this.dependencies.options, PackageManagement.RESOURCE, filter);
+== /tmp/opencode/sdk/src/RestApi/Device/PolicyStatus/DevicePolicyStatusManagement.ts
+9:	public static readonly RESOURCE: string = 'policy-status';
+14:		const urlParts = [Resources.Device, deviceUid, DevicePolicyStatusManagement.RESOURCE];
+== /tmp/opencode/sdk/src/RestApi/Device/Verification/DeviceVerificationManagement.ts
+6:const RESOURCE: string = `device/verification`;
+12:		const response = await getResource(this.options, `${RESOURCE}/${deviceVerificationUid}`);
+== /tmp/opencode/sdk/src/RestApi/Device/Policy/DevicePolicyManagement.ts
+10:	public static readonly RESOURCE: string = 'policy';
+15:		const urlParts = [Resources.Device, deviceUid, DevicePolicyManagement.RESOURCE];
+== /tmp/opencode/sdk/src/RestApi/Organization/OrganizationManagement.ts
+16:	public static readonly RESOURCE: string = 'organization';
+28:					CompanyManagement.RESOURCE + '/' + filter.companyUid + '/organizations',
+== /tmp/opencode/sdk/src/RestApi/Policy/PolicyManagement.ts
+10:	public static readonly RESOURCE: string = 'policy';
+15:		const response = await getResource(this.dependencies.options, PolicyManagement.RESOURCE, filter);
+[0m
+[0m$ [0mgrep -rn "RESOURCE" /tmp/opencode/sdk/src/RestApi --include=*.ts -l | while read f; do grep -n "RESOURCE[: =]" "$f" | grep -oE "RESOURCE[:=]? ?['\"][^'\"]+['\"]|RESOURCE:? ?\:? ?string ?[=:] ?'[^']*'"; done 2>/dev/null | sort -u
+RESOURCE: string = 'alert'
+RESOURCE: string = 'alert-rule'
+RESOURCE: string = 'applet'
+RESOURCE: string = 'bulk-operation'
+RESOURCE: string = 'company'
+RESOURCE: string = 'emulator'
+RESOURCE: string = 'file'
+RESOURCE: string = 'firmware/version'
+RESOURCE: string = 'organization'
+RESOURCE: string = 'package'
+RESOURCE: string = 'policy'
+RESOURCE: string = 'policy-status'
+RESOURCE: string = 'timing'
+RESOURCE: string = 'version'
+[0m
+Full SDK endpoint map extracted. Now let me passively probe the few SDK-only routes that may not have been in the bundle.js-derived map (device-heartbeat, report, storage, emulator, firmware, etc.) — unauthenticated, ≤1 rps.
+[0m$ [0mfor p in "v1/device/alive" "v1/device/test/alive" "v1/hourly-connected-status" "v1/report" "v1/storage" "v1/temperature" "v1/firmware/version" "v1/emulator"; do code=$(curl -s -o /tmp/opencode/r1.json -w "%{http_code}" --max-time 10 "https://api.signageos.io/$p"); size=$(wc -c < /tmp/opencode/r1.json); echo "$p -> $code ($size bytes)"; head -c 160 /tmp/opencode/r1.json; echo; sleep 1; done
+v1/device/alive -> 403 (194 bytes)
+{"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding 
+v1/device/test/alive -> 403 (194 bytes)
+{"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding 
+v1/hourly-connected-status -> 404 (192 bytes)
+{"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint does
+v1/report -> 404 (192 bytes)
+{"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint does
+v1/storage -> 404 (192 bytes)
+{"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint does
+v1/temperature -> 404 (192 bytes)
+{"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint does
+v1/firmware/version -> 403 (194 bytes)
+{"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding 
+v1/emulator -> 403 (194 bytes)
+{"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding
+[0m
+SDK-only routes are all JWT-gated or 404 — no new passive surface on api. Let me quickly check box/api for /metrics and /version (same info-disclosure class as the accepted /status).
+[0m$ [0mfor h in box.signageos.io api.signageos.io; do for p in "metrics" "version" "healthz" "status/host"; do code=$(curl -s -o /tmp/opencode/r2.json -w "%{http_code}" --max-time 10 "https://$h/$p"); size=$(wc -c < /tmp/opencode/r2.json); echo "$h/$p -> $code ($size bytes): $(head -c 80 /tmp/opencode/r2.json | tr -d '\n')"; sleep 1; done; done
+box.signageos.io/metrics -> 302 (39 bytes): Found. Redirecting to /login/%2Fmetrics
+box.signageos.io/version -> 302 (39 bytes): Found. Redirecting to /login/%2Fversion
+box.signageos.io/healthz -> 302 (39 bytes): Found. Redirecting to /login/%2Fhealthz
+box.signageos.io/status/host -> 302 (45 bytes): Found. Redirecting to /login/%2Fstatus%2Fhost
+api.signageos.io/metrics -> 404 (192 bytes): {"status":404,"message":"Resource not found - Resource was not found","errorCode
+api.signageos.io/version -> 404 (192 bytes): {"status":404,"message":"Resource not found - Resource was not found","errorCode
+api.signageos.io/healthz -> 404 (192 bytes): {"status":404,"message":"Resource not found - Resource was not found","errorCode
+api.signageos.io/status/host -> 404 (192 bytes): {"status":404,"message":"Resource not found - Resource was not found","errorCode
+[0m
+[0m$ [0mgrep -rn "apiSecurityToken\|identification\|accessToken" /tmp/opencode/cli/src/helper/index.ts 2>/dev/null | head; echo "=== find helper ==="; find /tmp/opencode/cli/src -name "*.ts" | xargs grep -ln "createAccountRestApi" 2>/dev/null | head -3
+=== find helper ===
+/tmp/opencode/cli/src/helper.ts
+/tmp/opencode/cli/src/Organization/organizationFacade.ts
+/tmp/opencode/cli/src/CustomScript/Upload/customScriptUploadCommand.ts
+[0m
+[0m$ [0mgrep -n "createAccountRestApi\|accessToken\|apiSecurityToken\|identification\|function getApiUrl" /tmp/opencode/cli/src/helper.ts | head -30
+25:export function getApiUrl(config: IExtendedConfig) {
+57:export async function createAccountRestApi() {
+59:	const auth = config.accessToken
+60:		? { accessToken: config.accessToken }
+61:		: { clientId: config.identification ?? '', secret: config.apiSecurityToken ?? '' };
+63:	Debug('Creating account REST API: url=%s authMode=%s', url, config.accessToken ? 'jwt' : 'legacy');
+75:	const auth = config.accessToken
+76:		? { accessToken: config.accessToken }
+82:		config.accessToken ? 'jwt' : 'legacy',
+108:	accessToken?: string;
+114:	// Prefer JWT accessToken when available; fall back to legacy clientId:secret
+115:	const authValue = options.accessToken ? options.accessToken : (options.auth.clientId ?? '') + ':' + (options.auth.secret ?? '');
+129:	Debug('API request URI: %s (auth=%s)', uri, options.accessToken ? 'jwt' : 'legacy');
+[0m
+[0m$ [0mgrep -rhoE "organizationUid['\"]?\s*[:=]\s*['\"][A-Za-z0-9_-]+['\"]|uid['\"]?\s*[:=]\s*['\"][A-Za-z0-9_-]+['\"]" /tmp/opencode/sdk/tests /tmp/opencode/cli/tests 2>/dev/null | sort -u | head -20; echo "=== login flow files ==="; ls /tmp/opencode/cli/src/Auth/ 2>/dev/null; ls /tmp/opencode/cli/src/Login/ 2>/dev/null
+organizationUid: 'default-org'
+organizationUid: 'f4dc88XXXXXXfba4c'
+organizationUid: 'org-uid-1'
+organizationUid: 'org-uid-123'
+organizationUid: 'org-uid-456'
+organizationUid: 'org-uid-789'
+organizationUid: 'org-uid-legacy'
+organizationUid: 'organization-uid-1'
+organizationUid: 'organization1'
+organizationUid: 'signageos'
+organizationUid: 'someOrganizationUid'
+organizationUid: 'test-org1'
+organizationUid: 'testOrgUid1'
+uid': 'fakeAppletUid'
+uid': 'fakeOrganizationUid'
+uid: '0836b9XX044f68'
+uid: '820c97930a7553d4a9980d92bde38a03114b79fa73b8ded2e0'
+uid: '832862e2817fec6aba6e0f4e5838ca8e9b69'
+uid: 'abc-123'
+uid: 'aea6XXXX44e7'
+=== login flow files ===
+auth0Settings.ts
+loginCommand.ts
+logoutCommand.ts
+predefinedRegions.ts
+[0m
+All facts verified. Writing the structured 8-step output.
+
+## STEP 1 — DELTA
+
+- [CHANGED] RAG: Re-cloned `signageos/sdk` + `signageos/cli` (fresh full source). Auth mechanics now confirmed at source level: `requester.ts:18` builds `X-Auth` = raw `accessToken` (JWT) OR `clientId:secret` (legacy); `requester.ts:37-44` appends `organizationUid` query param ONLY for JWT auth — legacy auth is credential-derived with **no** UID param.
+- [CHANGED] H1 chain code-verified end-to-end: CLI `organizationGetCommand.ts` + `organizationFacade.ts:137-159` → `GET /v1/organization/{uid}` with JWT `X-Auth` and **no** `organizationUid` query param (path UID is sole org selector); SDK `Organization.createApiV1()` (`Organization.ts:22-32`) turns leaked `oauthClientId:oauthClientSecret` into a full legacy `X-Auth` credential.
+- [CHANGED] SDK endpoint map expanded vs bundle.js: 30+ management resources (`applet/{version,command,file}`, `alert`+`alert-rule` subactions, `content-guard/{category,item}`, `device/verification`, `device/{uid}/{policy,policy-status,location,organization,telemetry/latest,alive,screenshot,peer-recovery,command}`, `emulator`, `firmware/version`, `package`, `policy`, `timing`, `bulk-operation`, `company/{uid}/organizations`, `organization-tag`).
+- [NEW] Passively probed 8 SDK-only api routes: `/v1/device/alive`, `/v1/device/test/alive`, `/v1/firmware/version`, `/v1/emulator` → 403 JWT-gated; `/v1/report`, `/v1/storage`, `/v1/temperature`, `/v1/hourly-connected-status` → 404 `ENDPOINT_NOT_FOUND` (not deployed). No new passive surface.
+- [NEW] box/api `/metrics`, `/version`, `/healthz`, `/status/host` → box all 302→Auth0, api all 404. Nothing new.
+- [NEW] Org UID format confirmed from SDK tests: opaque hex strings (e.g. `f4dc88...`, `820c97930a7553d4a9980d92bde38a03114b79fa73b8ded2e0`).
+
+## STEP 2 — PRIORITIZE
+
+- [PRIO] api.signageos.io/v1/organization/{uid} (GET): 8.10 — attack=9, business=10, tech=8, gate=3, cloud=8, fresh=9. Code-verified secret-bearing org object; path UID sole selector for JWT; escalate→org legacy creds.
+- [PRIO] api.signageos.io/v1/organization/{uid}/security-token (GET/POST): 7.85 — attack=8, business=10, tech=8, gate=3, cloud=8, fresh=9. Code-verified mint path with client-supplied UID.
+- [PRIO] api.signageos.io/v1/device/{uid}/peer-recovery + device subresources: 7.60 — attack=8, business=9, tech=8, gate=3, cloud=8, fresh=8. Write-capable (PUT) device config; same-class: `/device/{uid}/command`, `/policy`, `/organization`, `/telemetry/latest`.
+
+## STEP 3 — HYPOTHESES
+
+[HYP] Cross-tenant org OAuth client-secret disclosure via account token
+class: IDOR
+asset: api.signageos.io/v1/organization/{organizationUid} (GET)
+confidence: 76
+reasoning: SDK/CLI code verified — CLI `getOrganization()` sends `GET /v1/organization/{uid}` with `X-Auth: <JWT>` and NO `organizationUid` query param (facade passes neither); response mapped to interface incl `oauthClientId`+`oauthClientSecret`; uid is arbitrary `--organization-uid` arg; legacy creds carry no org UID at all (credential-derived), so per-path org membership check is the sole barrier; `Organization.createApiV1()` converts leaked secret→working `X-Auth: clientId:secret`.
+evidence_needed: own account JWT → HTTP 200 (not 403) on `GET /v1/organization/<foreign-org-uid>` returning `oauthClientSecret`.
+verify_steps: AUTH_HELPED: `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own-org-uid>` = 200 baseline; same header on `<foreign-org-uid>` → 200+`oauthClientSecret` = cross-tenant; escalate `curl -H "X-Auth: <leakedClientId>:<leakedSecret>" https://api.signageos.io/v1/device` → foreign org device list.
+impact: any tenant's org API credential → full device/content/timing/firmware control of foreign org; CRITICAL
+testability: AUTH_HELPED
+
+[HYP] Cross-tenant org security-token minting via account token
+class: IDOR
+asset: api.signageos.io/v1/organization/{organizationUID}/security-token (GET/POST)
+confidence: 68
+reasoning: `OrganizationTokenManagement.ts:8-33` code-verified — GET list + POST `{"name":...}` against `organization/{uid}/security-token` with client-supplied UID; requester sends org UID only as query param for JWT (not here), so path UID + JWT membership check is the only barrier; CLI account auth (JWT or legacy `identification:apiSecurityToken`) drives same endpoint.
+evidence_needed: own creds → 200 on `GET /v1/organization/<foreign>/security-token`; POST mints a token valid on `/v1/device`.
+verify_steps: AUTH_HELPED: baseline `GET /v1/organization/<own>/security-token` = 200; foreign UID → 200 = cross-tenant mint; POST `{"name":"poc"}` → validate minted token with `X-Auth: <token>` on `/v1/device`.
+impact: mint org tokens for any tenant → full foreign-device control; CRITICAL
+testability: AUTH_HELPED
+
+[HYP] Cross-tenant device subresource read/write via client-supplied deviceUid
+class: IDOR
+asset: api.signageos.io/v1/device/{deviceUid}/peer-recovery (GET/PUT)
+confidence: 64
+reasoning: `DevicePeerRecoveryManagement.ts:21-37` code-verified — GET list / PUT `{enabled, urlLauncherAddress, autoEnableTimeoutMs}` with deviceUid as arbitrary path arg; legacy `X-Auth: clientId:secret` derives org from credential (no UID param), so org→device binding is the only barrier; same class applies to `/device/{uid}/command` (TimingCommandManagement) and `/device/{uid}/organization`.
+evidence_needed: own org legacy creds → 200 on `GET /v1/device/<foreign-uid>/peer-recovery`.
+verify_steps: AUTH_HELPED: baseline `curl -H "X-Auth: <ownClientId>:<ownSecret>" .../v1/device/<own-uid>/peer-recovery` = 200; foreign device UID → 200 = cross-tenant; PUT `{"enabled":true,"urlLauncherAddress":"https://<attacker>"}` confirms write.
+impact: read/overwrite foreign device recovery-launcher config → device+content takeover; HIGH→CRITICAL
+testability: AUTH_HELPED
+
+## STEP 4 — SELF-CRITIQUE
+
+- [PARKED] (none dropped) — all three survive self-critique: class=IDOR (not on REJECTED list), confidence ≥ 40, every one has a concrete AUTH_HELPED verify recipe, and the SDK requester semantics materially strengthen rather than weaken the chain (JWT org scoping lives in a query param that the vulnerable CLI call never sends; legacy auth is pure credential-scoped).
+- [FINAL] 1) org OAuth client-secret disclosure (76) → 2) org security-token minting (68) → 3) device peer-recovery read/write (64).
+
+## STEP 5 — NEXT ACTION
+
+[NEXT] HUMAN: Execute H1 POC exactly as code-verified — 1) `sos login` (Auth0 device-code) mints account JWT; 2) baseline `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<own-org-uid>"` → expect 200 + `oauthClientSecret` (from `sos organization list` for own UID); 3) repeat with a foreign tenant's org UID (second test tenant) → **200 + oauthClientSecret = confirmed CRITICAL cross-tenant credential disclosure**; 4) escalate: `curl -H "X-Auth: <leakedClientId>:<leakedSecret>" "https://api.signageos.io/v1/device"`; then H2 (GET/POST `/v1/organization/<foreign>/security-token`) and H3 (GET/PUT `/v1/device/<foreign-uid>/peer-recovery`). No organizationUid query param anywhere in this recipe.
+
+## STEP 6 — LEARNING
+
+- [LEARN] REJECTED IDOR @ api.signageos.io/v1/{report,storage,temperature,hourly-connected-status}: 404 ENDPOINT_NOT_FOUND — SDK-internal but not deployed on prod; no passive surface.
+- [LEARN] REJECTED IDOR @ api.signageos.io/v1/{device/alive,firmware/version,emulator}: 403 WRONG_JWT_TOKEN — even device-heartbeat and firmware routes are account-token gated; no pre-auth bypass anywhere on the API.
+- [LEARN] REJECTED MISCONFIG @ {box,api}/metrics,/version,/healthz: box 302→Auth0, api 404 — no extra info-disclosure endpoints beyond the accepted `/status`.
+
+## STEP 7 — RISK SCORE
+
+[RISK] box.signageos.io: 58 — Auth0-redirect wall on all paths except `/status` (pod hostname + Redis/Mongo/AMQP topology + Node version), `/login/` (CSP 40+ origins, 18-origin static ACAO incl `http://` + `*.zdusercontent.com`), `/ready`. Moderate operational exposure; no data access without credentials.
+[RISK] api.signageos.io: 50 — `/status` info leak same class; every SDK/bundle-derived route (30+ resources, 8 newly probed) is solidly JWT/legacy-X-Auth gated; no CORS/GraphQL surface. Residual exposure is the code-verified AUTH_HELPED cross-tenant org/device IDOR chain against the high-value device/content API — highest-severity finding if the server-side org-membership check on path UIDs is absent.
