@@ -1895,3 +1895,836 @@ All key data gathered. Writing the structured analyst output to my lead file.
 - [RISK] api.signageos.io: **84** — 286-path public catalog, two token classes, three concrete cross-tenant surfaces (orgUid selector, device-move, org-token minting); uniform 403 unauth gate means risk is authz-granularity-dependent — the classic IDOR location.
 
 Lead file updated at `leads/lead-bigpickle.md`.
+===== ANALYST bigpickle 2026-08-07 20:15:16 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m✗ [0mWebFetch https://docs.signageos.io/hc/en-us/articles/4405231278482 failed
+[91m[1mError: [0mStatusCode: non 2xx status code (404 GET https://docs.signageos.io/hc/en-us/articles/4405231278482)
+[0m✗ [0mWebFetch https://docs.signageos.io/hc/en-us/articles/4405239033234 failed
+[91m[1mError: [0mStatusCode: non 2xx status code (404 GET https://docs.signageos.io/hc/en-us/articles/4405239033234)
+Both RAG URLs 404. Let me find the live docs.
+[0m◈ [0mParallel Web Search "signageos.io docs REST API authentication SOS_API_SECURITY_TOKEN"
+[0m◈ [0mParallel Web Search "signageos REST API documentation api.signageos.io v1 endpoints"
+Docs found (live at developers/docs.signageos.io, the old zendesk URLs 404'd). Key correction to my earlier model: REST auth is `X-Auth: token_id:token_secret`, not a JWT. Let me grab the OpenAPI spec and confirm `/v1` behavior with one passive probe.
+[0m% [0mWebFetch https://docs.signageos.io/api/
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code} %{size_download}B %{content_type}\n" -H "Accept: application/json" "https://api.signageos.io/v1/device" ; sleep 1.2; curl -s -i "https://api.signageos.io/v1/device" 2>&1 | head -30
+403 194B application/json; charset=utf-8
+HTTP/2 403 
+content-type: application/json; charset=utf-8
+content-length: 194
+date: Fri, 07 Aug 2026 20:04:46 GMT
+etag: W/"c2-bECwGV3d4wIS7DhwOdEtBpojHls"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+vary: Origin
+access-control-expose-headers: *
+x-cache: Error from cloudfront
+via: 1.1 70b5e4e00d42f0247179453e668e9110.cloudfront.net (CloudFront)
+x-amz-cf-pop: DFW56-P11
+x-amz-cf-id: ptDMB6OpDGzD_yc3P7Q083zvMPgAavmKqzwy-CMjo1_YQEB9XR8IpA==
+
+{"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding of provided JWT token has failed"}
+[0m
+OpenAPI spec is served on the in-scope host itself (`api.signageos.io/openapi.yml`) and the 403 body leaks the real auth model (`WRONG_JWT_TOKEN`, errorCode 403105). One GET to pull the spec:
+[0m$ [0mcurl -s -o /tmp/opencode/sos-openapi.yml -w "%{http_code} %{size_download}B %{content_type}\n" "https://api.signageos.io/openapi.yml"
+200 1566638B text/yaml; charset=utf-8
+[0m
+[0m$ [0mcd /tmp/opencode && wc -l sos-openapi.yml && grep -c "paths:" sos-openapi.yml && grep -c "security:" sos-openapi.yml && grep -n "openapi:\|^  /v1" sos-openapi.yml | head -5
+39376 sos-openapi.yml
+1
+426
+1:openapi: 3.0.0
+357:  /v1/account:
+728:  /v1/account/security-token:
+777:  /v1/account/security-token/{token}:
+807:  /v1/alert:
+[0m
+[0m$ [0mcd /tmp/opencode && python3 -c "import yaml; print('pyyaml ok')" 2>&1 | tail -1
+pyyaml ok
+[0m
+[0m$ [0mcd /tmp/opencode && python3 << 'EOF'
+import yaml
+spec = yaml.safe_load(open('sos-openapi.yml'))
+sec = spec.get('security', [])
+print("GLOBAL SECURITY:", sec)
+print("TOTAL PATHS:", len(spec['paths']))
+paths = spec['paths']
+# list all path keys
+for p in sorted(paths.keys()):
+    print(p)
+EOF
+GLOBAL SECURITY: [{'XAuthOrganization': []}, {'XAuthAccount': []}]
+TOTAL PATHS: 286
+/v1/account
+/v1/account/security-token
+/v1/account/security-token/{token}
+/v1/alert
+/v1/alert-rule
+/v1/alert-rule/{alertRuleUid}
+/v1/alert-rule/{alertRuleUid}/archive
+/v1/alert-rule/{alertRuleUid}/pause
+/v1/alert-rule/{alertRuleUid}/unarchive
+/v1/alert-rule/{alertRuleUid}/unpause
+/v1/alert/{alertUid}
+/v1/alert/{alertUid}/archive
+/v1/alert/{alertUid}/assign
+/v1/alert/{alertUid}/device-snooze/{deviceUid}
+/v1/alert/{alertUid}/snooze
+/v1/alert/{alertUid}/unarchive
+/v1/alert/{alertUid}/unassign
+/v1/alert/{alertUid}/unsnooze
+/v1/applet
+/v1/applet/command
+/v1/applet/count
+/v1/applet/{appletUid}
+/v1/applet/{appletUid}/command
+/v1/applet/{appletUid}/version
+/v1/applet/{appletUid}/version/{appletVersion}
+/v1/applet/{appletUid}/version/{appletVersion}/config
+/v1/applet/{appletUid}/version/{appletVersion}/deprecate
+/v1/applet/{appletUid}/version/{appletVersion}/file
+/v1/applet/{appletUid}/version/{appletVersion}/file/{appletFileName}
+/v1/applet/{appletUid}/version/{appletVersion}/publish
+/v1/applet/{appletUid}/version/{appletVersion}/renew
+/v1/applet/{appletUid}/version/{appletVersion}/test
+/v1/applet/{appletUid}/version/{appletVersion}/test/{testIdentifier}
+/v1/bulk-operation
+/v1/bulk-operation/preview
+/v1/bulk-operation/{bulkOperationUid}
+/v1/bulk-operation/{bulkOperationUid}/archive
+/v1/bulk-operation/{bulkOperationUid}/pause
+/v1/bulk-operation/{bulkOperationUid}/resume
+/v1/bulk-operation/{bulkOperationUid}/stop
+/v1/bulk-provisioning/recipe
+/v1/bulk-provisioning/recipe/csv
+/v1/bulk-provisioning/recipe/{recipeUid}
+/v1/company
+/v1/company/count
+/v1/company/{companyUid}
+/v1/company/{companyUid}/credit-transaction
+/v1/company/{companyUid}/credit-transaction/count
+/v1/company/{companyUid}/credit-transaction/{creditTransactionUid}
+/v1/company/{companyUid}/member
+/v1/company/{companyUid}/member/count
+/v1/company/{companyUid}/member/{memberUid}
+/v1/company/{companyUid}/public-key
+/v1/company/{companyUid}/support-access-permission
+/v1/content-guard/ai-helper/analyze-prompt
+/v1/content-guard/ai-helper/finalize
+/v1/content-guard/ai-helper/generate-description
+/v1/content-guard/ai-helper/generate-prompt
+/v1/content-guard/ai-helper/image
+/v1/content-guard/category
+/v1/content-guard/category/count
+/v1/content-guard/category/{contentGuardCategoryUid}
+/v1/content-guard/item
+/v1/content-guard/item/bulk
+/v1/content-guard/item/count
+/v1/content-guard/item/{contentGuardItemUid}
+/v1/content-guard/item/{contentGuardItemUid}/image-upload
+/v1/content-guard/item/{contentGuardItemUid}/image-upload/finish
+/v1/content-guard/item/{contentGuardItemUid}/tag/{tagUid}
+/v1/content-guard/managed/category
+/v1/content-guard/managed/category/{contentGuardCategoryUid}
+/v1/content-guard/managed/item
+/v1/content-guard/managed/item/{contentGuardItemUid}
+/v1/content-guard/managed/predefined-prompt
+/v1/content-guard/managed/predefined-prompt/{contentGuardPredefinedPromptUid}
+/v1/custom-script
+/v1/custom-script/count
+/v1/custom-script/managed
+/v1/custom-script/managed/{customScriptUid}
+/v1/custom-script/{customScriptUid}
+/v1/custom-script/{customScriptUid}/version
+/v1/custom-script/{customScriptUid}/version/count
+/v1/custom-script/{customScriptUid}/version/{version}
+/v1/custom-script/{customScriptUid}/version/{version}/platform
+/v1/custom-script/{customScriptUid}/version/{version}/platform/{platform}
+/v1/custom-script/{customScriptUid}/version/{version}/platform/{platform}/archive
+/v1/device
+/v1/device/alive
+/v1/device/alive/count
+/v1/device/applet
+/v1/device/applet/count
+/v1/device/application-types
+/v1/device/application/version/latest
+/v1/device/authentication/{deviceAuthHash}
+/v1/device/brands
+/v1/device/configuration/{deviceUid}/telemetry-cache/invalidate
+/v1/device/configuration/{deviceUid}/telemetry-intervals
+/v1/device/count
+/v1/device/custom-script/latest
+/v1/device/deprovision
+/v1/device/models
+/v1/device/policy
+/v1/device/policy/count
+/v1/device/screenshot
+/v1/device/screenshot/count
+/v1/device/tag
+/v1/device/tag/count
+/v1/device/telemetry/latest
+/v1/device/telemetry/latest/count
+/v1/device/verification
+/v1/device/verification/{deviceVerificationUid}
+/v1/device/volume/latest
+/v1/device/{deviceUid}
+/v1/device/{deviceUid}/action-log
+/v1/device/{deviceUid}/action-log/export
+/v1/device/{deviceUid}/action-log/types
+/v1/device/{deviceUid}/action-log/{actionUid}
+/v1/device/{deviceUid}/alive
+/v1/device/{deviceUid}/applet
+/v1/device/{deviceUid}/applet-test/{appletUid}/{appletVersion}
+/v1/device/{deviceUid}/applet/command
+/v1/device/{deviceUid}/applet/count
+/v1/device/{deviceUid}/applet/{appletUid}/command
+/v1/device/{deviceUid}/applet/{appletUid}/command/{commandUid}
+/v1/device/{deviceUid}/applet/{assignmentUid}
+/v1/device/{deviceUid}/application/version
+/v1/device/{deviceUid}/application/version/count
+/v1/device/{deviceUid}/application/version/latest
+/v1/device/{deviceUid}/application/{applicationType}/version
+/v1/device/{deviceUid}/authentication
+/v1/device/{deviceUid}/auto-recovery
+/v1/device/{deviceUid}/brightness
+/v1/device/{deviceUid}/connect
+/v1/device/{deviceUid}/custom-script
+/v1/device/{deviceUid}/custom-script/count
+/v1/device/{deviceUid}/custom-script/latest
+/v1/device/{deviceUid}/debug
+/v1/device/{deviceUid}/deprovision
+/v1/device/{deviceUid}/disconnect
+/v1/device/{deviceUid}/extended-management
+/v1/device/{deviceUid}/feature-test
+/v1/device/{deviceUid}/firmware
+/v1/device/{deviceUid}/firmware/count
+/v1/device/{deviceUid}/get-plugin/{pluginUid}
+/v1/device/{deviceUid}/get-runner/{runnerUid}
+/v1/device/{deviceUid}/hourly-connected-status
+/v1/device/{deviceUid}/location/{locationUid}
+/v1/device/{deviceUid}/organization
+/v1/device/{deviceUid}/package-clear-data
+/v1/device/{deviceUid}/package-install
+/v1/device/{deviceUid}/package-start
+/v1/device/{deviceUid}/package-stop
+/v1/device/{deviceUid}/peer-recovery
+/v1/device/{deviceUid}/pin-code
+/v1/device/{deviceUid}/plugin
+/v1/device/{deviceUid}/plugin/{assignmentUid}
+/v1/device/{deviceUid}/policy
+/v1/device/{deviceUid}/policy-merged
+/v1/device/{deviceUid}/policy-status
+/v1/device/{deviceUid}/policy-status/{policyUid}/item/{itemType}
+/v1/device/{deviceUid}/policy/{policyUid}
+/v1/device/{deviceUid}/power-action
+/v1/device/{deviceUid}/power-action/count
+/v1/device/{deviceUid}/remote-control
+/v1/device/{deviceUid}/report
+/v1/device/{deviceUid}/report/count
+/v1/device/{deviceUid}/resolution
+/v1/device/{deviceUid}/revoke-key
+/v1/device/{deviceUid}/revoke-key/count
+/v1/device/{deviceUid}/revoke-key/latest
+/v1/device/{deviceUid}/runner
+/v1/device/{deviceUid}/runner/{assignmentUid}
+/v1/device/{deviceUid}/scheduled-power-action
+/v1/device/{deviceUid}/scheduled-power-action/{scheduledActionUid}
+/v1/device/{deviceUid}/screen-capture
+/v1/device/{deviceUid}/screenshot
+/v1/device/{deviceUid}/screenshot/count
+/v1/device/{deviceUid}/security
+/v1/device/{deviceUid}/set-plugin/{pluginUid}
+/v1/device/{deviceUid}/set-runner/{runnerUid}
+/v1/device/{deviceUid}/storage
+/v1/device/{deviceUid}/system-log
+/v1/device/{deviceUid}/system-log/export
+/v1/device/{deviceUid}/tag
+/v1/device/{deviceUid}/tag/count
+/v1/device/{deviceUid}/tag/{tagUid}
+/v1/device/{deviceUid}/telemetry/latest
+/v1/device/{deviceUid}/telemetry/{telemetryType}
+/v1/device/{deviceUid}/telemetry/{telemetryType}/count
+/v1/device/{deviceUid}/telemetry/{telemetryType}/latest
+/v1/device/{deviceUid}/temperature
+/v1/device/{deviceUid}/time
+/v1/device/{deviceUid}/timer-settings
+/v1/device/{deviceUid}/volume
+/v1/device/{deviceUid}/volume/count
+/v1/device/{deviceUid}/volume/latest
+/v1/device/{deviceUid}/vpn
+/v1/emulator
+/v1/emulator/{emulatorUid}
+/v1/event-stream/exporter
+/v1/event-stream/exporter/count
+/v1/event-stream/exporter/{exporterConfigUid}
+/v1/export/device
+/v1/export/{uid}
+/v1/firmware/version
+/v1/js-sdk/version
+/v1/license
+/v1/license/count
+/v1/license/redeem
+/v1/license/{licenseUid}
+/v1/location
+/v1/location/count
+/v1/location/organization-tags
+/v1/location/organization-tags/count
+/v1/location/{locationUid}
+/v1/location/{locationUid}/add-attachment
+/v1/location/{locationUid}/archive
+/v1/location/{locationUid}/organization-tag
+/v1/location/{locationUid}/organization-tag/count
+/v1/location/{locationUid}/organization-tag/{tagUid}
+/v1/location/{locationUid}/remove-attachments
+/v1/location/{locationUid}/restore
+/v1/location/{locationUid}/unarchive
+/v1/organization
+/v1/organization-tag
+/v1/organization-tag/count
+/v1/organization-tag/tree
+/v1/organization-tag/tree/latest
+/v1/organization-tag/{uid}
+/v1/organization/count
+/v1/organization/{organizationUID}/security-token
+/v1/organization/{organizationUID}/subscriptionType/{subscriptiontype}
+/v1/organization/{organizationUid}
+/v1/organization/{organizationUid}/client-vpn-config
+/v1/organization/{organizationUid}/client-vpn-config/{uid}
+/v1/organization/{organizationUid}/device-plan-history
+/v1/organization/{organizationUid}/devicesCount
+/v1/organization/{organizationUid}/member
+/v1/organization/{organizationUid}/member/count
+/v1/organization/{organizationUid}/member/{memberUid}
+/v1/organization/{organizationUid}/security-token/{organizationSecurityTokenID}
+/v1/package
+/v1/package/{packageUid}
+/v1/package/{packageUid}/version
+/v1/package/{packageUid}/version/{packageVersionUid}
+/v1/package/{packageUid}/version/{packageVersionUid}/file
+/v1/package/{packageUid}/version/{packageVersionUid}/icon
+/v1/package/{packageUid}/version/{packageVersionUid}/publish
+/v1/package/{packageUid}/version/{packageVersionUid}/unpublish
+/v1/plugin
+/v1/plugin/count
+/v1/plugin/{pluginUid}
+/v1/plugin/{pluginUid}/version
+/v1/plugin/{pluginUid}/version/count
+/v1/plugin/{pluginUid}/version/{version}
+/v1/plugin/{pluginUid}/version/{version}/platform
+/v1/plugin/{pluginUid}/version/{version}/platform/{platform}
+/v1/plugin/{pluginUid}/version/{version}/platform/{platform}/archive
+/v1/policy
+/v1/policy/count
+/v1/policy/{policyUid}
+/v1/policy/{policyUid}/archive
+/v1/policy/{policyUid}/clone
+/v1/policy/{policyUid}/tag
+/v1/policy/{policyUid}/tag/{tagUid}
+/v1/runner
+/v1/runner/count
+/v1/runner/{runnerUid}
+/v1/runner/{runnerUid}/version
+/v1/runner/{runnerUid}/version/count
+/v1/runner/{runnerUid}/version/{version}
+/v1/runner/{runnerUid}/version/{version}/platform
+/v1/runner/{runnerUid}/version/{version}/platform/{platform}
+/v1/runner/{runnerUid}/version/{version}/platform/{platform}/archive
+/v1/system-log
+/v1/timing
+/v1/timing/count
+/v1/timing/{timingUid}
+/v1/uptime
+/v2/device
+/v2/device/count
+/v2/device/{deviceUid}
+/v2/device/{deviceUid}/firmware
+/v2/firmware
+/v2/firmware/count
+/v2/firmware/{firmwareVersionUid}
+[0m
+286 paths mapped. Now find which operations lack auth (security: []) and which are GET-able — the passive-testable surface:
+[0m$ [0mcd /tmp/opencode && python3 << 'EOF'
+import yaml
+spec = yaml.safe_load(open('sos-openapi.yml'))
+paths = spec['paths']
+methods = ('get','post','put','patch','delete')
+unauth = []
+for p, item in sorted(paths.items()):
+    for m in methods:
+        op = item.get(m)
+        if not op: continue
+        # operation-level security overrides
+        sec = op.get('security')
+        # resolve refs inside security? security may contain {'$ref'...} unlikely
+        if sec == []:
+            unauth.append((m.upper(), p, op.get('summary','')))
+        elif sec and all(isinstance(x, dict) for x in sec):
+            flat = [list(x.keys()) for x in sec]
+            if any(k not in ('XAuthOrganization','XAuthAccount') for s in flat for k in s):
+                unauth.append((m.upper(), p, op.get('summary','')+f" SEC={flat}"))
+print("=== OPERATIONS WITH security:[] or unknown schemes ===")
+for row in unauth: print(row)
+print(f"\nTOTAL: {len(unauth)}")
+EOF
+=== OPERATIONS WITH security:[] or unknown schemes ===
+
+TOTAL: 0
+[0m
+All 286 paths declare auth globally — no documented anonymous ops. But spec ≠ enforcement. Let me inspect the device-auth / verification / security-token flows in detail:
+[0m$ [0mcd /tmp/opencode && python3 << 'EOF'
+import yaml
+spec = yaml.safe_load(open('sos-openapi.yml'))
+paths = spec['paths']
+for target in ['/v1/device/authentication/{deviceAuthHash}','/v1/device/verification','/v1/device/verification/{deviceVerificationUid}','/v1/device/{deviceUid}/authentication','/v1/device/revoke-key','/v1/emulator','/v1/emulator/{emulatorUid}']:
+    item = paths.get(target)
+    print("="*80)
+    print("PATH:", target)
+    for m, op in (item or {}).items():
+        if not isinstance(op, dict): continue
+        print(f"-- {m.upper()}: {op.get('summary','')} | sec={op.get('security')}")
+        for prm in op.get('parameters',[]):
+            print("   param:", prm.get('name'), prm.get('in'), prm.get('required'), '|', prm.get('description','')[:100])
+EOF
+================================================================================
+PATH: /v1/device/authentication/{deviceAuthHash}
+-- GET: Get Device by Authentication Hash | sec=[{'XAuthOrganization': []}]
+   param: deviceAuthHash path True | 
+================================================================================
+PATH: /v1/device/verification
+-- POST: Verify Device via Verification Hash | sec=[{'XAuthOrganization': []}, {'XAuthAccount': []}]
+================================================================================
+PATH: /v1/device/verification/{deviceVerificationUid}
+-- GET: Get Device Verification | sec=[{'XAuthOrganization': []}]
+   param: deviceVerificationUid path True | 
+================================================================================
+PATH: /v1/device/{deviceUid}/authentication
+-- GET: Get Device Authentication Hash | sec=[{'XAuthOrganization': []}]
+   param: deviceUid path True | 
+================================================================================
+PATH: /v1/device/revoke-key
+================================================================================
+PATH: /v1/emulator
+-- POST: Create new emulator | sec=[{'XAuthAccount': []}]
+-- GET: Get list of emulators | sec=[{'XAuthAccount': []}]
+   param: organizationUids query None | Filter by Organization UIDs
+   param: uids query None | Filter by UIDs
+   param: descending query None | Order resource in descending or ascending order. Default is descending order.
+   param: limit query None | Maximum number of items to return per page. Next page link is available in response under header `Li
+   param: organizationUid query None | Organization UID
+Use `organizationUids` instead. This parameter is deprecated and will be removed in
+================================================================================
+PATH: /v1/emulator/{emulatorUid}
+-- DELETE: Remove emulator | sec=[{'XAuthAccount': []}]
+   param: emulatorUid path True |
+[0m
+[0m$ [0mcd /tmp/opencode && python3 << 'EOF'
+import yaml
+spec = yaml.safe_load(open('sos-openapi.yml'))
+paths = spec['paths']
+for target in ['/v1/organization/{organizationUID}/security-token','/v1/organization/{organizationUid}/security-token/{organizationSecurityTokenID}','/v1/account/security-token','/v1/account/security-token/{token}','/v1/organization','/v1/organization/{organizationUid}']:
+    item = paths.get(target)
+    print("="*80)
+    print("PATH:", target)
+    for m, op in (item or {}).items():
+        if not isinstance(op, dict): continue
+        print(f"-- {m.upper()}: {op.get('summary','')} | sec={op.get('security')}")
+        for prm in op.get('parameters',[]):
+            print("   param:", prm.get('name'), prm.get('in'), 'req=',prm.get('required'))
+EOF
+================================================================================
+PATH: /v1/organization/{organizationUID}/security-token
+-- GET: Get organization tokens | sec=[{'XAuthAccount': []}]
+   param: organizationUID path req= True
+-- POST: Create organization token | sec=[{'XAuthAccount': []}]
+   param: organizationUID path req= True
+================================================================================
+PATH: /v1/organization/{organizationUid}/security-token/{organizationSecurityTokenID}
+-- DELETE: Delete organization token | sec=[{'XAuthAccount': []}]
+   param: organizationUid path req= True
+   param: organizationSecurityTokenID path req= True
+================================================================================
+PATH: /v1/account/security-token
+-- POST: Create Account Security Token | sec=[{'XAuthOrganization': []}]
+   param: identification query req= None
+   param: password query req= None
+-- DELETE: Delete All Account Security Tokens | sec=[{'XAuthOrganization': []}]
+   param: identification query req= None
+   param: password query req= None
+================================================================================
+PATH: /v1/account/security-token/{token}
+-- DELETE: Delete One Account Security Token | sec=[{'XAuthOrganization': []}]
+   param: identification query req= None
+   param: password query req= None
+   param: token path req= True
+================================================================================
+PATH: /v1/organization
+-- POST: Create Organization | sec=[{'XAuthAccount': []}]
+-- GET: Get Organizations | sec=[{'XAuthAccount': []}]
+   param: uids query req= None
+   param: organizationUids query req= None
+   param: companyUid query req= None
+   param: descending query req= None
+   param: limit query req= None
+   param: lastId query req= None
+   param: organizationUid query req= None
+   param: name query req= None
+   param: title query req= None
+   param: search query req= None
+   param: isLabEnabled query req= None
+   param: isProduction query req= None
+================================================================================
+PATH: /v1/organization/{organizationUid}
+-- GET: Get Organization | sec=[{'XAuthAccount': []}, {'XAuthOrganization': []}]
+   param: organizationUid path req= True
+-- DELETE: Delete Organization | sec=[{'XAuthAccount': []}]
+   param: organizationUid path req= True
+-- PUT: Update Organization | sec=[{'XAuthAccount': []}]
+   param: organizationUid path req= True
+[0m
+Big find: `/v1/account/security-token` (POST/DELETE) requires only an **XAuthOrganization** token plus `identification`+`password` query params, and `/v1/organization/{uid}/security-token` minting is **XAuthAccount-only**. Let me check the securitySchemes + verification-hash schema, then run spaced passive probes on likely-public GET endpoints:
+[0m$ [0mcd /tmp/opencode && python3 << 'EOF'
+import yaml, json
+spec = yaml.safe_load(open('sos-openapi.yml'))
+print("=== securitySchemes ===")
+print(json.dumps(spec.get('components',{}).get('securitySchemes',{}), indent=1)[:800])
+paths = spec['paths']
+# verification body schema + auth hash param description
+print("\n=== device/verification POST body ===")
+op = paths['/v1/device/verification']['post']
+print(json.dumps(op.get('requestBody',{}), indent=1)[:1200])
+print("\n=== authentication/{deviceAuthHash} GET ===")
+op2 = paths['/v1/device/authentication/{deviceAuthHash}']['get']
+print(json.dumps(op2.get('parameters',[]), indent=1)[:800])
+print("\n=== GET endpoints w/ BOTH schemes or orgUid filter ===")
+for p,item in sorted(paths.items()):
+    op = item.get('get')
+    if not op: continue
+    sec = [list(x.keys()) for x in op.get('security',[])]
+    if len(sec)>=2 or any('organizationUid' in str(op.get('parameters'))) or any('organizationUid' in str(op.get('requestBody'))):
+        params = [pr['name'] for pr in op.get('parameters',[]) if isinstance(pr,dict)]
+        print(p, sec, params)
+EOF
+=== securitySchemes ===
+{
+ "XAuthOrganization": {
+  "type": "apiKey",
+  "in": "header",
+  "name": "X-Auth",
+  "description": "Organization authentication using token_id:token_secret format.\n\nTo authenticate:\n1. Go to [Organizations section](https://box.signageos.io/organizations) in signageOS Box\n2. Generate your token_id & token_secret\n3. Use as `X-Auth` header: `token_id:token_secret`\n\nExample: `87e376c08d16XXXXb796294744:5ef829c933aXXXX710f5388a27fee`\n"
+ },
+ "XAuthAccount": {
+  "type": "apiKey",
+  "in": "header",
+  "name": "X-Auth",
+  "description": "Account-level authentication using token_id:token_secret format.\n\nTo authenticate:\n1. Go to [Profile section](https://box.signageos.io/profile) in signageOS Box\n2. Generate your account token_id & token_secret\n3. Use as `X-Auth` header: `token_id:toke
+
+=== device/verification POST body ===
+{
+ "content": {
+  "application/json": {
+   "schema": {
+    "type": "object",
+    "properties": {
+     "verificationHash": {
+      "type": "string",
+      "description": "Verification hash generated on screen during deployment"
+     },
+     "organizationUid": {
+      "type": "string",
+      "description": "Organization UID. Not needed for organization authenticated requests"
+     },
+     "deviceName": {
+      "type": "string",
+      "description": "Optional custom name assigned to the device during pairing"
+     },
+     "policy": {
+      "type": "object",
+      "description": "Optional device policy assigned to the device during pairing",
+      "properties": {
+       "policyUid": {
+        "type": "string"
+       },
+       "priority": {
+        "type": "number"
+       }
+      },
+      "required": [
+       "policyUid",
+       "priority"
+      ]
+     },
+     "subscriptionType": {
+      "type": "string",
+      "enum": [
+       "open",
+       "basic",
+       "medium",
+       "all"
+      ],
+      "description": "Subscription type for the device. Defaults to organization's subscription type if not provided"
+     },
+     "domain": {
+      "type": "string",
+      "description": "Domain for 
+
+=== authentication/{deviceAuthHash} GET ===
+[
+ {
+  "name": "deviceAuthHash",
+  "in": "path",
+  "schema": {
+   "type": "string"
+  },
+  "required": true
+ }
+]
+
+=== GET endpoints w/ BOTH schemes or orgUid filter ===
+Traceback (most recent call last):
+  File "<stdin>", line 18, in <module>
+TypeError: 'bool' object is not iterable
+[0m
+[0m$ [0mcd /tmp/opencode && python3 << 'EOF'
+import yaml
+spec = yaml.safe_load(open('sos-openapi.yml'))
+paths = spec['paths']
+print("=== GET endpoints w/ BOTH auth schemes ===")
+for p,item in sorted(paths.items()):
+    op = item.get('get')
+    if not op: continue
+    sec = op.get('security', spec.get('security',[]))
+    schemes = set()
+    for s in sec:
+        for k in s: schemes.add(k)
+    if len(schemes)>=2:
+        print(p, sorted(schemes))
+EOF
+=== GET endpoints w/ BOTH auth schemes ===
+/v1/applet/command ['XAuthAccount', 'XAuthOrganization']
+/v1/applet/{appletUid}/command ['XAuthAccount', 'XAuthOrganization']
+/v1/applet/{appletUid}/version ['XAuthAccount', 'XAuthOrganization']
+/v1/applet/{appletUid}/version/{appletVersion} ['XAuthAccount', 'XAuthOrganization']
+/v1/applet/{appletUid}/version/{appletVersion}/config ['XAuthAccount', 'XAuthOrganization']
+/v1/bulk-operation ['XAuthAccount', 'XAuthOrganization']
+/v1/bulk-operation/{bulkOperationUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/content-guard/category ['XAuthAccount', 'XAuthOrganization']
+/v1/content-guard/category/count ['XAuthAccount', 'XAuthOrganization']
+/v1/content-guard/category/{contentGuardCategoryUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/content-guard/item ['XAuthAccount', 'XAuthOrganization']
+/v1/content-guard/item/count ['XAuthAccount', 'XAuthOrganization']
+/v1/content-guard/item/{contentGuardItemUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/content-guard/managed/category ['XAuthAccount', 'XAuthOrganization']
+/v1/content-guard/managed/category/{contentGuardCategoryUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/content-guard/managed/item ['XAuthAccount', 'XAuthOrganization']
+/v1/content-guard/managed/item/{contentGuardItemUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/content-guard/managed/predefined-prompt ['XAuthAccount', 'XAuthOrganization']
+/v1/content-guard/managed/predefined-prompt/{contentGuardPredefinedPromptUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/custom-script ['XAuthAccount', 'XAuthOrganization']
+/v1/custom-script/count ['XAuthAccount', 'XAuthOrganization']
+/v1/custom-script/managed ['XAuthAccount', 'XAuthOrganization']
+/v1/custom-script/managed/{customScriptUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/custom-script/{customScriptUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/custom-script/{customScriptUid}/version ['XAuthAccount', 'XAuthOrganization']
+/v1/custom-script/{customScriptUid}/version/count ['XAuthAccount', 'XAuthOrganization']
+/v1/custom-script/{customScriptUid}/version/{version} ['XAuthAccount', 'XAuthOrganization']
+/v1/custom-script/{customScriptUid}/version/{version}/platform ['XAuthAccount', 'XAuthOrganization']
+/v1/custom-script/{customScriptUid}/version/{version}/platform/{platform} ['XAuthAccount', 'XAuthOrganization']
+/v1/device ['XAuthAccount', 'XAuthOrganization']
+/v1/device/alive ['XAuthAccount', 'XAuthOrganization']
+/v1/device/alive/count ['XAuthAccount', 'XAuthOrganization']
+/v1/device/applet ['XAuthAccount', 'XAuthOrganization']
+/v1/device/applet/count ['XAuthAccount', 'XAuthOrganization']
+/v1/device/application-types ['XAuthAccount', 'XAuthOrganization']
+/v1/device/application/version/latest ['XAuthAccount', 'XAuthOrganization']
+/v1/device/brands ['XAuthAccount', 'XAuthOrganization']
+/v1/device/count ['XAuthAccount', 'XAuthOrganization']
+/v1/device/models ['XAuthAccount', 'XAuthOrganization']
+/v1/device/policy ['XAuthAccount', 'XAuthOrganization']
+/v1/device/policy/count ['XAuthAccount', 'XAuthOrganization']
+/v1/device/screenshot ['XAuthAccount', 'XAuthOrganization']
+/v1/device/screenshot/count ['XAuthAccount', 'XAuthOrganization']
+/v1/device/tag ['XAuthAccount', 'XAuthOrganization']
+/v1/device/tag/count ['XAuthAccount', 'XAuthOrganization']
+/v1/device/telemetry/latest ['XAuthAccount', 'XAuthOrganization']
+/v1/device/telemetry/latest/count ['XAuthAccount', 'XAuthOrganization']
+/v1/device/volume/latest ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/action-log ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/action-log/export ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/action-log/types ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/action-log/{actionUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/alive ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/applet ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/applet/command ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/applet/count ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/applet/{appletUid}/command ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/applet/{appletUid}/command/{commandUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/applet/{assignmentUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/application/version ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/application/version/latest ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/custom-script ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/extended-management ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/firmware ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/firmware/count ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/location/{locationUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/policy-merged ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/power-action ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/power-action/count ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/report/count ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/revoke-key ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/revoke-key/count ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/revoke-key/latest ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/runner ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/runner/{assignmentUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/screenshot ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/screenshot/count ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/storage ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/system-log ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/system-log/export ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/tag ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/tag/count ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/telemetry/{telemetryType} ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/telemetry/{telemetryType}/count ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/telemetry/{telemetryType}/latest ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/volume ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/volume/count ['XAuthAccount', 'XAuthOrganization']
+/v1/device/{deviceUid}/volume/latest ['XAuthAccount', 'XAuthOrganization']
+/v1/event-stream/exporter ['XAuthAccount', 'XAuthOrganization']
+/v1/event-stream/exporter/count ['XAuthAccount', 'XAuthOrganization']
+/v1/event-stream/exporter/{exporterConfigUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/export/{uid} ['XAuthAccount', 'XAuthOrganization']
+/v1/firmware/version ['XAuthAccount', 'XAuthOrganization']
+/v1/license ['XAuthAccount', 'XAuthOrganization']
+/v1/license/count ['XAuthAccount', 'XAuthOrganization']
+/v1/license/{licenseUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/location ['XAuthAccount', 'XAuthOrganization']
+/v1/location/count ['XAuthAccount', 'XAuthOrganization']
+/v1/location/organization-tags ['XAuthAccount', 'XAuthOrganization']
+/v1/location/organization-tags/count ['XAuthAccount', 'XAuthOrganization']
+/v1/location/{locationUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/location/{locationUid}/organization-tag ['XAuthAccount', 'XAuthOrganization']
+/v1/location/{locationUid}/organization-tag/count ['XAuthAccount', 'XAuthOrganization']
+/v1/organization-tag ['XAuthAccount', 'XAuthOrganization']
+/v1/organization-tag/count ['XAuthAccount', 'XAuthOrganization']
+/v1/organization-tag/tree ['XAuthAccount', 'XAuthOrganization']
+/v1/organization-tag/tree/latest ['XAuthAccount', 'XAuthOrganization']
+/v1/organization/{organizationUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/organization/{organizationUid}/device-plan-history ['XAuthAccount', 'XAuthOrganization']
+/v1/plugin ['XAuthAccount', 'XAuthOrganization']
+/v1/plugin/count ['XAuthAccount', 'XAuthOrganization']
+/v1/plugin/{pluginUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/plugin/{pluginUid}/version ['XAuthAccount', 'XAuthOrganization']
+/v1/plugin/{pluginUid}/version/count ['XAuthAccount', 'XAuthOrganization']
+/v1/plugin/{pluginUid}/version/{version} ['XAuthAccount', 'XAuthOrganization']
+/v1/plugin/{pluginUid}/version/{version}/platform ['XAuthAccount', 'XAuthOrganization']
+/v1/plugin/{pluginUid}/version/{version}/platform/{platform} ['XAuthAccount', 'XAuthOrganization']
+/v1/policy ['XAuthAccount', 'XAuthOrganization']
+/v1/policy/count ['XAuthAccount', 'XAuthOrganization']
+/v1/policy/{policyUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/runner ['XAuthAccount', 'XAuthOrganization']
+/v1/runner/count ['XAuthAccount', 'XAuthOrganization']
+/v1/runner/{runnerUid} ['XAuthAccount', 'XAuthOrganization']
+/v1/runner/{runnerUid}/version ['XAuthAccount', 'XAuthOrganization']
+/v1/runner/{runnerUid}/version/count ['XAuthAccount', 'XAuthOrganization']
+/v1/runner/{runnerUid}/version/{version} ['XAuthAccount', 'XAuthOrganization']
+/v1/runner/{runnerUid}/version/{version}/platform ['XAuthAccount', 'XAuthOrganization']
+/v1/runner/{runnerUid}/version/{version}/platform/{platform} ['XAuthAccount', 'XAuthOrganization']
+/v1/timing ['XAuthAccount', 'XAuthOrganization']
+/v1/timing/count ['XAuthAccount', 'XAuthOrganization']
+/v1/timing/{timingUid} ['XAuthAccount', 'XAuthOrganization']
+/v2/device ['XAuthAccount', 'XAuthOrganization']
+/v2/device/count ['XAuthAccount', 'XAuthOrganization']
+/v2/device/{deviceUid} ['XAuthAccount', 'XAuthOrganization']
+/v2/firmware ['XAuthAccount', 'XAuthOrganization']
+/v2/firmware/count ['XAuthAccount', 'XAuthOrganization']
+/v2/firmware/{firmwareVersionUid} ['XAuthAccount', 'XAuthOrganization']
+[0m
+Spec fully mapped. Now spaced passive probes (GET, no auth, ~1s apart) on metadata/device-facing endpoints where enforcement may differ from spec:
+[0m$ [0mcd /tmp/opencode
+for p in "v1/device/brands" "v1/device/models" "v1/js-sdk/version" "v1/firmware/version" "v2/device" "v1/device/telemetry/latest" "v1/export/device"; do
+  code=$(curl -s -o /tmp/opencode/resp.txt -w "%{http_code}" "https://api.signageos.io/$p")
+  body=$(head -c 180 /tmp/opencode/resp.txt | tr -d '\n')
+  echo "$p -> $code :: $body"
+  sleep 1.2
+done
+v1/device/brands -> 403 :: {"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding of provided JWT toke
+v1/device/models -> 403 :: {"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding of provided JWT toke
+v1/js-sdk/version -> 403 :: {"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding of provided JWT toke
+v1/firmware/version -> 403 :: {"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding of provided JWT toke
+v2/device -> 403 :: {"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding of provided JWT toke
+v1/device/telemetry/latest -> 403 :: {"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding of provided JWT toke
+v1/export/device -> 403 :: {"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding of provided JWT toke
+[0m
+All probes uniform `403 WRONG_JWT_TOKEN` — middleware auth is consistent; route existence confirmed by 403 vs 404. Analysis complete. Structured output:
+
+---
+
+**STEP 1 — DELTA**
+- [NEW] `api.signageos.io/openapi.yml` serves the full public spec (1.57MB, v50.0.3, 286 paths incl. v1+v2) with NO auth — complete endpoint catalog + security schemes + error taxonomy
+- [NEW] Auth model corrected: REST uses `X-Auth: token_id:token_secret` but server decodes it as a **JWT** (`errorDetail:"Decoding of provided JWT token has failed"`, `errorCode:403105 WRONG_JWT_TOKEN`) — tokens are server-signed JWTs, not opaque keys (confirms prior SDK-JWT reasoning as fact)
+- [NEW] Two-tier scheme: `XAuthOrganization` (org token) vs `XAuthAccount` (account token); docs require `organizationUid` param for account-token org-scoped listings
+- [NEW] `/v1/organization/{organizationUID}/security-token` GET/POST is **XAuthAccount-only**, keyed by foreign-key org UID — highest-value cross-tenant minting surface
+- [NEW] `/v1/account/security-token` POST/DELETE accepts `XAuthOrganization` + **`identification`+`password` as query params** — account-token minting via user creds over the wire
+- [NEW] `/v1/device/verification` POST accepts optional `organizationUid` (account token) — cross-org device pairing surface
+- [NEW] api.signageos.io confirmed behind CloudFront (`x-amz-cf-pop DFW56`, `x-cache: Error from cloudfront`); quota 200 rps/IP + 500 queued, cursor pagination (`until`/`lastId`), async polling on `/device/*`
+- [NEW] 7 spot probes (brands/models/js-sdk-version/firmware-version/v2/device/telemetry-latest/export) all `403 WRONG_JWT_TOKEN` — uniform middleware auth, no anonymous hole found
+
+**STEP 2 — PRIORITIZE**
+- [PRIO] `/v1/organization/{uid}/security-token` (XAuthAccount minting): score 7.6 — attack 9, business 10, tech 8, gate 2, cloud 5, fresh 8
+- [PRIO] `/v1/account/security-token` (org-token+password mint, creds in query): score 7.2 — attack 8, business 9, tech 9, gate 2, cloud 5, fresh 8
+- [PRIO] `/v1/device/verification` + orgUid (cross-org pairing): score 6.3 — attack 7, business 8, tech 7, gate 2, cloud 4, fresh 8
+
+**STEP 3 — HYPOTHESES**
+[HYP] Cross-tenant org-token minting via account token
+class: IDOR
+asset: api.signageos.io/v1/organization/{organizationUID}/security-token (GET/POST)
+confidence: 55
+reasoning: Spec marks this XAuthAccount-only; org UID is a path key. Account token scopes to a Company, yet docs say one account token "can create multiple organizations" and mint org tokens. If company-membership is not re-checked per UID, any account token mints tokens for any org, and org tokens fully control devices (brightness/firmware/content/timing).
+evidence_needed: 200 (not 403) on the foreign-UID path with own account token.
+verify_steps: AUTH_HELPED: `GET https://api.signageos.io/v1/organization/<own-org>/security-token` (baseline 200), then `GET /v1/organization/<foreign-org-uid>/security-token` — 200 = cross-tenant token mint → full device control of foreign org.
+impact: mint org tokens for any tenant → device/content/timing takeover; CRITICAL
+testability: AUTH_HELPED
+
+[HYP] Account-token filtered listing ignores tenant scope (organizationUid/companyUid)
+class: IDOR
+asset: api.signageos.io/v1/organization (GET), /v1/emulator (GET), /v1/device (GET)
+confidence: 50
+reasoning: account-token listing endpoints take `organizationUid(s)`/`companyUid` as free filters; docs explicitly require organizationUid for org-scoped listing with account tokens. If the filter is applied without a "filter ∈ my company" check, account tokens read foreign tenants' org/device/emulator data.
+evidence_needed: 200 with non-empty foreign data for a foreign uid filter.
+verify_steps: AUTH_HELPED: `GET /v1/organization?companyUid=<foreign>` and `GET /v1/device?organizationUid=<foreign>` with own account token — non-403/empty is a finding.
+impact: cross-tenant device/org/telemetry disclosure; HIGH
+testability: AUTH_HELPED
+
+[HYP] Credentials exposed in query string on account-token mint
+class: MISCONFIG
+asset: api.signageos.io/v1/account/security-token (POST/DELETE)
+confidence: 45
+reasoning: `identification` + `password` defined as **query** params (spec) on a POST behind CloudFront — user credentials land in URL logs/referrers; alternate auth path bypasses normal session flow.
+evidence_needed: confirmed CloudFront/access-log capture of query creds (infra-side, not provable passively) + spec-level confirmation of param location.
+verify_steps: AUTH_HELPED: with org token, POST `/v1/account/security-token?identification=<u>&password=<p>` and inspect request/response + any logging headers.
+impact: credential leakage via shared-infra logs; MEDIUM
+testability: AUTH_HELPED
+
+**STEP 4 — SELF-CRITIQUE**
+- [PARKED] device-hijack via `/v1/device/verification` verificationHash: needs physical view of a device screen hash → "physical access" exclusion; drop
+- [PARKED] JWT alg/confusion attacks: no token to test; no passive POC possible
+- [PARKED] The earlier "REJECTED IDOR @ api.signageos.io: no public endpoints" is **superseded** — catalog now proven to exist via openapi.yml; re-entered as AUTH_HELPED, not dead
+- [FINAL] 1) Cross-tenant org-token minting IDOR (55, AUTH_HELPED)  2) Account-token filtered-read IDOR (50, AUTH_HELPED)  3) Credentials-in-query mint (45, AUTH_HELPED, parked-tier)
+
+**STEP 5 — NEXT ACTION**
+[NEXT] RAG: fetch `github.com/signageos/sdk` source to confirm exact `X-Auth` construction for v1/v2, the account-token mint call shape (`identification`/`password` param placement), and whether `createApiV2` reuses v1 auth/orgUid semantics — converts hypothesis 1/2 into exact AUTH_HELPED test recipes.
+
+**STEP 6 — LEARNING**
+- [LEARN] ACCEPTED AUTH @ api.signageos.io: X-Auth tokens are server-signed JWTs (`errorCode 403105 WRONG_JWT_TOKEN`), two-tier org/account; prior "JWT" model confirmed
+- [LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: XAuthAccount-only minting keyed by foreign-key org UID — prime cross-tenant target (hypothesis, unconfirmed)
+- [LEARN] REJECTED IDOR @ api.signageos.io (2026-08-07 "no public endpoints"): SUPERSEDED — full 286-route catalog exposed at /openapi.yml; uniform 403 without token
+- [LEARN] ACCEPTED MISCONFIG @ api.signageos.io: account-token mint takes user credentials as query params (leak-into-logs vector)
+- [LEARN] REJECTED AUTH @ api.signageos.io anonymous surface: 7 more endpoints probed, all 403 — no unauthenticated path
+
+**STEP 7 — RISK SCORE**
+- [RISK] box.signageos.io: 72 — token-minting origin for both account+org tokens that gate a now-confirmed cross-tenant API; any auth bypass/XSS on box amplifies to tenant takeover; no new passive exposure
+- [RISK] api.signageos.io: 85 — surface upgraded from "static HTML, no API" to a documented 286-route JWT API with two-tier auth, account-only org-token minting keyed by foreign-key UID, and credentials-in-query on the token-mint path; uniform middleware but every org-scope check is an untested IDOR candidate
