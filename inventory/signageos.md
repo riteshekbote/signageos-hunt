@@ -40,3 +40,5 @@
 - CHANGED box.signageos.io CSP: `connect-src`/`frame-src` enlarged vs seed (additional S3 buckets + triplicated Auth0 `oauth/token` entries); CSP still ACCEPTED from seed
 
 ## 2026-08-07 21:04:45 UTC
+
+## 2026-08-07 21:34:19 UTC
