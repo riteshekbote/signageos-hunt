@@ -168,3 +168,4 @@ testability: PASSIVE (initial), AUTH_HELPED (full)
 [RISK] box.signageos.io: 75 — Auth0 OAuth2 flow, broad CSP trust boundary (20+ origins including device mgmt APIs, S3, websockets), Sentry/reCAPTCHA nonces, CloudFront; high business value (player/dashboard admin); postMessage/origin boundary expanded by remote-desktop/upload/platform/license subdomains
 [RISK] api.signageos.io: 60 — No public API surface, hidden behind CloudFront, auth model unknown, but high business value (core backend); risk driven by unknown attack surface via SDK/cli code mappings
 ## 2026-08-07 20:05:45 UTC [api] (model nemotron3)
+## 2026-08-07 20:54:09 UTC [api] (model nemotron3)

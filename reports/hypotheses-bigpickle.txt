@@ -1,29 +1,28 @@
-## 2026-08-07 20:07:10 UTC [box] (model bigpickle)
-[HYP] Cross-tenant org-token minting via account token
+## 2026-08-07 20:56:31 UTC [box] (model bigpickle)
+[HYP] Cross-tenant peer-recovery read/write via legacy client-secret not bound to target device UID
 class: IDOR
-asset: api.signageos.io/v1/organization/{organizationUID}/security-token (GET/POST)
+asset: api.signageos.io/v1/device/{uid}/peer-recovery (GET list / PUT set)
 confidence: 55
-reasoning: Spec marks this XAuthAccount-only; org UID is a path key. Account token scopes to a Company, yet docs say one account token "can create multiple organizations" and mint org tokens. If company-membership is not re-checked per UID, any account token mints tokens for any org, and org tokens fully control devices (brightness/firmware/content/timing).
-evidence_needed: 200 (not 403) on the foreign-UID path with own account token.
-verify_steps: AUTH_HELPED: `GET https://api.signageos.io/v1/organization/<own-org>/security-token` (baseline 200), then `GET /v1/organization/<foreign-org-uid>/security-token` — 200 = cross-tenant token mint → full device control of foreign org.
-impact: mint org tokens for any tenant → device/content/timing takeover; CRITICAL
+reasoning: gate is org client-secret (`403083 MISSING_CLIENT_SECRET`), not JWT; SDK takes deviceUid as an arbitrary path arg (DevicePeerRecoveryManagement.ts:22,36); org-context is client-controlled (`X-Auth: clientId:secret`, or `?organizationUid=` for JWT), so the server-side org→device binding is the only barrier.
+evidence_needed: with own org `X-Auth: clientId:secret`, GET/PUT peer-recovery against a device UID belonging to another org returns 200 (not 403).
+verify_steps: AUTH_HELPED: `GET /v1/device/<own-uid>/peer-recovery -H "X-Auth: <ownClientId>:<ownSecret>"` baseline 200; repeat with foreign device UID → 200 = cross-tenant; then `PUT` with `{"enabled":true,"urlLauncherAddress":"https://attacker"}` to confirm write.
+impact: read + overwrite peer-recovery config on any tenant's devices; PUT can point device launcher at attacker URL → device/content takeover; HIGH→CRITICAL
 testability: AUTH_HELPED
-[HYP] Account-token filtered listing ignores tenant scope (organizationUid/companyUid)
+[HYP] Cross-tenant org security-token minting via account token + client-supplied organizationUid
 class: IDOR
-asset: api.signageos.io/v1/organization (GET), /v1/emulator (GET), /v1/device (GET)
-confidence: 50
-reasoning: account-token listing endpoints take `organizationUid(s)`/`companyUid` as free filters; docs explicitly require organizationUid for org-scoped listing with account tokens. If the filter is applied without a "filter ∈ my company" check, account tokens read foreign tenants' org/device/emulator data.
-evidence_needed: 200 with non-empty foreign data for a foreign uid filter.
-verify_steps: AUTH_HELPED: `GET /v1/organization?companyUid=<foreign>` and `GET /v1/device?organizationUid=<foreign>` with own account token — non-403/empty is a finding.
-impact: cross-tenant device/org/telemetry disclosure; HIGH
+asset: api.signageos.io/v1/organization/{uid}/security-token (GET/POST)
+confidence: 60
+reasoning: docs state one account token can create multiple orgs and mint org tokens; SDK builds `organization/<uid>/security-token` (path = resource key) while JWT auth-context is a separate client-supplied `?organizationUid=` (requester.ts:41-44); if path-UID membership vs query-UID is not re-checked server-side, any account token mints tokens for any org.
+evidence_needed: non-403 on POST/GET `/v1/organization/<foreign-uid>/security-token` with own account JWT.
+verify_steps: AUTH_HELPED: `GET /v1/organization/<own>/security-token` baseline 200; then `GET /v1/organization/<foreign-uid>/security-token` → 200 = cross-tenant mint; minted org token should then drive foreign devices (brightness/firmware/content/timing).
+impact: mint org tokens for any tenant → full foreign-device control; CRITICAL
 testability: AUTH_HELPED
-[HYP] Credentials exposed in query string on account-token mint
-class: MISCONFIG
-asset: api.signageos.io/v1/account/security-token (POST/DELETE)
+[HYP] v2 API partial-migration authz drift (route exists in v2, alternate/weaker auth)
+class: AUTH
+asset: api.signageos.io/v2/*
 confidence: 45
-reasoning: `identification` + `password` defined as **query** params (spec) on a POST behind CloudFront — user credentials land in URL logs/referrers; alternate auth path bypasses normal session flow.
-evidence_needed: confirmed CloudFront/access-log capture of query creds (infra-side, not provable passively) + spec-level confirmation of param location.
-verify_steps: AUTH_HELPED: with org token, POST `/v1/account/security-token?identification=<u>&password=<p>` and inspect request/response + any logging headers.
-impact: credential leakage via shared-infra logs; MEDIUM
-testability: AUTH_HELPED
-[NEXT] RAG: fetch `github.com/signageos/sdk` source to confirm exact `X-Auth` construction for v1/v2, the account-token mint call shape (`identification`/`password` param placement), and whether `createApiV2` reuses v1 auth/orgUid semantics — converts hypothesis 1/2 into exact AUTH_HELPED test recipes.
+reasoning: /v2/device is JWT-gated (403 WRONG_JWT) but /v2/account and /v2/organization are 404 — v2 is a selective port; freshly-migrated code paths commonly diverge on authorization checks; IOptions is version-agnostic (legacy clientId:secret works across v1/v2).
+evidence_needed: any /v2 route returning 200 unauthenticated, or ≠403/404, or accepting legacy auth where v1 requires JWT.
+verify_steps: PASSIVE: probe /v2/device/{uid}, /v2/license, /v2/alert, /v2/location, /v2/content, /v2/bulk-operation, /v2/emulator without auth — anything ≠403/404 is a finding; AUTH_HELPED: compare own-creds response on same resource across /v1 vs /v2.
+impact: authz drift → data disclosure / cross-tenant access via an alternate code path; HIGH
+testability: PASSIVE

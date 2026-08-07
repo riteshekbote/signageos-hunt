@@ -2728,3 +2728,249 @@ testability: AUTH_HELPED
 **STEP 7 — RISK SCORE**
 - [RISK] box.signageos.io: 72 — token-minting origin for both account+org tokens that gate a now-confirmed cross-tenant API; any auth bypass/XSS on box amplifies to tenant takeover; no new passive exposure
 - [RISK] api.signageos.io: 85 — surface upgraded from "static HTML, no API" to a documented 286-route JWT API with two-tier auth, account-only org-token minting keyed by foreign-key UID, and credentials-in-query on the token-mint path; uniform middleware but every org-scope check is an untested IDOR candidate
+===== ANALYST bigpickle 2026-08-07 21:04:45 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mprobe() {
+  host="$1"; shift
+  for p in "$@"; do
+    out=$(mktemp)
+    meta=$(curl -sS -m 10 -o "$out" -w "%{http_code} %{content_type} %{size_download}" "https://$host/$p" 2>/dev/null)
+    body=$(head -c 160 "$out" | tr '\n' ' ' | tr -s ' ')
+    echo "[$host /$p] $meta | $body"
+    rm -f "$out"
+    sleep 1.2
+  done
+}
+probe api.signageos.io v2/device v2/organization v2/account health healthz readyz metrics status/detailed v1/status v1/device/00000000-0000-0000-0000-000000000000/alive v1/device/00000000-0000-0000-0000-000000000000/peer-recovery v1/device/00000000-0000-0000-0000-000000000000/organization v1/device/00000000-0000-0000-0000-000000000000/telemetry/latest v1/export/device
+probe box.signageos.io health healthz metrics version config.json status/health graphql favicon.ico
+[api.signageos.io /v2/device] 403 application/json; charset=utf-8 194 | {"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding 
+[api.signageos.io /v2/organization] 404 application/json; charset=utf-8 192 | {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint does
+[api.signageos.io /v2/account] 404 application/json; charset=utf-8 192 | {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint does
+[api.signageos.io /health] 404 application/json; charset=utf-8 192 | {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint does
+[api.signageos.io /healthz] 404 application/json; charset=utf-8 192 | {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint does
+[api.signageos.io /readyz] 404 application/json; charset=utf-8 192 | {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint does
+[api.signageos.io /metrics] 404 application/json; charset=utf-8 192 | {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint does
+[api.signageos.io /status/detailed] 404 application/json; charset=utf-8 192 | {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint does
+[api.signageos.io /v1/status] 404 application/json; charset=utf-8 192 | {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint does
+[api.signageos.io /v1/device/00000000-0000-0000-0000-000000000000/alive] 403 application/json; charset=utf-8 194 | {"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding 
+[api.signageos.io /v1/device/00000000-0000-0000-0000-000000000000/peer-recovery] 403 application/json; charset=utf-8 297 | {"status":403,"message":"Access forbidden - Authentication error.","errorCode":403083,"errorName":"MISSING_CLIENT_SECRET_TO_AUTHENTICATE","errorDetail":"Both x-
+[api.signageos.io /v1/device/00000000-0000-0000-0000-000000000000/organization] 404 application/json; charset=utf-8 192 | {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint does
+[api.signageos.io /v1/device/00000000-0000-0000-0000-000000000000/telemetry/latest] 403 application/json; charset=utf-8 194 | {"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding 
+[api.signageos.io /v1/export/device] 403 application/json; charset=utf-8 194 | {"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding 
+[box.signageos.io /health] 302 text/plain; charset=utf-8 38 | Found. Redirecting to /login/%2Fhealth
+[box.signageos.io /healthz] 302 text/plain; charset=utf-8 39 | Found. Redirecting to /login/%2Fhealthz
+[box.signageos.io /metrics] 302 text/plain; charset=utf-8 39 | Found. Redirecting to /login/%2Fmetrics
+[box.signageos.io /version] 302 text/plain; charset=utf-8 39 | Found. Redirecting to /login/%2Fversion
+[box.signageos.io /config.json] 302 text/plain; charset=utf-8 43 | Found. Redirecting to /login/%2Fconfig.json
+[box.signageos.io /status/health] 302 text/plain; charset=utf-8 47 | Found. Redirecting to /login/%2Fstatus%2Fhealth
+[box.signageos.io /graphql] 302 text/plain; charset=utf-8 39 | Found. Redirecting to /login/%2Fgraphql
+[box.signageos.io /favicon.ico] 302 text/plain; charset=utf-8 43 | Found. Redirecting to /login/%2Ffavicon.ico
+[0m
+[0m$ [0mprobe() {
+  host="$1"; shift
+  for p in "$@"; do
+    out=$(mktemp)
+    meta=$(curl -sS -m 10 -o "$out" -w "%{http_code} %{content_type}" "https://$host/$p" 2>/dev/null)
+    body=$(cat "$out" | tr '\n' ' ')
+    echo "[$host /$p] $meta | $body"
+    rm -f "$out"
+    sleep 1.2
+  done
+}
+probe api.signageos.io v1/device/00000000-0000-0000-0000-000000000000/peer-recovery v2/device/00000000-0000-0000-0000-000000000000 v1/device/00000000-0000-0000-0000-000000000000/peer-recovery/config v1/device/00000000-0000-0000-0000-000000000000/peer-recovery/status v1/device/00000000-0000-0000-0000-000000000000/client-secret
+[api.signageos.io /v1/device/00000000-0000-0000-0000-000000000000/peer-recovery] 403 application/json; charset=utf-8 | {"status":403,"message":"Access forbidden - Authentication error.","errorCode":403083,"errorName":"MISSING_CLIENT_SECRET_TO_AUTHENTICATE","errorDetail":"Both x-oauth-client_secret and second part (after chart :) of x-auth header are missing from request thus organization not to be authenticated"}
+[api.signageos.io /v2/device/00000000-0000-0000-0000-000000000000] 403 application/json; charset=utf-8 | {"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding of provided JWT token has failed"}
+[api.signageos.io /v1/device/00000000-0000-0000-0000-000000000000/peer-recovery/config] 404 application/json; charset=utf-8 | {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint doesn't exist for specified method"}
+[api.signageos.io /v1/device/00000000-0000-0000-0000-000000000000/peer-recovery/status] 404 application/json; charset=utf-8 | {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint doesn't exist for specified method"}
+[api.signageos.io /v1/device/00000000-0000-0000-0000-000000000000/client-secret] 404 application/json; charset=utf-8 | {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint doesn't exist for specified method"}
+[0m
+[0m$ [0mprobe() {
+  host="$1"; shift
+  for p in "$@"; do
+    out=$(mktemp)
+    meta=$(curl -sS -m 10 -o "$out" -w "%{http_code}" -H "$1" "https://$host/$p" 2>/dev/null)
+    body=$(cat "$out" | tr '\n' ' ')
+    echo "[$host /$p | $hdr] $meta | $body"
+    rm -f "$out"
+    sleep 1.2
+  done
+}
+hdr="x-oauth-client_secret: test"
+probe api.signageos.io "v1/device/00000000-0000-0000-0000-000000000000/peer-recovery" "$hdr"
+hdr="x-auth: chart:test"
+probe api.signageos.io "v1/device/00000000-0000-0000-0000-000000000000/peer-recovery" "$hdr"
+hdr=""
+probe api.signageos.io "v1/device/00000000-0000-0000-0000-000000000000" "v1/device/00000000-0000-0000-0000-000000000000/telemetry"
+[api.signageos.io /v1/device/00000000-0000-0000-0000-000000000000/peer-recovery | x-oauth-client_secret: test] 403 | {"status":403,"message":"Access forbidden - Authentication error.","errorCode":403083,"errorName":"MISSING_CLIENT_SECRET_TO_AUTHENTICATE","errorDetail":"Both x-oauth-client_secret and second part (after chart :) of x-auth header are missing from request thus organization not to be authenticated"}
+[api.signageos.io /x-oauth-client_secret: test | x-oauth-client_secret: test] 000 | 
+[api.signageos.io /v1/device/00000000-0000-0000-0000-000000000000/peer-recovery | x-auth: chart:test] 403 | {"status":403,"message":"Access forbidden - Authentication error.","errorCode":403083,"errorName":"MISSING_CLIENT_SECRET_TO_AUTHENTICATE","errorDetail":"Both x-oauth-client_secret and second part (after chart :) of x-auth header are missing from request thus organization not to be authenticated"}
+[api.signageos.io /x-auth: chart:test | x-auth: chart:test] 000 | 
+[api.signageos.io /v1/device/00000000-0000-0000-0000-000000000000 | ] 403 | {"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding of provided JWT token has failed"}
+[api.signageos.io /v1/device/00000000-0000-0000-0000-000000000000/telemetry | ] 404 | {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint doesn't exist for specified method"}
+[0m
+[0m$ [0mcurl -sS -m 10 -w "\n[status %{http_code}]\n" -H "x-oauth-client_secret: test" "https://api.signageos.io/v1/device/00000000-0000-0000-0000-000000000000/peer-recovery"; sleep 1.2
+curl -sS -m 10 -w "\n[status %{http_code}]\n" -H "x-auth: chart:test" "https://api.signageos.io/v1/device/00000000-0000-0000-0000-000000000000/peer-recovery"
+{"status":403,"message":"Access forbidden - Authentication error.","errorCode":403083,"errorName":"MISSING_CLIENT_SECRET_TO_AUTHENTICATE","errorDetail":"Both x-oauth-client_secret and second part (after chart :) of x-auth header are missing from request thus organization not to be authenticated"}
+[status 403]
+{"status":403,"message":"Access forbidden - Client ID not set in x-oauth-client_id header","errorCode":403075,"errorName":"NO_ORGANIZATION_TO_AUTHENTICATE","errorDetail":"No organization found by x-oauth-client_id header or first part (before char :) of x-auth header found thus not to be authenticated"}
+[status 403]
+[0m
+[0m$ [0mcd /tmp/opencode && rm -rf sdk && git clone --depth 1 https://github.com/signageos/sdk.git sdk 2>&1 | tail -2
+Cloning into 'sdk'...
+[0m
+[0m$ [0mcd /tmp/opencode/sdk && rg -l -i "peer.recovery|peerRecovery" . | head -5; echo "---AUTH---"; rg -n -i "x-auth|x-oauth|chart" src 2>/dev/null | head -20; echo "---BASEURL---"; rg -n "apiBase|baseUrl|API_URL|signageos.io" src 2>/dev/null | head -10
+/bin/bash: line 1: rg: command not found
+---AUTH---
+---BASEURL---
+[0m
+[0m$ [0mcd /tmp/opencode/sdk && ls; echo "---"; grep -rn -i "peer.recovery\|peerRecovery" --include=*.ts --include=*.js -l . 2>/dev/null | head; echo "---AUTH---"; grep -rn -i "x-auth\|x-oauth" . 2>/dev/null | head; echo "---API_URL---"; grep -rn "signageos.io" . 2>/dev/null | grep -v node_modules | head
+CHANGELOG.md
+Dockerfile
+README.md
+docker-compose.yml
+eslint.config.mjs
+package-lock.json
+package.json
+renovate.json
+src
+tests
+tsconfig.json
+tsconfig.test.json
+typedoc.json
+---
+./tests/fixtures/Device/PeerRecovery/DevicePeerRecovery.fixtures.ts
+./tests/e2e/RestAPI/BulkOperation/RestAPI.spec.ts
+./tests/unit/RestApi/Device/PeerRecovery/DevicePeerRecoveryManagement.spec.ts
+./src/RestApi/BulkOperation/BulkOperation.enums.ts
+./src/RestApi/BulkOperation/BulkOperation.types.ts
+./src/RestApi/Timing/commands/Management/ManagementPeerRecoveryCommands.ts
+./src/RestApi/Timing/commands/Management/ManagementCommands.ts
+./src/RestApi/Device/Monitoring/DeviceMonitoring.types.ts
+./src/RestApi/Device/Telemetry/IDeviceTelemetry.ts
+./src/RestApi/Device/Configuration/DeviceConfiguration.ts
+---AUTH---
+./CHANGELOG.md:41:- Support JWT access token authentication via `X-Auth` header (discriminated union: `ILegacyAuthOptions | IJwtAuthOptions`)
+./tests/unit/RestApi/Applet/Command/AppletCommandManagement.spec.ts:40:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+./tests/unit/RestApi/Applet/Version/File/AppletVersionFileManagement.spec.ts:70:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+./tests/unit/RestApi/Applet/Version/AppletVersionManagement.spec.ts:37:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+./tests/unit/RestApi/Applet/Version/AppletTestSuiteManagement.spec.ts:31:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+./tests/unit/RestApi/Applet/AppletManagement.spec.ts:27:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+./tests/unit/RestApi/Emulator/EmulatorManagement.spec.ts:26:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+./tests/unit/RestApi/Firmware/FirmwareVersionManagement.spec.ts:76:				'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+./tests/unit/RestApi/Firmware/FirmwareVersionManagement.spec.ts:148:			reqheaders: { 'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}` },
+./tests/unit/RestApi/helper.ts:30:		'x-auth': `${nockOpts1.auth.clientId}:${nockOpts1.auth.secret}`, // checks the x-auth header presence
+---API_URL---
+./CHANGELOG.md:227:- Factories `createApiV1` and `createApiV2` have correct default API URL `https://api.signageos.io`
+./docker-compose.yml:24:            - SOS_API_URL=${SOS_API_URL:-https://api.signageos.io}
+./docker-compose.yml:26:            - SOS_FORWARD_SERVER_URL=${SOS_FORWARD_SERVER_URL:-https://forward.signageos.io}
+./tests/unit/RestApi/helper.ts:14:	url: 'https://api.signageos.io',
+./tests/unit/RestApi/requester.spec.ts:66:		const BASE_URL = 'https://api.test.signageos.io';
+./tests/unit/RestApi/requester.spec.ts:156:		const BASE_URL = 'https://api.test.signageos.io';
+./tests/unit/RestApi/Device/Monitoring/DeviceMonitoringManagement.spec.ts:23:			uri: 'https://2.signageos.io/upload/screenshot/75be42f304756aa4e13b3c4d8fd618145c839cacd61ec8ff53',
+./tests/unit/RestApi/Device/Monitoring/DeviceMonitoringManagement.spec.ts:200:			uri: 'https://2.signageos.io/reports/6496XXXXcadeb/Applet.ActiveAppletDispatchCommand_Applet.Command/2018-08-16.csv',
+./tests/unit/RestApi/Device/PeerRecovery/DevicePeerRecoveryManagement.spec.ts:32:		} = { enabled: true, urlLauncherAddress: 'https://www.t.signageos.io' };
+./tests/unit/env.spec.ts:18:		should(SOS_API_URL).equal('https://api.signageos.io');
+[0m
+[0m$ [0mcd /tmp/opencode/sdk && find src/RestApi/Device/PeerRecovery src/RestApi/Timing/commands/Management -name "*.ts" | head; echo "---REQ---"; find src -name "requester*"; echo "---AUTH OPTS---"; grep -rn -i "ILegacyAuthOptions\|IJwtAuthOptions" src --include=*.ts -l | head
+src/RestApi/Device/PeerRecovery/DevicePeerRecovery.ts
+src/RestApi/Device/PeerRecovery/DevicePeerRecoveryManagement.ts
+src/RestApi/Timing/commands/Management/ManagementAudioCommands.ts
+src/RestApi/Timing/commands/Management/ManagementOsCommands.ts
+src/RestApi/Timing/commands/Management/ManagementRemoteControlCommands.ts
+src/RestApi/Timing/commands/Management/ManagementNetworkCommands.ts
+src/RestApi/Timing/commands/Management/ManagementDebugCommands.ts
+src/RestApi/Timing/commands/Management/ManagementPeerRecoveryCommands.ts
+src/RestApi/Timing/commands/Management/ManagementCommands.ts
+src/RestApi/Timing/commands/Management/ManagementTimeCommands.ts
+---REQ---
+src/RestApi/requester.ts
+---AUTH OPTS---
+src/RestApi/IOptions.ts
+[0m
+[0m→ [0mRead /tmp/opencode/sdk/src/RestApi/Device/PeerRecovery/DevicePeerRecoveryManagement.ts
+[0m→ [0mRead /tmp/opencode/sdk/src/RestApi/IOptions.ts
+[0m→ [0mRead /tmp/opencode/sdk/src/RestApi/requester.ts
+[0m
+[0m$ [0mcd /tmp/opencode/sdk && sed -n '1,80p' src/RestApi/resources.ts 2>/dev/null; echo "===SECTOKEN==="; grep -rn "security-token\|securityToken" src --include=*.ts | head; echo "===ACCOUNT==="; find src/RestApi/Account -name "*.ts" | head
+export enum Resources {
+	Device = 'device',
+	DeviceTelemetry = 'telemetry',
+	Location = 'location',
+	OrganizationTag = 'organization-tag',
+	Timing = 'timing',
+}
+===SECTOKEN===
+src/RestApi/Organization/Token/OrganizationTokenManagement.ts:30:			return `organization/${organizationUid}/security-token/${tokenId}`;
+src/RestApi/Organization/Token/OrganizationTokenManagement.ts:32:		return `organization/${organizationUid}/security-token`;
+src/RestApi/Organization/Token/OrganizationToken.ts:14:	securityToken: string;
+src/RestApi/Organization/Token/OrganizationToken.ts:30:	public readonly securityToken: IOrganizationFullToken['securityToken'];
+===ACCOUNT===
+find: ‘src/RestApi/Account’: No such file or directory
+[0m
+[0m→ [0mRead /tmp/opencode/sdk/src/RestApi/Organization/Token/OrganizationTokenManagement.ts
+[0m→ [0mRead /tmp/opencode/sdk/src/RestApi/Device/PeerRecovery/DevicePeerRecovery.ts
+STEP 1 — DELTA
+- [NEW] api.signageos.io: second auth mechanism proven — `/v1/device/{uid}/peer-recovery` unauthenticated → `403083 MISSING_CLIENT_SECRET_TO_AUTHENTICATE`; with `x-auth: chart:test` the error advances to `403075 NO_ORGANIZATION_TO_AUTHENTICATE`, proving the legacy `X-Auth: <clientId>:<secret>` org-credential path (distinct from JWT). First-party SDK (requester.ts:18,25) confirms `X-Auth` = JWT OR `clientId:secret`.
+- [NEW] api.signageos.io: `/v2/device` exists (403 WRONG_JWT) while `/v2/account`, `/v2/organization` are 404 — v2 API is real but partially migrated.
+- [NEW] api.signageos.io: `/v1/device/{uid}` (device detail) confirmed present (403 WRONG_JWT); `/v1/device/{uid}/telemetry` → 404 (route does not exist).
+- [NEW] SDK source (RAG): for JWT auth the org-context is the **client-supplied** `?organizationUid=` query param — "the API needs to know which organization the request is for" (IOptions.ts:42-44); org is not derived from a server-side JWT claim. Org identified by credentials themselves only in legacy mode.
+- [NEW] SDK source: `GET/POST /v1/organization/{uid}/security-token` + `DELETE /v1/organization/{uid}/security-token/{tokenId}` (OrganizationTokenManagement.ts:28-33) — org-token mint surface; `PUT /v1/device/{uid}/peer-recovery` sets `enabled` + `urlLauncherAddress` (attacker-controlled URL field) gated only by client-secret (DevicePeerRecoveryManagement.ts:35-37).
+- [NEG] api.signageos.io: /health /healthz /readyz /metrics /status/detailed /v1/status — all 404.
+- [NEG] box.signageos.io: /health /healthz /metrics /version /config.json /status/health /graphql — all 302→/login; only /status and /login/ are unauthenticated surfaces.
+
+STEP 2 — PRIORITIZE
+- [PRIO] api /v1/device/{uid}/peer-recovery — score 7.2 (attack 7, business 9, tech 8, gate 4, cloud 4, fresh 10). Write-capable device surface gated by low-class org credential, not JWT.
+- [PRIO] api /v1/organization/{uid}/security-token — score 6.95 (attack 6, business 10, tech 8, gate 3, cloud 4, fresh 9). Token mint whose JWT org-context is a client query param.
+- [PRIO] api /v2/* — score 6.3 (attack 6, business 8, tech 8, gate 2, cloud 4, fresh 9). Partially-migrated versioned surface, unmapped.
+- [PRIO] box /settings (token minting origin) — score 5.85 (attack 5, business 9, tech 7, gate 2, cloud 3, fresh 7). Mints the exact clientId/secret that gates api device-write endpoints.
+
+STEP 3 — HYPOTHESES
+[HYP] Cross-tenant peer-recovery read/write via legacy client-secret not bound to target device UID
+class: IDOR
+asset: api.signageos.io/v1/device/{uid}/peer-recovery (GET list / PUT set)
+confidence: 55
+reasoning: gate is org client-secret (`403083 MISSING_CLIENT_SECRET`), not JWT; SDK takes deviceUid as an arbitrary path arg (DevicePeerRecoveryManagement.ts:22,36); org-context is client-controlled (`X-Auth: clientId:secret`, or `?organizationUid=` for JWT), so the server-side org→device binding is the only barrier.
+evidence_needed: with own org `X-Auth: clientId:secret`, GET/PUT peer-recovery against a device UID belonging to another org returns 200 (not 403).
+verify_steps: AUTH_HELPED: `GET /v1/device/<own-uid>/peer-recovery -H "X-Auth: <ownClientId>:<ownSecret>"` baseline 200; repeat with foreign device UID → 200 = cross-tenant; then `PUT` with `{"enabled":true,"urlLauncherAddress":"https://attacker"}` to confirm write.
+impact: read + overwrite peer-recovery config on any tenant's devices; PUT can point device launcher at attacker URL → device/content takeover; HIGH→CRITICAL
+testability: AUTH_HELPED
+
+[HYP] Cross-tenant org security-token minting via account token + client-supplied organizationUid
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token (GET/POST)
+confidence: 60
+reasoning: docs state one account token can create multiple orgs and mint org tokens; SDK builds `organization/<uid>/security-token` (path = resource key) while JWT auth-context is a separate client-supplied `?organizationUid=` (requester.ts:41-44); if path-UID membership vs query-UID is not re-checked server-side, any account token mints tokens for any org.
+evidence_needed: non-403 on POST/GET `/v1/organization/<foreign-uid>/security-token` with own account JWT.
+verify_steps: AUTH_HELPED: `GET /v1/organization/<own>/security-token` baseline 200; then `GET /v1/organization/<foreign-uid>/security-token` → 200 = cross-tenant mint; minted org token should then drive foreign devices (brightness/firmware/content/timing).
+impact: mint org tokens for any tenant → full foreign-device control; CRITICAL
+testability: AUTH_HELPED
+
+[HYP] v2 API partial-migration authz drift (route exists in v2, alternate/weaker auth)
+class: AUTH
+asset: api.signageos.io/v2/*
+confidence: 45
+reasoning: /v2/device is JWT-gated (403 WRONG_JWT) but /v2/account and /v2/organization are 404 — v2 is a selective port; freshly-migrated code paths commonly diverge on authorization checks; IOptions is version-agnostic (legacy clientId:secret works across v1/v2).
+evidence_needed: any /v2 route returning 200 unauthenticated, or ≠403/404, or accepting legacy auth where v1 requires JWT.
+verify_steps: PASSIVE: probe /v2/device/{uid}, /v2/license, /v2/alert, /v2/location, /v2/content, /v2/bulk-operation, /v2/emulator without auth — anything ≠403/404 is a finding; AUTH_HELPED: compare own-creds response on same resource across /v1 vs /v2.
+impact: authz drift → data disclosure / cross-tenant access via an alternate code path; HIGH
+testability: PASSIVE
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] Device-scoped endpoint auth bypass (telemetry/alive/peer-recovery): disproven — /v1/device/{uid}/alive, /telemetry/latest and /v1/device/{uid} are all JWT-gated (403 WRONG_JWT); only peer-recovery uses client-secret. Folded into H1.
+- [PARKED] Credentials in query string on account-token mint: SDK shows credentials ride in `X-Auth` header (requester.ts:18,25), not query params; class is infra-logging, low confidence. Not actionable.
+- [FINAL] 1) Cross-tenant org security-token mint (60, AUTH_HELPED)  2) Cross-tenant peer-recovery read/write via client-secret (55, AUTH_HELPED)  3) v2 API authz drift (45, PASSIVE)
+
+STEP 5 — NEXT ACTION
+- [NEXT] PROBE: passively map remaining `/v2/*` surface on api.signageos.io (GET-only, 1.2s spacing): `/v2/device/{uid}`, `/v2/device/{uid}/alive`, `/v2/license`, `/v2/alert`, `/v2/location`, `/v2/content-guard/item`, `/v2/bulk-operation`, `/v2/emulator`, `/v2/export/device`, `/v2/timing` — any response other than 403/404 confirms an unguarded or differently-gated v2 route (directly tests H3).
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED AUTH @ api.signageos.io: second auth mechanism confirmed — legacy `X-Auth: clientId:secret` org-credential on `/v1/device/{uid}/peer-recovery`; JWT org-context is client-supplied `?organizationUid=` query param (SDK IOptions.ts), enabling precisely-specified cross-tenant IDOR test recipes.
+- [LEARN] REJECTED AUTH @ api.signageos.io: generic "device-scoped endpoints have weaker auth" disproven — telemetry/latest, alive, /v1/device/{uid} all JWT-gated 403; only peer-recovery is client-secret-gated.
+- [LEARN] REJECTED MISCONFIG @ api.signageos.io: /metrics /health /healthz /readyz all 404 — no Prometheus/health surface beyond /status.
+- [LEARN] REJECTED MISCONFIG @ box.signageos.io: /metrics /health /config.json /graphql all 302→/login — /status and /login/ remain the only unauthenticated surfaces.
+
+STEP 7 — RISK SCORE
+- [RISK] box.signageos.io: 74 — Auth0 dashboard + the minting origin for the long-lived clientId/secret that gate api device-write endpoints; broad CSP trust boundary (20+ origins) and accepted /status info disclosure keep exposure material; no new unauth surface.
+- [RISK] api.signageos.io: 85 — dual-auth API now confirmed (JWT + client-secret), org-context carried in a client-supplied query param (IDOR-shaped), device-write surface gated by a lower-class credential, token-mint endpoints, and a partially-migrated v2 surface; risk raised from 78.
