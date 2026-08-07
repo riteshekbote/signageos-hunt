@@ -25,3 +25,9 @@
 - CHANGED api.signageos.io auth model unknown — no public docs, no swagger, no obvious auth headers on root; SDK/cli repos (signageos org, 59 repos) likely contain actual endpoint mappings and auth schemes
 
 ## 2026-08-07 18:56:31 UTC
+
+## 2026-08-07 19:26:08 UTC
+- NEW api.signageos.io: Returns static HTML (37KB, text/html, etag W/"90ac-...") even with `Accept: application/json`, `Authorization: Bearer null`, `x-api-key: test` — no JSON API surface exposed
+- NEW remote-desktop.signageos.io & upload.signageos.io: Serve IDENTICAL Express HTML (same etag W/"90ac-...", same 37036 bytes, black background with base64 PNG) — confirms shared infrastructure
+- NEW platform.signageos.io: Returns HTTP 503 (service unavailable)
+- CHANGED license.signageos.io: No response / connection timeout

@@ -124,3 +124,46 @@ testability: PASSIVE (initial), AUTH_HELPED (full flow)
 [LEARN] REJECTED IDOR @ api.signageos.io via undiscovered versioned endpoints: no public endpoints discoverable via passive probing (all common paths 404) — carried forward from 2026-08-07
 [RISK] box.signageos.io: 75 — Auth0 OAuth2 flow, broad CSP trust boundary (20+ origins including device mgmt APIs, S3, websockets), Sentry/reCAPTCHA nonces, CloudFront; high business value (player/dashboard admin); postMessage/origin boundary expanded by remote-desktop/upload/platform/license subdomains
 [RISK] api.signageos.io: 60 — No public API surface, hidden behind CloudFront, auth model unknown, but high business value (core backend); risk driven by unknown attack surface via SDK/cli code mappings
+## 2026-08-07 19:21:18 UTC [api] (model nemotron3)
+[NEW] api.signageos.io: Returns static HTML (37KB, text/html, etag W/"90ac-...") even with `Accept: application/json`, `Authorization: Bearer null`, `x-api-key: test` — no JSON API surface exposed
+[NEW] remote-desktop.signageos.io & upload.signageos.io: Serve IDENTICAL Express HTML (same etag W/"90ac-...", same 37036 bytes, black background with base64 PNG) — confirms shared infrastructure
+[NEW] platform.signageos.io: Returns HTTP 503 (service unavailable)
+[CHANGED] license.signageos.io: No response / connection timeout
+[PRIO] api.signageos.io (root + hidden endpoints), score=7.70, axes: attack=7, business=9, tech=6 (CloudFront, no public spec), gate=10 (public root), cloud=7 (AWS, internal microservices), fresh=6
+[PRIO] signageos/sdk & cli repos (GitHub), score=7.70, axes: attack=7, business=8, tech=7 (TS, auth headers, baseURL), gate=10 (public), cloud=6 (code refs), fresh=8 (active)
+[PRIO] box.signageos.io CSP origins (remote-desktop, upload, platform, license), score=7.45, axes: attack=8, business=8, tech=7 (postMessage, WS, Express), gate=6 (needs login), cloud=8 (subdomains, AWS, S3), fresh=7
+[HYP] api.signageos.io responds with API JSON when proper Accept header sent
+class: IDOR
+asset: api.signageos.io/
+confidence: 50
+reasoning: Root serves static HTML (37KB) with 404 on all common paths; SDK/cli repos likely reference actual API via headers (Accept: application/json, Authorization, x-api-key); CloudFront vary: Origin suggests content negotiation
+evidence_needed: Response with JSON content-type and API structure when requesting with Accept: application/json or SDK-observed headers
+verify_steps: PASSIVE: GET https://api.signageos.io/ -H "Accept: application/json" -H "Authorization: Bearer null" -H "x-api-key: test" — observe Content-Type and body; PASSIVE RAG: clone signageos/sdk repo grep for baseURL, headers, auth patterns
+impact: Unauthorized access to device management, content distribution, user data; severity CRITICAL
+testability: PASSIVE
+[HYP] signageos/sdk & cli repos map api.signageos.io endpoints and auth scheme
+class: IDOR
+asset: github.com/signageos/sdk, github.com/signageos/cli
+confidence: 55
+reasoning: 59 public repos in signageos org; sdk (TS) and cli (TS) are first-party; must contain baseURL, auth header construction, endpoint paths for api.signageos.io
+evidence_needed: Source code showing API baseURL, authorization header patterns, endpoint paths, request/response types
+verify_steps: PASSIVE RAG: git clone https://github.com/signageos/sdk && grep -r "baseURL\|api.signageos.io\|Authorization\|x-api-key" --include="*.ts"; same for cli repo
+impact: Full API surface mapping enabling authz/logic flaw hunting; severity HIGH
+testability: PASSIVE
+[HYP] postMessage origin validation bypass between box.signageos.io and remote-desktop/upload.signageos.io
+class: OTHER
+asset: box.signageos.io (CSP frame-src: remote-desktop.signageos.io, upload.signageos.io)
+confidence: 45
+reasoning: CSP allows frame-src for both subdomains; both serve identical Express HTML (same etag, 37036 bytes); if either embeds box in iframe or listens for postMessage, loose origin checks could leak tokens or trigger actions
+evidence_needed: postMessage event listener on remote-desktop/upload that accepts messages from box.signageos.io without strict origin validation; or box embedding them without sandbox
+verify_steps: PASSIVE: GET https://remote-desktop.signageos.io/ and https://upload.signageos.io/ — inspect HTML for postMessage listeners, iframe embeds, messageEvent.origin checks; AUTH_HELPED: login, open devtools, inspect iframe/postMessage on each CSP-listed origin
+impact: Cross-origin data leakage, action forgery on device management/upload; severity MEDIUM-HIGH
+testability: PASSIVE (initial), AUTH_HELPED (full)
+[PARKED] (none dropped — all confidence ≥40, no rejected classes, all have concrete verify_steps)
+[FINAL] Ranked surviving hypotheses:
+[NEXT] RAG: Clone and grep signageos/sdk (TypeScript) and signageos/cli repos for API baseURL patterns, auth header construction, and endpoint paths — this maps the hidden api.signageos.io surface
+[LEARN] REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state parameter — class AUTH excluded as "CSRF on forms that are available to anonymous users" per scope.yml
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io CSP: overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary (carried forward from 2026-08-07)
+[LEARN] REJECTED IDOR @ api.signageos.io via undiscovered versioned endpoints: no public endpoints discoverable via passive probing (all common paths 404) — carried forward from 2026-08-07
+[RISK] box.signageos.io: 75 — Auth0 OAuth2 flow, broad CSP trust boundary (20+ origins including device mgmt APIs, S3, websockets), Sentry/reCAPTCHA nonces, CloudFront; high business value (player/dashboard admin); postMessage/origin boundary expanded by remote-desktop/upload/platform/license subdomains
+[RISK] api.signageos.io: 60 — No public API surface, hidden behind CloudFront, auth model unknown, but high business value (core backend); risk driven by unknown attack surface via SDK/cli code mappings
