@@ -47,3 +47,5 @@
 - NEW Hardcoded clientId/secret in `videowall-designer/sos/videoTiming.js` (line 18-19) authenticating against internal staging API `http://api.kiera.office.signageos.io` over HTTP — REAL_SECRET + ENDPOINT_
 
 ## 2026-08-07 22:51:50 UTC
+
+## 2026-08-07 23:28:25 UTC
