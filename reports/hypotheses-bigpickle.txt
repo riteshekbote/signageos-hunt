@@ -1,1 +1,34 @@
-## 2026-08-07 18:29:41 UTC [box] (model bigpickle)
+## 2026-08-07 18:50:25 UTC [box] (model bigpickle)
+[HYP] Cross-tenant IDOR via organizationUid on api.signageos.io /v1
+class: IDOR
+asset: api.signageos.io/v1/{device,organization,alert,...}
+confidence: 60
+reasoning: 19 routes confirmed present (403-only, no auth header). SDK appends `organizationUid` query param to JWT calls and builds `apiUrl/version/resource`; JWT identifies account, UID selects tenant — if authorization is per-JWT and not re-checked per-UID, cross-org reads/writes are possible. Untestable without a token.
+evidence_needed: valid `X-Auth` JWT + observed 200 vs 403 for a foreign `organizationUid`.
+verify_steps: AUTH_HELPED: with a box-generated token, `GET https://api.signageos.io/v1/device` (own org), then `GET /v1/device?organizationUid=<other-org-uid>` and `GET /v1/organization/<foreign-uid>` — any non-403 is a finding.
+impact: cross-tenant device/org data disclosure and manipulation; CRITICAL
+testability: AUTH_HELPED
+[HYP] Device-scoped endpoint auth weaker than user JWT on telemetry/alive/peer-recovery
+class: AUTH
+asset: api.signageos.io/v1/device/{uid}/telemetry/latest
+confidence: 45
+reasoning: device-side resources (`telemetry/latest`, `device/{uid}/alive`, `peer-recovery`) may accept device tokens or no-auth in device onboarding path; `device/telemetry/latest` confirmed 403 today but subresource matrix unprobed.
+evidence_needed: any `/v1/device/*` subresource returning ≠403 unauthenticated.
+verify_steps: PASSIVE: `GET /v1/device/<uid>/alive`, `/v1/device/<uid>/peer-recovery`, `/v1/device/<uid>/organization` (no header) — 403 confirms route, 200/401-with-different-error hints alternate auth.
+impact: unauthenticated device state/telemetry read; MEDIUM
+testability: PASSIVE
+[HYP] Box dashboard token-generation surface over-scopes API credentials
+class: AUTH
+asset: box.signageos.io/settings
+confidence: 45
+reasoning: CLI docs direct users to `box.signageos.io/settings` to mint `SOS_API_IDENTIFICATION`/`SOS_API_SECURITY_TOKEN`; box is in-scope and CSP `connect-src` includes `api.signageos.io`, so box is the token minting origin. If minted tokens lack scope/expiry constraints, any XSS/CSRF on box amplifies to full API.
+evidence_needed: authenticated inspection of the token-minting XHR (scopes, expiry, org binding).
+verify_steps: AUTH_HELPED: login to box, observe XHR to `api.signageos.io/v1/*` from box origin in devtools, test whether minted token honors `organizationUid` and expiry.
+impact: over-scoped long-lived API creds enabling cross-org access; HIGH
+testability: AUTH_HELPED
+[PARKED] Auth0 redirect_uri validation bypass @ box/login: no longer actionable — Auth0 tenant-side allowlist, not testable passively (already learned).
+[PARKED] JWT audience=Auth0 Management API v2 confusion: audience string is public but minting a Management-API token requires tenant credentials; no passive POC. confidence <45.
+[FINAL] 1) Cross-tenant IDOR via organizationUid (60, AUTH_HELPED)  2) Device-scoped endpoint auth bypass (45, PASSIVE)  3) Box token-generation over-scope (45, AUTH_HELPED)
+[NEXT] RAG: fetch public REST-API docs `https://docs.signageos.io/hc/en-us/articles/4405231278482` (REST APIs) and `https://docs.signageos.io/hc/en-us/articles/4405239033234` (REST-API-Authentication) to extract the complete v1/v2 endpoint catalog + any unauthenticated/token-less endpoints, then re-probe only non-403 candidates on api.signageos.io.
+[RISK] box.signageos.io: 72 — Auth0 OAuth2 dashboard, API-token minting origin, broad CSP trust boundary (20+ origins incl. device/upload/remote-desktop APIs); exposure stable.
+[RISK] api.signageos.io: 78 — previously dismissed as "no surface", now confirmed versioned JWT API (19+ routes, device-management data, cross-tenant IDOR potential); risk materially raised.
