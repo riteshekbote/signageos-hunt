@@ -6009,3 +6009,463 @@ testability: AUTH_HELPED
 ## STEP 7 — RISK SCORE
 - [RISK] box.signageos.io: 72 — /status info leak live (pod hostname, UID, Node, backend topology); CORS 18-origin static whitelist (incl. HTTP + zdusercontent wildcard); broad CSP trust boundary; origin for account/org token minting (`/settings`, `/profile`); all other paths Auth0-gated.
 - [RISK] api.signageos.io: 80 — 286-path attack surface now fully mapped with public in-scope spec; account tokens are user-mintable master keys that (per spec) read org OAuth client secrets and mint org tokens; the only remaining gate is server-side tenant-binding, which is precisely what H1-H3 target; no unauthenticated surface.
+===== ANALYST bigpickle 2026-08-07 22:51:50 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcd /tmp/opencode && rm -rf sdk && git clone --depth 1 https://github.com/signageos/sdk 2>&1 | tail -2
+Cloning into 'sdk'...
+[0m
+[0m$ [0mcurl -s -o /tmp/opencode/box_status.json -w "%{http_code} %{content_type}\n" --max-time 15 https://box.signageos.io/status; sleep 1.2; curl -s -o /tmp/opencode/api_status.json -w "%{http_code} %{content_type}\n" --max-time 15 https://api.signageos.io/status
+200 application/json; charset=utf-8
+200 application/json; charset=utf-8
+[0m
+[0m$ [0mcat /tmp/opencode/box_status.json | head -c 600; echo; echo "---"; cat /tmp/opencode/api_status.json | head -c 300
+{"name":"box","status":"OK","process":{"uid":"fae10c952251023ac172ed48dbae9b0c8118787ad959cc18bf","pid":1,"version":"v20.20.2","uptime":24774.02065023,"cpuUsage":{"user":2840340950,"system":348549503},"memoryUsage":{"rss":283025408,"heapTotal":219594752,"heapUsed":146105176,"external":24796183,"arrayBuffers":21277886}},"hostname":"box-7c8c876945-52dpt","failedServices":[],"succeededServices":["amqp0","redis1","redis3","redis2","redis0","mongoDB2","mongoDB3","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1786142979348,"respondedAt":1786142979411,"amqp0":{"response":{"requestedAt":17861429
+---
+{"name":"api","status":"OK","process":{"uid":"028ff8ca70384a14ca40b7cca9b4872f9c268924a9c3ac6f94","pid":1,"version":"v24.19.0","uptime":24142.471632124,"cpuUsage":{"user":9674880833,"system":825400634},"memoryUsage":{"rss":876507136,"heapTotal":524111872,"heapUsed":418525472,"external":97393122,"arr
+[0m
+[0m$ [0mcd /tmp/opencode/sdk && ls && echo "---" && ls src 2>/dev/null
+CHANGELOG.md
+Dockerfile
+README.md
+docker-compose.yml
+eslint.config.mjs
+package-lock.json
+package.json
+renovate.json
+src
+tests
+tsconfig.json
+tsconfig.test.json
+typedoc.json
+---
+Console
+Development
+FileSystem
+Lib
+Polyfill
+RestApi
+SosHelper
+Timer
+Utils
+apiTools.ts
+index.ts
+parameters.ts
+[0m
+[0m$ [0mcd /tmp/opencode/sdk && ls -R src/RestApi src/Utils 2>/dev/null | head -60
+src/RestApi:
+Alerts
+Applet
+BulkOperation
+Company
+ContentGuard
+CustomScript
+Dependencies.ts
+Device
+Emulator
+Error
+Firmware
+IOptions.ts
+Location
+Organization
+Package
+Plugin
+Policy
+RestApi.ts
+RestApiV2.ts
+Runner
+Timing
+V2
+apiVersions.ts
+mapper.ts
+requester.ts
+resources.ts
+storageRequester.ts
+
+src/RestApi/Alerts:
+Alert.ts
+AlertManagement.ts
+IAlert.ts
+IAlertFilter.ts
+Rules
+
+src/RestApi/Alerts/Rules:
+AlertRule.ts
+AlertRulesManagement.ts
+IAlertRule.ts
+IAlertRuleFilter.ts
+
+src/RestApi/Applet:
+Applet.ts
+AppletManagement.ts
+Command
+IApplet.ts
+Version
+
+src/RestApi/Applet/Command:
+AppletCommand.ts
+AppletCommandManagement.ts
+IAppletCommand.ts
+IAppletCommandFilter.ts
+
+src/RestApi/Applet/Version:
+AppletTestSuite.ts
+AppletTestSuiteManagement.ts
+AppletVersion.ts
+AppletVersionManagement.ts
+[0m
+[0m$ [0mcd /tmp/opencode/sdk && grep -rn "X-Auth\|XAuth\|unsafeDecrypted\|Authorization\|Bearer" src/ | head -40
+src/apiTools.ts:25:	 * The token is sent as `X-Auth: <token>` header.
+src/RestApi/IOptions.ts:3:/** Legacy authentication using clientId and secret pair (sent as `X-Auth: clientId:secret`). */
+src/RestApi/IOptions.ts:9:/** JWT authentication using an access token (sent as `X-Auth: <token>`). */
+src/RestApi/requester.ts:25:			'X-Auth': authHeader,
+[0m
+[0m→ [0mRead /tmp/opencode/sdk/src/RestApi/IOptions.ts
+[0m→ [0mRead /tmp/opencode/sdk/src/RestApi/requester.ts
+[0m
+[0m$ [0mcd /tmp/opencode/sdk && ls src/RestApi/Organization src/RestApi/V2 && echo "---" && grep -rn "security-token\|peer-recovery\|oauthClientSecret\|organizationUid" src/RestApi/ | head -30
+src/RestApi/Organization:
+IOrganization.ts
+IOrganizationFilter.ts
+Organization.ts
+OrganizationManagement.ts
+Tag
+Token
+
+src/RestApi/V2:
+Device
+---
+src/RestApi/Applet/AppletManagement.ts:35:	public async create(settings: IAppletCreatable & { organizationUid?: string }): Promise<Applet> {
+src/RestApi/IOptions.ts:43:	 * This is sent as a query parameter `organizationUid` on all requests.
+src/RestApi/IOptions.ts:45:	organizationUid?: string;
+src/RestApi/Emulator/IEmulatorFilter.ts:2:	/** @deprecated Use organizationUids instead */
+src/RestApi/Emulator/IEmulatorFilter.ts:3:	organizationUid?: string;
+src/RestApi/Emulator/IEmulatorFilter.ts:4:	organizationUids?: string[];
+src/RestApi/Emulator/IEmulator.ts:2:	organizationUid: string;
+src/RestApi/requester.ts:38:	// organizationUid is only needed as a query param for JWT (accessToken) auth.
+src/RestApi/requester.ts:40:	// Sending organizationUid as a query param for legacy-auth endpoints causes INVALID_QUERY_PARAMS errors.
+src/RestApi/requester.ts:42:		options.organizationUid && isJwtAuth(options.auth) ? { ...queryParams, organizationUid: options.organizationUid } : queryParams;
+src/RestApi/V2/Device/Device.ts:18:	organizationUid: string;
+src/RestApi/V2/Device/Device.ts:39:	public readonly organizationUid: IDevice['organizationUid'];
+src/RestApi/Plugin/Plugin.ts:8:	public readonly organizationUid: IPlugin['organizationUid'];
+src/RestApi/Plugin/IPlugin.ts:5:	organizationUid: string;
+src/RestApi/Plugin/IPlugin.ts:12:export type IPluginCreatable = Pick<IPlugin, 'name' | 'title' | 'description' | 'tagUids'> & { organizationUid?: string };
+src/RestApi/ContentGuard/Category/ContentGuardCategory.ts:7:	public readonly organizationUid: IContentGuardCategory['organizationUid'];
+src/RestApi/ContentGuard/Category/IContentGuardCategoryFilter.ts:6:	readonly organizationUids?: string[];
+src/RestApi/ContentGuard/Category/IContentGuardCategory.ts:4:	readonly organizationUid: string;
+src/RestApi/ContentGuard/Category/IContentGuardCategory.ts:10:export type IContentGuardCategoryCreatable = Pick<IContentGuardCategory, 'title' | 'valid' | 'organizationUid'>;
+src/RestApi/ContentGuard/Item/IContentGuardItemFilter.ts:8:	readonly organizationUids?: string[];
+src/RestApi/Runner/Runner.ts:7:	organizationUid: string;
+src/RestApi/Runner/Runner.ts:14:export type IRunnerCreatable = Pick<IRunner, 'name' | 'title' | 'description' | 'tagUids'> & { organizationUid?: string };
+src/RestApi/Runner/Runner.ts:21:	public readonly organizationUid: IRunner['organizationUid'];
+src/RestApi/BulkOperation/BulkOperation.ts:27:	public readonly organizationUids: IBulkOperationAlias['organizationUids'];
+src/RestApi/BulkOperation/IBulkOperation.ts:53:	organizationUids: string[];
+src/RestApi/BulkOperation/BulkOperation.types.ts:165:		organizationUid: string;
+src/RestApi/BulkOperation/BulkOperation.types.ts:202:	organizationUid?: string;
+src/RestApi/Location/Location.ts:13:	organizationUid: string;
+src/RestApi/Location/Location.ts:32:	organizationUid?: string;
+src/RestApi/Location/Location.ts:51:	public readonly organizationUid: ILocation['organizationUid'];
+[0m
+[0m$ [0mcd /tmp/opencode/sdk && ls src/RestApi/Organization/Token && grep -rn "class\|get\|post\|put\|delete\|security" src/RestApi/Organization/Token/*.ts | head -30
+OrganizationToken.ts
+OrganizationTokenManagement.ts
+src/RestApi/Organization/Token/OrganizationToken.ts:14:	securityToken: string;
+src/RestApi/Organization/Token/OrganizationToken.ts:17:export class OrganizationToken implements IOrganizationToken {
+src/RestApi/Organization/Token/OrganizationToken.ts:27:export class OrganizationFullToken implements IOrganizationFullToken {
+src/RestApi/Organization/Token/OrganizationToken.ts:30:	public readonly securityToken: IOrganizationFullToken['securityToken'];
+src/RestApi/Organization/Token/OrganizationTokenManagement.ts:2:import { parseJSONResponse, postResource, deleteResource, getResource } from '../../requester';
+src/RestApi/Organization/Token/OrganizationTokenManagement.ts:5:export class OrganizationTokenManagement {
+src/RestApi/Organization/Token/OrganizationTokenManagement.ts:8:	public async get(organizationUid: string) {
+src/RestApi/Organization/Token/OrganizationTokenManagement.ts:9:		const response = await getResource(this.dependencies.options, this.getUrl(organizationUid));
+src/RestApi/Organization/Token/OrganizationTokenManagement.ts:15:		const response = await postResource(
+src/RestApi/Organization/Token/OrganizationTokenManagement.ts:17:			this.getUrl(organizationUid),
+src/RestApi/Organization/Token/OrganizationTokenManagement.ts:24:	public async delete(organizationUid: string, tokenId: string): Promise<void> {
+src/RestApi/Organization/Token/OrganizationTokenManagement.ts:25:		await deleteResource(this.dependencies.options, this.getUrl(organizationUid, tokenId));
+src/RestApi/Organization/Token/OrganizationTokenManagement.ts:28:	private getUrl(organizationUid: string, tokenId?: string) {
+src/RestApi/Organization/Token/OrganizationTokenManagement.ts:30:			return `organization/${organizationUid}/security-token/${tokenId}`;
+src/RestApi/Organization/Token/OrganizationTokenManagement.ts:32:		return `organization/${organizationUid}/security-token`;
+[0m
+[0m$ [0mcd /tmp/opencode/sdk && grep -rn "getOwnToken\|getOrganizationToken\|securityToken\|security-token" src/ | head -20
+src/RestApi/Organization/Token/OrganizationTokenManagement.ts:30:			return `organization/${organizationUid}/security-token/${tokenId}`;
+src/RestApi/Organization/Token/OrganizationTokenManagement.ts:32:		return `organization/${organizationUid}/security-token`;
+src/RestApi/Organization/Token/OrganizationToken.ts:14:	securityToken: string;
+src/RestApi/Organization/Token/OrganizationToken.ts:30:	public readonly securityToken: IOrganizationFullToken['securityToken'];
+[0m
+[0m→ [0mRead /tmp/opencode/sdk/src/RestApi/Organization/Token/OrganizationTokenManagement.ts
+[0m
+[0m$ [0mcd /tmp/opencode/sdk && grep -n "auth\|XAuthAccount\|XAuthOrganization" src/RestApi/Organization/OrganizationManagement.ts src/RestApi/Device/DeviceManagement.ts 2>/dev/null | head; ls src/RestApi/Device 2>/dev/null | head
+src/RestApi/Device/DeviceManagement.ts:39:	public authentication: DeviceAuthenticationManagement;
+src/RestApi/Device/DeviceManagement.ts:71:		this.authentication = new DeviceAuthenticationManagement(organizationDI.options);
+Alive
+AppVersion
+AppletTest
+Audio
+Authentication
+AutoRecovery
+Brightness
+Configuration
+Connect
+DateTime
+[0m
+[0m$ [0mcd /tmp/opencode/sdk && ls src/RestApi/Device/AutoRecovery && grep -rn "peer-recovery\|urlLauncherAddress\|peerRecovery" src/ | head
+DeviceAutoRecovery.ts
+DeviceAutoRecoveryManagement.ts
+src/RestApi/Timing/commands/Management/ManagementPeerRecoveryCommands.ts:6:} from '@signageos/front-applet/es6/Monitoring/Management/PeerRecovery/peerRecoveryCommands';
+src/RestApi/Timing/commands/Management/ManagementCommands.ts:64:	public readonly peerRecovery: IPeerRecovery;
+src/RestApi/Timing/commands/Management/ManagementCommands.ts:82:		this.peerRecovery = new ManagementPeerRecoveryCommands(this.deviceUid, this.appletUid, this.appletCommandManagement);
+src/RestApi/Device/Monitoring/DeviceMonitoring.types.ts:20:	PEER_RECOVERY = 'peerRecovery',
+src/RestApi/Device/Configuration/DeviceConfiguration.ts:25:	PEER_RECOVERY = 'peerRecovery',
+src/RestApi/Device/PeerRecovery/DevicePeerRecovery.ts:6:	urlLauncherAddress: string;
+src/RestApi/Device/PeerRecovery/DevicePeerRecovery.ts:25:	public readonly urlLauncherAddress: IDevicePeerRecoveryEnabled['urlLauncherAddress'];
+src/RestApi/Device/PeerRecovery/DevicePeerRecoveryManagement.ts:14:	urlLauncherAddress?: IDevicePeerRecoveryEnabledUpdatable['urlLauncherAddress'];
+src/RestApi/Device/PeerRecovery/DevicePeerRecoveryManagement.ts:22:		const peerRecoveries = await getResource(this.options, `${Resources.Device}/${deviceUid}/peer-recovery`);
+src/RestApi/Device/PeerRecovery/DevicePeerRecoveryManagement.ts:27:		return peerRecoveriesParsed.map((peerRecovery) => {
+[0m
+[0m$ [0mcd /tmp/opencode/sdk && grep -rn "peer-recovery\|brightness\|resolution\|auto-recovery\|autoRecovery" src/RestApi/Device/ -r | grep -i "url\|recovery" | head
+src/RestApi/Device/Monitoring/DeviceMonitoring.types.ts:21:	AUTO_RECOVERY = 'autoRecovery',
+src/RestApi/Device/Configuration/DeviceConfiguration.ts:26:	AUTO_RECOVERY = 'autoRecovery',
+src/RestApi/Device/AutoRecovery/DeviceAutoRecoveryManagement.ts:17:		return autoRecoveries.map((autoRecovery) => {
+src/RestApi/Device/AutoRecovery/DeviceAutoRecoveryManagement.ts:18:			if (autoRecovery.enabled) {
+src/RestApi/Device/AutoRecovery/DeviceAutoRecoveryManagement.ts:19:				return new DeviceAutoRecoveryEnabled(autoRecovery);
+src/RestApi/Device/AutoRecovery/DeviceAutoRecoveryManagement.ts:21:			return new DeviceAutoRecoveryDisabled(autoRecovery);
+src/RestApi/Device/AutoRecovery/DeviceAutoRecoveryManagement.ts:30:		return `${Resources.Device}/${deviceUid}/auto-recovery`;
+src/RestApi/Device/PeerRecovery/DevicePeerRecoveryManagement.ts:22:		const peerRecoveries = await getResource(this.options, `${Resources.Device}/${deviceUid}/peer-recovery`);
+src/RestApi/Device/PeerRecovery/DevicePeerRecoveryManagement.ts:36:		await putResource(this.options, `${Resources.Device}/${deviceUid}/peer-recovery`, JSON.stringify(settings));
+src/RestApi/Device/DeviceManagement.ts:59:	public autoRecovery: DeviceAutoRecoveryManagement;
+[0m
+[0m$ [0mcd /tmp/opencode/sdk && grep -n "version\|v1\|v2\|url" src/RestApi/apiVersions.ts src/RestApi/resources.ts src/RestApi/RestApi.ts 2>/dev/null | head -20
+src/RestApi/apiVersions.ts:2:	V1 = 'v1',
+src/RestApi/apiVersions.ts:3:	V2 = 'v2',
+[0m
+[0m$ [0mcd /tmp/opencode/sdk && grep -rn "api.signageos\|https://\|url:" src/RestApi/Dependencies.ts src/index.ts 2>/dev/null | head; echo "---"; grep -rn "api.signageos" src/ | head
+---
+[0m
+[0m$ [0mcd /tmp/opencode && rm -rf cli && git clone --depth 1 https://github.com/signageos/cli 2>&1 | tail -1 && cd cli && grep -rln "api.signageos\|X-Auth\|organizationUid" src 2>/dev/null | head; ls src 2>/dev/null | head
+Cloning into 'cli'...
+src/Applet/Upload/appletUploadCommand.ts
+src/Applet/Build/appletBuildCommand.ts
+src/Applet/Start/appletStartCommand.ts
+src/Applet/Test/Upload/appletTestRunCommand.ts
+src/Applet/Test/Upload/appletTestUploadCommand.ts
+src/Applet/Version/appletVersionStatusFacade.ts
+src/Emulator/emulatorFactory.ts
+src/Emulator/emulatorFacade.ts
+src/Plugin/Upload/pluginUploadCommand.ts
+src/Plugin/pluginFacade.ts
+Applet
+Auth
+Cache
+Cli
+Command
+CommandLine
+CustomScript
+Development
+Device
+Emulator
+[0m
+[0m$ [0mcd /tmp/opencode/cli && grep -rn "api.signageos\|API_URL\|BASE_URL\|https://api" src/ bin/ 2>/dev/null | head; echo "---auth---"; ls src/Auth
+src/helper.ts:28:	// 2. SOS_API_URL env var (user-explicit override, for CI/CD)
+src/helper.ts:30:	// 4. SOS_DEFAULT_API_URL env var (package default from .env.production)
+src/helper.ts:32:	const envUrl = process.env.SOS_API_URL;
+src/helper.ts:34:	const defaultUrl = process.env.SOS_DEFAULT_API_URL;
+src/helper.ts:37:		'API URL resolution: cli=%o env(SOS_API_URL)=%o profile=%o env(SOS_DEFAULT_API_URL)=%o resolved=%o',
+src/helper.ts:45:		throw new Error(`No API URL is defined. Please use --api-url or set SOS_API_URL environment variable.`);
+src/Command/globalArgs.ts:2:import { API_URL_OPTION, PROFILE_OPTION } from '../generalCommand';
+src/Command/globalArgs.ts:15: * sos --api-url https://api.custom.signageos.io applet list
+src/Command/globalArgs.ts:19:	const options = cliArgs([API_URL_OPTION], { partial: true });
+src/Command/globalArgs.ts:20:	return options[API_URL_OPTION.name];
+---auth---
+auth0Settings.ts
+loginCommand.ts
+logoutCommand.ts
+predefinedRegions.ts
+[0m
+[0m$ [0mcd /tmp/opencode/cli && grep -rn "account-token\|accessToken\|token" src/Auth/loginCommand.ts src/Auth/auth0Settings.ts 2>/dev/null | head -20; echo "---env---"; cat .env.production 2>/dev/null; grep -rn "SOS_DEFAULT_API_URL\|api.signageos.io" .env* package.json 2>/dev/null | head
+src/Auth/loginCommand.ts:39: * then stores the resulting JWT tokens in `~/.sosrc`.
+src/Auth/loginCommand.ts:166:		const tokens = await pollForToken(auth0, deviceCode.device_code, deviceCode.interval, deviceCode.expires_in);
+src/Auth/loginCommand.ts:168:		saveStoredTokens(tokens, profile);
+---env---
+SOS_DEFAULT_API_URL=https://api.signageos.io
+SOS_DEFAULT_BOX_HOST=box.signageos.io
+SOS_DEFAULT_FORWARD_SERVER_URL=https://forward.signageos.io
+SOS_DEFAULT_AUTH0_DOMAIN=auth0.signageos.io
+SOS_DEFAULT_AUTH0_CLIENT_ID=8AU8D3zJ4mK8gszZP3gZO0nv9DusSNjV
+SOS_DEFAULT_AUTH0_AUDIENCE=https://sos-production.us.auth0.com/api/v2/
+SOS_DEFAULT_AUTH0_SCOPE=openid profile email offline_access
+.env.production:1:SOS_DEFAULT_API_URL=https://api.signageos.io
+[0m
+[0m$ [0mcd /tmp/opencode/cli && grep -rn "createOrganizationToken\|security-token\|createOrganizationSecurityToken\|OrganizationToken" src/ | head; echo "---sosrc---"; grep -rn "sosrc\|accessToken\|organizationUid" src/Cache/*.ts src/helper.ts 2>/dev/null | head -20
+---sosrc---
+src/helper.ts:29:	// 3. config.apiUrl (.sosrc field — user's saved profile)
+src/helper.ts:59:	const auth = config.accessToken
+src/helper.ts:60:		? { accessToken: config.accessToken }
+src/helper.ts:63:	Debug('Creating account REST API: url=%s authMode=%s', url, config.accessToken ? 'jwt' : 'legacy');
+src/helper.ts:75:	const auth = config.accessToken
+src/helper.ts:76:		? { accessToken: config.accessToken }
+src/helper.ts:80:		'Creating organization REST API: url=%s authMode=%s organizationUid=%o',
+src/helper.ts:82:		config.accessToken ? 'jwt' : 'legacy',
+src/helper.ts:90:		organizationUid: config.defaultOrganizationUid,
+src/helper.ts:108:	accessToken?: string;
+src/helper.ts:114:	// Prefer JWT accessToken when available; fall back to legacy clientId:secret
+src/helper.ts:115:	const authValue = options.accessToken ? options.accessToken : (options.auth.clientId ?? '') + ':' + (options.auth.secret ?? '');
+src/helper.ts:129:	Debug('API request URI: %s (auth=%s)', uri, options.accessToken ? 'jwt' : 'legacy');
+[0m
+[0m→ [0mRead /tmp/opencode/cli/src/helper.ts[90m [offset=50, limit=95][0m
+[0m
+[0m$ [0mcd /tmp/opencode/cli && grep -rln "apiSecurityToken\|oauthClientSecret\|oauthClientId" src/ | head; echo "---cmds---"; find src/Command -type f -name "*.ts" | head -40
+src/Emulator/emulatorFacade.ts
+src/helper.ts
+src/RunControl/runControlHelper.ts
+src/Device/deviceFacade.ts
+src/Organization/organizationFacade.ts
+---cmds---
+src/Command/commandDefinition.ts
+src/Command/Autocomplete/autocompleteCommand.ts
+src/Command/Autocomplete/Uninstall/uninstallAutocompleteCommand.ts
+src/Command/Autocomplete/Install/installAutocompleteCommand.ts
+src/Command/globalArgs.ts
+src/Command/commandProcessor.ts
+src/Command/autoComplete.ts
+[0m
+[0m$ [0mcd /tmp/opencode/cli && grep -n "apiSecurityToken\|oauthClientSecret\|oauthClientId\|security-token\|securityToken\|security token" src/Organization/organizationFacade.ts | head -20
+16:	oauthClientId: string;
+17:	oauthClientSecret: string;
+132:		oauthClientId: org.oauthClientId,
+133:		oauthClientSecret: org.oauthClientSecret,
+144:			secret: config.apiSecurityToken,
+[0m
+[0m→ [0mRead /tmp/opencode/cli/src/Organization/organizationFacade.ts
+[0m
+[0m$ [0mcd /tmp/opencode/sdk && ls src/RestApi/V2/Device && head -40 src/RestApi/V2/Device/DeviceManagement.ts 2>/dev/null; echo "---"; cat src/RestApi/V2/Device/Device.ts 2>/dev/null | head -30
+Device.ts
+DeviceManagement.ts
+import IOptions from '../../IOptions';
+import IDeviceFilter from '../../Device/IDeviceFilter';
+import Device, { IDeviceUpdatable, IDevice } from './Device';
+import { getResource, parseJSONResponse, putResource } from '../../requester';
+import { Resources } from '../../resources';
+
+export default class DeviceManagementV2 {
+	constructor(private organizationOptions: IOptions) {}
+
+	public async list(filter: IDeviceFilter = {}): Promise<IDevice[]> {
+		const response = await getResource(this.organizationOptions, Resources.Device, filter);
+		const data: IDevice[] = await parseJSONResponse(response);
+
+		return data.map((item: IDevice) => new Device(item));
+	}
+
+	public async get(deviceUid: IDevice['uid'], filter: IDeviceFilter = {}): Promise<IDevice> {
+		const response = await getResource(this.organizationOptions, Resources.Device + '/' + deviceUid, filter);
+
+		return new Device(await parseJSONResponse(response));
+	}
+
+	public async set(deviceUid: IDevice['uid'], settings: IDeviceUpdatable) {
+		await putResource(this.organizationOptions, `${Resources.Device}/${deviceUid}`, JSON.stringify(settings));
+	}
+}
+---
+import { fillDataToEntity } from '../../mapper';
+
+export enum SocketDriver {
+	Websocket = 'websocket',
+	Http = 'http',
+}
+
+export interface IDevice {
+	uid: string;
+	name: string;
+	createdAt: Date;
+	applicationType: string;
+	firmwareVersion: string;
+	model: string;
+	serialNumber: string;
+	brand: string | null;
+	osVersion: string | null;
+	organizationUid: string;
+	locationUid?: string;
+	connectionMethod?: SocketDriver | null;
+}
+
+export interface IDeviceUpdatable {
+	name?: string;
+	connectionMethod?: SocketDriver;
+}
+
+export default class Device implements IDevice {
+	// public readonly [P in keyof IDevice]: IDevice[P]; // Generalized TS doesn't support
+	public readonly uid: IDevice['uid'];
+[0m
+[0m$ [0mfor p in "v2/device" "v2/device/foo" "v2/license" "v2/alert" "v2/location" "v2/content" "v2/organization" "v2/account"; do printf "%-22s " "/$p"; curl -s -o /tmp/opencode/v2resp.txt -w "%{http_code} %{content_type} %{size_download}B" --max-time 12 "https://api.signageos.io/$p"; printf "  "; head -c 120 /tmp/opencode/v2resp.txt | tr -d '\n'; echo; sleep 1.1; done
+/v2/device             403 application/json; charset=utf-8 194B  {"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"W
+/v2/device/foo         403 application/json; charset=utf-8 194B  {"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"W
+/v2/license            404 application/json; charset=utf-8 192B  {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND
+/v2/alert              404 application/json; charset=utf-8 192B  {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND
+/v2/location           404 application/json; charset=utf-8 192B  {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND
+/v2/content            404 application/json; charset=utf-8 192B  {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND
+/v2/organization       404 application/json; charset=utf-8 192B  {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND
+/v2/account            404 application/json; charset=utf-8 192B  {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND
+[0m
+All RAG and passive probes complete. Both `/status` endpoints live (box pod rotated to `box-7c8c876945-52dpt`). `v2/*` probe: only `/v2/device` exists, still 403 JWT-gated, rest 404. Compiling analysis.
+
+## STEP 1 — DELTA
+- [NEW] sdk/requester.ts + cli/helper.ts: `X-Auth` is `<clientId>:<secret>` (legacy) or raw `<accessToken>` (JWT). Legacy auth NEVER sends `organizationUid` query (sending it yields INVALID_QUERY_PARAMS) → for legacy creds the org context is **derived entirely from the credential**, so the org→resource membership check is the sole cross-tenant barrier.
+- [NEW] cli/organizationFacade.ts `getOrganization(uid)`: first-party code calls `GET /v1/organization/{uid}` with **account-level auth** (JWT or `identification:apiSecurityToken`) and returns the body verbatim, which includes `oauthClientId`+`oauthClientSecret`; the uid is an arbitrary client-supplied `--organization-uid` flag → first-party confirmation of H1's exact endpoint/response.
+- [NEW] sdk/OrganizationTokenManagement: exact routes confirmed — `GET`/`POST /v1/organization/{organizationUid}/security-token` (POST body `{"name":...}`), `DELETE .../security-token/{tokenId}` → H2 recipe locked.
+- [NEW] sdk/DevicePeerRecoveryManagement: `GET`/`PUT /v1/device/{deviceUid}/peer-recovery` (PUT body incl `urlLauncherAddress`) → H3 recipe locked.
+- [NEW] cli `.env.production`: public Auth0 clientId `8AU8D3zJ4mK8gszZP3gZO0nv9DusSNjV` + audience `https://sos-production.us.auth0.com/api/v2/` + device-code flow → JWT persisted to `~/.sosrc`; public client ID only, no secret. Box/CLI auth model fully mapped.
+- [NEW] Passive `/v2/*` probe: only `/v2/device` exists (403 JWT-gated, `403105 WRONG_JWT_TOKEN`); `/v2/license|alert|location|content|organization|account` all 404 → v2 is a selective device-only port, no pre-auth bypass surface.
+
+## STEP 2 — PRIORITIZE
+- [PRIO] /v1/organization/{uid} GET (account-auth → oauthClientSecret) — score 7.15 (attack 8 / business 10 / tech 8 / gate 3 / cloud 3 / fresh 7)
+- [PRIO] /v1/organization/{uid}/security-token GET/POST — score 6.30 (attack 7 / business 9 / tech 7 / gate 3 / cloud 2 / fresh 6)
+- [PRIO] /v1/device/{deviceUid}/peer-recovery GET/PUT — score 6.30 (attack 8 / business 9 / tech 6 / gate 3 / cloud 2 / fresh 5)
+- [PRIO] /v2/device (partial-migration authz drift) — score 5.75 (attack 6 / business 7 / tech 7 / gate 5 / cloud 3 / fresh 4)
+
+## STEP 3 — HYPOTHESES
+[HYP] Cross-tenant org OAuth client-secret disclosure via account token
+class: IDOR
+asset: api.signageos.io/v1/organization/{organizationUid} (GET)
+confidence: 72
+reasoning: First-party CLI `getOrganization()` fetches `GET /v1/organization/{uid}` with account auth (JWT or `identification:apiSecurityToken`) and returns body incl `oauthClientId`+`oauthClientSecret`; uid is a client-supplied `--organization-uid` path arg; legacy-cred org context is credential-derived (no organizationUid query) so server-side account∈company→org re-check per path UID is the only barrier.
+evidence_needed: own account token → 200 (not 403) on `GET /v1/organization/<foreign-org-uid>` returning oauthClientSecret.
+verify_steps: AUTH_HELPED: baseline `GET https://api.signageos.io/v1/organization/<own-org-uid> -H "X-Auth: <acctId>:<acctToken>"` = 200; repeat with foreign org UID → 200 + `oauthClientSecret` = cross-tenant; escalate: use leaked secret as org X-Auth on `GET /v1/device`.
+impact: any tenant's org API credential → full device/content/timing/firmware control of foreign org; CRITICAL
+testability: AUTH_HELPED
+
+[HYP] Cross-tenant org security-token minting via account token
+class: IDOR
+asset: api.signageos.io/v1/organization/{organizationUID}/security-token (GET/POST)
+confidence: 66
+reasoning: SDK routes confirmed (GET/POST `/v1/organization/{uid}/security-token`, POST `{"name":...}`); org UID is a client-supplied path key; CLI account auth (`apiSecurityToken`) has same capability as the spec's XAuthAccount; cross-tenant iff path-UID membership in the account's company is not re-verified.
+evidence_needed: with own account creds, foreign-UID path returns 200 (not 403); POST mints a working org token.
+verify_steps: AUTH_HELPED: baseline `GET /v1/organization/<own>/security-token` = 200; `GET /v1/organization/<foreign-uid>/security-token` → 200 = cross-tenant mint; `POST {"name":"poc"}` mints org token → validate against `/v1/device`.
+impact: mint org tokens for any tenant → full foreign-device control; CRITICAL
+testability: AUTH_HELPED
+
+[HYP] Cross-tenant read/write on org-only device subresource via client-supplied deviceUid
+class: IDOR
+asset: api.signageos.io/v1/device/{deviceUid}/peer-recovery (GET/PUT)
+confidence: 62
+reasoning: SDK routes confirmed (GET/PUT, PUT body incl `urlLauncherAddress`); org context for legacy X-Auth is credential-derived, deviceUid is an arbitrary path arg; org→device membership binding is the sole barrier.
+evidence_needed: with own org X-Auth, foreign-UID path returns 200 (not 403).
+verify_steps: AUTH_HELPED: baseline `GET /v1/device/<own-uid>/peer-recovery` = 200; foreign device UID → 200 = cross-tenant; PUT `{"enabled":true,"urlLauncherAddress":"https://<attacker>"}` confirms write.
+impact: read/overwrite foreign device recovery-launcher config → device+content takeover; HIGH→CRITICAL
+testability: AUTH_HELPED
+
+## STEP 4 — SELF-CRITIQUE
+- [PARKED] (v2 partial-migration authz drift): confidence 45 but passive probe just showed v2 is device-only and fully JWT-gated (403), no unauthenticated surface — downgraded below the three AUTH_HELPED IDORs.
+- [FINAL] 1. organization/{uid} oauthClientSecret (72) | 2. organization/{uid}/security-token mint (66) | 3. device/{uid}/peer-recovery (62) — all class IDOR (not on REJECTED list), all ≥40, all with exact AUTH_HELPED verify recipes.
+
+## STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Execute H1 POC with one box-minted account token — `sos login` (Auth0 device-code) then `curl -H "X-Auth: <acctId>:<acctToken>" https://api.signageos.io/v1/organization/<own-org-uid>` (baseline 200), then `.../v1/organization/<foreign-org-uid>` — 200 with `oauthClientSecret` = confirmed cross-tenant credential disclosure; then H2 (`GET/POST /v1/organization/<foreign>/security-token`) and H3 (`GET/PUT /v1/device/<foreign-uid>/peer-recovery`). Requires own org UID + a second test tenant.
+
+## STEP 6 — LEARNING
+- [LEARN] REJECTED AUTH @ api.signageos.io/v2/*: v2 is a selective device-only port, JWT-gated (`403105 WRONG_JWT_TOKEN`); no pre-auth bypass surface — closes the v2 authz-drift hypothesis (was 45, now parked).
+- [LEARN] ACCEPTED AUTH-MODEL @ api.signageos.io: X-Auth confirmed dual-scheme (`clientId:secret` legacy / raw JWT), legacy never carries organizationUid query → org is credential-derived; first-party CLI `getOrganization(uid)` proves account auth returns oauthClientSecret on a client-supplied uid path.
+
+## STEP 7 — RISK SCORE
+- [RISK] box.signageos.io: 58 — Unauthenticated `/status` info leak (rotating pod hostname `box-7c8c876945-52dpt`, service topology redis/mongo/amqp, Node v20.20.2); 18-origin static ACAO whitelist (incl `http://` variant + `*.zdusercontent.com` wildcard); broad CSP (40+ origins). Everything else Auth0-gated. Moderate operational exposure, no data access without credentials.
+- [RISK] api.signageos.io: 52 — `/status` info leak (api pod, v24.19.0, redis0-3/mongoDB0-2/amqp0); 60+ `/v1/*` + `/v2/device` solidly JWT-gated (403); no CORS issue; elevated from 47 because first-party account-auth path (`/v1/organization/{uid}`) returns org credentials and only an account∈company→org check separates tenants — pending AUTH_HELPED POC.

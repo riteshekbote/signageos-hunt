@@ -1,13 +1,10 @@
-## 2026-08-07 22:06:04 UTC [api] (model nemotron3)
-[NEW] Hardcoded clientId/secret in `videowall-designer/sos/videoTiming.js` (line 18-19) authenticating against internal staging API `http://api.kiera.office.signageos.io` over HTTP — REAL_SECRET + ENDPOINT_LEAK confirmed via reposcan (secret SHA256: `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`)
+## 2026-08-07 22:51:36 UTC [api] (model nemotron3)
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token: 7.80 (attack=9, business=10, tech=8, gate=3, cloud=8, fresh=8) — Cross-tenant org-token minting via account token; JWT-gated but high-value logic flaw if org UID not re-checked
 [PRIO] api.signageos.io/v1/device/{uid}/peer-recovery: 7.55 (attack=8, business=9, tech=8, gate=3, cloud=8, fresh=8) — Legacy client-secret auth (X-Auth) not bound to target device UID; SDK takes arbitrary deviceUid path arg
 [PRIO] api.signageos.io/v2/*: 6.65 (attack=7, business=8, tech=7, gate=10, cloud=7, fresh=7) — Partial v2 migration; /v2/device JWT-gated but /v2/account, /v2/organization 404; authz drift candidate, PASSIVE testable
-[PRIO] api.kiera.office.signageos.io (internal staging): 6.20 (attack=7, business=6, tech=6, gate=10, cloud=8, fresh=6) — Hardcoded credentials in public repo (videowall-designer) hit this HTTP endpoint; credential reuse/replay risk against prod org boundaries
-[PRIO] box.signageos.io/status: 6.25 (attack=5, business=6, tech=5, gate=10, cloud=7, fresh=6) — Already accepted MISCONFIG; infra recon value for SSRF/logic-flaw chaining
 [HYP] Cross-tenant org security-token minting via account token + client-supplied organizationUid
 class: IDOR
-asset: api.signageos.io/v1/organization/{uid}/security-token (GET/POST)
+asset: api.signageos.io/v1/organization/{uid}/security-token
 confidence: 65
 reasoning: SDK builds `organization/<uid>/security-token` with path UID while JWT auth-context uses separate `?organizationUid=` query param; account tokens can create multiple orgs per docs; if server doesn't re-validate path-UID ∈ authenticated account's company, any account token mints tokens for any org
 evidence_needed: non-403 on POST/GET `/v1/organization/<foreign-uid>/security-token` with own account JWT
@@ -16,7 +13,7 @@ impact: mint org tokens for any tenant → full foreign-device control (brightne
 testability: AUTH_HELPED
 [HYP] Cross-tenant peer-recovery read/write via legacy client-secret not bound to target device UID
 class: IDOR
-asset: api.signageos.io/v1/device/{uid}/peer-recovery (GET list / PUT set)
+asset: api.signageos.io/v1/device/{uid}/peer-recovery
 confidence: 55
 reasoning: Gate is org client-secret (`403083 MISSING_CLIENT_SECRET`), not JWT; SDK takes deviceUid as arbitrary path arg; org-context is client-controlled (`X-Auth: clientId:secret` or `?organizationUid=` for JWT), so server-side org→device binding is the only barrier
 evidence_needed: with own org `X-Auth: clientId:secret`, GET/PUT peer-recovery against a device UID belonging to another org returns 200 (not 403)
@@ -32,11 +29,10 @@ evidence_needed: any /v2 route returning 200 unauthenticated, or ≠403/404, or 
 verify_steps: PASSIVE: probe /v2/device/{uid}, /v2/license, /v2/alert, /v2/location, /v2/content, /v2/bulk-operation, /v2/emulator without auth — anything ≠403/404 is a finding; AUTH_HELPED: compare own-creds response on same resource across /v1 vs /v2
 impact: authz drift → data disclosure / cross-tenant access via an alternate code path; HIGH
 testability: PASSIVE
-[PARKED] (none dropped — all confidence ≥40, no rejected classes, all have concrete verify_steps)
 [FINAL] Ranked surviving hypotheses (top first):
 [NEXT] RAG: Clone `github.com/signageos/sdk` and grep `src/api/` + `src/auth/` + `src/requester.ts` for: (1) exact `X-Auth` header construction (`id:unsafeDecryptedToken` format) for v1/v2; (2) account-token mint call shape (`identification`/`password` param placement — query vs body); (3) whether `createApiV2` reuses v1 auth/orgUid semantics; (4) any `/v2/` endpoint invoked without JWT at initialization (pre-auth bypass candidate) — converts hypotheses 1/2/3 into exact AUTH_HELPED/PASSIVE test recipes
 [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → mtnct), process UID, Node v20.20.2, and service topology (amqp0, redis0-3, mongoDB0-3). Not on rejected list.
-[LEARN] ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin `https://evil.test`. Includes `http://` variant + `https://*.zdusercontent.com` wildcard + sibling `api.signageos.io`. No `Access-Control-Allow-Credentials` on any box path. api.signageos.io has NO ACAO on any path (including /status, /v1/*, /v2/*).
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin `https://evil.test`. Includes `http://` variant + `https://*.zdusercontent.com` wildcard + sibling `api.signageos.io`. No `Access-Control-Allow-Credentials` on any box path. api.signageos.io has NO ACAO on any path.
 [LEARN] ACCEPTED MISCONFIG @ box.signageos.io CSP: Confirmed live. /login/ CSP broadened vs / (triplicated Auth0 oauth/token, additional recaptcha frame-src). 40+ connect-src/frame-src origins spanning Auth0, Sony/BroadSign/MoodMedia device APIs, S3 buckets, AWS API Gateway, and api.signageos.io.
 [LEARN] REJECTED MISCONFIG @ box.signageos.io /ready: Returns 200 `OK` (2 bytes) — trivial health check, no data leaked. Not reportable.
 [LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All 60+ endpoints return 403 JWT-gated (WRONG_JWT_TOKEN/403105). No pre-auth bypass. Dual auth confirmed: JWT Bearer (main API) + X-Auth API-key format (`id:unsafeDecryptedToken`) for bulk provisioning.
