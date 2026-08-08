@@ -88,3 +88,6 @@
   - | Q2 | NO — requires valid account JWT |
   - | Q2 | NO — requires valid org X-Auth (clientId:secret) |
   - | **VALID** | 4 | box/status, api/status, box CORS, box CSP |
+
+- 1 lead(s) marked VALID at 2026-08-08 17:55:35 UTC
+  - | **VALID** | 4 | box/status, api/status, box CORS, box CSP |
