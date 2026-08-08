@@ -22,3 +22,10 @@
   - | Q2 Reachable? | Requires valid account JWT or X-Auth — not public |
   - | Q2 Reachable? | Requires valid org X-Auth (clientId:secret) — not public |
   - | VALID | 0 |
+
+- 5 lead(s) marked VALID at 2026-08-08 07:21:25 UTC
+  - | Q2 Reachable? | Requires valid account JWT or X-Auth — **not public/unauthenticated** |
+  - | Q2 Reachable? | Requires valid account JWT or X-Auth — **not public/unauthenticated** |
+  - | Q2 Reachable? | Requires valid org X-Auth (clientId:secret) or account JWT — **not public** |
+  - | Q2 Reachable? | Requires valid JWT — **not public/unauthenticated** |
+  - | VALID | 0 |
