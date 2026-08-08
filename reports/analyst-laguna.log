@@ -6634,3 +6634,31 @@ All three hypotheses survive (confidence ≥ 40, not on REJECTED list, concrete 
 [RISK] box.signageos.io: 68 — Unauthenticated `/status` leaks pod hostname + 64-hex process UID + Node v20.20.2 + full service topology with per-service response timing AND `/status` lacks ALL security headers (HSTS/xfo/xcto/CSP = 0) while `/`+`/login/` are hardened. Broad CSP (59 connect-src origins) + 17 static CORS ACAO incl. http:// plaintext variant + *.zdusercontent.com wildcard, no credentials flag.
 
 [RISK] api.signageos.io: 60 — All 60+ v1/v2 REST endpoints JWT/X-Auth-gated, no pre-auth bypass confirmed. `/status` leaks pod metadata + Node v24.19.0 + topology but is now hardened with HSTS/xfo/xcto. High-severity IDOR on `/v1/organization/{uid}/security-token` confirmed mechanism (AUTH_HELPED, off-phase).
+===== ANALYST laguna 2026-08-08 11:21:47 UTC =====
+[0m
+> build · laguna-s-2.1-free
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcurl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_status_b.json && echo "--- HEADERS ---" && cat /tmp/poc_box_status_h.txt && echo "--- BODY ---" && cat /tmp/poc_box_status_b.json failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[0m
+[0m$ [0mcurl -sD- --max-time 20 -H 'Origin: https://evil.test' https://box.signageos.io/login/ | grep -i 'access-control-allow-origin' | wc -l && echo "--- credentials check ---" && curl -sD- --max-time 20 https://box.signageos.io/login/ | grep -i 'access-control-allow-credentials' && echo "--- (empty above = no credentials) ---"
+17
+--- credentials check ---
+[0m
+I'll analyze the current state and perform passive probes to finalize the PoC evidence package for the box `/status` finding.
+[0m$ [0mcurl -sD- --max-time 20 https://box.signageos.io/login/ | grep -oE 'https?://[^ ]+' | sort -u | wc -l && echo "--- csp origin count ---" && curl -s --max-time 20 https://box.signageos.io/login/ | grep -oiE 'content-security-policy:[^;]*' | grep -oE 'https?://[^ '"'"'"]+' | sort -u | wc -l
+82
+--- csp origin count ---
+0
+[0m
+[0m$ [0mecho "=== SECURITY HEADER COUNT ON /status ===" && grep -icE 'strict-transport|x-frame|x-content|content-security' /tmp/poc_box_status_h.txt; echo "=== SECURITY HEADER COUNT ON / ===" && curl -sID --max-time 20 https://box.signageos.io/ | grep -icE 'strict-transport|x-frame|x-content|content-security'; echo "=== HSTS ON / ===" && curl -sID --max-time 20 https://box.signageos.io/ | grep -i 'strict-transport-security'
+=== SECURITY HEADER COUNT ON /status ===
+grep: /tmp/poc_box_status_h.txt: No such file or directory
+=== SECURITY HEADER COUNT ON / ===
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 30000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
