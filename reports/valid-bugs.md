@@ -91,3 +91,9 @@
 
 - 1 lead(s) marked VALID at 2026-08-08 17:55:35 UTC
   - | **VALID** | 4 | box/status, api/status, box CORS, box CSP |
+
+- 4 lead(s) marked VALID at 2026-08-08 18:32:32 UTC
+  - | **A** | `box.signageos.io/status` — unauthenticated K8s infra leak (pod hostname, process UID, Node version, Redis/Mongo/AMQP topology) | **VALID** | 4.3 Low |
+  - | **B** | `api.signageos.io/status` — same class of infra leak | **VALID** | 4.3 Low |
+  - | **C** | `box.signageos.io` CORS — 18 static ACAO values on `/` + `/login/` (http:// variant + `*.zdusercontent.com` wildcard, no credentials flag) | **VALID** | 3.1 Low |
+  - | **D** | `box.signageos.io` CSP — overly broad connect-src/frame-src (40+ origins: Auth0, device APIs, S3, API Gateway) | **VALID** | 3.1 Low |
