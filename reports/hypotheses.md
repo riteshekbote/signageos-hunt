@@ -400,3 +400,12 @@
 ## RANKED HYPOTHESES 2026-08-08 13:07:14 UTC
 
 ## RANKED HYPOTHESES 2026-08-08 13:54:14 UTC
+
+## RANKED HYPOTHESES 2026-08-08 14:23:33 UTC
+- [95] box.signageos.io/status: Unauthenticated `/status` topology leak with zero security headers (differential vs hardened `/`+`/login/`) (from reports/hypotheses-laguna.txt)
+- NEXT(hypotheses-laguna.txt): PROBE: Finalize the box `/status` PoC evidence package — save headers and body to files, confirm zero security headers via grep, confirm differential via root H
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live (2026-08-08 14:22). Pod `box-7c8c876945-gkzcp`, Node v20.20.2, process.uid `b341def86252cd23a7db1
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/login/ & / CORS+CSP: Reconfirmed. 17 static ACAO incl. `http://` plaintext + `https://*.zdusercontent.com` wildcard + `api
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. Pod `api-6f69db97d5-ff5td`, Node v24.19.0, full topology. Hardened with HSTS+xfo+xcto (different
+- LEARN: REJECTED IDOR @ box.signageos.io: No unauthenticated authn surface on box beyond `/status` info-leak and CSP/CORS — no pre-auth bypass found.
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `WRONG_JWT_TOKEN`/`Account not found`/403105 — excluded per scope.yml.
