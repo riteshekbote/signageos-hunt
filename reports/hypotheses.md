@@ -171,3 +171,12 @@
 - LEARN: REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state — excluded per "CSRF on anonymous-accessible forms" (carried forward).
 - LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 4
 - LEARN: ACCEPTED SECRET_LEAK @ github.com/signageos/videowall-designer: Hardcoded clientId/secret (SHA256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a7
+
+## RANKED HYPOTHESES 2026-08-08 00:49:27 UTC
+- [76] api.signageos.io/v1/organization/{organizationUid}: Cross-tenant org OAuth client-secret disclosure via account token (from reports/hypotheses-bigpickle.txt)
+- [65] api.signageos.io/v1/organization/{uid}/security-token: api.signageos.io/v1/organization/{uid}/security-token — Cross-tenant org security-token minting via account token + client-supplied organizationUid (from reports/hypotheses-laguna.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Execute H1 POC with one box-minted account token — 1) `sos login` (Auth0 device-code) to mint account JWT; 2) baseline `curl -H "X-Auth: <accountJWT>" "h
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Execute H1 POC exactly as code-verified — 1) `sos login` (Auth0 device-code) to mint account JWT; 2) baseline `curl -H "X-Auth: <jwt>" "https://api.signa
+- NEXT(hypotheses-laguna.txt): RAG: Clone github.com/signageos/sdk and grep src/api/ + src/auth/ + src/requester.ts for: (1) exact X-Auth header construction (id:unsafeDecryptedToken format),
+- LEARN: NO_NEW_PROOF — This cycle is passive analysis only; no AUTH_HELPED tests executed. All previously ACCEPTED/REJECTED classes from 2026-08-07 23:54 reconfirmed vi
+- LEARN: NO_NEW_PROOF — This cycle is passive analysis only; no AUTH_HELPED tests executed. All previously ACCEPTED/REJECTED classes from 2026-08-07 23:54 reconfirmed vi

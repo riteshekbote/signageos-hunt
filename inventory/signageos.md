@@ -54,3 +54,11 @@
 - NEW api.signageos.io Node version upgraded to v24.19.0 (was v24.19.0 on some pods, v20.20.2 on others — mixed fleet confirmed)
 - NEW box.signageos.io pod hostname rotated to `box-7c8c876945-52dpt` (Node v20.20.2); api.signageos.io pod hostname rotated to `api-6f69db97d5-97fjw` (Node v24.19.0) — K8s rolling deploy confirmed
 - CHANGED api.signageos.io/v2/device now returns 403 JWT-gated (previously 404) — v2 migration advancing
+
+## 2026-08-08 00:49:27 UTC
+- NEW api.signageos.io Node version upgraded to v24.19.0 (mixed fleet: v24.19.0 + v20.20.2 pods confirmed)
+- NEW box.signageos.io pod hostname rotated to `box-7c8c876945-52dpt` (Node v20.20.2); api.signageos.io pod hostname rotated to `api-6f69db97d5-97fjw` (Node v24.19.0) — K8s rolling deploy confirmed
+- CHANGED api.signageos.io/v2/device now returns 403 JWT-gated (previously 404) — v2 migration advancing
+- NEW api.signageos.io Node version upgraded to v24.19.0 (mixed fleet: v24.19.0 + v20.20.2 pods confirmed)
+- NEW box.signageos.io pod hostname rotated to `box-7c8c876945-52dpt` (Node v20.20.2); api.signageos.io pod hostname rotated to `api-6f69db97d5-97fjw` (Node v24.19.0) — K8s rolling deploy confirmed
+- CHANGED api.signageos.io/v2/device now returns 403 JWT-gated (previously 404) — v2 migration advancing

