@@ -140,3 +140,4 @@
 - 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Unauthenticated GET leaks pod hostname + 64-hex process.uid + Node v20.20.2 + full amqp/redis/mongo topology + per-service responseTime; headers ONLY x-powered-by: Express — zero hardening headers
 - 2026-08-08 REJECTED class @ lead: LEAD 5  Cross-tenant IDOR             — AUTH_HELPED, needs JWT + 2nd tenant
 - 2026-08-08 REJECTED class @ lead: LEAD 9   v2 authz drift               — PASSIVE confirms all gated/404
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/login/ & / CORS+CSP: 17 static ACAO incl. http:// plaintext variant + https://*.zdusercontent.com wildcard + api.signageos.io sibling; evil.test NOT reflected (static whitelist); NO access-control-allow-credentials; CSP 59 distinct origins with triplicated Auth0 oauth/token on /login/

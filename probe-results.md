@@ -24,3 +24,8 @@ https://api.signageos.io/v1/device -> HTTP 403
 
 ## 2026-08-08 21:15:22 UTC
 
+
+## 2026-08-08 21:52:14 UTC
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://box.signageos.io/status -> 200 len=1441 type=application/json; charset=utf-8
