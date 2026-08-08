@@ -29,3 +29,8 @@
   - | Q2 Reachable? | Requires valid org X-Auth (clientId:secret) or account JWT — **not public** |
   - | Q2 Reachable? | Requires valid JWT — **not public/unauthenticated** |
   - | VALID | 0 |
+
+- 3 lead(s) marked VALID at 2026-08-08 09:07:13 UTC
+  - **Verdict: VALID (Low)**
+  - | Q2 | ⚠️ AUTH_HELPED — requires valid JWT/account token (low-priv user) |
+  - | **VALID** | 1 | `box.signageos.io/status` infra info disclosure (CVSS 3.7 Low) |
