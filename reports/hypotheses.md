@@ -285,3 +285,20 @@
 - LEARN: ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: Reconfirmed — 18 ACAO incl. http:// + *.zdusercontent.com, NO credentials flag, unchanged under spoofed Origin. 
 - LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — /v2/device → 403 (not 404), /v1/organization/test → 403. All endpoints JWT/X-Auth-gated, no pre-auth b
 - LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live — pod 22g8d, Node v24.19.0, full topology. Now carries proper security headers (HSTS, xfo, xcto) 
+
+## RANKED HYPOTHESES 2026-08-08 09:12:47 UTC
+- [78] api.signageos.io/v1/organization/{organizationUid}/security-token: Cross-tenant security-token minting via org-scoped X-Auth path (from reports/hypotheses-laguna.txt)
+- [75] api.signageos.io/v1/organization/{organizationUid}: Cross-tenant org OAuth client-secret disclosure via account JWT (from reports/hypotheses-nemotron3.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Execute H1 POC with one box-minted account token — 1) `sos login` (Auth0 device-code) to mint account JWT; 2) baseline `curl -H "X-Auth: <accountJWT>" "h
+- NEXT(hypotheses-laguna.txt): PROBE: Quantify the box CORS/CSP PoC and test wildcard reflection — `curl -sI -H 'Origin: https://sub.zdusercontent.com' https://box.signageos.io/login/ | grep 
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Now carries proper security headers (HSTS, x-frame-options: DENY, x-content-type-options: nosniff) — hardening rel
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `WRONG_JWT_TOKEN`/`NO_ORGANIZATION_TO_AUTHENTICATE`/`WRONG_ACCOUNT_SECRET` + error
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v2/device: Returns 403 JWT-gated (previously 404) — now JWT-gated, not a pre-auth bypass (carried forward)
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. Node v20.20.2, pod box-7c8c876945-r5fm9, succeededServices (amqp0, redis0-3, mongoDB0-3). Still 
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. Node v24.19.0, pod api-6f69db97d5-9kg9l, same topology. Now hardened with security headers.
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — all routes 403 JWT/X-Auth-gated, no pre-auth bypass surface. v2 migration advancing (/v2/device now 40
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 flow params not passively testable without tenant/authenticated session (carried forward).
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 state/redirect_uri binding — not passively testable, no unauthenticated authn surf remaining on box; all en
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/*/status: Confirmed `/status` lacks ALL security headers (HSTS/xfo/xcto/CSP absent) — only `x-powered-by: Express` — diffe
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: Reconfirmed 403 bodies leak `WRONG_JWT_TOKEN`/`NO_ORGANIZATION_TO_AUTHENTICATE`/`WRONG_ACCOUNT_SE
+- LEARN: CONFIRMED MECHANISM @ api.signageos.io/v1/organization/{uid}: Dual-auth precisely enumerated — X-Auth `id:unsafeDecryptedToken` format; org derived from header 

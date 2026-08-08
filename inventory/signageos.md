@@ -90,3 +90,9 @@
 - CHANGED box.signageos.io/status: pod hostname rotated to `box-7c8c876945-52dpt` (Node v20.20.2) — rolling-deploy churn, no functional change. Headers confirmed absent: no HSTS / x-frame-options / x-content-ty
 - CHANGED api.signageos.io/status: pod hostname rotated to `api-6f69db97d5-22g8d` (Node v24.19.0) — rolling-deploy churn. Unlike box, api.status now carries `strict-transport-security`, `x-frame-options: DENY`,
 - CHANGED api.signageos.io/v2/device: confirmed 403 JWT-gated (was 404) — v2 migration advance confirmed via passive probe.
+
+## 2026-08-08 09:12:47 UTC
+- NEW api.signageos.io/status now carries proper security headers: `strict-transport-security: max-age=31536000`, `x-frame-options: DENY`, `x-content-type-options: nosniff` — previously absent
+- CHANGED api.signageos.io/v2/device confirmed 403 JWT-gated (was 404) — v2 migration advancing; carries same security headers as /status
+- CHANGED box.signageos.io/status pod hostname rotated to `box-7c8c876945-r5fm9` (Node v20.20.2) — still missing HSTS/xfo/xcto
+- CHANGED api.signageos.io/status pod hostname rotated to `api-6f69db97d5-9kg9l` (Node v24.19.0) — now hardened with security headers
