@@ -785,3 +785,4 @@ testability: PASSIVE
 [RISK] api.signageos.io: 60 — All 60+ v1/v2 REST endpoints JWT/X-Auth-gated, no pre-auth bypass confirmed (`/v2/device`→403, `/v1/organization/test`→403 descriptive-error REJECTED). `/status` leaks pod metadata + Node v24.19.0 + topology but is hardened with HSTS/xfo/xcto. High-severity IDOR on `/v1/organization/{uid}/security-token` confirmed mechanism but requires AUTH_HELPED (off-phase for box target).
 ## 2026-08-08 17:02:59 UTC [box] (model laguna)
 ## 2026-08-08 17:42:51 UTC [box] (model laguna)
+## 2026-08-08 18:13:49 UTC [box] (model laguna)
