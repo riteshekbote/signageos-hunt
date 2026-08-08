@@ -714,3 +714,4 @@ testability: AUTH_HELPED (off-phase: target=box, this is api)
 [RISK] api.signageos.io: 60 — All 60+ v1/v2 REST endpoints JWT/X-Auth-gated, no pre-auth bypass confirmed. `/status` leaks pod metadata + Node v24.19.0 + topology but is now hardened with HSTS/xfo/xcto. High-severity IDOR on `/v1/organization/{uid}/security-token` confirmed mechanism (AUTH_HELPED, off-phase).
 ## 2026-08-08 11:18:59 UTC [box] (model laguna)
 ## 2026-08-08 11:46:43 UTC [box] (model laguna)
+## 2026-08-08 12:03:54 UTC [box] (model laguna)
