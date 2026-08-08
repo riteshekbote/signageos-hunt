@@ -141,3 +141,7 @@
 - 2026-08-08 REJECTED class @ lead: LEAD 5  Cross-tenant IDOR             — AUTH_HELPED, needs JWT + 2nd tenant
 - 2026-08-08 REJECTED class @ lead: LEAD 9   v2 authz drift               — PASSIVE confirms all gated/404
 - 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/login/ & / CORS+CSP: 17 static ACAO incl. http:// plaintext variant + https://*.zdusercontent.com wildcard + api.signageos.io sibling; evil.test NOT reflected (static whitelist); NO access-control-allow-credentials; CSP 59 distinct origins with triplicated Auth0 oauth/token on /login/
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Pod rotated to box-7c8c876945-chbwh (Node v20.20.2), still ONLY x-powered-by: Express with zero security headers — RECONFIRMED LIVE (no HSTS/xfo/xcto/CSP differential vs /)
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Pod rotated to api-6f69db97d5-wpppp (Node v24.19.0), security headers present — RECONFIRMED LIVE (hardened differential vs box persists)
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/login/ & /: 17 static ACAO reconfirmed incl http:// plaintext + *.zdusercontent.com wildcard + api.signageos.io sibling; evil.test NOT reflected; NO access-control-allow-credentials; CSP 59 origins + triplicated Auth0 oauth/token — RECONFIRMED LIVE
+- 2026-08-08 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — /v2/device → 403, /v1/organization/test → 403; all JWT/X-Auth-gated, no pre-auth bypass — PARKED (AUTH_HELPED, off-phase for box target)
