@@ -163,3 +163,18 @@
   - | 11 | box CORS ACAO whitelist | MISCONFIG | **VALID (Low, border)** CVSS 3.1 | Static http:// + wildcard, passive PoC confirmed |
   - | 12 | box CSP overly broad | MISCONFIG | **VALID (Low, border)** CVSS 3.1 | 40+ origins, passive PoC confirmed |
   - **VALID leads to report:** 4 (box/api /status ×2, box CORS, box CSP) — all reconfirmations of previously accepted findings. No new VALID findings this cycle.
+
+- 13 lead(s) marked VALID at 2026-08-08 23:53:44 UTC
+  - **Verdict: VALID (Low)** — reconfirmation of previously accepted finding.
+  - **Verdict: VALID (Low)** — reconfirmation of previously accepted finding.
+  - **Verdict: VALID (Low, borderline)** — reconfirmation of previously accepted finding.
+  - **Verdict: VALID (Low, borderline)** — reconfirmation of previously accepted finding.
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant to prove. Not passively provable. Carried forward.
+  - | 1 | `box.signageos.io/status` — K8s infra leak | **VALID (Low)** | 4.3 |
+  - | 2 | `api.signageos.io/status` — K8s infra leak | **VALID (Low)** | 4.3 |
+  - | 3 | `box.signageos.io` CORS — static http:// + wildcard ACAO | **VALID (Low, border)** | 3.1 |
+  - | 4 | `box.signageos.io` CSP — 40+ origins, triplicated Auth0 | **VALID (Low, border)** | 3.1 |
+  - | 1 | box.signageos.io/status infra leak | **VALID (Low)** | 4.3 | Reconfirmed; passive PoC stable |
+  - | 2 | api.signageos.io/status infra leak | **VALID (Low)** | 4.3 | Reconfirmed; hardened w/ security headers |
+  - | 3 | box.signageos.io CORS ACAO whitelist | **VALID (Low, border)** | 3.1 | Reconfirmed; static http:// + wildcard, no creds |
+  - | 4 | box.signageos.io CSP overly broad | **VALID (Low, border)** | 3.1 | Reconfirmed; 40+ origins, triplicated Auth0 |
