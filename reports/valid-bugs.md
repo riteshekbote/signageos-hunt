@@ -59,3 +59,21 @@
   - | 3 | `box.signageos.io` CORS ACAO whitelist (http:// + wildcard) | MISCONFIG | **VALID** | Passive PoC confirmed; static whitelist, no credentials flag |
   - | 4 | `box.signageos.io` CSP overly broad (40+ origins) | MISCONFIG | **VALID** | Passive PoC confirmed; triplicated Auth0 + wildcard |
   - 4. **Prior triage consistency:** LEADs 1-3 were previously marked VALID in `valid-bugs.md`. This triage confirms those verdicts with full 7-Question Gate analysis.
+
+- 9 lead(s) triaged at 2026-08-08 14:52 UTC (full 7-Question Gate, all models)
+  - | 1 | `box.signageos.io/status` unauthenticated infra info disclosure | MISCONFIG | **VALID (Low)** | CVSS 3.7 | Passive PoC confirmed 15+ times |
+  - | 2 | `api.signageos.io/status` unauthenticated infra info disclosure | MISCONFIG | **VALID (Low)** | CVSS 3.7 | Passive PoC confirmed |
+  - | 3 | `box.signageos.io` CORS ACAO whitelist (http:// + wildcard) | MISCONFIG | **VALID (Low, borderline)** | CVSS 3.7 | Static whitelist, no credentials flag |
+  - | 4 | `box.signageos.io` CSP overly broad (40+ origins) | MISCONFIG | **VALID (Low, borderline)** | CVSS 3.7 | Triplicated Auth0 + wildcard |
+  - | 5 | `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant mint | IDOR | **HOLD** | AUTH_HELPED — requires valid account JWT + second tenant |
+  - | 6 | `api.signageos.io/v1/organization/{uid}` cross-tenant OAuth secret disclosure | IDOR | **HOLD** | AUTH_HELPED — requires valid account JWT + second tenant |
+  - | 7 | `api.signageos.io/v1/device/{uid}/peer-recovery` cross-tenant read/write | IDOR | **HOLD** | AUTH_HELPED — requires valid org X-Auth + second tenant |
+  - | 8 | `api.signageos.io/v2/*` authz drift | AUTH | **HOLD** | No passive evidence; all routes 403/404 |
+  - | 9 | `videowall-designer` hardcoded secret (staging host) | SECRET_LEAK | **INVALID** | Out-of-scope host + known duplicate |
+
+- 5 lead(s) marked VALID at 2026-08-08 14:55:57 UTC
+  - - 4. **Prior triage consistency:** LEADs 1-3 were previously marked VALID in `valid-bugs.md`. This triage confirms those verdicts with full 7-Question Gate analysis.
+  - | 1 | `box.signageos.io/status` — unauthenticated infra info disclosure | **VALID (Low)** | 3.7 |
+  - | 2 | `api.signageos.io/status` — unauthenticated infra info disclosure | **VALID (Low)** | 3.7 |
+  - | 3 | `box.signageos.io` CORS ACAO whitelist (http:// + wildcard) | **VALID (Low, borderline)** | 3.7 |
+  - | 4 | `box.signageos.io` CSP overly broad (40+ origins) | **VALID (Low, borderline)** | 3.7 |
