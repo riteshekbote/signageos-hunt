@@ -713,3 +713,4 @@ testability: AUTH_HELPED (off-phase: target=box, this is api)
 [RISK] box.signageos.io: 68 — Unauthenticated `/status` leaks pod hostname + 64-hex process UID + Node v20.20.2 + full service topology with per-service response timing AND `/status` lacks ALL security headers (HSTS/xfo/xcto/CSP = 0) while `/`+`/login/` are hardened. Broad CSP (59 connect-src origins) + 17 static CORS ACAO incl. http:// plaintext variant + *.zdusercontent.com wildcard, no credentials flag.
 [RISK] api.signageos.io: 60 — All 60+ v1/v2 REST endpoints JWT/X-Auth-gated, no pre-auth bypass confirmed. `/status` leaks pod metadata + Node v24.19.0 + topology but is now hardened with HSTS/xfo/xcto. High-severity IDOR on `/v1/organization/{uid}/security-token` confirmed mechanism (AUTH_HELPED, off-phase).
 ## 2026-08-08 11:18:59 UTC [box] (model laguna)
+## 2026-08-08 11:46:43 UTC [box] (model laguna)
