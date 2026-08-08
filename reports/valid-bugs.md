@@ -126,3 +126,23 @@
   - | Q2 Reachable | YES — any attacker with valid org X-Auth (client-secret) |
   - **Verdict: HOLD** — AUTH_HELPED; not passively provable. Requires valid X-Auth credential.
   - | VALID | 0 | — |
+
+- 18 lead(s) marked VALID at 2026-08-08 22:19:50 UTC
+  - | A | box.signageos.io | `/status` unauthenticated infra leak | VALID (Low) |
+  - | B | api.signageos.io | `/status` unauthenticated infra leak | VALID (Low) |
+  - | C | box.signageos.io | CORS ACAO 18-origin static whitelist (http:// + wildcard) | VALID (Low, borderline) |
+  - | D | box.signageos.io | CSP overly broad connect-src/frame-src (40+ origins) | VALID (Low, borderline) |
+  - **VERDICT: VALID — Low (CVSS 3.1: 4.3)**
+  - **VERDICT: VALID — Low (CVSS 3.1: 4.3)**
+  - **VERDICT: VALID — Informational/Low (CVSS 3.1: 3.1)**
+  - | **Q7 Triager accept?** | MARGINAL — defense-in-depth finding; triager may accept as informational or reject as "best practice". Kept as VALID informational given the breadth. |
+  - **VERDICT: VALID — Informational (CVSS 3.1: 3.1)**
+  - | **Q2 Attacker reach?** | NO — requires valid JWT/X-Auth. All endpoints return 403 (WRONG_JWT_TOKEN/403105) without auth. |
+  - | **Q2 Attacker reach?** | NO — requires valid account JWT/credentials |
+  - | **Q2 Attacker reach?** | NO — requires valid org X-Auth (clientId:secret) |
+  - | **Q2 Attacker reach?** | NO — requires valid account JWT |
+  - | **Q2 Attacker reach?** | NO — requires valid credentials to observe the mint flow |
+  - | A | box.signageos.io | `/status` unauthenticated infra leak | VALID | 4.3 Low |
+  - | B | api.signageos.io | `/status` unauthenticated infra leak | VALID | 4.3 Low |
+  - | C | box.signageos.io | CORS ACAO 18-origin static whitelist | VALID | 3.1 Low |
+  - | D | box.signageos.io | CSP overly broad (40+ origins) | VALID | 3.1 Low |
