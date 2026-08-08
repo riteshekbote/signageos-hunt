@@ -811,3 +811,4 @@ evidence_needed: own legacy creds → 200 on a foreign device uid.
 verify_steps: AUTH_HELPED: baseline `GET /v1/device/<own-uid>/peer-recovery -H "X-Auth: <ownClientId>:<ownSecret>"` = 200; foreign uid → 200 = cross-tenant; PUT `{"enabled":true,"urlLauncherAddress":"https://<attacker>"}` confirms write.
 impact: read/overwrite foreign device recovery-launcher config → device/content takeover; HIGH→CRITICAL
 testability: AUTH_HELPED
+## 2026-08-08 09:51:33 UTC [box] (model bigpickle)
