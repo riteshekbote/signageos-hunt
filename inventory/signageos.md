@@ -84,3 +84,9 @@
 ## 2026-08-08 07:58:45 UTC
 - CHANGED box.signageos.io/status: pod hostname rotated to `box-7c8c876945-xmdhm` (Node v20.20.2) — K8s rolling deploy churn, no functional change
 - CHANGED api.signageos.io/status: pod hostname rotated to `api-6f69db97d5-jnncr` (Node v24.19.0) — K8s rolling deploy churn, no functional change
+
+## 2026-08-08 08:30:39 UTC
+- NEW None — latest cycle (2026-08-08 07:58) shows only K8s pod hostname rotation on `/status` endpoints (box-7c8c876945-xmdhm, api-6f69db97d5-jnncr), no functional surface change
+- CHANGED box.signageos.io/status: pod hostname rotated to `box-7c8c876945-52dpt` (Node v20.20.2) — rolling-deploy churn, no functional change. Headers confirmed absent: no HSTS / x-frame-options / x-content-ty
+- CHANGED api.signageos.io/status: pod hostname rotated to `api-6f69db97d5-22g8d` (Node v24.19.0) — rolling-deploy churn. Unlike box, api.status now carries `strict-transport-security`, `x-frame-options: DENY`,
+- CHANGED api.signageos.io/v2/device: confirmed 403 JWT-gated (was 404) — v2 migration advance confirmed via passive probe.
