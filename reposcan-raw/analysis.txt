@@ -1,12 +1,62 @@
 [0m
 > build · nemotron-3-ultra-free
 [0m
-[0m$ [0mecho -n '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9' | sha256sum
+[0m$ [0mecho -n "9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9" | sha256sum
 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e  -
 [0m
-| Category | File | Line | SHA256 | Classification |
-|----------|------|------|--------|----------------|
-| **KNOWN_DUPLICATE** | reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | Already documented in KB (2026-08-07) as SECRET_LEAK targeting staging `http://api.kiera.office.signageos.io` |
+[0m$ [0mhead -30 reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
+const RestApi = require('@signageos/test/dist/RestApi/RestApi').default;
 
-**Verdict:**
-- REPORT_CANDIDATE: **no** — This is a **known duplicate** already tracked in the knowledge base (2026-08-07 ACCEPTED SECRET_LEAK). The hardcoded secret targets an internal staging host (`api.kiera.office.signageos.io` over HTTP), which is out of scope for the program (eligible targets are only `box.signageos.io` and `api.signageos.io`). No new findings in this scan.
+/**
+ * @param {Array.<{ index: Number, deviceUid: String, uri: String }>} videos
+ * @param {Object} [auth]
+ * @param {String} [auth].clientId
+ * @param {String} [auth].secret
+ * @param {String} [appletUid]
+ * @param {String} [appletVersion]
+ * @param {String} [apiUrl]
+ * @param {String} [syncGroup]
+ * @param {String} [syncServer]
+ */
+module.exports = exports = {
+    async setupVideoTimings(
+        videos,
+        auth = {
+            clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47',
+            secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+        },
+        appletUid = 'c790b56805154b80e12309453ee2c387511179106563165848',
+        appletVersion = '1.0.0',
+        apiUrl = 'http://api.kiera.office.signageos.io',
+        syncGroup = 'video-' + Math.random(),
+        syncServer,
+    ) {
+        const sos = new RestApi({
+            url: apiUrl,
+            version: 'v1',
+            auth,
+[0m
+### Classification Tables
+
+#### REAL_SECRET
+| File | Line | Secret SHA256 | Context |
+|------|------|---------------|---------|
+| reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | Hardcoded `clientId`/`secret` default params in test setup function |
+
+#### ENDPOINT_LEAK
+| File | Line | Endpoint | Type |
+|------|------|----------|------|
+| reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 27 | `http://api.kiera.office.signageos.io` | Internal staging API (HTTP, not HTTPS) |
+
+#### TEST_OR_EXAMPLE
+| File | Line | Description |
+|------|------|-------------|
+| reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 13-30 | Test/setup utility with default auth params for video timing integration tests |
+
+---
+
+### Verdict
+
+| Candidate | REPORT_CANDIDATE | Reason |
+|-----------|------------------|--------|
+| Hardcoded secret (SHA256 `564c293ba...`) in `videowall-designer/sos/videoTiming.js` | **no** | Credential targets `http://api.kiera.office.signageos.io` (internal staging, HTTP) — **out of program scope** (eligible targets ONLY: `box.signageos.io`, `api.signageos.io`). Per knowledge base: "not directly reportable (out-of-scope host) but informs prod org-boundary testing." |
