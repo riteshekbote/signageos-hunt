@@ -97,3 +97,12 @@
   - | **B** | `api.signageos.io/status` — same class of infra leak | **VALID** | 4.3 Low |
   - | **C** | `box.signageos.io` CORS — 18 static ACAO values on `/` + `/login/` (http:// variant + `*.zdusercontent.com` wildcard, no credentials flag) | **VALID** | 3.1 Low |
   - | **D** | `box.signageos.io` CSP — overly broad connect-src/frame-src (40+ origins: Auth0, device APIs, S3, API Gateway) | **VALID** | 3.1 Low |
+
+- 7 lead(s) marked VALID at 2026-08-08 19:50:51 UTC
+  - | 1 | **box.signageos.io/status** — unauthenticated JSON leaks pod hostname, process UID, Node version, full amqp/redis/mongo topology; zero security headers (HSTS/xfo/xcto/CSP all absent) | **VALID**
+  - | 2 | **box.signageos.io CORS** — 17-18 static ACAO values incl. `http://` plaintext variant + `https://*.zdusercontent.com` wildcard; no Access-Control-Allow-Credentials | **VALID** (already accepted
+  - | 3 | **box.signageos.io CSP** — overly broad connect-src/frame-src (40-59 origins), triplicated Auth0 oauth/token | **VALID** (already accepted) |
+  - | 4 | **api.signageos.io/status** — same info-leak class but now hardened with HSTS/xfo/xcto | **VALID** (already accepted) |
+  - | 5 | Cross-tenant IDOR @ api.signageos.io/v1/organization/{uid}/security-token | **HOLD** — requires valid X-Auth token |
+  - | 6 | Cross-tenant org OAuth client-secret disclosure @ api.signageos.io/v1/organization/{uid} | **HOLD** — requires valid account JWT |
+  - | 7 | Cross-tenant peer-recovery overwrite @ api.signageos.io/v1/device/{uid}/peer-recovery | **HOLD** — requires valid org X-Auth |
