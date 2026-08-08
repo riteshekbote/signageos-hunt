@@ -106,3 +106,13 @@
   - | 5 | Cross-tenant IDOR @ api.signageos.io/v1/organization/{uid}/security-token | **HOLD** — requires valid X-Auth token |
   - | 6 | Cross-tenant org OAuth client-secret disclosure @ api.signageos.io/v1/organization/{uid} | **HOLD** — requires valid account JWT |
   - | 7 | Cross-tenant peer-recovery overwrite @ api.signageos.io/v1/device/{uid}/peer-recovery | **HOLD** — requires valid org X-Auth |
+
+- 8 lead(s) marked VALID at 2026-08-08 20:16:06 UTC
+  - VERDICT: VALID (MISCONFIG — Infrastructure Information Disclosure)
+  - | **VALID** | 4 | box/api `/status` info disclosure, box CORS (HTTP variant + wildcard), box CSP (40+ origins) |
+  - VERDICT: VALID (MISCONFIG — Infrastructure Information Disclosure)
+  - VERDICT: VALID (MISCONFIG — CORS Trust-Boundary Expansion, Low severity)
+  - VERDICT: VALID (MISCONFIG — Overly Broad CSP, Low-Medium severity)
+  - VERDICT: HOLD — AUTH_HELPED-only, no passive POC. Requires valid JWT + second
+  - VERDICT: HOLD — AUTH_HELPED-only. Requires valid account credentials to
+  - VALID  (4):
