@@ -77,3 +77,14 @@
   - | 2 | `api.signageos.io/status` — unauthenticated infra info disclosure | **VALID (Low)** | 3.7 |
   - | 3 | `box.signageos.io` CORS ACAO whitelist (http:// + wildcard) | **VALID (Low, borderline)** | 3.7 |
   - | 4 | `box.signageos.io` CSP overly broad (40+ origins) | **VALID (Low, borderline)** | 3.7 |
+
+- 9 lead(s) marked VALID at 2026-08-08 16:59:58 UTC
+  - **Verdict: VALID (Low)** | CVSS 3.1: 3.7 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - **Verdict: VALID (Low)** | CVSS 3.1: 3.7 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - **Verdict: VALID (Low, borderline)** | CVSS 3.1: 3.7 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - **Verdict: VALID (Low, borderline)** | CVSS 3.1: 3.7 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - | Q2 | NO — requires valid account JWT (403 without) |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant
+  - | Q2 | NO — requires valid account JWT |
+  - | Q2 | NO — requires valid org X-Auth (clientId:secret) |
+  - | **VALID** | 4 | box/status, api/status, box CORS, box CSP |
