@@ -159,3 +159,5 @@
 - NEW box.signageos.io/status pod hostname rotated to `box-7c8c876945-chbwh` (Node v20.20.2, UID `db5ae9f2f2545ca6eac15f7ebcc244fd6c66c2abaf90f0fe21`) — K8s rolling deploy, still ONLY `x-powered-by: Express
 - NEW api.signageos.io/status pod hostname rotated to `api-6f69db97d5-wpppp` (Node v24.19.0, UID `2730e3d23aad18e08380a26c87ecb53369d27821392ff3476c`) — K8s rolling deploy, security headers (HSTS/xfo/xcto) 
 - CHANGED box.signageos.io CORS/CSP reconfirmed — 17 static ACAO (incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + `api.signageos.io`), evil.test NOT reflected, NO `access-con
+
+## 2026-08-08 23:53:17 UTC

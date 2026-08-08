@@ -1,12 +1,7 @@
-## 2026-08-08 23:21:56 UTC [api] (model nemotron3)
-[NEW] box.signageos.io/status pod hostname rotated to `box-7c8c876945-chbwh` (Node v20.20.2, UID `db5ae9f2f2545ca6eac15f7ebcc244fd6c66c2abaf90f0fe21`) — K8s rolling deploy, still ONLY `x-powered-by: Express`
-[NEW] api.signageos.io/status pod hostname rotated to `api-6f69db97d5-wpppp` (Node v24.19.0, UID `2730e3d23aad18e08380a26c87ecb53369d27821392ff3476c`) — K8s rolling deploy, security headers (HSTS/xfo/xcto) confirmed present
-[CHANGED] box.signageos.io CORS/CSP reconfirmed — 17 static ACAO (incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + `api.signageos.io`), evil.test NOT reflected, NO `access-control-allow-credentials`, CSP 59+ distinct origins with triplicated Auth0 oauth/token
+## 2026-08-08 23:53:05 UTC [api] (model nemotron3)
 [PRIO] api.signageos.io/v1/organization/{organizationUid}, 7.8, attack=9 business=10 tech=8 gate=2 cloud=8 fresh=7
-[PRIO] api.signageos.io/v1/organization/{organizationUid}/security-token, 7.5, attack=8 business=10 tech=8 gate=2 cloud=8 fresh=7
 [PRIO] box.signageos.io/status, 5.5, attack=6 business=4 tech=3 gate=10 cloud=5 fresh=5
 [PRIO] box.signageos.io/ CORS+CSP, 5.8, attack=6 business=3 tech=7 gate=10 cloud=5 fresh=5
-[PRIO] api.signageos.io/status, 5.2, attack=5 business=4 tech=3 gate=10 cloud=5 fresh=5
 [HYP] Cross-tenant org OAuth client-secret disclosure via account JWT
 class: IDOR
 asset: api.signageos.io/v1/organization/{organizationUid}
@@ -15,15 +10,6 @@ reasoning: SDK/CLI code-verified — getOrganization() sends GET /v1/organizatio
 evidence_needed: own account JWT → HTTP 200 on GET /v1/organization/<foreign-org-uid> returning oauthClientSecret
 verify_steps: AUTH_HELPED: curl -H "X-Auth: <accountJWT>" https://api.signageos.io/v1/organization/<own-org-uid> = 200 baseline; repeat with foreign-org UID → 200 + oauthClientSecret = cross-tenant; escalate: curl -H "X-Auth: <leakedClientId>:<leakedSecret>" https://api.signageos.io/v1/device → foreign org device list
 impact: any tenant's org API credential → full device/content/timing/firmware control of foreign org; CRITICAL
-testability: AUTH_HELPED
-[HYP] Cross-tenant org security-token minting via account JWT + client-supplied organizationUid
-class: IDOR
-asset: api.signageos.io/v1/organization/{organizationUid}/security-token
-confidence: 70
-reasoning: OrganizationTokenManagement.ts code-verified — GET list + POST {"name":...} against organization/{uid}/security-token with client-supplied UID; requester sends org UID only as query param for JWT (not for this endpoint), so path UID + account JWT membership check is the only barrier; account tokens can create multiple orgs per docs
-evidence_needed: own account JWT → 200 on GET /v1/organization/<foreign-uid>/security-token; POST mints token valid on /v1/device
-verify_steps: AUTH_HELPED: baseline GET /v1/organization/<own>/security-token = 200; foreign UID → 200 = cross-tenant mint; POST {"name":"poc"} → validate minted token with X-Auth: <token> on /v1/device
-impact: mint org tokens for any tenant → full foreign-device control (brightness, firmware, content, timing); CRITICAL
 testability: AUTH_HELPED
 [HYP] Unauthenticated /status topology leak with zero security headers
 class: MISCONFIG
@@ -34,8 +20,17 @@ evidence_needed: curl -sD- https://box.signageos.io/status | grep -iE 'strict-tr
 verify_steps: PASSIVE: curl -sD- https://box.signageos.io/status (confirm data + header deficit)
 impact: Infrastructure topology + process identity exposed unauthenticated; aids reconnaissance for chained attacks; MEDIUM
 testability: PASSIVE
+[HYP] Broad static CORS whitelist with http:// variant and zdusercontent wildcard
+class: MISCONFIG
+asset: box.signageos.io/
+confidence: 90
+reasoning: 17 static ACAO values incl http://box.signageos.io plaintext + https://*.zdusercontent.com wildcard + api.signageos.io sibling; unchanged under spoofed Origin evil.test; NO access-control-allow-credentials on any box path
+evidence_needed: curl -H "Origin: https://evil.test" -sD- https://box.signageos.io/ shows same 17 ACAO without evil.test reflection
+verify_steps: PASSIVE: curl -H "Origin: https://evil.test" -sD- https://box.signageos.io/ && curl -sD- https://box.signageos.io/login/ (confirm static whitelist, no credentials flag)
+impact: Overly permissive CORS expands postMessage/origin trust boundary; no direct credential theft without credentials flag; LOW-MEDIUM
+testability: PASSIVE
 [PARKED] Cross-tenant org OAuth client-secret disclosure via account JWT: requires AUTH_HELPED (valid account JWT + foreign org UID), off-phase for passive-first POC cycle
-[PARKED] Cross-tenant org security-token minting via account JWT + client-supplied organizationUid: requires AUTH_HELPED (valid account JWT + foreign org UID), off-phase for passive-first POC cycle
+[PARKED] Broad static CORS whitelist with http:// variant and zdusercontent wildcard: class MISCONFIG accepted but LOW-MEDIUM impact, passive reconfirmed, no new POC needed this cycle
 [FINAL] Ranked surviving hypotheses (top first):
 [NEXT] PROBE: curl -s --max-time 20 https://box.signageos.io/status -o /tmp/poc_status_b.json -D /tmp/poc_status_h.txt && grep -icE 'strict-transport|x-frame|x-content|content-security' /tmp/poc_status_h.txt && cat /tmp/poc_status_b.json | jq .
 [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Unauthenticated GET leaks pod hostname + 64-hex process.uid + Node v20.20.2 + full amqp/redis/mongo topology + per-service responseTime; headers ONLY x-powered-by: Express — zero hardening headers
