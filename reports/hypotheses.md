@@ -447,3 +447,5 @@
 - LEARN: REJECTED MISCONFIG @ api.signageos.io/v2/device: Returns 403 JWT-gated (was 404) — now JWT-gated, not a pre-auth bypass
 - LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — all routes 403 JWT/X-Auth-gated, no pre-auth bypass surface. v2 migration advancing (/v2/device now 40
 - LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 state/redirect_uri binding — not passively testable, no unauthenticated authn surf remaining on box; all en
+
+## RANKED HYPOTHESES 2026-08-08 17:43:05 UTC
