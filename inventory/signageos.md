@@ -72,3 +72,7 @@
 ## 2026-08-08 04:47:05 UTC
 
 ## 2026-08-08 05:31:29 UTC
+
+## 2026-08-08 06:07:19 UTC
+- CHANGED box.signageos.io/status pod hostname rotated to box-7c8c876945-gkzcp (Node v20.20.2) — known rolling-deploy churn, no functional change
+- CHANGED api.signageos.io/status pod hostname rotated to api-6f69db97d5-st6zq (Node v24.19.0) — known rolling-deploy churn, no functional change

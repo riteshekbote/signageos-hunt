@@ -4426,3 +4426,110 @@ All three hypotheses meet criteria: confidence ≥ 40, not on REJECTED list, con
 
 [RISK] box.signageos.io: 70 — unauthenticated /status metadata leak + overly broad CSP/CORS expand attack surface
 [RISK] api.signageos.io: 65 — dual-auth model on 60+ org-scoped endpoints; IDOR risk if tenant validation missing; no CORS exploitability (no ACAO)
+===== ANALYST laguna 2026-08-08 06:07:19 UTC =====
+[0m
+> build · laguna-s-2.1-free
+[0m
+[0m$ [0mcurl -s -i --connect-timeout 10 --max-time 15 https://box.signageos.io/status 2>&1 | head -60
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1436
+date: Sat, 08 Aug 2026 06:04:48 GMT
+etag: W/"59c-zaT7A3P9ETLFup7DKVcpbGuQBPc"
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 8cd68668a2917bad8b847f81e97b321a.cloudfront.net (CloudFront)
+x-amz-cf-pop: PHX52-P1
+x-amz-cf-id: 83EtqdAyz4Zplplsi1hg4-d3UYna45Cu_J-exFZAmedcgtPPrzfMcw==
+
+{"name":"box","status":"OK","process":{"uid":"9dcb452a362229c8d3f1650e199957b1d177b10e78203ee46d","pid":1,"version":"v20.20.2","uptime":4635.090833814,"cpuUsage":{"user":234066551,"system":35316890},"memoryUsage":{"rss":205680640,"heapTotal":139382784,"heapUsed":117880880,"external":23465160,"arrayBuffers":20014447}},"hostname":"box-7c8c876945-4jk76","failedServices":[],"succeededServices":["amqp0","redis0","redis2","redis3","redis1","mongoDB2","mongoDB3","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1786169088900,"respondedAt":1786169088961,"amqp0":{"response":{"requestedAt":1786169088900,"respondedAt":1786169088961,"responseTime":61}},"redis0":{"response":{"requestedAt":1786169088901,"respondedAt":1786169088903,"responseTime":2}},"redis2":{"response":{"requestedAt":1786169088901,"respondedAt":1786169088903,"responseTime":2}},"redis3":{"response":{"requestedAt":1786169088901,"respondedAt":1786169088904,"responseTime":3}},"redis1":{"response":{"requestedAt":1786169088901,"respondedAt":1786169088904,"responseTime":3}},"mongoDB2":{"response":{"requestedAt":1786169088901,"respondedAt":1786169088903,"responseTime":2}},"mongoDB3":{"response":{"requestedAt":1786169088901,"respondedAt":1786169088904,"responseTime":3}},"mongoDB1":{"response":{"requestedAt":1786169088901,"respondedAt":1786169088906,"responseTime":5}},"mongoDB0":{"response":{"requestedAt":1786169088901,"respondedAt":1786169088907,"responseTime":6}}}
+[0m
+I need to verify the highest-confidence PASSIVE hypothesis (box.signageos.io/status) right now since I'm in POC phase targeting box. Let me run a single passive probe.
+[0m$ [0mcurl -s -i --connect-timeout 10 --max-time 15 https://api.signageos.io/status 2>&1 | head -40
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1331
+date: Sat, 08 Aug 2026 06:04:50 GMT
+etag: W/"533-jIZbQuWHsfyKalI2jPJYNrvukpE"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+via: 1.1 ea616b46cffefe382adc8a3aaad64c5c.cloudfront.net (CloudFront)
+x-amz-cf-pop: PHX50-P2
+x-amz-cf-id: v_VtpneOZyAKVBLL1N09ZEdFlLd45_Ur7QPiA8bDrMH31OSTE_9ONw==
+
+{"name":"api","status":"OK","process":{"uid":"1618046bac52a47ed41bb2e1c151dacd1faf9ad564e2909950","pid":1,"version":"v24.19.0","uptime":60753.058222403,"cpuUsage":{"user":25940184610,"system":2312777744},"memoryUsage":{"rss":851193856,"heapTotal":458125312,"heapUsed":274829056,"external":70737535,"arrayBuffers":66574635}},"hostname":"api-6f69db97d5-dw2j2","failedServices":[],"succeededServices":["amqp0","redis0","redis3","redis2","redis1","mongoDB2","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1786169090152,"respondedAt":1786169090214,"amqp0":{"response":{"requestedAt":1786169090152,"respondedAt":1786169090213,"responseTime":61}},"redis0":{"response":{"requestedAt":1786169090152,"respondedAt":1786169090154,"responseTime":2}},"redis3":{"response":{"requestedAt":1786169090152,"respondedAt":1786169090155,"responseTime":3}},"redis2":{"response":{"requestedAt":1786169090152,"respondedAt":1786169090155,"responseTime":3}},"redis1":{"response":{"requestedAt":1786169090152,"respondedAt":1786169090155,"responseTime":3}},"mongoDB2":{"response":{"requestedAt":1786169090153,"respondedAt":1786169090155,"responseTime":2}},"mongoDB1":{"response":{"requestedAt":1786169090153,"respondedAt":1786169090158,"responseTime":5}},"mongoDB0":{"response":{"requestedAt":1786169090152,"respondedAt":1786169090159,"responseTime":7}}}
+[0m
+Both status endpoints confirmed live with identical schema. Now the structured analysis.
+
+---
+
+## STEP 1 — DELTA
+- `[NEW]` api.signageos.io/status confirmed live — HTTP 200 JSON leaking pod hostname (`api-6f69db97d5-dw2j2`), process UID, Node v24.19.0, backend topology (amqp0, redis0-3, mongoDB0-3). Distinct from /ready (200 `OK`).
+- `[CHANGED]` api.signageos.io/status now observed to carry `cache-control: no-store`, `x-frame-options: DENY`, `x-content-type-options: nosniff`, `strict-transport-security` — new hardening headers NOT seen on box.signageos.io/status.
+- `[CHANGED]` box.signageos.io/status hostname rotated `52dpt → 4jk76`; api.signageos.io/status hostname rotated `97fjw → dw2j2`. Pod rotation confirms live K8s environment.
+- `[NEW]` box.signageos.io/status missing the security headers (no `x-frame-options`/`x-content-type-options`/`HSTS`) that api.signageos.io/status now has — confirms inconsistent hardening across the two pods.
+
+## STEP 2 — PRIORITIZE
+- `[PRIO]` box.signageos.io/status — 5.0 — attack 6, business 5, tech 4, gate 10, cloud 5, fresh 8
+- `[PRIO]` api.signageos.io/status — 5.2 — attack 6, business 5, tech 5 (security headers but still leaks), gate 10, cloud 6 (mixed fleet v24.19.0 + v20.20.2), fresh 8
+- `[PRIO]` api.signageos.io/v1/organization/{uid} — 4.9 — attack 7, business 10, tech 8, gate 2, cloud 6, fresh 2
+- `[PRIO]` api.signageos.io/v1/organization/{uid}/security-token — 4.9 — attack 7, business 10, tech 8, gate 2, cloud 6, fresh 2
+- `[PRIO]` box.signageos.io CSP/CORS — 4.5 — attack 5, business 4, tech 6, gate 10, cloud 5, fresh 5
+
+## STEP 3 — HYPOTHESES
+`[HYP]` box.signageos.io/status — K8s pod metadata + backend topology leak
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 90
+reasoning: Unauthenticated GET returns HTTP 200 application/json. Live just now (06:04:48 UTC) confirming hostname=`box-7c8c876945-4jk76`, process UID=`9dcb452a362229c8d3f1650e199957b1d177b10e78203ee46d`, Node v20.20.2, succeededServices=[amqp0, redis0-3, mongoDB0-3], plus per-service response times and exact timestamps. No security headers (x-frame-options, HSTS, x-content-type-options all absent), unlike the API pod.
+evidence_needed: GET https://box.signageos.io/status → 200 application/json containing `hostname` + `succeededServices` + `process.uid` + `version`
+verify_steps: PASSIVE: curl -s https://box.signageos.io/status
+impact: Pod hostname, 40-hex process UID, Node version, backend service names + response timing enable targeted SSRF and downstream logic-flaw probing. Severity: Low-Medium.
+testability: PASSIVE
+
+`[HYP]` api.signageos.io/v1/organization/{uid} — cross-tenant OAuth client-secret disclosure
+class: IDOR
+asset: api.signageos.io/v1/organization/{organizationUid}
+confidence: 75
+reasoning: 60+ /v1/* endpoints JWT-gated via dual auth (Bearer JWT + X-Auth `id:unsafeDecryptedToken`). Org-scoped endpoint takes client-supplied organizationUid in path. SDK likely sets orgUid client-side; risk of missing server-side tenant validation allowing account-token holder to read foreign org metadata incl. oauthClientSecret.
+evidence_needed: GET /v1/organization/<own-orgUid> -H "X-Auth: <acctId>:<acctToken>" returns 200 with oauthClientSecret (baseline); GET /v1/organization/<foreign-orgUid> with same header returns 200 (not 403) exposing oauthClientSecret
+verify_steps: AUTH_HELPED: GET /v1/organization/<foreign-orgUid> -H "X-Auth: <acctId>:<acctToken>" (→ 200 containing oauthClientSecret = confirmed IDOR)
+impact: Disclosure of any org's OAuth client secret → impersonation, device enrollment hijack. Severity: High.
+testability: AUTH_HELPED
+
+`[HYP]` box.signageos.io CSP/CORS — broad origin trust boundary
+class: MISCONFIG
+asset: box.signageos.io/ (CSP + CORS headers)
+confidence: 80
+reasoning: Live 2026-08-08. /login/ CSP has 33+ connect-src/frame-src origins spanning Auth0, Sony/BroadSign/MoodMedia device APIs, S3 buckets, AWS API Gateway, api.signageos.io sibling. 18 static access-control-allow-origin values incl. http:// (plaintext) + `*.zdusercontent.com` + api.signageos.io sibling. No `access-control-allow-credentials` on any box path — limits direct CORS theft but expands postMessage/origin trust.
+evidence_needed: curl -sI https://box.signageos.io/login/ | grep -iE 'content-security-policy|access-control-allow-origin' showing >20 origins in each
+verify_steps: PASSIVE: curl -sI https://box.signageos.io/login/
+impact: Broadened origin trust boundary enables origin-confused postMessage and frame-injection chains; http:// ACAO enables potential downgrade. Severity: Medium.
+testability: PASSIVE
+
+## STEP 4 — SELF-CRITIQUE
+`[PARKED]` api.signageos.io/v1/organization/{uid}/security-token — confidence 65 (below 70 threshold); same IDOR class already represented by higher-confidence {uid} org endpoint with identical verify path.
+`[PARKED]` api.signageos.io/v1/* descriptive errors — REJECTED per scope.yml (descriptive error messages exclusion).
+`[PARKED]` api.signageos.io/v2/device 403 — already REJECTED; JWT-gated, no pre-auth bypass.
+`[PARKED]` Auth0 redirect_uri / login CSRF — REJECTED per scope.yml (CSRF on anonymous-accessible forms).
+`[FINAL]` (re-ranked):
+1. box.signageos.io/status — MISCONFIG — confidence 90 (PASSIVE, already proven live)
+2. box.signageos.io CSP/CORS — MISCONFIG — confidence 80 (PASSIVE)
+3. api.signageos.io/v1/organization/{uid} — IDOR — confidence 75 (AUTH_HELPED)
+
+## STEP 5 — NEXT ACTION
+`[NEXT]` PROBE: Verify whether the api.signageos.io /v1/organization endpoint path is discoverable and its exact form — `curl -s -o /dev/null -w "%{http_code}" https://api.signageos.io/v1/organization` and `https://api.signageos.io/v1/organization/test-uid` (expect 403 JWT-gate baseline, confirming path exists without needing auth — passive recon for the AUTH_HELPED IDOR). This maps the exact endpoint structure before needing a token.
+
+## STEP 6 — LEARNING
+- `[LEARNED]` ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live at 06:04:48 UTC — hostname=box-7c8c876945-4jk76, Node v20.20.2, process UID, backend topology leaked. Missing security headers (no x-frame-options / HSTS / x-content-type-options).
+- `[LEARNED]` ACCEPTED MISCONFIG @ api.signageos.io/status: Confirmed live — hostname=api-6f69db97d5-dw2j2, Node v24.19.0, backend topology leaked. NOW has no-store + x-frame-options:DENY + nosniff + HSTS (new hardening not on box pod).
+- `[LEARNED]` REJECTED MISCONFIG @ box.signageos.io/cors: Still confirmed — 18 static ACAO values, NO access-control-allow-credentials on any box path. CORS exfiltration blocked; only origin-trust-boundary expansion remains (postMessage/frame).
+- `[LEARNED]` REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri validation + state binding — still NOT testable passively without tenant access or authenticated session. Carried forward.
+- `[LEARNED]` REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `WRONG_JWT_TOKEN`/`Account not found`/403105 — excluded per scope.yml.
+
+## STEP 7 — RISK SCORE
+- `[RISK]` box.signageos.io: 72 — unauthenticated /status metadata leak + broad CSP origin trust (33+ origins incl. http:// + sibling API + zendesk wildcard); consistent pod rotation; missing basic security headers on status endpoint
+- `[RISK]` api.signageos.io: 78 — unauthenticated /status leak on mixed Node fleet (v24.19.0 + v20.20.2); JWT-gated /v1 + /v2 org-scoped endpoints with dual-auth model create IDOR risk surface if tenant validation is missing; descriptive error leakage (excluded but aids attack chain); no ACAO (CORS-safe for now)
