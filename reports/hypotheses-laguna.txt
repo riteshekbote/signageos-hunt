@@ -1,1 +1,39 @@
-## 2026-08-08 07:08:34 UTC [box] (model laguna)
+## 2026-08-08 07:58:25 UTC [box] (model laguna)
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token — 7.40 — atk=8/bus=9/tech=8(gate=3/cloud=6/fresh=9
+[PRIO] box.signageos.io/ login CSP+CORS — 6.60 — atk=7/bus=5/tech=6/gate=10/cloud=5/fresh=7
+[PRIO] box.signageos.io/status — 6.00 — atk=6/bus=4/tech=4/gate=10/cloud=6/fresh=8
+[HYP] Cross-tenant security-token minting via org-scoped X-Auth path
+class: IDOR
+asset: api.signageos.io/v1/organization/{organizationUid}/security-token
+confidence: 78
+reasoning: 3 endpoints probed confirm dual-auth: Bearer-JWT (403105 on /v1/device) and X-Auth `id:unsafeDecryptedToken` (403075/403076 on org paths). The {organizationUid} is client-supplied in the URL path while org identity is independently derived from the first part of the X-Auth header — a classic tenant-confusion/IDOR surface. Security-token uses a distinct auth path (403076) from org-metadata (403075), so a missing server-side cross-check of path-uid against header-derived-org would expose token minting.
+evidence_needed: With a single valid X-Auth (own org), GET /v1/organization/{own-uid}/security-token → 200 + valid token (baseline); GET /v1/organization/{foreign-uid}/security-token with the SAME header → 200 (not 403) returning a token scoped to the foreign org.
+verify_steps: AUTH_HELPED: (1) `sos login` (Auth0 device-code) to obtain an account JWT, then construct X-Auth `<accountId>:<jwt>`; (2) baseline `curl -H "X-Auth: <ownId>:<jwt>" https://api.signageos.io/v1/organization/<own-orgUid>/security-token` → expect 200; (3) `curl -H "X-Auth: <ownId>:<jwt>" https://api.signageos.io/v1/organization/<foreign-orgUid>/security-token` → if 200 with token body ≠ 403, IDOR confirmed.
+impact: Mint a security token for any arbitrary organization → unauthorized device enrollment/control and downstream SSO impersonation. Severity: High.
+testability: AUTH_HELPED
+[HYP] Over-broad CSP connect-src + reflected CORS ACAO without credential flag
+class: MISCONFIG
+asset: box.signageos.io/login/ (+ /)
+confidence: 82
+reasoning: Live 2026-08-08 07:56. /login/ CSP lists 30+ connect-src/frame-src origins (Auth0 oauth/token x3, Sony/BroadSign/MoodMedia device APIs, 6+ S3 buckets, AWS API Gateway, api.signageos.io sibling, *.zdusercontent.com). 18 static `access-control-allow-origin` values on / (302) incl. `http://box.signageos.io` plaintext variant + `https://*.zdusercontent.com` wildcard; reflected verbatim under spoofed Origin with NO `access-control-allow-credentials`.
+evidence_needed: CSP header containing >20 origins in connect-src; ≥1 http:// ACAO variant; ACAO reflected under arbitrary Origin without credentials flag.
+verify_steps: PASSIVE: `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/` | grep -iE 'access-control-allow-origin|content-security-policy' and count distinct origins.
+impact: Broadened origin trust boundary enables origin-confused postMessage/frame-injection and downgrade chains; http:// ACAO permits plaintext downgrade of token-bearing origins. Severity: Medium. (Credential theft currently blocked by absent credentials flag.)
+testability: PASSIVE
+[HYP] Unauthenticated /status metadata leak
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 90
+reasoning: Live 2026-08-08 07:56:12 UTC → HTTP 200 application/json, `x-powered-by: Express`, no HSTS / x-frame-options / x-content-type-options. Body leaks hostname=box-7c8c876945-xmdhm, 40-hex process.uid=`8e416ed1bf38a2db9ef7aa0d4e74cf5fec4ad8a2a84ee7604e`, Node v20.20.2, and full succeededServices=[amqp0,redis0-3,mongoDB0-3] with per-service responseTime + epoch timestamps.
+evidence_needed: GET https://box.signageos.io/status → 200 application/json containing `hostname`+`process.uid`+`version`+`succeededServices`.
+verify_steps: PASSIVE: `curl -s https://box.signageos.io/status`
+impact: Pod hostname, 40-hex process UID, Node version, backend service topology + response timing enable targeted SSRF/fuzzing and downgrade CVE mapping. Severity: Low-Medium.
+testability: PASSIVE
+[FINAL] (re-ranked):
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live (pod xmdhm, Node v20.20.2, full topology). Unchanged in data shape; new headers absent (no HSTS/xfo/xcto).
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: Reconfirmed — 18 ACAO incl. http:// + *.zdusercontent.com, NO `access-control-allow-credentials` under any Origin → not directly credential-theft exploitable (carried forward).
+[LEARN] REJECTED MISCONFIG @ box.signageos.io/ready: Returns 200 "OK" (2 bytes) trivial health check, no data leaked (carried forward).
+[LEARN] REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak `WRONG_JWT_TOKEN`/`NO_ORGANIZATION_TO_AUTHENTICATE`/`WRONG_ACCOUNT_SECRET` + errorCode 403075/403076/403105 — class descriptive-error excluded per scope.yml (carried forward).
+[LEARN] CONFIRMED MECHANISM @ api.signageos.io/v1/organization/{uid}: Dual-auth precisely enumerated — X-Auth format `id:unsafeDecryptedToken`; org identity derived from header first-part (before `:`); `/organization/{uid}`→403075, `/organization/{uid}/security-token`→403076, `/v1/device`→403105 (JWT-only). Org {uid} in path is client-supplied and distinct from auth-derived org — narrows IDOR verification to X-Auth org-crossing.
+[LEARN] REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 flow params not passively testable without tenant/authenticated session (carried forward).
+[RISK] box.signageos.io: 68 — unauthenticated /status topology leak + broad CSP (30+ origins) / CORS (18 ACAO incl. http:// + wildcard, no credentials flag) expand trust boundary; rolling-deploy churn confirmed.

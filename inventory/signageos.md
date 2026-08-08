@@ -80,3 +80,7 @@
 ## 2026-08-08 07:09:50 UTC
 - CHANGED box.signageos.io/status: pod hostname rotated to `box-7c8c876945-9v4gf` (Node v20.20.2) — K8s rolling deploy churn, no functional change
 - CHANGED api.signageos.io/status: pod hostname rotated to `api-6f69db97d5-9kg9l` (Node v24.19.0) — K8s rolling deploy churn, no functional change
+
+## 2026-08-08 07:58:45 UTC
+- CHANGED box.signageos.io/status: pod hostname rotated to `box-7c8c876945-xmdhm` (Node v20.20.2) — K8s rolling deploy churn, no functional change
+- CHANGED api.signageos.io/status: pod hostname rotated to `api-6f69db97d5-jnncr` (Node v24.19.0) — K8s rolling deploy churn, no functional change

