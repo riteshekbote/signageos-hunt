@@ -146,3 +146,20 @@
   - | B | api.signageos.io | `/status` unauthenticated infra leak | VALID | 4.3 Low |
   - | C | box.signageos.io | CORS ACAO 18-origin static whitelist | VALID | 3.1 Low |
   - | D | box.signageos.io | CSP overly broad (40+ origins) | VALID | 3.1 Low |
+
+- 15 lead(s) marked VALID at 2026-08-08 22:54:09 UTC
+  - | Q2 Attacker reach? | NO — all endpoints return 403 `WRONG_JWT_TOKEN`/`403105` without a JWT. Requires valid account JWT (AUTH_HELPED). |
+  - | Q4 Passive proof? | NO — cannot prove without a valid JWT + a second tenant's UID. |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant to prove. Not passively provable.
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant.
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant.
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid org X-Auth + second tenant. PUT also violates passive-only rule.
+  - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N). Minimal proof: `curl -s https://box.signageos.io/status` → JSON with hostname + succeededServices + process.uid + No
+  - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N). Minimal proof: `curl -s https://api.signageos.io/status` → JSON with hostname + succeededServices + Node version. Re
+  - **Verdict: VALID (Low, borderline)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N). Minimal proof: `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/` → observe static ACAO
+  - **Verdict: VALID (Low, borderline)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N). Minimal proof: `curl -sI https://box.signageos.io/login/%2F` → CSP header with 40+ distinct origins. Rep
+  - | 9 | box.signageos.io/status info leak | MISCONFIG | **VALID (Low)** CVSS 4.3 | Unauthenticated JSON leak, passive PoC confirmed |
+  - | 10 | api.signageos.io/status info leak | MISCONFIG | **VALID (Low)** CVSS 4.3 | Unauthenticated JSON leak, passive PoC confirmed |
+  - | 11 | box CORS ACAO whitelist | MISCONFIG | **VALID (Low, border)** CVSS 3.1 | Static http:// + wildcard, passive PoC confirmed |
+  - | 12 | box CSP overly broad | MISCONFIG | **VALID (Low, border)** CVSS 3.1 | 40+ origins, passive PoC confirmed |
+  - **VALID leads to report:** 4 (box/api /status ×2, box CORS, box CSP) — all reconfirmations of previously accepted findings. No new VALID findings this cycle.
