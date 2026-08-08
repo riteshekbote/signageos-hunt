@@ -123,3 +123,4 @@
 - 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v1/organization/test descriptive errors: Reconfirmed — 403 body still leaks `WRONG_JWT_TOKEN`/`Account not found`/403105 — excluded class per scope.yml.
 - 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v2/device: Reconfirmed 403 JWT-gated (since 2026-08-08 02:38) — not a pre-auth bypass.
 - 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live — pod api-6f69db97d5-9kg9l, Node v24.19.0, full topology; now hardened with HSTS+xfo+xcto (differential vs box /status which lacks them).
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status — still alive: pod `box-7c8c876945-r5fm9`, Node v20.20.2, security-header grep = 0.

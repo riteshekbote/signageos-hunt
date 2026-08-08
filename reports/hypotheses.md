@@ -368,3 +368,15 @@
 - LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/organization/test descriptive errors: Reconfirmed — 403 body still leaks `WRONG_JWT_TOKEN`/`Account not found`/403105 —
 - LEARN: REJECTED MISCONFIG @ api.signageos.io/v2/device: Reconfirmed 403 JWT-gated (since 2026-08-08 02:38) — not a pre-auth bypass.
 - LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live — pod api-6f69db97d5-9kg9l, Node v24.19.0, full topology; now hardened with HSTS+xfo+xcto (differ
+
+## RANKED HYPOTHESES 2026-08-08 10:57:22 UTC
+- [95] box.signageos.io/status: Unauthenticated /status topology leak with zero security headers (differential vs hardened `/`+`/login/`) (from reports/hypotheses-laguna.txt)
+- NEXT(hypotheses-nemotron3.txt): PROBE: curl -sD- https://box.signageos.io/status | grep -iE 'strict-transport|x-frame|x-content|content-security' — confirm zero security headers on /status (fi
+- NEXT(hypotheses-laguna.txt): PROBE: Finalize the box `/status` PoC evidence package — `curl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_statu
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Unauthenticated GET leaks pod hostname, process UID, Node v20.20.2, full service topology (amqp0, redis0-3, mongoD
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Now hardened with HSTS (max-age=31536000), x-frame-options: DENY, x-content-type-options: nosniff — differential v
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v2/device: Returns 403 JWT-gated (was 404) — now JWT-gated, not a pre-auth bypass
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — all routes 403 JWT/X-Auth-gated, no pre-auth bypass surface. v2 migration advancing (/v2/device now 40
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 state/redirect_uri binding — not passively testable, no unauthenticated authn surf remaining on box; all en
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status — still alive: pod `box-7c8c876945-r5fm9`, Node v20.20.2, security-header grep = 0.

@@ -848,3 +848,4 @@ testability: AUTH_HELPED
 [LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — /v2/device and /v1/organization/test both 403 JWT-gated with hardened headers; no pre-auth bypass surface. Unchanged.
 [RISK] box.signageos.io: 58 — /status leaks pod hostname + Node version + backend topology with zero security headers; /login/ CSP 40+ origins + 17 static ACAO (incl. http:// + *.zdusercontent.com wildcard) but no credentials flag. Moderate operational exposure; no data access without authn.
 [RISK] api.signageos.io: 50 — /status info leak same class (now hardened); every v1/v2 route solidly JWT/legacy-X-Auth gated; no CORS/GraphQL surface; only descriptive-error bodies (excluded). Residual exposure is the code-verified AUTH_HELPED cross-tenant org/device IDOR chain — highest severity if per-path org-membership checks are absent.
+## 2026-08-08 10:54:44 UTC [box] (model bigpickle)
