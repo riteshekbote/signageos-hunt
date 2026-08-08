@@ -65,3 +65,6 @@
 
 ## 2026-08-08 02:38:01 UTC
 - CHANGED api.signageos.io/v2/device: now returns 403 JWT-gated (was 404) — v2 migration advancing; supports AUTH hypothesis on v2 endpoints
+
+## 2026-08-08 03:56:22 UTC
+- NEW api.signageos.io/v2/device: now returns 403 JWT-gated (was 404) — v2 migration advancing
