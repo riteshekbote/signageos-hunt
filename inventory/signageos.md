@@ -70,3 +70,5 @@
 - NEW api.signageos.io/v2/device: now returns 403 JWT-gated (was 404) — v2 migration advancing
 
 ## 2026-08-08 04:47:05 UTC
+
+## 2026-08-08 05:31:29 UTC
