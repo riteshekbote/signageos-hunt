@@ -116,3 +116,13 @@
   - VERDICT: HOLD — AUTH_HELPED-only, no passive POC. Requires valid JWT + second
   - VERDICT: HOLD — AUTH_HELPED-only. Requires valid account credentials to
   - VALID  (4):
+
+- 8 lead(s) marked VALID at 2026-08-08 21:01:03 UTC
+  - | Q4 Provable GET/HEAD only | NO — requires valid X-Auth token (AUTH_HELPED) |
+  - **Verdict: HOLD** — AUTH_HELPED; plausible logic flaw but not provable with passive GET/HEAD only. Requires valid account token + second tenant.
+  - **Verdict: HOLD** — AUTH_HELPED; not passively provable. Requires valid account token + second tenant.
+  - | Q2 Reachable | YES — any authenticated attacker with valid JWT |
+  - **Verdict: HOLD** — AUTH_HELPED; not passively provable. Requires valid JWT token.
+  - | Q2 Reachable | YES — any attacker with valid org X-Auth (client-secret) |
+  - **Verdict: HOLD** — AUTH_HELPED; not passively provable. Requires valid X-Auth credential.
+  - | VALID | 0 | — |
