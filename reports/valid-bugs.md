@@ -15,3 +15,10 @@
   - | Q2 Reachable? | **Requires valid account JWT** |
   - | Q2 Reachable? | **Requires valid org X-Auth (clientId:secret) or account JWT** |
   - | **VALID** | 3 | box.status, api.status, box CORS |
+
+- 5 lead(s) marked VALID at 2026-08-08 06:03:13 UTC
+  - | Q2 Reachable? | Requires valid JWT — not public/unauthenticated |
+  - | Q2 Reachable? | Requires valid account JWT or X-Auth — not public |
+  - | Q2 Reachable? | Requires valid account JWT or X-Auth — not public |
+  - | Q2 Reachable? | Requires valid org X-Auth (clientId:secret) — not public |
+  - | VALID | 0 |
