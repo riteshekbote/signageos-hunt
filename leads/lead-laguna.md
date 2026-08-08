@@ -347,3 +347,4 @@ evidence_needed: curl -sI https://box.signageos.io/login/ | grep -iE 'content-se
 verify_steps: PASSIVE: curl -sI https://box.signageos.io/login/
 impact: Broadened origin trust boundary enables origin-confused postMessage and frame-injection chains; http:// ACAO enables potential downgrade. Severity: Medium.
 testability: PASSIVE
+## 2026-08-08 07:08:34 UTC [box] (model laguna)
