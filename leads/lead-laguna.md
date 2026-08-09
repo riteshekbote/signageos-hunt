@@ -1289,3 +1289,4 @@ testability: PASSIVE
 [RISK] box.signageos.io: 58 — /status leaks pod hostname + Node version + 64-hex process.uid + full backend topology with zero hardening headers (differential vs hardened `/`+`/login/`); /login/ CSP 59+ origins + 17 static ACAO incl `http://` variant + `*.zdusercontent.com` wildcard, but no credentials flag → no direct credential-theft path.
 [RISK] api.signageos.io: 50 — /status info leak now hardened (HSTS/xfo/xcto); all v1/v2 routes solidly JWT/X-Auth-gated, no CORS/GraphQL surface, only descriptive-error bodies (excluded class). Residual exposure is the code-verified AUTH_HELPED cross-tenant org/device IDOR chain — CRITICAL if per-path org-membership checks are absent; awaits token-bearing human verification.
 ## 2026-08-09 14:10:23 UTC [box] (model laguna)
+## 2026-08-09 14:53:34 UTC [box] (model laguna)

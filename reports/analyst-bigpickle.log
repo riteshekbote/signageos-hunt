@@ -10922,3 +10922,788 @@ STEP 7 — RISK SCORE
 [93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
 [0m✗ [0mcurl -s -o /tmp/d_api_status_b.txt -D /tmp/d_api_status_h.txt https://api.signageos.io/status -m 20; echo "---BODY---"; cat /tmp/d_api_status_b.txt | head -c 900; echo; echo "---HEADERS---"; cat /tmp/d_api_status_h.txt failed
 [91m[1mError: [0mThe user rejected permission to use this specific tool call.
+===== ANALYST bigpickle 2026-08-09 14:54:57 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la /home/runner/work/signageos-hunt/signageos-hunt/ 2>/dev/null; echo "---"; ls /tmp/opencode 2>/dev/null; echo "---"; ls /tmp/poc_box_status* 2>/dev/null
+total 208
+drwxr-xr-x 11 runner runner  4096 Aug  9 14:53 .
+drwxr-xr-x  3 runner runner  4096 Aug  9 14:52 ..
+drwxr-xr-x  7 runner runner  4096 Aug  9 14:53 .git
+drwxr-xr-x  3 runner runner  4096 Aug  9 14:52 .github
+-rw-r--r--  1 runner runner   944 Aug  9 14:52 README.md
+-rw-r--r--  1 runner runner    32 Aug  9 14:53 analyst-out.txt
+-rw-r--r--  1 runner runner 64361 Aug  9 14:53 analyst-prompt.txt
+-rw-r--r--  1 runner runner 60748 Aug  9 14:53 ctx.txt
+drwxr-xr-x  2 runner runner  4096 Aug  9 14:52 inventory
+drwxr-xr-x  2 runner runner  4096 Aug  9 14:52 knowledge
+drwxr-xr-x  2 runner runner  4096 Aug  9 14:52 leads
+-rw-r--r--  1 runner runner  4953 Aug  9 14:52 probe-results.md
+drwxr-xr-x  2 runner runner  4096 Aug  9 14:52 reports
+drwxr-xr-x  3 runner runner  4096 Aug  9 14:52 reposcan-raw
+-rw-r--r--  1 runner runner  3086 Aug  9 14:52 scope.yml
+drwxr-xr-x  2 runner runner  4096 Aug  9 14:52 scripts
+-rw-r--r--  1 runner runner    33 Aug  9 14:52 state_bigpickle.json
+-rw-r--r--  1 runner runner    33 Aug  9 14:52 state_laguna.json
+-rw-r--r--  1 runner runner    33 Aug  9 14:52 state_ling3.json
+-rw-r--r--  1 runner runner    33 Aug  9 14:52 state_longcat.json
+-rw-r--r--  1 runner runner    33 Aug  9 14:52 state_nemotron3.json
+drwxr-xr-x  2 runner runner  4096 Aug  9 14:52 triage
+---
+---
+[0m
+[0m$ [0mcat state_bigpickle.json; echo "---SCOPE---"; cat scope.yml; echo "---PROBE---"; cat probe-results.md
+{"phase": "POC", "target": "box"}---SCOPE---
+programs:
+  signageos:
+    name: signageOS Bug Bounty
+    disclosure_policy: TBD - operator-provided program scope (update once public channel confirmed)
+    assets:
+      - name: box.signageos.io
+        priority: In
+      - name: api.signageos.io
+        priority: In
+    out_of_scope:
+      - "Network level Denial of Service attacks"
+      - "Application Denial of Service by locking user accounts"
+      - "Descriptive error messages or headers (e.g. Stack Traces, banner grabbing)"
+      - "Disclosure of known public files or directories (e.g. robots.txt)"
+      - "Outdated software / library versions"
+      - "OPTIONS / TRACE HTTP method enabled"
+      - "CSRF on logout"
+      - "CSRF on forms that are available to anonymous users"
+      - "Cookies that lack HTTP Only or Secure settings for non-sensitive data"
+      - "Self-XSS and issues exploitable only through Self-XSS"
+      - "Reports resulting from automated scanning utilities without additional details or a POC demonstrating a specific exploit"
+      - "Attacks requiring physical access to a user's device"
+      - "Attacks dependent upon social engineering of signageOS employees or vendors"
+      - "Username enumeration based on login or forgot password pages"
+      - "Enforcement policies for brute force, rate limiting, or account lockout"
+      - "SSL/TLS best practices"
+      - "SSL attacks such as BEAST, BREACH, Renegotiation attack"
+      - "Clickjacking, without additional details demonstrating a specific exploit"
+      - "Mail configuration issues including SPF, DKIM, DMARC settings"
+      - "Use of a known-vulnerable library without a description of an exploit specific to our implementation"
+      - "Password and account recovery policies"
+      - "Presence of autocomplete functionality in form fields"
+      - "Publicly accessible login panels"
+      - "Lack of email address verification during account registration or account invitation"
+      - "Lack of email address verification password restore"
+      - "Session control during email/password changes"
+    github_orgs:
+      - signageos
+
+rules:
+  passive_first: true          # GET/HEAD reads first; no invasive testing without program approval
+  max_requests_per_second: 1   # never hammer
+  no_doom: true                # no DoS/DDoS, no account-lockout attacks
+  no_account_creation: true    # no mass signups without program approval
+  no_data_modification: true   # no writes, deletes, state changes on live infra
+  no_pre_disclosure: true      # never disclose before program response
+  poc_required: true           # scanner output alone is REJECTED; every report needs a specific exploit/POC
+  redact_secrets_in_commits: true   # commit sha256 of secrets, never raw values
+
+# Multi-model ensemble: every hunt run picks a rotation of the 5 models.
+models:
+  - { id: opencode/big-pickle, name: bigpickle }
+  - { id: opencode/nemotron-3-ultra-free, name: nemotron3 }
+  - { id: opencode/longcat-2.0-free, name: longcat }
+  - { id: opencode/ling-3.0-flash-free, name: ling3 }
+  - { id: opencode/laguna-s-2.1-free, name: laguna }
+---PROBE---
+
+## 2026-08-08 17:04:06 UTC
+https://box.signageos.io/status -> 200 len=1440 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+
+## 2026-08-08 17:43:05 UTC
+
+
+## 2026-08-08 18:13:59 UTC
+
+
+## 2026-08-08 19:03:14 UTC
+
+
+## 2026-08-08 19:40:18 UTC
+
+
+## 2026-08-08 20:07:46 UTC
+
+
+## 2026-08-08 20:45:36 UTC
+
+
+## 2026-08-08 21:15:22 UTC
+
+
+## 2026-08-08 21:52:14 UTC
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://box.signageos.io/status -> 200 len=1441 type=application/json; charset=utf-8
+
+## 2026-08-08 22:17:52 UTC
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://box.signageos.io/status -> 200 len=1433 type=application/json; charset=utf-8
+
+## 2026-08-08 22:55:06 UTC
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://box.signageos.io/status -> 200 len=1441 type=application/json; charset=utf-8
+
+## 2026-08-08 23:22:42 UTC
+https://box.signageos.io/status -> 200 len=1441 type=application/json; charset=utf-8
+https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io` -> ERR <urlopen error [Errno -2] Name or service not know
+https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io/v1/organization/{otherTenantUid -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+
+## 2026-08-08 23:53:19 UTC
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://box.signageos.io/status -> 200 len=1437 type=application/json; charset=utf-8
+https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
+https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
+
+## 2026-08-09 01:07:13 UTC
+
+
+## 2026-08-09 03:08:09 UTC
+
+
+## 2026-08-09 04:36:22 UTC
+
+
+## 2026-08-09 05:35:10 UTC
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://box.signageos.io/status -> 200 len=1442 type=application/json; charset=utf-8
+https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
+https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
+
+## 2026-08-09 06:26:33 UTC
+
+
+## 2026-08-09 07:34:55 UTC
+
+
+## 2026-08-09 08:22:41 UTC
+https://box.signageos.io/status -> 200 len=1435 type=application/json; charset=utf-8
+https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io` -> ERR <urlopen error [Errno -2] Name or service not know
+https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+
+## 2026-08-09 09:12:31 UTC
+https://box.signageos.io/status -> 200 len=1434 type=application/json; charset=utf-8
+https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io -> 200 len=37036 type=text/html; charset=utf-8
+https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+
+## 2026-08-09 09:58:48 UTC
+https://box.signageos.io/status -> 200 len=1442 type=application/json; charset=utf-8
+https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io/v1/device/{targetUid -> HTTP 403
+https://box.signageos.io/status` -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io` -> ERR <urlopen error [Errno -2] Name or service not know
+https://box.signageos.io/login/%2F` -> 200 len=104078 type=text/html; charset=utf-8
+
+## 2026-08-09 10:42:56 UTC
+
+
+## 2026-08-09 11:14:29 UTC
+
+
+## 2026-08-09 11:49:28 UTC
+https://box.signageos.io/status -> 200 len=1437 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<own-uid>` -> HTTP 403
+https://api.signageos.io/v1/device` -> HTTP 404
+
+## 2026-08-09 12:20:33 UTC
+
+
+## 2026-08-09 13:32:51 UTC
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/v1/organization/<own-uid>` -> HTTP 403
+https://api.signageos.io/v1/device` -> HTTP 404
+https://box.signageos.io/status -> 200 len=1449 type=application/json; charset=utf-8
+https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
+https://box.signageos.io/status` -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io` -> ERR <urlopen error [Errno -2] Name or service not know
+https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
+
+## 2026-08-09 14:10:34 UTC
+[0m
+[0m$ [0mls -la leads/ inventory/ knowledge/ reports/ triage/ scripts/; echo "---"; cat leads/*.txt 2>/dev/null | tail -100
+inventory/:
+total 24
+drwxr-xr-x  2 runner runner  4096 Aug  9 14:52 .
+drwxr-xr-x 11 runner runner  4096 Aug  9 14:53 ..
+-rw-r--r--  1 runner runner 12931 Aug  9 14:52 signageos.md
+
+knowledge/:
+total 52
+drwxr-xr-x  2 runner runner  4096 Aug  9 14:52 .
+drwxr-xr-x 11 runner runner  4096 Aug  9 14:53 ..
+-rw-r--r--  1 runner runner 43095 Aug  9 14:52 index.md
+
+leads/:
+total 964
+drwxr-xr-x  2 runner runner   4096 Aug  9 14:52 .
+drwxr-xr-x 11 runner runner   4096 Aug  9 14:53 ..
+-rw-r--r--  1 runner runner 133598 Aug  9 14:52 lead-bigpickle.md
+-rw-r--r--  1 runner runner 195885 Aug  9 14:52 lead-laguna.md
+-rw-r--r--  1 runner runner   2870 Aug  9 14:52 lead-ling3.md
+-rw-r--r--  1 runner runner   2992 Aug  9 14:52 lead-longcat.md
+-rw-r--r--  1 runner runner 221000 Aug  9 14:52 lead-nemotron3.md
+-rw-r--r--  1 runner runner   1412 Aug  9 14:52 reposcan-2026-08-07-18-57.md
+-rw-r--r--  1 runner runner   1523 Aug  9 14:52 reposcan-2026-08-07-19-27.md
+-rw-r--r--  1 runner runner   1889 Aug  9 14:52 reposcan-2026-08-07-19-37.md
+-rw-r--r--  1 runner runner   1180 Aug  9 14:52 reposcan-2026-08-07-20-04.md
+-rw-r--r--  1 runner runner   1125 Aug  9 14:52 reposcan-2026-08-07-20-16.md
+-rw-r--r--  1 runner runner   1229 Aug  9 14:52 reposcan-2026-08-07-21-07.md
+-rw-r--r--  1 runner runner   1623 Aug  9 14:52 reposcan-2026-08-07-21-35.md
+-rw-r--r--  1 runner runner   1368 Aug  9 14:52 reposcan-2026-08-07-22-03.md
+-rw-r--r--  1 runner runner   1472 Aug  9 14:52 reposcan-2026-08-07-22-08.md
+-rw-r--r--  1 runner runner   1595 Aug  9 14:52 reposcan-2026-08-07-22-52.md
+-rw-r--r--  1 runner runner   1601 Aug  9 14:52 reposcan-2026-08-07-23-01.md
+-rw-r--r--  1 runner runner   1151 Aug  9 14:52 reposcan-2026-08-07-23-29.md
+-rw-r--r--  1 runner runner   1501 Aug  9 14:52 reposcan-2026-08-07-23-55.md
+-rw-r--r--  1 runner runner   1256 Aug  9 14:52 reposcan-2026-08-08-00-43.md
+-rw-r--r--  1 runner runner   1236 Aug  9 14:52 reposcan-2026-08-08-00-51.md
+-rw-r--r--  1 runner runner   1533 Aug  9 14:52 reposcan-2026-08-08-02-39.md
+-rw-r--r--  1 runner runner   1793 Aug  9 14:52 reposcan-2026-08-08-02-51.md
+-rw-r--r--  1 runner runner   1439 Aug  9 14:52 reposcan-2026-08-08-03-57.md
+-rw-r--r--  1 runner runner   1219 Aug  9 14:52 reposcan-2026-08-08-04-02.md
+-rw-r--r--  1 runner runner   1439 Aug  9 14:52 reposcan-2026-08-08-04-48.md
+-rw-r--r--  1 runner runner   1368 Aug  9 14:52 reposcan-2026-08-08-05-13.md
+-rw-r--r--  1 runner runner   1255 Aug  9 14:52 reposcan-2026-08-08-05-32.md
+-rw-r--r--  1 runner runner   1209 Aug  9 14:52 reposcan-2026-08-08-06-03.md
+-rw-r--r--  1 runner runner   1200 Aug  9 14:52 reposcan-2026-08-08-06-09.md
+-rw-r--r--  1 runner runner   1178 Aug  9 14:52 reposcan-2026-08-08-07-04.md
+-rw-r--r--  1 runner runner   1129 Aug  9 14:52 reposcan-2026-08-08-07-11.md
+-rw-r--r--  1 runner runner   1624 Aug  9 14:52 reposcan-2026-08-08-07-27.md
+-rw-r--r--  1 runner runner   1538 Aug  9 14:52 reposcan-2026-08-08-07-59.md
+-rw-r--r--  1 runner runner   1098 Aug  9 14:52 reposcan-2026-08-08-08-06.md
+-rw-r--r--  1 runner runner   1263 Aug  9 14:52 reposcan-2026-08-08-08-32.md
+-rw-r--r--  1 runner runner   1419 Aug  9 14:52 reposcan-2026-08-08-09-08.md
+-rw-r--r--  1 runner runner   1308 Aug  9 14:52 reposcan-2026-08-08-09-14.md
+-rw-r--r--  1 runner runner   2580 Aug  9 14:52 reposcan-2026-08-08-09-56.md
+-rw-r--r--  1 runner runner   1313 Aug  9 14:52 reposcan-2026-08-08-10-01.md
+-rw-r--r--  1 runner runner   1219 Aug  9 14:52 reposcan-2026-08-08-10-29.md
+-rw-r--r--  1 runner runner   1110 Aug  9 14:52 reposcan-2026-08-08-10-35.md
+-rw-r--r--  1 runner runner   1397 Aug  9 14:52 reposcan-2026-08-08-10-59.md
+-rw-r--r--  1 runner runner   1055 Aug  9 14:52 reposcan-2026-08-08-11-19.md
+-rw-r--r--  1 runner runner   1104 Aug  9 14:52 reposcan-2026-08-08-11-23.md
+-rw-r--r--  1 runner runner   1339 Aug  9 14:52 reposcan-2026-08-08-11-48.md
+-rw-r--r--  1 runner runner   1570 Aug  9 14:52 reposcan-2026-08-08-11-52.md
+-rw-r--r--  1 runner runner   1367 Aug  9 14:52 reposcan-2026-08-08-12-05.md
+-rw-r--r--  1 runner runner   1471 Aug  9 14:52 reposcan-2026-08-08-12-22.md
+-rw-r--r--  1 runner runner   1600 Aug  9 14:52 reposcan-2026-08-08-13-09.md
+-rw-r--r--  1 runner runner   1869 Aug  9 14:52 reposcan-2026-08-08-13-25.md
+-rw-r--r--  1 runner runner   1625 Aug  9 14:52 reposcan-2026-08-08-13-55.md
+-rw-r--r--  1 runner runner   1478 Aug  9 14:52 reposcan-2026-08-08-14-04.md
+-rw-r--r--  1 runner runner   1390 Aug  9 14:52 reposcan-2026-08-08-14-26.md
+-rw-r--r--  1 runner runner    317 Aug  9 14:52 reposcan-2026-08-08-14-56.md
+-rw-r--r--  1 runner runner    596 Aug  9 14:52 reposcan-2026-08-08-14-58.md
+-rw-r--r--  1 runner runner   1248 Aug  9 14:52 reposcan-2026-08-08-15-20.md
+-rw-r--r--  1 runner runner   1354 Aug  9 14:52 reposcan-2026-08-08-15-50.md
+-rw-r--r--  1 runner runner   1289 Aug  9 14:52 reposcan-2026-08-08-15-54.md
+-rw-r--r--  1 runner runner   1011 Aug  9 14:52 reposcan-2026-08-08-16-55.md
+-rw-r--r--  1 runner runner   1233 Aug  9 14:52 reposcan-2026-08-08-17-05.md
+-rw-r--r--  1 runner runner   1252 Aug  9 14:52 reposcan-2026-08-08-17-38.md
+-rw-r--r--  1 runner runner   2887 Aug  9 14:52 reposcan-2026-08-08-17-44.md
+-rw-r--r--  1 runner runner   1285 Aug  9 14:52 reposcan-2026-08-08-18-15.md
+-rw-r--r--  1 runner runner   1452 Aug  9 14:52 reposcan-2026-08-08-19-04.md
+-rw-r--r--  1 runner runner   1936 Aug  9 14:52 reposcan-2026-08-08-19-43.md
+-rw-r--r--  1 runner runner   1559 Aug  9 14:52 reposcan-2026-08-08-19-46.md
+-rw-r--r--  1 runner runner   1653 Aug  9 14:52 reposcan-2026-08-08-20-11.md
+-rw-r--r--  1 runner runner   1252 Aug  9 14:52 reposcan-2026-08-08-20-39.md
+-rw-r--r--  1 runner runner   1101 Aug  9 14:52 reposcan-2026-08-08-20-46.md
+-rw-r--r--  1 runner runner   1152 Aug  9 14:52 reposcan-2026-08-08-21-13.md
+-rw-r--r--  1 runner runner   1351 Aug  9 14:52 reposcan-2026-08-08-21-17.md
+-rw-r--r--  1 runner runner   1026 Aug  9 14:52 reposcan-2026-08-08-21-50.md
+-rw-r--r--  1 runner runner   1142 Aug  9 14:52 reposcan-2026-08-08-21-53.md
+-rw-r--r--  1 runner runner   1356 Aug  9 14:52 reposcan-2026-08-08-22-18.md
+-rw-r--r--  1 runner runner   1547 Aug  9 14:52 reposcan-2026-08-08-22-39.md
+-rw-r--r--  1 runner runner   1322 Aug  9 14:52 reposcan-2026-08-08-22-56.md
+-rw-r--r--  1 runner runner   1648 Aug  9 14:52 reposcan-2026-08-08-23-12.md
+-rw-r--r--  1 runner runner   1354 Aug  9 14:52 reposcan-2026-08-08-23-24.md
+-rw-r--r--  1 runner runner   1312 Aug  9 14:52 reposcan-2026-08-08-23-49.md
+-rw-r--r--  1 runner runner   1213 Aug  9 14:52 reposcan-2026-08-08-23-54.md
+-rw-r--r--  1 runner runner   1095 Aug  9 14:52 reposcan-2026-08-09-01-08.md
+-rw-r--r--  1 runner runner   1085 Aug  9 14:52 reposcan-2026-08-09-02-19.md
+-rw-r--r--  1 runner runner   1612 Aug  9 14:52 reposcan-2026-08-09-03-09.md
+-rw-r--r--  1 runner runner   1127 Aug  9 14:52 reposcan-2026-08-09-04-01.md
+-rw-r--r--  1 runner runner   1328 Aug  9 14:52 reposcan-2026-08-09-04-37.md
+-rw-r--r--  1 runner runner   1400 Aug  9 14:52 reposcan-2026-08-09-05-22.md
+-rw-r--r--  1 runner runner   1295 Aug  9 14:52 reposcan-2026-08-09-05-36.md
+-rw-r--r--  1 runner runner   1528 Aug  9 14:52 reposcan-2026-08-09-06-11.md
+-rw-r--r--  1 runner runner   1241 Aug  9 14:52 reposcan-2026-08-09-06-28.md
+-rw-r--r--  1 runner runner   1176 Aug  9 14:52 reposcan-2026-08-09-07-19.md
+-rw-r--r--  1 runner runner   1395 Aug  9 14:52 reposcan-2026-08-09-07-36.md
+-rw-r--r--  1 runner runner   1500 Aug  9 14:52 reposcan-2026-08-09-08-10.md
+-rw-r--r--  1 runner runner   1465 Aug  9 14:52 reposcan-2026-08-09-08-23.md
+-rw-r--r--  1 runner runner   1295 Aug  9 14:52 reposcan-2026-08-09-09-06.md
+-rw-r--r--  1 runner runner   1110 Aug  9 14:52 reposcan-2026-08-09-09-14.md
+-rw-r--r--  1 runner runner   1172 Aug  9 14:52 reposcan-2026-08-09-10-00.md
+-rw-r--r--  1 runner runner   1691 Aug  9 14:52 reposcan-2026-08-09-10-44.md
+-rw-r--r--  1 runner runner   1369 Aug  9 14:52 reposcan-2026-08-09-10-48.md
+-rw-r--r--  1 runner runner   1833 Aug  9 14:52 reposcan-2026-08-09-11-16.md
+-rw-r--r--  1 runner runner   1156 Aug  9 14:52 reposcan-2026-08-09-11-37.md
+-rw-r--r--  1 runner runner   1662 Aug  9 14:52 reposcan-2026-08-09-11-51.md
+-rw-r--r--  1 runner runner   1554 Aug  9 14:52 reposcan-2026-08-09-12-17.md
+-rw-r--r--  1 runner runner   1491 Aug  9 14:52 reposcan-2026-08-09-12-22.md
+-rw-r--r--  1 runner runner   1384 Aug  9 14:52 reposcan-2026-08-09-13-34.md
+-rw-r--r--  1 runner runner   1182 Aug  9 14:52 reposcan-2026-08-09-14-13.md
+-rw-r--r--  1 runner runner   1599 Aug  9 14:52 reposcan-2026-08-09-14-21.md
+-rw-r--r--  1 runner runner   1599 Aug  9 14:52 reposcan-latest.md
+
+reports/:
+total 2740
+drwxr-xr-x  2 runner runner    4096 Aug  9 14:52 .
+drwxr-xr-x 11 runner runner    4096 Aug  9 14:53 ..
+-rw-r--r--  1 runner runner  844920 Aug  9 14:52 analyst-bigpickle.log
+-rw-r--r--  1 runner runner 1133446 Aug  9 14:52 analyst-laguna.log
+-rw-r--r--  1 runner runner   12960 Aug  9 14:52 analyst-ling3.log
+-rw-r--r--  1 runner runner    5400 Aug  9 14:52 analyst-longcat.log
+-rw-r--r--  1 runner runner  654403 Aug  9 14:52 analyst-nemotron3.log
+-rw-r--r--  1 runner runner      51 Aug  9 14:52 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      48 Aug  9 14:52 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      47 Aug  9 14:52 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      49 Aug  9 14:52 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner      51 Aug  9 14:52 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner   89661 Aug  9 14:52 hypotheses.md
+-rw-r--r--  1 runner runner   22363 Aug  9 14:52 valid-bugs.md
+
+scripts/:
+total 16
+drwxr-xr-x  2 runner runner 4096 Aug  9 14:52 .
+drwxr-xr-x 11 runner runner 4096 Aug  9 14:53 ..
+-rw-r--r--  1 runner runner 7771 Aug  9 14:52 sync-issues.py
+
+triage/:
+total 664
+drwxr-xr-x  2 runner runner  4096 Aug  9 14:52 .
+drwxr-xr-x 11 runner runner  4096 Aug  9 14:53 ..
+-rw-r--r--  1 runner runner  9404 Aug  9 14:52 run-2026-08-07-20-04.md
+-rw-r--r--  1 runner runner 19469 Aug  9 14:52 run-2026-08-07-21-05.md
+-rw-r--r--  1 runner runner   821 Aug  9 14:52 run-2026-08-07-21-58.md
+-rw-r--r--  1 runner runner   315 Aug  9 14:52 run-2026-08-07-22-57.md
+-rw-r--r--  1 runner runner 10680 Aug  9 14:52 run-2026-08-07-23-50.md
+-rw-r--r--  1 runner runner  8209 Aug  9 14:52 run-2026-08-07-23-54.md
+-rw-r--r--  1 runner runner 14208 Aug  9 14:52 run-2026-08-08-02-27.md
+-rw-r--r--  1 runner runner   274 Aug  9 14:52 run-2026-08-08-04-31.md
+-rw-r--r--  1 runner runner 29931 Aug  9 14:52 run-2026-08-08-06-03.md
+-rw-r--r--  1 runner runner 16365 Aug  9 14:52 run-2026-08-08-07-21.md
+-rw-r--r--  1 runner runner 14058 Aug  9 14:52 run-2026-08-08-09-07.md
+-rw-r--r--  1 runner runner 25049 Aug  9 14:52 run-2026-08-08-09-59.md
+-rw-r--r--  1 runner runner 30333 Aug  9 14:52 run-2026-08-08-10-59.md
+-rw-r--r--  1 runner runner 10676 Aug  9 14:52 run-2026-08-08-11-47.md
+-rw-r--r--  1 runner runner   247 Aug  9 14:52 run-2026-08-08-13-30.md
+-rw-r--r--  1 runner runner  2219 Aug  9 14:52 run-2026-08-08-14-09.md
+-rw-r--r--  1 runner runner  6719 Aug  9 14:52 run-2026-08-08-14-55.md
+-rw-r--r--  1 runner runner  2432 Aug  9 14:52 run-2026-08-08-15-52.md
+-rw-r--r--  1 runner runner  6550 Aug  9 14:52 run-2026-08-08-16-59.md
+-rw-r--r--  1 runner runner  6764 Aug  9 14:52 run-2026-08-08-17-55.md
+-rw-r--r--  1 runner runner 10604 Aug  9 14:52 run-2026-08-08-18-32.md
+-rw-r--r--  1 runner runner  5088 Aug  9 14:52 run-2026-08-08-19-20.md
+-rw-r--r--  1 runner runner 15294 Aug  9 14:52 run-2026-08-08-19-50.md
+-rw-r--r--  1 runner runner 23074 Aug  9 14:52 run-2026-08-08-20-16.md
+-rw-r--r--  1 runner runner 20038 Aug  9 14:52 run-2026-08-08-21-01.md
+-rw-r--r--  1 runner runner 26405 Aug  9 14:52 run-2026-08-08-22-19.md
+-rw-r--r--  1 runner runner 15410 Aug  9 14:52 run-2026-08-08-22-54.md
+-rw-r--r--  1 runner runner   258 Aug  9 14:52 run-2026-08-08-23-21.md
+-rw-r--r--  1 runner runner 13791 Aug  9 14:52 run-2026-08-08-23-53.md
+-rw-r--r--  1 runner runner 28996 Aug  9 14:52 run-2026-08-09-01-00.md
+-rw-r--r--  1 runner runner   303 Aug  9 14:52 run-2026-08-09-03-10.md
+-rw-r--r--  1 runner runner   383 Aug  9 14:52 run-2026-08-09-04-41.md
+-rw-r--r--  1 runner runner 30960 Aug  9 14:52 run-2026-08-09-05-41.md
+-rw-r--r--  1 runner runner   302 Aug  9 14:52 run-2026-08-09-06-32.md
+-rw-r--r--  1 runner runner  3567 Aug  9 14:52 run-2026-08-09-07-43.md
+-rw-r--r--  1 runner runner 37175 Aug  9 14:52 run-2026-08-09-08-28.md
+-rw-r--r--  1 runner runner 13446 Aug  9 14:52 run-2026-08-09-09-28.md
+-rw-r--r--  1 runner runner 17283 Aug  9 14:52 run-2026-08-09-10-22.md
+-rw-r--r--  1 runner runner   912 Aug  9 14:52 run-2026-08-09-11-00.md
+-rw-r--r--  1 runner runner   291 Aug  9 14:52 run-2026-08-09-11-51.md
+-rw-r--r--  1 runner runner  1025 Aug  9 14:52 run-2026-08-09-12-30.md
+-rw-r--r--  1 runner runner 15090 Aug  9 14:52 run-2026-08-09-13-41.md
+-rw-r--r--  1 runner runner  3628 Aug  9 14:52 run-2026-08-09-14-26.md
+-rw-r--r--  1 runner runner  7976 Aug  9 14:52 triage-2026-08-07-20-01.md
+-rw-r--r--  1 runner runner 13886 Aug  9 14:52 triage-2026-08-08-14-52.md
+-rw-r--r--  1 runner runner 12811 Aug  9 14:52 triage-2026-08-08-17-52.md
+-rw-r--r--  1 runner runner 15421 Aug  9 14:52 triage-2026-08-08-18-27.md
+-rw-r--r--  1 runner runner 11689 Aug  9 14:52 triage-report-2026-08-09.md
+---
+[0m
+[0m$ [0mcat leads/reposcan-2026-08-09-14-21.md; echo "===14-13==="; cat leads/reposcan-2026-08-09-14-13.md; echo "===13-34==="; cat leads/reposcan-2026-08-09-13-34.md; echo "===latest==="; cat leads/reposcan-latest.md
+===== REPOSCAN 2026-08-09 14:21:47 UTC =====
+## Grep hits:
+SCAN SUMMARY: 1055 code/config files scanned, 1 hits
+reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19: secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+
+## Model analysis:
+[0m
+> build · nemotron-3-ultra-free
+[0m
+Based on the scan results and knowledge base, this is a **known finding** already documented in the RAG base. The single hit is in a signageos repo (not gladiaio), and matches the previously classified `ACCEPTED SECRET_LEAK`.
+
+### Classification Table
+
+| Category | File | Line | SHA256 of Secret | Classification |
+|----------|------|------|------------------|----------------|
+| SECRET_LEAK | reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | **REAL_SECRET** (hardcoded clientId/secret targeting internal staging `http://api.kiera.office.signageos.io` over HTTP) |
+
+### Verdict
+
+| Candidate | REPORT_CANDIDATE |
+|-----------|------------------|
+| signageos/videowall-designer hardcoded secret | **no** — Already classified as `ACCEPTED SECRET_LEAK` in knowledge base (2026-08-07). Targets out-of-scope staging host `api.kiera.office.signageos.io` over HTTP. Not directly reportable per program scope (eligible targets: only `box.signageos.io`, `api.signageos.io`), but informs prod org-boundary testing. |
+
+**Note:** The scan references `signageos` org/repos, not `gladiaio`. The knowledge base contains no gladiaio-related findings. If you intended to scan a different org, please clarify.
+===14-13===
+
+===== REPOSCAN 2026-08-09 14:13:30 UTC =====
+## Grep hits:
+SCAN SUMMARY: 1055 code/config files scanned, 1 hits
+reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19: secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+
+## Model analysis:
+[0m
+> build · nemotron-3-ultra-free
+[0m
+[0m$ [0mecho -n '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9' | sha256sum
+564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e  -
+[0m
+### Classification Table
+
+| Category | File | Line | SHA256(secret) | Classification |
+|----------|------|------|----------------|----------------|
+| SECRET_LEAK | reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | **KNOWN_DUPLICATE** |
+
+### Verdict
+
+| Candidate | REPORT_CANDIDATE |
+|-----------|------------------|
+| videowall-designer secret (SHA256 `564c29...`) | **no** — Already triaged 2026-08-07 as ACCEPTED SECRET_LEAK (known duplicate). Targets internal staging `http://api.kiera.office.signageos.io` (out-of-scope host). Credential reuse risk noted but not directly reportable per program scope.
+===13-34===
+
+===== REPOSCAN 2026-08-09 13:34:48 UTC =====
+## Grep hits:
+SCAN SUMMARY: 1055 code/config files scanned, 1 hits
+reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19: secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+
+## Model analysis:
+[0m
+> build · nemotron-3-ultra-free
+[0m
+[0m$ [0mecho -n '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9' | sha256sum
+564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e  -
+[0m
+### Classification Table
+
+| Category | File | Line | Secret SHA256 | Classification | Notes |
+|----------|------|------|---------------|----------------|-------|
+| REAL_SECRET | reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | **REAL_SECRET** (known, previously accepted) | Hardcoded client secret targeting internal staging `http://api.kiera.office.signageos.io` over HTTP |
+
+### Verdict
+
+| Candidate | REPORT_CANDIDATE | Reason |
+|-----------|------------------|--------|
+| videowall-designer secret | **no** | Already documented in knowledge base (2026-08-07 ACCEPTED SECRET_LEAK). Targets out-of-scope internal staging host (`api.kiera.office.signageos.io`), not the program's eligible targets (`box.signageos.io`, `api.signageos.io`). Credential reuse risk noted but not directly reportable per scope. |
+===latest===
+
+===== REPOSCAN 2026-08-09 14:21:47 UTC =====
+## Grep hits:
+SCAN SUMMARY: 1055 code/config files scanned, 1 hits
+reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19: secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+
+## Model analysis:
+[0m
+> build · nemotron-3-ultra-free
+[0m
+Based on the scan results and knowledge base, this is a **known finding** already documented in the RAG base. The single hit is in a signageos repo (not gladiaio), and matches the previously classified `ACCEPTED SECRET_LEAK`.
+
+### Classification Table
+
+| Category | File | Line | SHA256 of Secret | Classification |
+|----------|------|------|------------------|----------------|
+| SECRET_LEAK | reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | **REAL_SECRET** (hardcoded clientId/secret targeting internal staging `http://api.kiera.office.signageos.io` over HTTP) |
+
+### Verdict
+
+| Candidate | REPORT_CANDIDATE |
+|-----------|------------------|
+| signageos/videowall-designer hardcoded secret | **no** — Already classified as `ACCEPTED SECRET_LEAK` in knowledge base (2026-08-07). Targets out-of-scope staging host `api.kiera.office.signageos.io` over HTTP. Not directly reportable per program scope (eligible targets: only `box.signageos.io`, `api.signageos.io`), but informs prod org-boundary testing. |
+
+**Note:** The scan references `signageos` org/repos, not `gladiaio`. The knowledge base contains no gladiaio-related findings. If you intended to scan a different org, please clarify.
+[0m
+[0m$ [0mtail -120 triage/run-2026-08-09-14-26.md
+===== TRIAGE 2026-08-09 14:26:17 UTC =====
+[0m
+> build · longcat-2.0-free
+[0m
+[0m$ [0mls -la /home/runner/work/signageos-hunt/signageos-hunt
+total 88
+drwxr-xr-x 11 runner runner 4096 Aug  9 14:21 .
+drwxr-xr-x  3 runner runner 4096 Aug  9 14:21 ..
+drwxr-xr-x  7 runner runner 4096 Aug  9 14:21 .git
+drwxr-xr-x  3 runner runner 4096 Aug  9 14:21 .github
+-rw-r--r--  1 runner runner  944 Aug  9 14:21 README.md
+drwxr-xr-x  2 runner runner 4096 Aug  9 14:21 inventory
+drwxr-xr-x  2 runner runner 4096 Aug  9 14:21 knowledge
+drwxr-xr-x  2 runner runner 4096 Aug  9 14:21 leads
+-rw-r--r--  1 runner runner    0 Aug  9 14:21 new-leads.txt
+-rw-r--r--  1 runner runner 4953 Aug  9 14:21 probe-results.md
+-rw-r--r--  1 runner runner    0 Aug  9 14:21 probe-results.txt
+drwxr-xr-x  2 runner runner 4096 Aug  9 14:21 reports
+drwxr-xr-x  3 runner runner 4096 Aug  9 14:21 reposcan-raw
+-rw-r--r--  1 runner runner 3086 Aug  9 14:21 scope.yml
+drwxr-xr-x  2 runner runner 4096 Aug  9 14:21 scripts
+-rw-r--r--  1 runner runner   33 Aug  9 14:21 state_bigpickle.json
+-rw-r--r--  1 runner runner   33 Aug  9 14:21 state_laguna.json
+-rw-r--r--  1 runner runner   33 Aug  9 14:21 state_ling3.json
+-rw-r--r--  1 runner runner   33 Aug  9 14:21 state_longcat.json
+-rw-r--r--  1 runner runner   33 Aug  9 14:21 state_nemotron3.json
+drwxr-xr-x  2 runner runner 4096 Aug  9 14:21 triage
+-rw-r--r--  1 runner runner   38 Aug  9 14:21 triage-output.txt
+-rw-r--r--  1 runner runner  938 Aug  9 14:21 triage-prompt.txt
+[0m
+[0m→ [0mRead scope.yml
+[0m→ [0mRead probe-results.md
+[0m→ [0mRead leads
+[0m→ [0mRead triage-prompt.txt
+[0m→ [0mRead leads/lead-bigpickle.md
+[0m→ [0mRead leads/lead-laguna.md
+[0m→ [0mRead leads/lead-ling3.md
+[0m→ [0mRead leads/lead-longcat.md
+[0m→ [0mRead leads/lead-nemotron3.md
+[0m→ [0mRead leads/reposcan-latest.md
+[0m→ [0mRead triage-output.txt
+[0m→ [0mRead new-leads.txt
+[0m
+[0m← [0mWrite triage/triage-report-2026-08-09.md
+Wrote file successfully.
+[0m
+Now I have all the information needed. Let me compile the triage report.
+[0m✗ [0mWrite  failed
+[91m[1mError: [0mTool execution aborted
+## Triage Complete
+
+After deduplicating across 5 models, I evaluated **10 unique leads** against the 7-Question Gate:
+
+| Lead | Verdict | Reason |
+|------|---------|--------|
+| **box.signageos.io/status info leak** | **VALID** (Low 5.3) | Unauthenticated JSON leaks pod hostname, Node version, service topology. Provable via GET. |
+| box.signageos.io CORS ACAO | INVALID | Static ACAO + no credentials + public HTML = no actionable impact |
+| box.signageos.io CSP broad | HOLD | Requires co-located XSS; informational only |
+| Cross-tenant IDOR family (4 variants) | HOLD | AUTH_HELPED only; can't prove without valid token + second tenant |
+| v2 authz drift | INVALID | No evidence; all routes return expected 403/404 |
+| Hardcoded creds (videowall-designer) | INVALID | Out-of-scope host (`api.kiera.office.signageos.io`); already triaged as duplicate |
+| Auth0 redirect_uri bypass | INVALID | Not testable passively |
+| Login CSRF (OAuth state) | INVALID | Explicitly excluded per scope.yml |
+| Descriptive error messages | INVALID | Explicitly excluded per scope.yml |
+| /ready health check | INVALID | No data leaked, no impact |
+
+**Result:** 1 VALID, 2 HOLD, 7 INVALID
+
+The single VALID finding is `box.signageos.io/status` — an unauthenticated infrastructure information disclosure (CVSS 5.3) with full passive proof. Report to signageOS security channel per scope.yml (disclosure_policy currently TBD).
+
+Full report written to: `triage/triage-report-2026-08-09.md`
+[0m
+[0m$ [0mcurl -s -o /tmp/opencode/bx_status_b.txt -D /tmp/opencode/bx_status_h.txt --max-time 20 https://box.signageos.io/status; echo "=== BODY ==="; head -c 900 /tmp/opencode/bx_status_b.txt; echo; echo "=== HEADERS ==="; cat /tmp/opencode/bx_status_h.txt
+=== BODY ===
+{"name":"box","status":"OK","process":{"uid":"19641a8fa9fa54ee9b4a758c5f34f14273f15bc3655ecdc6f8","pid":1,"version":"v20.20.2","uptime":2807.983895097,"cpuUsage":{"user":66544079,"system":9560815},"memoryUsage":{"rss":166940672,"heapTotal":106835968,"heapUsed":90710488,"external":22512887,"arrayBuffers":19060126}},"hostname":"box-7c8c876945-jltnj","failedServices":[],"succeededServices":["amqp0","redis0","redis1","redis3","redis2","mongoDB2","mongoDB3","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1786287252480,"respondedAt":1786287252544,"amqp0":{"response":{"requestedAt":1786287252480,"respondedAt":1786287252543,"responseTime":63}},"redis0":{"response":{"requestedAt":1786287252480,"respondedAt":1786287252483,"responseTime":3}},"redis1":{"response":{"requestedAt":1786287252480,"respondedAt":1786287252483,"responseTime":3}},"redis3":{"response":{"requestedAt":1786287252480,"respon
+=== HEADERS ===
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1434
+date: Sun, 09 Aug 2026 14:54:12 GMT
+etag: W/"59a-fmT/aYk1Wc47BV0DW9J6pvUQKFE"
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 c942cfe30baa723bd56d66d18e668b12.cloudfront.net (CloudFront)
+x-amz-cf-pop: ORD58-P5
+x-amz-cf-id: ysNarbdKMe2X9JvKPXVusY8MNRNqa1MTpU-xn2qabHE1KO0pP-L47w==
+[0m
+[0m$ [0mcurl -s -o /dev/null -D - -H "Origin: https://evil.test" --max-time 20 https://box.signageos.io/login/ | head -60
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+content-length: 104078
+date: Sun, 09 Aug 2026 14:54:20 GMT
+etag: W/"1968e-l015OpLoI9y7ySDvQS/J2AMfWoM"
+x-recaptcha-nonce-hash: b0fb2174318e1219df43e374
+x-sentry-client-nonce-hash: b3887c8bf5cc825f2fe33c30
+x-dom-purify-nonce-hash: 80338ed82a7d8f355d6c20f0
+x-trusted-html-nonce-hash: 14d186be3628ecc18e06cea6
+x-bundle-nonce-hash: 150a5e9a5e8c53161e0687bd
+x-assets-nonce-hash: 9551e24ad70c2ac47997fef9
+x-style-nonce-hash: fc307b21cd200921e1cf5627
+content-security-policy: base-uri 'self';default-src 'none';connect-src 'self' wss://box.signageos.io/ https://api.mapbox.com https://events.mapbox.com https://sentry.io https://sos-production.us.auth0.com/oauth/token https://sos-production.us.auth0.com/oauth/token https://auth0.signageos.io/oauth/token https://signageos-public.s3.eu-central-1.amazonaws.com https://*.sentry.io https://heapanalytics.com https://fonts.googleapis.com https://api.rm.moodmedia.com https://api-next.rm.moodmedia.com https://api.soc.broadsign.com https://api-next.soc.broadsign.com https://api.proav-devicemgmt.sony.net https://api-next.proav-devicemgmt.sony.net https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://demo.signageos.io https://marketplace.signageos.io https://signageos-user-data-exports.s3.eu-central-1.amazonaws.com https://qwfin59thg.execute-api.eu-central-1.amazonaws.com https://upload.signageos.io https://upload.signageos.io https://remote-desktop.signageos.io wss://remote-desktop.signageos.io/ https://2.signageos.io https://static.signageos.io https://upload.signageos.io  https://platform.signageos.io  https://weinre.signageos.io  https://license.signageos.io  https://signageos-device-monitoring.s3.eu-central-1.amazonaws.com https://signageos-public.s3.eu-central-1.amazonaws.com https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com https://storage.googleapis.com https://remote-desktop.signageos.io  https://remote-desktop-us.signageos.io https://api.signageos.io  https://signageos.zendesk.com https://*.zdusercontent.com https://www.google.com/recaptcha/api2/clr https://api.signageos.io https://sos-production.us.auth0.com/oauth/token https://sos-production.us.auth0.com/oauth/token https://auth0.signageos.io/oauth/token;img-src 'self' https://s.gravatar.com/avatar/ https://i0.wp.com/cdn.auth0.com/avatars/ data: https://2.signageos.io https://static.signageos.io https://upload.signageos.io  https://platform.signageos.io  https://weinre.signageos.io  https://license.signageos.io  https://signageos-device-monitoring.s3.eu-central-1.amazonaws.com https://signageos-public.s3.eu-central-1.amazonaws.com https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com https://storage.googleapis.com https://remote-desktop.signageos.io  https://remote-desktop-us.signageos.io https://api.signageos.io  https://signageos.zendesk.com https://*.zdusercontent.com https://www.google.com/recaptcha/api2/clr https://heapanalytics.com https://remote-desktop.signageos.io https://demo.signageos.io https://marketplace.signageos.io;worker-src 'self' blob:;font-src 'self' data: https://fonts.gstatic.com https://heapanalytics.com;style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://heapanalytics.com https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/2.7.0/mapbox-gl.min.css https://cdn.jsdelivr.net/npm/monaco-editor@0.55.1/min/vs/editor/editor.main.css;frame-src https://www.google.com/ https://demo.signageos.io/ https://marketplace.signageos.io/ https://sos-production.us.auth0.com/ https://sos-production.us.auth0.com/ https://auth0.signageos.io/ https://www.signageos.io https://demo.signageos.io https://sos-production.us.auth0.com/ https://sos-production.us.auth0.com/ https://auth0.signageos.io/;script-src 'self' 'strict-dynamic' 'wasm-unsafe-eval';script-src-elem https://cdn.heapanalytics.com https://heapanalytics.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/releases/ https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.7/purify.min.js https://cdn.jsdelivr.net/npm/monaco-editor@0.55.1/min/vs/ https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/2.7.0/mapbox-gl.min.js https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.43/moment-timezone-with-data.min.js 'nonce-b0fb2174318e1219df43e374' 'nonce-b3887c8bf5cc825f2fe33c30' 'nonce-80338ed82a7d8f355d6c20f0' 'nonce-14d186be3628ecc18e06cea6' 'nonce-150a5e9a5e8c53161e0687bd' 'nonce-9551e24ad70c2ac47997fef9';media-src 'self';manifest-src 'self';upgrade-insecure-requests ;require-trusted-types-for 'script';report-uri /csp-report;form-action 'self';frame-ancestors 'self';object-src 'none';script-src-attr 'none'
+cross-origin-opener-policy: unsafe-none
+cross-origin-resource-policy: cross-origin
+referrer-policy: no-referrer
+strict-transport-security: max-age=63072000; includeSubDomains; preload
+x-content-type-options: nosniff
+x-dns-prefetch-control: off
+x-download-options: noopen
+x-frame-options: DENY
+x-permitted-cross-domain-policies: none
+x-xss-protection: 0
+access-control-allow-origin: http://box.signageos.io
+access-control-allow-origin: https://2.signageos.io
+access-control-allow-origin: https://static.signageos.io
+access-control-allow-origin: https://upload.signageos.io
+access-control-allow-origin: https://platform.signageos.io
+access-control-allow-origin: https://weinre.signageos.io
+access-control-allow-origin: https://license.signageos.io
+access-control-allow-origin: https://signageos-device-monitoring.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://signageos-public.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://storage.googleapis.com
+access-control-allow-origin: https://remote-desktop.signageos.io
+access-control-allow-origin: https://remote-desktop-us.signageos.io
+access-control-allow-origin: https://api.signageos.io
+access-control-allow-origin: https://signageos.zendesk.com
+access-control-allow-origin: https://*.zdusercontent.com
+access-control-allow-origin: https://www.google.com/recaptcha/api2/clr
+box-version: 2.192.0-ma-blank-screen-evaluation-strategy.36887
+x-cache: Miss from cloudfront
+via: 1.1 6a7b4b41112304057a352630e969f514.cloudfront.net (CloudFront)
+x-amz-cf-pop: ORD58-P5
+x-amz-cf-id: ZYxxG7uBWDoKTf1kuFdHx9Z6iXHgvus1sQxabbHVajYVzWze5IzZ5A==
+[0m
+[0m$ [0mcurl -s -o /tmp/opencode/api_status_b.txt -D /tmp/opencode/api_status_h.txt --max-time 20 https://api.signageos.io/status; echo "=== BODY (first 500) ==="; head -c 500 /tmp/opencode/api_status_b.txt; echo; echo "=== HEADERS ==="; cat /tmp/opencode/api_status_h.txt
+=== BODY (first 500) ===
+{"name":"api","status":"OK","process":{"uid":"9049879d587241cd6d32f3728d4bc92d24df0c7329b6c22887","pid":1,"version":"v24.19.0","uptime":179041.396453137,"cpuUsage":{"user":75085246181,"system":6542060020},"memoryUsage":{"rss":1041199104,"heapTotal":494768128,"heapUsed":442861888,"external":101571665,"arrayBuffers":97409286}},"hostname":"api-6f69db97d5-st6zq","failedServices":[],"succeededServices":["amqp0","redis3","redis2","redis1","redis0","mongoDB2","mongoDB1","mongoDB0"],"timeout":30000,"req
+=== HEADERS ===
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1343
+date: Sun, 09 Aug 2026 14:54:30 GMT
+etag: W/"53f-bLA4S8Tf6ujYvKe4U2Z8NT6Kqrw"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+via: 1.1 db2156947650f57f05656a1bd0f161ae.cloudfront.net (CloudFront)
+x-amz-cf-pop: ORD56-P6
+x-amz-cf-id: K2yezBQSoVBkK3Ym90CWXMe9hXzXgc3fvyq-96NBuDI3mfxvyilThQ==
+[0m
+[0m$ [0mcat triage/triage-report-2026-08-09.md 2>/dev/null | tail -60; echo "===VALID-BUGS==="; tail -40 reports/valid-bugs.md; echo "===HYP-BIGPICKLE==="; cat reports/hypotheses-bigpickle.txt
+---
+
+### LEAD 9: Descriptive Error Messages on api.signageos.io
+
+**Finding:** 403 error body leaks `"Account not found"`, `"Decoding of provided JWT token has failed"`, errorCode 403105.
+
+| Question | Answer |
+|----------|--------|
+| Q1 In scope? | **YES** — api.signageos.io |
+| Q2 Reachable? | **YES** — public |
+| Q3 Real impact? | LOW — informational only |
+| Q4 Passive proof? | **YES** |
+| Q5 Novel? | **YES** |
+| Q6 Not rejected? | **NO** — explicitly excluded: "Descriptive error messages or headers" |
+| Q7 Acceptable? | **NO** — explicitly excluded per scope.yml |
+
+**Verdict: INVALID** — Explicitly excluded per scope.yml "Descriptive error messages or headers (e.g. Stack Traces, banner grabbing)".
+
+---
+
+### LEAD 10: box.signageos.io/ready — Trivial Health Check
+
+**Finding:** Returns 200 "OK" (2 bytes).
+
+| Question | Answer |
+|----------|--------|
+| Q1 In scope? | **YES** |
+| Q2 Reachable? | **YES** |
+| Q3 Real impact? | **NONE** — trivial health check, no data leaked |
+| Q4 Passive proof? | **YES** |
+| Q5 Novel? | N/A |
+| Q6 Not rejected? | N/A — no impact |
+| Q7 Acceptable? | **NO** |
+
+**Verdict: INVALID** — Trivial health check with no data leakage; no security impact.
+
+---
+
+## SUMMARY
+
+| Lead | Verdict | Severity | Reason |
+|------|---------|----------|--------|
+| 1. box.signageos.io/status info leak | **VALID** | Low (5.3) | Unauthenticated infra disclosure; passive proof |
+| 2. box.signageos.io CORS ACAO | **INVALID** | — | Static, no credentials, public HTML only |
+| 3. box.signageos.io CSP broad | **HOLD** | — | Requires XSS; informational |
+| 4. Cross-tenant IDOR family | **HOLD** | — | AUTH_HELPED only; needs program approval |
+| 5. v2 authz drift | **INVALID** | — | No evidence; speculation |
+| 6. Hardcoded creds (videowall) | **INVALID** | — | Out-of-scope host; duplicate |
+| 7. Auth0 redirect_uri bypass | **INVALID** | — | Not testable passively |
+| 8. Login CSRF (OAuth state) | **INVALID** | — | Excluded per scope.yml |
+| 9. Descriptive error messages | **INVALID** | — | Excluded per scope.yml |
+| 10. /ready health check | **INVALID** | — | No impact |
+
+**Actionable findings:** 1 VALID, 2 HOLD, 7 INVALID
+
+**Recommended next steps:**
+1. Submit Lead 1 (box.status info leak) to signageOS security channel
+2. Request program approval for AUTH_HELPED testing of Lead 4 (cross-tenant IDOR)
+3. Deprioritize Lead 3 (CSP) unless XSS is discovered
+===VALID-BUGS===
+  - | Q2 Attacker reach? | **NO** — requires valid account JWT |
+  - | Q2 Attacker reach? | **NO** — requires valid credentials to observe the mint flow |
+  - | A | box.signageos.io | /status unauthenticated infra leak | **VALID** | 4.3 |
+  - | B | api.signageos.io | /status unauthenticated infra leak | **VALID** | 4.3 |
+  - | C | box.signageos.io | CORS ACAO 18-origin static whitelist | **VALID** | 3.1 |
+  - | D | box.signageos.io | CSP overly broad (40+ origins) | **VALID** | 3.1 |
+
+- 12 lead(s) marked VALID at 2026-08-09 09:28:07 UTC
+  - **VERDICT: VALID — Low**
+  - **VERDICT: VALID — Low**
+  - **VERDICT: VALID — Informational / Low**
+  - **VERDICT: VALID — Informational**
+  - | Q2 | Reachable? | **NO** — requires valid JWT/X-Auth token. All endpoints return 403 (WRONG_JWT_TOKEN / 403105) without auth. |
+  - | Q2 | Reachable? | **NO** — requires valid account JWT |
+  - | Q2 | Reachable? | **NO** — requires valid org X-Auth (clientId:secret) |
+  - | Q2 | Reachable? | **NO** — requires valid account JWT |
+  - | A | box.signageos.io | /status unauthenticated infra leak | **VALID** | 4.3 Low |
+  - | B | api.signageos.io | /status unauthenticated infra leak | **VALID** | 4.3 Low |
+  - | C | box.signageos.io | CORS ACAO 18-origin static whitelist | **VALID** | 3.1 Low |
+  - | D | box.signageos.io | CSP overly broad (40+ origins) | **VALID** | 3.1 Low |
+
+- 9 lead(s) marked VALID at 2026-08-09 10:22:06 UTC
+  - ### ✅ VERDICT: VALID
+  - | **Q7 Acceptable** | ⚠️ BORDERLINE — real but lower impact than box (API is properly gated). Still a valid MISCONFIG. |
+  - ### ✅ VERDICT: VALID (lower severity)
+  - ### ✅ VERDICT: VALID (low severity)
+  - | **Q2 Reachability** | ❌ NO (under passive-first) — requires a valid account JWT/X-Auth token. All endpoints return 403 without auth. |
+  - | **Q4 Proof** | ❌ NO — AUTH_HELPED only. Probe results: `GET /v1/organization/<own-org-uid>` → **403** (no token). Cannot prove cross-tenant without a second tenant's UID + valid creds. |
+  - | 1 | `box.signageos.io/status` unauthenticated info leak | MISCONFIG | ✅ **VALID** | 5.3 Med | Real recon-enabling misconfiguration |
+  - | 2 | `api.signageos.io/status` unauthenticated info leak | MISCONFIG | ✅ **VALID** | 4.3 Med | Same class, lower impact (API gated) |
+  - | 3 | `box.signageos.io` CORS ACAO whitelist (18 origins) | MISCONFIG | ✅ **VALID** | 3.1 Low | Trust-boundary expansion; no credentials flag |
+
+- 3 lead(s) marked VALID at 2026-08-09 13:41:03 UTC
+  - **Verdict: VALID**
+  - **Verdict: VALID**
+  - **Verdict: VALID (Low severity — accepted as trust-boundary expansion)**
+
+- 2 lead(s) marked VALID at 2026-08-09 14:26:17 UTC
+  - | **box.signageos.io/status info leak** | **VALID** (Low 5.3) | Unauthenticated JSON leaks pod hostname, Node version, service topology. Provable via GET. |
+  - | Cross-tenant IDOR family (4 variants) | HOLD | AUTH_HELPED only; can't prove without valid token + second tenant |
+===HYP-BIGPICKLE===
+## 2026-08-09 14:09:36 UTC [box] (model bigpickle)
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/opencode/*, /tmp/*); auto-rejecting
+[0m✗ [0mcp /tmp/opencode/bx_status_h.txt /tmp/poc_box_status_h.txt; cp /tmp/opencode/bx_status_b.txt /tmp/poc_box_status_b.txt; grep -cE 'strict-transport|x-frame|x-content|content-security' /tmp/poc_box_status_h.txt; echo "grep exit: $?"; wc -c /tmp/poc_box_status_b.txt; grep -iE 'access-control-allow-origin|box-version' /tmp/opencode/bx_status_h.txt || echo "NO ACAO/box-version on /status" failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
