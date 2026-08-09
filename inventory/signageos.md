@@ -161,3 +161,5 @@
 - CHANGED box.signageos.io CORS/CSP reconfirmed — 17 static ACAO (incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + `api.signageos.io`), evil.test NOT reflected, NO `access-con
 
 ## 2026-08-08 23:53:17 UTC
+
+## 2026-08-09 01:07:13 UTC
