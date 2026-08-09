@@ -307,3 +307,17 @@
   - **VERDICT: ⏸️ HOLD** — Credible code-verified cross-tenant IDOR chain, but unverifiable under current constraints: needs a valid account JWT + second test tenant, and scope.yml prohibits account creat
   - | 1 | Unauthenticated `/status` infra info disclosure + missing security headers | `box.signageos.io/status` | **VALID** | Passive proof, real recon impact, not rejected |
   - | 1 | `box.signageos.io/status` unauthenticated infra info disclosure + missing security headers | **VALID** | Passive GET proof, real recon impact (pod hostnames, Node version, backend topology), CVS
+
+- 12 lead(s) marked VALID at 2026-08-09 19:27:01 UTC
+  - VERDICT: VALID (Low) — reconfirmation of previously accepted finding
+  - VERDICT: VALID (Low) — reconfirmation of previously accepted finding
+  - VERDICT: VALID (Low, borderline) — reconfirmation of previously accepted finding
+  - VERDICT: VALID (Informational, borderline) — reconfirmation of previously accepted finding
+  - VERDICT: HOLD — AUTH_HELPED only; requires valid account JWT + second tenant
+  - VERDICT: HOLD — AUTH_HELPED only; requires valid account JWT + second tenant
+  - VERDICT: HOLD — AUTH_HELPED only; requires valid org X-Auth + second tenant
+  - | A | `box.signageos.io/status` infra leak | **VALID (Low 4.3)** | Passive PoC confirmed 15×, reconfirmed |
+  - | B | `api.signageos.io/status` infra leak | **VALID (Low 4.3)** | Same class, hardened w/ security headers |
+  - | C | `box.signageos.io` CORS ACAO (http:// + wildcard) | **VALID (Low 3.1)** | Static whitelist, no credentials flag |
+  - | D | `box.signageos.io` CSP 40+ origins | **VALID (Info 3.1)** | Overly broad trust boundary |
+  - VALID (4):

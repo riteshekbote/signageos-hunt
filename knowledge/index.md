@@ -207,3 +207,5 @@
 - 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod rotation, zero security headers, full topology leak unchanged
 - 2026-08-09 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened — HSTS/xfo/xcto present, differential vs box persists
 - 2026-08-09 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes JWT/X-Auth-gated, no passive bypass
+- 2026-08-09 REJECTED class @ lead: E  api.signageos.io/v1/organization/{uid}/security-token — cross-tenant mint (AUTH_HELPED)
+- 2026-08-09 REJECTED class @ lead: I  videowall-designer videoTiming.js:19 — hardcoded staging secret (out-of-scope host)
