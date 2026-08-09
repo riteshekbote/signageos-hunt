@@ -208,3 +208,8 @@
   - **Verdict: HOLD** — AUTH_HELPED only; requires valid org X-Auth + second tenant.
   - | Q2 | NO — requires valid credentials to observe the POST mint flow |
   - | **VALID** | 4 | box/status, api/status, box CORS, box CSP |
+
+- 3 lead(s) marked VALID at 2026-08-09 07:43:21 UTC
+  - | `box.signageos.io/status` | 200 JSON | **VALID** (reconfirmed 15+ times, CVSS 4.3) |
+  - | `box.signageos.io/` | 200 HTML | **VALID** (CORS/CSP, reconfirmed) |
+  - | `box.signageos.io/login/` | 200 HTML | **VALID** (CORS/CSP, reconfirmed) |
