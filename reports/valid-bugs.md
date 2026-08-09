@@ -263,3 +263,25 @@
 - 2 lead(s) marked VALID at 2026-08-09 14:26:17 UTC
   - | **box.signageos.io/status info leak** | **VALID** (Low 5.3) | Unauthenticated JSON leaks pod hostname, Node version, service topology. Provable via GET. |
   - | Cross-tenant IDOR family (4 variants) | HOLD | AUTH_HELPED only; can't prove without valid token + second tenant |
+
+- 27 lead(s) marked VALID at 2026-08-09 15:56:05 UTC
+  - | Q5 Novel? | **NO** — reconfirmed 15+ times since 2026-08-07; already in `valid-bugs.md` |
+  - | Q7 Triager accept? | **YES** — accepted as VALID (Low) on every prior triage run |
+  - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - | Q5 Novel? | **NO** — reconfirmed 15+ times; already in `valid-bugs.md` |
+  - | Q7 Triager accept? | **YES** — accepted as VALID (Low) on every prior triage run |
+  - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - | Q7 Triager accept? | **YES** — accepted as VALID (Low, borderline) on prior runs |
+  - **Verdict: VALID (Low, borderline)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)
+  - | Q7 Triager accept? | **MARGINAL** — defense-in-depth; accepted as VALID informational on prior runs given breadth |
+  - **Verdict: VALID (Informational)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N)
+  - | Q2 Reachable? | **NO** (under passive-first) — requires valid account JWT (AUTH_HELPED). All endpoints return 403 `WRONG_JWT_TOKEN`/`403105` without auth. |
+  - | Q4 GET/HEAD proof? | **NO** — cannot prove without valid account JWT + second tenant |
+  - | Q7 Triager accept? | **HOLD** — no passive POC possible; requires valid token + second tenant |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant to prove. Code-verified via SDK (`OrganizationTokenManagement.ts:8-33`).
+  - | Q2 Reachable? | **NO** (under passive-first) — requires valid account JWT (AUTH_HELPED). 403 without auth. |
+  - | Q4 GET/HEAD proof? | **NO** — cannot prove without valid account JWT + second tenant |
+  - | Q7 Triager accept? | **HOLD** — no passive POC possible; requires valid token + second tenant |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant. Code-verified via CLI `getOrganization()`.
+  - | Q2 Reachable? | **NO** (under passive-first) — requires valid org `X-Auth: clientId:secret` (403083 without auth). PUT also violates passive-only rule. |
+  - | Q4 GET/HEAD proof? | **NO** — requires valid org X-Auth + second tenant; PUT is invasive |
