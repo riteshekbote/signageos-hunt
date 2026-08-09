@@ -1,13 +1,12 @@
-## 2026-08-09 20:32:34 UTC [api] (model nemotron3)
-[PRIO] api.signageos.io/v1/organization/{uid}/security-token, 8.1, attack=9 business=10 tech=8 gate=2 cloud=8 fresh=8
+## 2026-08-09 21:09:24 UTC [api] (model nemotron3)
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token, 7.9, attack=9 business=10 tech=8 gate=2 cloud=8 fresh=8
 [PRIO] api.signageos.io/v1/organization/{organizationUid}, 7.8, attack=9 business=10 tech=8 gate=2 cloud=8 fresh=7
 [PRIO] box.signageos.io/status, 5.5, attack=6 business=4 tech=3 gate=10 cloud=5 fresh=5
-[PRIO] box.signageos.io/login/, 5.3, attack=6 business=3 tech=4 gate=10 cloud=4 fresh=4
 [HYP] Cross-tenant security-token minting via X-Auth org UID override
 class: IDOR
 asset: api.signageos.io/v1/organization/{uid}/security-token
 confidence: 78
-reasoning: SDK/CLI code-verified — POST /v1/organization/{uid}/security-token with X-Auth: <accountJWT> returns org-scoped token; uid is client-supplied path arg; account JWT carries no org UID (credential-derived), so server-side membership check on path UID is sole barrier
+reasoning: SDK/CLI code-verified — POST /v1/organization/{uid}/security-token with X-Auth: <accountJWT> returns org-scoped token; uid is client-supplied path arg; account JWT carries no org UID, so server-side membership check on path UID is sole barrier
 evidence_needed: own account JWT → HTTP 200 on POST /v1/organization/<foreign-org-uid>/security-token returning securityToken
 verify_steps: AUTH_HELPED: curl -X POST -H "X-Auth: <accountJWT>" https://api.signageos.io/v1/organization/<own-org-uid>/security-token = 200 baseline; repeat with foreign-org UID → 200 + securityToken = cross-tenant; escalate: curl -H "X-Auth: <leakedSecurityToken>" https://api.signageos.io/v1/device → foreign org device list
 impact: any tenant's org token → full device/content/timing/firmware control of foreign org; CRITICAL
@@ -21,15 +20,6 @@ evidence_needed: own account JWT → HTTP 200 on GET /v1/organization/<foreign-o
 verify_steps: AUTH_HELPED: curl -H "X-Auth: <accountJWT>" https://api.signageos.io/v1/organization/<own-org-uid> = 200 baseline; repeat with foreign-org UID → 200 + oauthClientSecret = cross-tenant; escalate: curl -H "X-Auth: <leakedClientId>:<leakedSecret>" https://api.signageos.io/v1/device → foreign org device list
 impact: any tenant's org API credential → full device/content/timing/firmware control of foreign org; CRITICAL
 testability: AUTH_HELPED
-[HYP] Unauthenticated K8s topology leak via /status missing security headers
-class: MISCONFIG
-asset: box.signageos.io/status
-confidence: 95
-reasoning: Live unauthenticated GET returns pod hostname, 64-hex process UID, Node v20.20.2, full amqp/redis/mongo topology with per-service responseTime; headers ONLY x-powered-by: Express (zero hardening: no HSTS/xfo/xcto/CSP) — differential vs api.status which carries all three
-evidence_needed: curl -I https://box.signageos.io/status shows 0 security headers; curl https://box.signageos.io/status returns JSON with topology
-verify_steps: PASSIVE: GET https://box.signageos.io/status → 200 JSON leak; GET -I → grep -cE 'strict-transport|x-frame|x-content|content-security' = 0; differential: same on api.signageos.io/status returns HSTS/xfo/xcto
-impact: infrastructure reconnaissance (pod naming, service mesh topology, Node version) aids chained attacks; LOW direct exploitability
-testability: PASSIVE
 [FINAL] Surviving hypotheses (ranked):
 [NEXT] HUMAN: Execute the standing H1 POC — 1) `sos login` (Auth0 device-code) mints account JWT; 2) baseline `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<own-org-uid>"` → 200; 3) repeat with a foreign org UID (from sandbox/invite or second tenant) → observe 200 + oauthClientSecret = cross-tenant IDOR confirmed; 4) if step 3 succeeds, test POST /v1/organization/<foreign-org-uid>/security-token with same JWT → securityToken minting.
 [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Unauthenticated GET leaks pod hostname + 64-hex process.uid + Node v20.20.2 + full amqp/redis/mongo topology + per-service responseTime; headers ONLY x-powered-by: Express — zero hardening headers
