@@ -1,4 +1,4 @@
-## 2026-08-09 08:22:24 UTC [api] (model nemotron3)
+## 2026-08-09 09:11:44 UTC [api] (model nemotron3)
 [PRIO] api.signageos.io/v1/organization/{organizationUid}, 7.8, attack=9 business=10 tech=8 gate=2 cloud=8 fresh=7
 [PRIO] box.signageos.io/ CORS+CSP, 5.8, attack=6 business=3 tech=7 gate=10 cloud=5 fresh=5
 [PRIO] box.signageos.io/status, 5.5, attack=6 business=4 tech=3 gate=10 cloud=5 fresh=5
@@ -12,15 +12,6 @@ evidence_needed: own account JWT → HTTP 200 on GET /v1/organization/<foreign-o
 verify_steps: AUTH_HELPED: curl -H "X-Auth: <accountJWT>" https://api.signageos.io/v1/organization/<own-org-uid> = 200 baseline; repeat with foreign-org UID → 200 + oauthClientSecret = cross-tenant; escalate: curl -H "X-Auth: <leakedClientId>:<leakedSecret>" https://api.signageos.io/v1/device → foreign org device list
 impact: any tenant's org API credential → full device/content/timing/firmware control of foreign org; CRITICAL
 testability: AUTH_HELPED
-[HYP] Unauthenticated /status topology leak with zero security headers
-class: MISCONFIG
-asset: box.signageos.io/status
-confidence: 95
-reasoning: Live GET returns JSON with pod hostname, process UID, Node v20.20.2, full Redis/MongoDB/AMQP topology; headers show ONLY x-powered-by: Express — no HSTS, x-frame-options, x-content-type-options, CSP; api.status now hardened with all three
-evidence_needed: curl -sD- https://box.signageos.io/status | grep -iE 'strict-transport|x-frame|x-content|content-security' returns zero matches
-verify_steps: PASSIVE: curl -sD- https://box.signageos.io/status (confirm data + header deficit)
-impact: Infrastructure topology + process identity exposed unauthenticated; aids reconnaissance for chained attacks; MEDIUM
-testability: PASSIVE
 [HYP] Broad static CORS whitelist with http:// variant and zdusercontent wildcard
 class: MISCONFIG
 asset: box.signageos.io/
@@ -30,6 +21,16 @@ evidence_needed: curl -H "Origin: https://evil.test" -sD- https://box.signageos.
 verify_steps: PASSIVE: curl -H "Origin: https://evil.test" -sD- https://box.signageos.io/ && curl -sD- https://box.signageos.io/login/ (confirm static whitelist, no credentials flag)
 impact: Overly permissive CORS expands postMessage/origin trust boundary; no direct credential theft without credentials flag; LOW-MEDIUM
 testability: PASSIVE
+[HYP] Unauthenticated /status topology leak with zero security headers
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 95
+reasoning: Live GET returns JSON with pod hostname, process UID, Node v20.20.2, full Redis/MongoDB/AMQP topology; headers show ONLY x-powered-by: Express — no HSTS, x-frame-options, x-content-type-options, CSP; api.status now hardened with all three
+evidence_needed: curl -sD- https://box.signageos.io/status | grep -iE 'strict-transport|x-frame|x-content|content-security' returns zero matches
+verify_steps: PASSIVE: curl -sD- https://box.signageos.io/status (confirm data + header deficit)
+impact: Infrastructure topology + process identity exposed unauthenticated; aids reconnaissance for chained attacks; MEDIUM
+testability: PASSIVE
+[PARKED] Cross-tenant org OAuth client-secret disclosure via account JWT: requires AUTH_HELPED (valid account JWT + foreign org UID), off-phase for passive-first POC cycle; no second tenant available for verification
 [FINAL] Ranked surviving hypotheses (top first):
 [NEXT] PROBE: curl -s --max-time 20 https://box.signageos.io/status -o /tmp/poc_status_b.json -D /tmp/poc_status_h.txt && grep -icE 'strict-transport|x-frame|x-content|content-security' /tmp/poc_status_h.txt && cat /tmp/poc_status_b.json | jq .
 [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Unauthenticated GET leaks pod hostname + 64-hex process.uid + Node v20.20.2 + full amqp/redis/mongo topology + per-service responseTime; headers ONLY x-powered-by: Express — zero hardening headers
