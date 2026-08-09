@@ -1669,3 +1669,43 @@ testability: PASSIVE
 [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/login/ & / CORS+CSP: 17 static ACAO incl. http:// plaintext variant + https://*.zdusercontent.com wildcard + api.signageos.io sibling; evil.test NOT reflected (static whitelist); NO access-control-allow-credentials; CSP 59 distinct origins with triplicated Auth0 oauth/token on /login/
 [RISK] box.signageos.io: 58 — Unauthenticated /status info leak (pod hostname + Redis/MongoDB/AMQP topology + Node version); CORS ACAO whitelist with 18 origins (incl zdusercontent wildcard + http:// variant); broad CSP (40+ connect-src/frame-src origins). Still missing HSTS/xfo/xcto on /status.
 [RISK] api.signageos.io: 62 — Unauthenticated /status info leak (pod hostname + service topology) but now hardened with HSTS/xfo/xcto; 60+ /v1/*+/v2/* endpoints all solidly JWT-gated (403 without token); no CORS issues. Risk raised due to code-verified cross-tenant IDOR candidates (org OAuth secret disclosure, org-token minting, peer-recovery) that are AUTH_HELPED-testable with CRITICAL business impact.
+## 2026-08-09 17:21:00 UTC [api] (model nemotron3)
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token, 8.1, attack=9 business=10 tech=8 gate=2 cloud=8 fresh=8
+[PRIO] api.signageos.io/v1/organization/{organizationUid}, 7.8, attack=9 business=10 tech=8 gate=2 cloud=8 fresh=7
+[PRIO] box.signageos.io/status, 5.5, attack=6 business=4 tech=3 gate=10 cloud=5 fresh=5
+[HYP] Cross-tenant security-token minting via X-Auth org UID override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 78
+reasoning: SDK/CLI code-verified — POST /v1/organization/{uid}/security-token with X-Auth: <accountJWT> returns org-scoped token; uid is client-supplied path arg; account JWT carries no org UID (credential-derived), so server-side membership check on path UID is sole barrier
+evidence_needed: own account JWT → HTTP 200 on POST /v1/organization/<foreign-org-uid>/security-token returning securityToken
+verify_steps: AUTH_HELPED: curl -X POST -H "X-Auth: <accountJWT>" https://api.signageos.io/v1/organization/<own-org-uid>/security-token = 200 baseline; repeat with foreign-org UID → 200 + securityToken = cross-tenant; escalate: curl -H "X-Auth: <leakedSecurityToken>" https://api.signageos.io/v1/device → foreign org device list
+impact: any tenant's org token → full device/content/timing/firmware control of foreign org; CRITICAL
+testability: AUTH_HELPED
+[HYP] Cross-tenant org OAuth client-secret disclosure via account JWT
+class: IDOR
+asset: api.signageos.io/v1/organization/{organizationUid}
+confidence: 75
+reasoning: SDK/CLI code-verified — GET /v1/organization/{uid} with X-Auth: <accountJWT> returns oauthClientId + oauthClientSecret; uid is client-supplied path arg; legacy creds carry no org UID, so server-side account∈company→org membership check on path UID is sole barrier
+evidence_needed: own account JWT → HTTP 200 on GET /v1/organization/<foreign-org-uid> returning oauthClientSecret
+verify_steps: AUTH_HELPED: curl -H "X-Auth: <accountJWT>" https://api.signageos.io/v1/organization/<own-org-uid> = 200 baseline; repeat with foreign-org UID → 200 + oauthClientSecret = cross-tenant; escalate: curl -H "X-Auth: <leakedClientId>:<leakedSecret>" https://api.signageos.io/v1/device → foreign org device list
+impact: any tenant's org API credential → full device/content/timing/firmware control of foreign org; CRITICAL
+testability: AUTH_HELPED
+[HYP] Unauthenticated /status topology leak with zero security headers
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 95
+reasoning: Live GET returns JSON with pod hostname, process UID, Node v20.20.2, full Redis/MongoDB/AMQP topology; headers show ONLY x-powered-by: Express — no HSTS, x-frame-options, x-content-type-options, CSP; api.status now hardened with all three
+evidence_needed: curl -sD- https://box.signageos.io/status | grep -iE 'strict-transport|x-frame|x-content|content-security' returns zero matches
+verify_steps: PASSIVE: curl -sD- https://box.signageos.io/status (confirm data + header deficit)
+impact: Infrastructure topology + process identity exposed unauthenticated; aids reconnaissance for chained attacks; MEDIUM
+testability: PASSIVE
+[PARKED] Unauthenticated /status topology leak with zero security headers: already ACCEPTED at 95 confidence with live POC; not a new hypothesis for POC phase targeting api
+[FINAL] Surviving hypotheses (ranked):
+[NEXT] HUMAN: Execute the standing H1 POC — 1) `sos login` (Auth0 device-code) mints account JWT; 2) baseline `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<own-org-uid>"` → 200; 3) repeat with a foreign org UID (from sandbox/invite or second tenant) → observe 200 + oauthClientSecret = cross-tenant IDOR confirmed; 4) if step 3 succeeds, test POST /v1/organization/<foreign-org-uid>/security-token with same JWT → securityToken minting.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod rotation, zero security headers, full topology leak unchanged
+[LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened — HSTS/xfo/xcto present, differential vs box persists
+[LEARN] REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: class stable (WRONG_JWT_TOKEN/403075/403076/403105) — excluded per scope.yml
+[LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes JWT/X-Auth-gated, no passive bypass
+[RISK] box.signageos.io: 58 — Unauthenticated /status info leak (pod hostname + Redis/MongoDB/AMQP topology + Node version); CORS ACAO whitelist with 18 origins (incl zdusercontent wildcard + http:// variant); broad CSP (40+ connect-src/frame-src origins). Still missing HSTS/xfo/xcto on /status.
+[RISK] api.signageos.io: 62 — Unauthenticated /status info leak (pod hostname + service topology) but hardened with HSTS/xfo/xcto; 60+ /v1/*+/v2/* endpoints all solidly JWT-gated (403 without token); no CORS issues. Risk raised due to code-verified cross-tenant IDOR candidates (org OAuth secret disclosure, org-token minting) that are AUTH_HELPED-testable with CRITICAL business impact.
