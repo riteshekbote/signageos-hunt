@@ -343,3 +343,10 @@
   - | Q4 | **NO** — requires valid org X-Auth + second tenant. PUT also violates passive-only rule. |
   - **Verdict: HOLD** — AUTH_HELPED only; requires valid org X-Auth + second tenant. PUT is invasive.
   - | Q2 | **NO** — requires valid account credentials to observe |
+
+- 5 lead(s) marked VALID at 2026-08-09 21:55:58 UTC
+  - ### **Verdict: VALID**
+  - ### **Verdict: VALID** (same class, separate asset)
+  - | **Q2 Reachability** | ⚠️ AUTH_HELPED — requires a valid account JWT (`X-Auth: <jwt>`). Not public/anonymous. |
+  - | 1 | `box.signageos.io/status` — unauthenticated infra info disclosure | **VALID** | 5.3 Med |
+  - | 2 | `api.signageos.io/status` — unauthenticated infra info disclosure | **VALID** | 5.3 Med |
