@@ -294,3 +294,16 @@
 
 - 1 lead(s) marked VALID at 2026-08-09 17:53:53 UTC
   - | **VALID** | 1 | `box.signageos.io/status` & `/api` — unauthenticated infra info disclosure + missing security headers (CVSS 5.3) |
+
+- 11 lead(s) marked VALID at 2026-08-09 18:37:40 UTC
+  - **VERDICT: VALID**
+  - | Q2 Reachability | PARTIAL — needs valid account JWT (any low-priv user) |
+  - | Q4 Proof w/o invasive testing | NO — needs valid JWT + 2nd tenant UID; all passive probes return only 403 |
+  - | 1 | box.signageos.io/status info disclosure | VALID | Passive proof, real impact, not rejected |
+  - **VERDICT: ✅ VALID**
+  - | **Q2 Reachability** | ⚠️ PARTIAL — Requires a valid account JWT (minted via `sos login` Auth0 device-code flow). Any registered user qualifies as low-priv. The UID path arg is client-supplied and di
+  - | **Q4 Proof without invasive testing** | ❌ NO — Cannot prove without a valid account JWT AND a second test tenant's UID. All passive probes return only 403 (no-auth). AUTH_HELPED verification require
+  - | **Q7 Reasonable triager** | ❌ NO (as-is) — A reasonable triager cannot accept without proof. The verify_steps require (a) a valid account JWT and (b) a second test tenant's org UID. scope.yml `no_ac
+  - **VERDICT: ⏸️ HOLD** — Credible code-verified cross-tenant IDOR chain, but unverifiable under current constraints: needs a valid account JWT + second test tenant, and scope.yml prohibits account creat
+  - | 1 | Unauthenticated `/status` infra info disclosure + missing security headers | `box.signageos.io/status` | **VALID** | Passive proof, real recon impact, not rejected |
+  - | 1 | `box.signageos.io/status` unauthenticated infra info disclosure + missing security headers | **VALID** | Passive GET proof, real recon impact (pod hostnames, Node version, backend topology), CVS
