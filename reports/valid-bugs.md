@@ -243,3 +243,14 @@
   - | B | api.signageos.io | /status unauthenticated infra leak | **VALID** | 4.3 Low |
   - | C | box.signageos.io | CORS ACAO 18-origin static whitelist | **VALID** | 3.1 Low |
   - | D | box.signageos.io | CSP overly broad (40+ origins) | **VALID** | 3.1 Low |
+
+- 9 lead(s) marked VALID at 2026-08-09 10:22:06 UTC
+  - ### ✅ VERDICT: VALID
+  - | **Q7 Acceptable** | ⚠️ BORDERLINE — real but lower impact than box (API is properly gated). Still a valid MISCONFIG. |
+  - ### ✅ VERDICT: VALID (lower severity)
+  - ### ✅ VERDICT: VALID (low severity)
+  - | **Q2 Reachability** | ❌ NO (under passive-first) — requires a valid account JWT/X-Auth token. All endpoints return 403 without auth. |
+  - | **Q4 Proof** | ❌ NO — AUTH_HELPED only. Probe results: `GET /v1/organization/<own-org-uid>` → **403** (no token). Cannot prove cross-tenant without a second tenant's UID + valid creds. |
+  - | 1 | `box.signageos.io/status` unauthenticated info leak | MISCONFIG | ✅ **VALID** | 5.3 Med | Real recon-enabling misconfiguration |
+  - | 2 | `api.signageos.io/status` unauthenticated info leak | MISCONFIG | ✅ **VALID** | 4.3 Med | Same class, lower impact (API gated) |
+  - | 3 | `box.signageos.io` CORS ACAO whitelist (18 origins) | MISCONFIG | ✅ **VALID** | 3.1 Low | Trust-boundary expansion; no credentials flag |
