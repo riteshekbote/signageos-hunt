@@ -595,3 +595,5 @@
 - LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 4
 
 ## RANKED HYPOTHESES 2026-08-09 10:42:56 UTC
+
+## RANKED HYPOTHESES 2026-08-09 11:14:29 UTC
