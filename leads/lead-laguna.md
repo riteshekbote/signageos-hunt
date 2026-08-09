@@ -1009,3 +1009,4 @@ testability: PASSIVE
 [RISK] box.signageos.io: **58** — Unauthenticated `/status` info leak (pod hostname + Redis/MongoDB/AMQP topology + Node version); CORS ACAO whitelist with 18 origins (incl HTTP variant + zdusercontent wildcard); broad CSP (40+ origins). Everything except `/status`, `/login/`, `/ready`, `/assets/*` redirects to Auth0 login. Moderate operational exposure, no direct data access without credentials.
 ## 2026-08-09 10:42:46 UTC [box] (model laguna)
 ## 2026-08-09 11:14:18 UTC [box] (model laguna)
+## 2026-08-09 11:49:03 UTC [box] (model laguna)

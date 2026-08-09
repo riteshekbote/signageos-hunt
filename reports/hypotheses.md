@@ -597,3 +597,7 @@
 ## RANKED HYPOTHESES 2026-08-09 10:42:56 UTC
 
 ## RANKED HYPOTHESES 2026-08-09 11:14:29 UTC
+
+## RANKED HYPOTHESES 2026-08-09 11:49:26 UTC
+- [95] box.signageos.io/status: Box /status unauthenticated internal-topology info-leak — PoC finalized (from reports/hypotheses-bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Run the token-bearing verification of the org-IDOR chain (highest open value): `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own-uid
