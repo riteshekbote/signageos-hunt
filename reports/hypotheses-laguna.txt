@@ -1,1 +1,40 @@
-## 2026-08-09 07:34:43 UTC [box] (model laguna)
+## 2026-08-09 08:22:28 UTC [box] (model laguna)
+[PRIO] box.signageos.io/status: score 68 | attack_surface 6 | business_value 8 | tech_exposure 6 | gate_ease 10 | cloud_surface 5 | freshness 10
+[HYP] Unauthenticated /status info-leak with zero security headers
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 95
+reasoning: HTTP 200 application/json returns ONLY `x-powered-by: Express`. Body leaks K8s hostname `box-7c8c876945-2g8bw`, 64-hex process.uid, Node v20.20.2, succeededServices topology (amqp0, redis0-3, mongoDB0-3) with per-service responseTime. Security-header grep = 0 on /status while `/` carries HSTS — confirmed differential.
+evidence_needed: GET /status → 200 JSON with hostname+uid+version+topology; 0 security headers; `/` HAS HSTS
+verify_steps: `curl -s --max-time 20 https://box.signageos.io/status -o /tmp/poc_status_b.json -D /tmp/poc_status_h.txt`; `grep -icE 'strict-transport|x-frame|x-content|content-security' /tmp/poc_status_h.txt` (expect 0); `curl -sI https://box.signageos.io/ | grep -ic strict-transport-security` (expect 1); `python3 -m json.tool /tmp/poc_status_b.json | grep -E 'hostname|uid|version|succeededServices'`
+impact: Pod hostname, process UID, Node version, backend topology + response timing enable targeted SSRF/fuzzing and CVE mapping; missing security headers widen clickjacking/MIME-sniff surface. Severity: Low-Medium
+testability: PASSIVE
+[HYP] Broad CORS ACAO whitelist incl. plaintext http:// + wildcard zdusercontent.com, no credentials flag
+class: MISCONFIG
+asset: box.signageos.io/login/ (+ /)
+confidence: 86
+reasoning: 17 static `access-control-allow-origin` values (spoofed Origin `https://evil.test` NOT reflected — static whitelist). Includes `http://box.signageos.io` plaintext variant + `https://*.zdusercontent.com` wildcard + sibling `https://api.signageos.io`. NO `access-control-allow-credentials` (grep = 0). CSP has 59+ distinct origins with triplicated Auth0 oauth/token on /login/.
+evidence_needed: /login/ response with 17 ACAO incl 1 `http://` variant + 1 `*.zdusercontent.com` wildcard; evil.test NOT in ACAO list; no ACA header
+verify_steps: `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/login/ | grep -c 'access-control-allow-origin'` (expect 17); `grep -ic 'access-control-allow-credentials'` (expect 0); `curl -s https://box.signageos.io/login/ | grep -oE 'https://sos-production[^ ;]+' | sort -u | wc -l` (expect ≥3 = triplicated)
+impact: Broadened origin trust boundary enables origin-confused postMessage/frame-injection and plaintext-downgrade token interception chains. Severity: Medium
+testability: PASSIVE
+[HYP] Broad CSP trust boundary enabling cross-origin device-API token exfil
+class: MISCONFIG
+asset: box.signageos.io/login/
+confidence: 72
+reasoning: CSP connect-src/frame-src img-src script-src all include 59+ distinct origins spanning Auth0, Sony/BroadSign/MoodMedia device APIs, S3 buckets, AWS API Gateway, api.signageos.io sibling, and `*.zdusercontent.com` wildcard — triplicated Auth0 oauth/token entries. Broadened trust boundary permits exfil via any listed origin.
+evidence_needed: /login/ CSP header with ≥50 distinct origin patterns in connect-src, including device APIs and triplicated Auth0
+verify_steps: `curl -s https://box.signageos.io/login/ | grep -oE 'https?://[^ ;]+' | sort -u | wc -l` (expect ≥59)
+impact: Overly broad CSP weakens postMessage/frame-ancestor security model, enabling token exfiltration via trusted-but-broad origins. Severity: Low-Medium
+testability: PASSIVE
+[FINAL] (re-ranked, phase=POC target=box):
+[PARKED] Cross-tenant org security-token IDOR via X-Auth: class IDOR; requires AUTH_HELPED — off-phase for box target, not passively verifiable (carried forward, confidence 78)
+[PARKED] Auth0 OAuth2 state/redirect_uri binding: class AUTH; on REJECTED list ("CSRF on anonymous-accessible forms" + "Auth0 redirect_uri validation not testable passively without tenant access") — confidence would be low and verify_steps require authenticated/tenant context; dropped
+[NEXT] PROBE: `curl -s --max-time 20 https://box.signageos.io/status -o /tmp/poc_status_b.json -D /tmp/poc_status_h.txt && echo '---HEADER_GREP---' && grep -icE 'strict-transport|x-frame|x-content|content-security' /tmp/poc_status_h.txt && echo '---ROOT_HSTS---' && curl -sI https://box.signageos.io/ | grep -ic strict-transport-security && echo '---BODY---' && python3 -m json.tool /tmp/poc_status_b.json | grep -E 'hostname|uid|version|succeededServices|responseTime'`
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-7c8c876945-2g8bw` (K8s rolling rotation), Node v20.20.2, process UID `5d1934974f1fa15a...`, 9 succeededServices, per-service responseTime; headers ONLY x-powered-by: Express (security-header grep = 0)
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/login/ & / CORS+CSP: Reconfirmed — 17 static ACAO incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + `api.signageos.io` sibling; evil.test NOT reflected (static whitelist); NO access-control-allow-credentials (grep = 0); CSP 59+ origins with triplicated Auth0 oauth/token
+[LEARN] REJECTED MISCONFIG @ box.signageos.io/ready: Returns 200 "OK" (2 bytes), trivial health check, no data leaked
+[LEARN] REJECTED MISCONFIG @ box.signageos.io/csp-report: GET → 302 login redirect; not an exposed endpoint, nothing reportable
+[LEARN] REJECTED IDS @ api.signageos.io/v1/*+v2/*: All 60+ endpoints 403 JWT/X-Auth-gated, no pre-auth bypass — v2/device → 403 (was 404)
+[RISK] box.signageos.io: 68 — Unauthenticated `/status` leaks pod hostname + 64-hex process UID + Node v20.20.2 + full service topology with per-service response timing AND `/status` lacks ALL security headers (HSTS/xfo/xcto/CSP = 0) while `/`+`/login/` are hardened. Broad CSP (59 connect-src origins, triplicated Auth0) + 17 static CORS ACAO incl `http://` plaintext variant + `*.zdusercontent.com` wildcard, no credentials flag — expands origin trust boundary for postMessage/downgrade chains. Rolling-deploy churn confirmed.
+[RISK] api.signageos.io: 60 — All 60+ v1/v2 REST endpoints JWT/X-Auth-gated, no pre-auth bypass confirmed (`/v2/device`→403, `/v1/organization/test`→403 descriptive-error REJECTED). `/status` leaks pod metadata + Node v24.19.0 + topology but is hardened with HSTS/xfo/xcto. High-severity IDOR on `/v1/organization/{uid}/security-token` confirmed mechanism but requires AUTH_HELPED (off-phase for box target).

@@ -77,3 +77,11 @@ https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
 
 ## 2026-08-09 07:34:55 UTC
 
+
+## 2026-08-09 08:22:41 UTC
+https://box.signageos.io/status -> 200 len=1435 type=application/json; charset=utf-8
+https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io` -> ERR <urlopen error [Errno -2] Name or service not know
+https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
