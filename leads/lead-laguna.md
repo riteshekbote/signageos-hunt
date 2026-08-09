@@ -1290,3 +1290,4 @@ testability: PASSIVE
 [RISK] api.signageos.io: 50 — /status info leak now hardened (HSTS/xfo/xcto); all v1/v2 routes solidly JWT/X-Auth-gated, no CORS/GraphQL surface, only descriptive-error bodies (excluded class). Residual exposure is the code-verified AUTH_HELPED cross-tenant org/device IDOR chain — CRITICAL if per-path org-membership checks are absent; awaits token-bearing human verification.
 ## 2026-08-09 14:10:23 UTC [box] (model laguna)
 ## 2026-08-09 14:53:34 UTC [box] (model laguna)
+## 2026-08-09 15:29:36 UTC [box] (model laguna)
