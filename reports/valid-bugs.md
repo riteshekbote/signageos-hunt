@@ -193,3 +193,18 @@
   - **Verdict: HOLD** — AUTH_HELPED only; requires valid org X-Auth + second tenant.
   - | Q2 | NO — requires valid credentials to observe the POST mint flow |
   - | **VALID** | 4 | box/status, api/status, box CORS, box CSP |
+
+- 13 lead(s) marked VALID at 2026-08-09 05:41:07 UTC
+  - **Verdict: VALID (Low)** | CVSS 3.1: **4.3** (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - **Verdict: VALID (Low)** | CVSS 3.1: **4.3** (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - **Verdict: VALID (Low, borderline)** | CVSS 3.1: **3.1** (CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)
+  - | Q7 | MARGINAL — defense-in-depth finding; triager may accept as informational or reject as "best practice". Kept as VALID informational given the breadth (40+ origins, device APIs, S3 buckets) |
+  - **Verdict: VALID (Informational)** | CVSS 3.1: **3.1** (CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N)
+  - | Q2 | NO — requires valid account JWT (probe-results.md: 403 without auth) |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant to prove. All passive probes return 403.
+  - | Q2 | NO — requires valid account JWT (probe-results.md: 403 without auth) |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant.
+  - | Q2 | NO — requires valid org X-Auth `clientId:secret` (403083 without auth) |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid org X-Auth + second tenant.
+  - | Q2 | NO — requires valid credentials to observe the POST mint flow |
+  - | **VALID** | 4 | box/status, api/status, box CORS, box CSP |
