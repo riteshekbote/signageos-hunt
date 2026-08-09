@@ -288,3 +288,6 @@
 
 - 1 lead(s) marked VALID at 2026-08-09 16:34:24 UTC
   - | **VALID** | 4 | All reconfirmations of previously accepted findings (box/api /status, box CORS, box CSP) |
+
+- 1 lead(s) marked VALID at 2026-08-09 17:22:08 UTC
+  - | **VALID** | 1 | box/api `/status` — unauthenticated infra info disclosure + missing security headers (CVSS 5.3) |
