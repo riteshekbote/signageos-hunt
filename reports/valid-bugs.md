@@ -213,3 +213,19 @@
   - | `box.signageos.io/status` | 200 JSON | **VALID** (reconfirmed 15+ times, CVSS 4.3) |
   - | `box.signageos.io/` | 200 HTML | **VALID** (CORS/CSP, reconfirmed) |
   - | `box.signageos.io/login/` | 200 HTML | **VALID** (CORS/CSP, reconfirmed) |
+
+- 14 lead(s) marked VALID at 2026-08-09 08:28:47 UTC
+  - **VERDICT: VALID — Low severity**
+  - **VERDICT: VALID — Low severity**
+  - **VERDICT: VALID — Informational / Low**
+  - | Q7 Triager accept? | **MARGINAL** — defense-in-depth finding; triager may accept as informational or reject as "best practice". Kept as VALID informational given breadth. |
+  - **VERDICT: VALID — Informational**
+  - | Q2 Attacker reach? | **NO** — requires valid JWT/X-Auth token. All probed endpoints return 403 (WRONG_JWT_TOKEN / 403105) without auth. |
+  - | Q2 Attacker reach? | **NO** — requires valid account JWT/credentials |
+  - | Q2 Attacker reach? | **NO** — requires valid org X-Auth (clientId:secret) |
+  - | Q2 Attacker reach? | **NO** — requires valid account JWT |
+  - | Q2 Attacker reach? | **NO** — requires valid credentials to observe the mint flow |
+  - | A | box.signageos.io | /status unauthenticated infra leak | **VALID** | 4.3 |
+  - | B | api.signageos.io | /status unauthenticated infra leak | **VALID** | 4.3 |
+  - | C | box.signageos.io | CORS ACAO 18-origin static whitelist | **VALID** | 3.1 |
+  - | D | box.signageos.io | CSP overly broad (40+ origins) | **VALID** | 3.1 |
