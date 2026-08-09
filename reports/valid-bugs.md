@@ -259,3 +259,7 @@
   - **Verdict: VALID**
   - **Verdict: VALID**
   - **Verdict: VALID (Low severity — accepted as trust-boundary expansion)**
+
+- 2 lead(s) marked VALID at 2026-08-09 14:26:17 UTC
+  - | **box.signageos.io/status info leak** | **VALID** (Low 5.3) | Unauthenticated JSON leaks pod hostname, Node version, service topology. Provable via GET. |
+  - | Cross-tenant IDOR family (4 variants) | HOLD | AUTH_HELPED only; can't prove without valid token + second tenant |
