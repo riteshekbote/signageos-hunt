@@ -285,3 +285,6 @@
   - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant. Code-verified via CLI `getOrganization()`.
   - | Q2 Reachable? | **NO** (under passive-first) — requires valid org `X-Auth: clientId:secret` (403083 without auth). PUT also violates passive-only rule. |
   - | Q4 GET/HEAD proof? | **NO** — requires valid org X-Auth + second tenant; PUT is invasive |
+
+- 1 lead(s) marked VALID at 2026-08-09 16:34:24 UTC
+  - | **VALID** | 4 | All reconfirmations of previously accepted findings (box/api /status, box CORS, box CSP) |
