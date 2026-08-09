@@ -209,3 +209,5 @@
 - 2026-08-09 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes JWT/X-Auth-gated, no passive bypass
 - 2026-08-09 REJECTED class @ lead: E  api.signageos.io/v1/organization/{uid}/security-token — cross-tenant mint (AUTH_HELPED)
 - 2026-08-09 REJECTED class @ lead: I  videowall-designer videoTiming.js:19 — hardcoded staging secret (out-of-scope host)
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle — pod `box-7c8c876945-gkzcp`, uid `b341def86252…`, Node v20.20.2, full topology; zero security headers persists (grep=0) — differential vs hardened api /status persists.
+- 2026-08-09 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All routes still JWT/X-Auth-gated pre-auth; no passive bypass. Cross-tenant org/security-token chain remains AUTH_HELPED.
