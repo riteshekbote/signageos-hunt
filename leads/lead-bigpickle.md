@@ -1067,3 +1067,31 @@ testability: PASSIVE
 ## 2026-08-09 14:09:36 UTC [box] (model bigpickle)
 ## 2026-08-09 14:54:45 UTC [box] (model bigpickle)
 ## 2026-08-09 15:28:19 UTC [box] (model bigpickle)
+## 2026-08-09 16:01:25 UTC [box] (model bigpickle)
+[HYP] Cross-tenant org OAuth client-secret disclosure via account JWT
+class: IDOR
+asset: api.signageos.io/v1/organization/{organizationUid}
+confidence: 75
+reasoning: SDK/CLI code-verified — GET sends `X-Auth: <JWT>` with client-supplied UID path arg; response maps oauthClientId+oauthClientSecret. Path UID independent of auth-derived org. Pre-auth 403 reconfirmed this cycle.
+evidence_needed: own JWT → 200 on foreign UID returning oauthClientSecret.
+verify_steps: AUTH_HELPED: `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own-uid>` = 200 baseline; foreign `<uid>` → 200+secret = cross-tenant leak.
+impact: leak any tenant's org API credential → full foreign-device control; CRITICAL
+testability: AUTH_HELPED
+[HYP] Cross-tenant security-token minting
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 78
+reasoning: Endpoint enumerated (403076 WRONG_ACCOUNT_SECRET pre-auth). X-Auth org derived from header first-part; {uid} path arg independent. If server trusts path uid for token issue without membership check, any token can mint org tokens.
+evidence_needed: own token → 200 creating token on foreign org; minted token works on /v1/device.
+verify_steps: AUTH_HELPED: `POST /v1/organization/<foreign-uid>/security-token {"name":"poc"}`; then `-H "X-Auth: <minted-token>" https://api.signageos.io/v1/device`.
+impact: mint valid API tokens for arbitrary tenants; CRITICAL
+testability: AUTH_HELPED
+[HYP] Box /status unauthenticated internal-topology info-leak (PoC package)
+class: MISCONFIG
+asset: box.signageos.io/status (GET)
+confidence: 95
+reasoning: Reconfirmed this cycle — HTTP 200 JSON, pod `box-7c8c876945-2g8bw`, 40-hex process.uid, Node v20.20.2, amqp0/redis0-3/mongoDB0-3 topology, per-service responseTime; headers ONLY `x-powered-by: Express` (grep=0). Differential vs hardened `/`+`/login/` and api /status persists.
+evidence_needed: none — body+headers re-archived this cycle (/tmp/d_box_b.json, /tmp/d_box_h.txt).
+verify_steps: PROBE done: `curl -sD /tmp/d_box_h.txt https://box.signageos.io/status -o /tmp/d_box_b.json`; security-header grep = 0.
+impact: unauthenticated internal-infra disclosure (hostname, Node, backend topology, process uid); MODERATE
+testability: PASSIVE
