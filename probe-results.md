@@ -184,3 +184,8 @@ https://api.signageos.io/v1/organization/<own-uid>` -> HTTP 403
 https://api.signageos.io/v1/device` -> HTTP 404
 https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
 https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+
+## 2026-08-09 19:55:34 UTC
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
