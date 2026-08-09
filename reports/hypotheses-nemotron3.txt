@@ -1,4 +1,4 @@
-## 2026-08-09 17:21:00 UTC [api] (model nemotron3)
+## 2026-08-09 17:55:11 UTC [api] (model nemotron3)
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token, 8.1, attack=9 business=10 tech=8 gate=2 cloud=8 fresh=8
 [PRIO] api.signageos.io/v1/organization/{organizationUid}, 7.8, attack=9 business=10 tech=8 gate=2 cloud=8 fresh=7
 [PRIO] box.signageos.io/status, 5.5, attack=6 business=4 tech=3 gate=10 cloud=5 fresh=5
@@ -20,15 +20,6 @@ evidence_needed: own account JWT → HTTP 200 on GET /v1/organization/<foreign-o
 verify_steps: AUTH_HELPED: curl -H "X-Auth: <accountJWT>" https://api.signageos.io/v1/organization/<own-org-uid> = 200 baseline; repeat with foreign-org UID → 200 + oauthClientSecret = cross-tenant; escalate: curl -H "X-Auth: <leakedClientId>:<leakedSecret>" https://api.signageos.io/v1/device → foreign org device list
 impact: any tenant's org API credential → full device/content/timing/firmware control of foreign org; CRITICAL
 testability: AUTH_HELPED
-[HYP] Unauthenticated /status topology leak with zero security headers
-class: MISCONFIG
-asset: box.signageos.io/status
-confidence: 95
-reasoning: Live GET returns JSON with pod hostname, process UID, Node v20.20.2, full Redis/MongoDB/AMQP topology; headers show ONLY x-powered-by: Express — no HSTS, x-frame-options, x-content-type-options, CSP; api.status now hardened with all three
-evidence_needed: curl -sD- https://box.signageos.io/status | grep -iE 'strict-transport|x-frame|x-content|content-security' returns zero matches
-verify_steps: PASSIVE: curl -sD- https://box.signageos.io/status (confirm data + header deficit)
-impact: Infrastructure topology + process identity exposed unauthenticated; aids reconnaissance for chained attacks; MEDIUM
-testability: PASSIVE
 [PARKED] Unauthenticated /status topology leak with zero security headers: already ACCEPTED at 95 confidence with live POC; not a new hypothesis for POC phase targeting api
 [FINAL] Surviving hypotheses (ranked):
 [NEXT] HUMAN: Execute the standing H1 POC — 1) `sos login` (Auth0 device-code) mints account JWT; 2) baseline `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<own-org-uid>"` → 200; 3) repeat with a foreign org UID (from sandbox/invite or second tenant) → observe 200 + oauthClientSecret = cross-tenant IDOR confirmed; 4) if step 3 succeeds, test POST /v1/organization/<foreign-org-uid>/security-token with same JWT → securityToken minting.
