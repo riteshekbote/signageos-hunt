@@ -321,3 +321,25 @@
   - | C | `box.signageos.io` CORS ACAO (http:// + wildcard) | **VALID (Low 3.1)** | Static whitelist, no credentials flag |
   - | D | `box.signageos.io` CSP 40+ origins | **VALID (Info 3.1)** | Overly broad trust boundary |
   - VALID (4):
+
+- 25 lead(s) marked VALID at 2026-08-09 21:01:18 UTC
+  - | Q5 Novel? | **NO** — reconfirmed 15+ times since 2026-08-07. Already in `valid-bugs.md` |
+  - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - | Q5 | **NO** — reconfirmed since 2026-08-07. Already in `valid-bugs.md` |
+  - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - | Q5 | **NO** — reconfirmed since 2026-08-07. Already in `valid-bugs.md` |
+  - | Q7 | **MARGINAL** — no `Access-Control-Allow-Credentials`; only unauthenticated HTML readable. Accepted as VALID informational on prior runs. |
+  - **Verdict: VALID (Low, borderline)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)
+  - | Q5 | **NO** — reconfirmed since 2026-08-07. Already in `valid-bugs.md` |
+  - | Q7 | **MARGINAL** — defense-in-depth; requires co-located XSS to fully exploit. Accepted as VALID informational on prior runs given breadth. |
+  - **Verdict: VALID (Informational)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N)
+  - | Q2 | **NO** — requires valid account JWT. All probes return 403 without auth. |
+  - | Q4 | **NO** — cannot prove without valid account JWT + second tenant's UID |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant. Code-verified via SDK (`OrganizationTokenManagement.ts:29-32`) but unverifiable under passive-first constraint.
+  - | Q2 | **NO** — requires valid account JWT. 403 without auth. |
+  - | Q4 | **NO** — cannot prove without valid credentials + second tenant |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant. Code-verified via SDK (`sosControlHelper.ts:130-136`).
+  - | Q2 | **NO** — requires valid org `X-Auth: clientId:secret` (403083 without auth) |
+  - | Q4 | **NO** — requires valid org X-Auth + second tenant. PUT also violates passive-only rule. |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid org X-Auth + second tenant. PUT is invasive.
+  - | Q2 | **NO** — requires valid account credentials to observe |
