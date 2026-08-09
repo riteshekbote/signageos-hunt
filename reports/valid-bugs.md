@@ -350,3 +350,25 @@
   - | **Q2 Reachability** | ⚠️ AUTH_HELPED — requires a valid account JWT (`X-Auth: <jwt>`). Not public/anonymous. |
   - | 1 | `box.signageos.io/status` — unauthenticated infra info disclosure | **VALID** | 5.3 Med |
   - | 2 | `api.signageos.io/status` — unauthenticated infra info disclosure | **VALID** | 5.3 Med |
+
+- 22 lead(s) marked VALID at 2026-08-09 23:54:55 UTC
+  - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - | Q7 Triager accept? | **YES** — same class as Lead 1, valid but lower severity |
+  - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - | Q7 Triager accept? | **MARGINAL** — no `Access-Control-Allow-Credentials`, only unauthenticated HTML readable. Accepted as VALID informational on prior runs |
+  - **Verdict: VALID (Low, borderline)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)
+  - | Q7 Triager accept? | **MARGINAL** — defense-in-depth; requires co-located XSS to fully exploit. Accepted as VALID informational on prior runs given breadth |
+  - **Verdict: VALID (Informational)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N)
+  - | Q2 Reachable? | **NO** (under passive-first) — requires valid account JWT. All probes return 403 without auth |
+  - | Q4 Passive proof? | **NO** — cannot prove without valid account JWT + second tenant |
+  - | Q7 Triager accept? | **NO** — no POC possible without a valid account token + second tenant |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant to prove. Code-verified via SDK (`OrganizationTokenManagement.ts:29-32`) but unverifiable under passive-first constrain
+  - | Q2 Reachable? | **NO** (under passive-first) — requires valid account JWT. 403 without auth |
+  - | Q4 Passive proof? | **NO** — cannot prove without valid account JWT + second tenant |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant. Code-verified via CLI `getOrganization()` but unverifiable under passive-first constraint.
+  - | Q2 Reachable? | **NO** (under passive-first) — requires valid org `X-Auth: clientId:secret`. 403083 without auth |
+  - | Q4 Passive proof? | **NO** — requires valid org X-Auth + second tenant. PUT also violates passive-only rule |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid org X-Auth + second tenant. PUT is invasive.
+  - | 1 | `box.signageos.io/status` infra leak | MISCONFIG | **VALID (Low)** | 4.3 |
+  - | 2 | `api.signageos.io/status` infra leak | MISCONFIG | **VALID (Low)** | 4.3 |
+  - | 3 | `box.signageos.io` CORS ACAO whitelist | MISCONFIG | **VALID (Low, border)** | 3.1 |
