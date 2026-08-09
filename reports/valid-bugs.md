@@ -254,3 +254,8 @@
   - | 1 | `box.signageos.io/status` unauthenticated info leak | MISCONFIG | ✅ **VALID** | 5.3 Med | Real recon-enabling misconfiguration |
   - | 2 | `api.signageos.io/status` unauthenticated info leak | MISCONFIG | ✅ **VALID** | 4.3 Med | Same class, lower impact (API gated) |
   - | 3 | `box.signageos.io` CORS ACAO whitelist (18 origins) | MISCONFIG | ✅ **VALID** | 3.1 Low | Trust-boundary expansion; no credentials flag |
+
+- 3 lead(s) marked VALID at 2026-08-09 13:41:03 UTC
+  - **Verdict: VALID**
+  - **Verdict: VALID**
+  - **Verdict: VALID (Low severity — accepted as trust-boundary expansion)**
