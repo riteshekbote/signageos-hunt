@@ -229,3 +229,17 @@
   - | B | api.signageos.io | /status unauthenticated infra leak | **VALID** | 4.3 |
   - | C | box.signageos.io | CORS ACAO 18-origin static whitelist | **VALID** | 3.1 |
   - | D | box.signageos.io | CSP overly broad (40+ origins) | **VALID** | 3.1 |
+
+- 12 lead(s) marked VALID at 2026-08-09 09:28:07 UTC
+  - **VERDICT: VALID — Low**
+  - **VERDICT: VALID — Low**
+  - **VERDICT: VALID — Informational / Low**
+  - **VERDICT: VALID — Informational**
+  - | Q2 | Reachable? | **NO** — requires valid JWT/X-Auth token. All endpoints return 403 (WRONG_JWT_TOKEN / 403105) without auth. |
+  - | Q2 | Reachable? | **NO** — requires valid account JWT |
+  - | Q2 | Reachable? | **NO** — requires valid org X-Auth (clientId:secret) |
+  - | Q2 | Reachable? | **NO** — requires valid account JWT |
+  - | A | box.signageos.io | /status unauthenticated infra leak | **VALID** | 4.3 Low |
+  - | B | api.signageos.io | /status unauthenticated infra leak | **VALID** | 4.3 Low |
+  - | C | box.signageos.io | CORS ACAO 18-origin static whitelist | **VALID** | 3.1 Low |
+  - | D | box.signageos.io | CSP overly broad (40+ origins) | **VALID** | 3.1 Low |
