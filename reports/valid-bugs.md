@@ -291,3 +291,6 @@
 
 - 1 lead(s) marked VALID at 2026-08-09 17:22:08 UTC
   - | **VALID** | 1 | box/api `/status` — unauthenticated infra info disclosure + missing security headers (CVSS 5.3) |
+
+- 1 lead(s) marked VALID at 2026-08-09 17:53:53 UTC
+  - | **VALID** | 1 | `box.signageos.io/status` & `/api` — unauthenticated infra info disclosure + missing security headers (CVSS 5.3) |
