@@ -8521,3 +8521,44 @@ I'll execute the POC probe to verify the highest-confidence hypothesis on box.si
 [0m✗ [0mecho '=== STATUS HEADERS ===' && cat /tmp/poc_status_h.txt && echo '' && echo '=== ROOT HSTS ===' && curl -sI https://box.signageos.io/ 2>&1 | head -20 && echo '' && echo '=== STATUS BODY ===' && python3 -m json.tool /tmp/poc_status_b.json 2>&1 failed
 [91m[1mError: [0mThe user rejected permission to use this specific tool call.
 Let me check the captured files for the details.
+===== ANALYST laguna 2026-08-09 05:35:07 UTC =====
+[0m
+> build · laguna-s-2.1-free
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mecho '=== BOX /status ===' && curl -s --max-time 20 -D /tmp/h_status.txt https://box.signageos.io/status -o /tmp/b_status.json && echo "HEADERS:" && cat /tmp/h_status.txt && echo "SEC_HEADERS_GREP:" && grep -icE 'strict-transport|x-frame|x-content|content-security' /tmp/h_status.txt && echo "BODY_KEYS:" && python3 -m json.tool /tmp/b_status.json 2>/dev/null | grep -E 'hostname|uid|version|succeededServices|requestedAt|respondedAt' failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[0m
+[0m$ [0mecho '=== BOX / (root HSTS check) ===' && curl -sI --max-time 20 https://box.signageos.io/ | grep -i 'strict-transport-security' && echo "=== BOX /login/ CORS (evil.test origin) ===" && curl -sI --max-time 20 -H 'Origin: https://evil.test' https://box.signageos.io/login/ | grep -ic 'access-control-allow-origin' && echo "CREDS:" && curl -sI --max-time 20 -H 'Origin: https://evil.test' https://box.signageos.io/login/ | grep -ic 'access-control-allow-credentials' && echo "ACAO_LIST:" && curl -sI --max-time 20 -H 'Origin: https://evil.test' https://box.signageos.io/login/ | grep -i 'access-control-allow-origin'
+=== BOX / (root HSTS check) ===
+strict-transport-security: max-age=63072000; includeSubDomains; preload
+=== BOX /login/ CORS (evil.test origin) ===
+17
+CREDS:
+0
+[0m
+[0m$ [0mecho '=== BOX /login/ CSP origins ===' && curl -s --max-time 20 https://box.signageos.io/login/ | grep -oE 'https?://[^"'\'' ;]+' | sort -u | nl && echo "COUNT:" && curl -s --max-time 20 https://box.signageos.io/login/ | grep -oE 'https?://[^"'\'' ;]+' | sort -u | wc -l
+=== BOX /login/ CSP origins ===
+     1	https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.7/purify.min.js
+     2	https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/2.7.0/mapbox-gl.min.css
+     3	https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/2.7.0/mapbox-gl.min.js
+     4	https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.43/moment-timezone-with-data.min.js
+     5	https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js
+     6	https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900
+COUNT:
+6
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mecho '=== API /status ===' && curl -s --max-time 20 -D /tmp/h_api_status.txt https://api.signageos.io/status -o /tmp/b_api_status.json && echo "HEADERS:" && cat /tmp/h_api_status.txt && echo "SEC_HEADERS_GREP:" && grep -icE 'strict-transport|x-frame|x-content|content-security' /tmp/h_api_status.txt && echo "BODY:" && python3 -m json.tool /tmp/b_api_status.json 2>/dev/null | grep -E 'hostname|uid|version|succeededServices|requestedAt|respondedAt' failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[0m
+[0m$ [0mecho '=== API v1 organization/test ===' && curl -s --max-time 20 -D /tmp/h_org.txt https://api.signageos.io/v1/organization/test 2>&1 | head -20 && echo "=== API v2/device ===' && curl -sI --max-time 20 https://api.signageos.io/v2/device 2>&1 | head -10 && echo "=== API / CORS check ===" && curl -sI --max-time 20 -H 'Origin: https://evil.test' https://api.signageos.io/ | grep -ic 'access-control-allow-origin'
+/bin/bash: -c: line 1: unexpected EOF while looking for matching `"'
+[0m
+I'll start by verifying the current state of the surface with passive probes, then run the 8 analysis steps.
+[0m$ [0mecho '=== BOX /ready ===' && curl -s --max-time 20 https://box.signageos.io/ready && echo "" && echo "=== BOX / root redirect target ===" && curl -sI --max-time 20 https://box.signageos.io/ | grep -i 'location'
+=== BOX /ready ===
+OK
+=== BOX / root redirect target ===
+location: /login/%2F
+[0m
