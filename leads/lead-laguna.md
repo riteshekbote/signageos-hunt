@@ -1446,3 +1446,4 @@ testability: AUTH_HELPED
 [NEXT] HUMAN: Run token-bearing org-IDOR baseline — `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own-uid>` must =200; then replace `<own-uid>` with a foreign UID → 200 leaking `oauthClientSecret` proves cross-tenant disclosure.
 ## 2026-08-10 02:29:58 UTC [box] (model laguna)
 ## 2026-08-10 04:17:37 UTC [box] (model laguna)
+## 2026-08-10 05:51:42 UTC [box] (model laguna)

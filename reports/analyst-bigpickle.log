@@ -12576,3 +12576,106 @@ STEP 6 — LEARNING
 STEP 7 — RISK SCORE
 - [RISK] box.signageos.io: 58 — /status leaks pod hostname + Node version + process uid + full backend topology with zero hardening headers (differential vs hardened `/`+`/login/` and api /status), edge-fronted but uncached and Host-hardened; /login/ CSP ~60 origins + 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard but no credentials flag → no direct credential-theft path; all other box paths behind login catch-all.
 - [RISK] api.signageos.io: 50 — /status info leak hardened; all v1/v2 routes solidly JWT/X-Auth-gated, no CORS/GraphQL surface, only descriptive-error bodies (excluded). Residual exposure is the code-verified AUTH_HELPED cross-tenant org/device IDOR chain — CRITICAL if per-path org-membership checks are absent; awaits token-bearing human verification.
+===== ANALYST bigpickle 2026-08-10 05:52:32 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -sD - --max-time 20 https://box.signageos.io/status -o /tmp/poc_status_body.txt -w "TIME:%{time_total}\n" | grep -iE "^(HTTP|content-type|x-cache|via|x-amz|strict-transport|x-frame|x-content|content-security|x-powered|access-control|server:|age:|vary)"
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 527e1e2b39815bda71583fd0c39ce026.cloudfront.net (CloudFront)
+x-amz-cf-pop: DFW56-P1
+x-amz-cf-id: khiyglcqVp5KL-JSju7wvJqujKoFA73OT2TNE8FGUvlQ2lfiwOLb8g==
+[0m
+[0m$ [0mcurl -sI --max-time 20 https://box.signageos.io/login/ | grep -iE "^(HTTP|content-type|x-cache|via|x-amz|strict-transport|x-frame|x-content|content-security|access-control-allow-origin|access-control-allow-credentials|server:|set-cookie)"
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+content-security-policy: base-uri 'self';default-src 'none';connect-src 'self' wss://box.signageos.io/ https://api.mapbox.com https://events.mapbox.com https://sentry.io https://sos-production.us.auth0.com/oauth/token https://sos-production.us.auth0.com/oauth/token https://auth0.signageos.io/oauth/token https://signageos-public.s3.eu-central-1.amazonaws.com https://*.sentry.io https://heapanalytics.com https://fonts.googleapis.com https://api.rm.moodmedia.com https://api-next.rm.moodmedia.com https://api.soc.broadsign.com https://api-next.soc.broadsign.com https://api.proav-devicemgmt.sony.net https://api-next.proav-devicemgmt.sony.net https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://demo.signageos.io https://marketplace.signageos.io https://signageos-user-data-exports.s3.eu-central-1.amazonaws.com https://qwfin59thg.execute-api.eu-central-1.amazonaws.com https://upload.signageos.io https://upload.signageos.io https://remote-desktop.signageos.io wss://remote-desktop.signageos.io/ https://2.signageos.io https://static.signageos.io https://upload.signageos.io  https://platform.signageos.io  https://weinre.signageos.io  https://license.signageos.io  https://signageos-device-monitoring.s3.eu-central-1.amazonaws.com https://signageos-public.s3.eu-central-1.amazonaws.com https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com https://storage.googleapis.com https://remote-desktop.signageos.io  https://remote-desktop-us.signageos.io https://api.signageos.io  https://signageos.zendesk.com https://*.zdusercontent.com https://www.google.com/recaptcha/api2/clr https://api.signageos.io https://sos-production.us.auth0.com/oauth/token https://sos-production.us.auth0.com/oauth/token https://auth0.signageos.io/oauth/token;img-src 'self' https://s.gravatar.com/avatar/ https://i0.wp.com/cdn.auth0.com/avatars/ data: https://2.signageos.io https://static.signageos.io https://upload.signageos.io  https://platform.signageos.io  https://weinre.signageos.io  https://license.signageos.io  https://signageos-device-monitoring.s3.eu-central-1.amazonaws.com https://signageos-public.s3.eu-central-1.amazonaws.com https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com https://storage.googleapis.com https://remote-desktop.signageos.io  https://remote-desktop-us.signageos.io https://api.signageos.io  https://signageos.zendesk.com https://*.zdusercontent.com https://www.google.com/recaptcha/api2/clr https://heapanalytics.com https://remote-desktop.signageos.io https://demo.signageos.io https://marketplace.signageos.io;worker-src 'self' blob:;font-src 'self' data: https://fonts.gstatic.com https://heapanalytics.com;style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://heapanalytics.com https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/2.7.0/mapbox-gl.min.css https://cdn.jsdelivr.net/npm/monaco-editor@0.55.1/min/vs/editor/editor.main.css;frame-src https://www.google.com/ https://demo.signageos.io/ https://marketplace.signageos.io/ https://sos-production.us.auth0.com/ https://sos-production.us.auth0.com/ https://auth0.signageos.io/ https://www.signageos.io https://demo.signageos.io https://sos-production.us.auth0.com/ https://sos-production.us.auth0.com/ https://auth0.signageos.io/;script-src 'self' 'strict-dynamic' 'wasm-unsafe-eval';script-src-elem https://cdn.heapanalytics.com https://heapanalytics.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/releases/ https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.7/purify.min.js https://cdn.jsdelivr.net/npm/monaco-editor@0.55.1/min/vs/ https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/2.7.0/mapbox-gl.min.js https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.43/moment-timezone-with-data.min.js 'nonce-edf54f6666520d52dc66bf4a' 'nonce-8faed00489dfe19f6c524d52' 'nonce-dce46a91dff7be8e5c261d1a' 'nonce-62c513d42bfee949eff90e34' 'nonce-778ca54b2ae105b50100fe5c' 'nonce-159cb25da9cd9ef761a44ba7';media-src 'self';manifest-src 'self';upgrade-insecure-requests ;require-trusted-types-for 'script';report-uri /csp-report;form-action 'self';frame-ancestors 'self';object-src 'none';script-src-attr 'none'
+strict-transport-security: max-age=63072000; includeSubDomains; preload
+x-content-type-options: nosniff
+x-frame-options: DENY
+access-control-allow-origin: http://box.signageos.io
+access-control-allow-origin: https://2.signageos.io
+access-control-allow-origin: https://static.signageos.io
+access-control-allow-origin: https://upload.signageos.io
+access-control-allow-origin: https://platform.signageos.io
+access-control-allow-origin: https://weinre.signageos.io
+access-control-allow-origin: https://license.signageos.io
+access-control-allow-origin: https://signageos-device-monitoring.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://signageos-public.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://storage.googleapis.com
+access-control-allow-origin: https://remote-desktop.signageos.io
+access-control-allow-origin: https://remote-desktop-us.signageos.io
+access-control-allow-origin: https://api.signageos.io
+access-control-allow-origin: https://signageos.zendesk.com
+access-control-allow-origin: https://*.zdusercontent.com
+access-control-allow-origin: https://www.google.com/recaptcha/api2/clr
+x-cache: Miss from cloudfront
+via: 1.1 77aab32a5c746acbc2235661b0d444fa.cloudfront.net (CloudFront)
+x-amz-cf-pop: DFW56-P1
+x-amz-cf-id: xhbEv-_bpqB5aOLHe7W-3B0jfHfN5MU1mXvPx62dNXnVLxR5gBm6gQ==
+[0m
+[0m$ [0mpython3 -c "import json;d=json.load(open('/tmp/poc_status_body.txt'));print({k:(v if not isinstance(v,(dict,list)) else type(v).__name__) for k,v in d.items()})"
+{'name': 'box', 'status': 'OK', 'process': 'dict', 'hostname': 'box-7c8c876945-m9w2q', 'failedServices': 'list', 'succeededServices': 'list', 'timeout': 30000, 'requestedAt': 1786341025190, 'respondedAt': 1786341025253, 'amqp0': 'dict', 'redis2': 'dict', 'redis3': 'dict', 'redis0': 'dict', 'redis1': 'dict', 'mongoDB2': 'dict', 'mongoDB3': 'dict', 'mongoDB1': 'dict', 'mongoDB0': 'dict'}
+[0m
+**STEP 1 — DELTA**
+- [CHANGED] box /status: CloudFront edge POP rotated PHX52-P1 → DFW56-P1; pod hostname rotated to `box-7c8c876945-m9w2q`; body shape identical (status/process/hostname/succeededServices/amqp0/redis0-3/mongoDB0-3 with responseTime), still `x-cache: Miss`, headers STILL only `x-powered-by: Express` + CloudFront (security-header grep = 0)
+- [CHANGED] box /login/: re-archived — 17 static ACAO (incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + api sibling), NO `access-control-allow-credentials`, HSTS `max-age=63072000; includeSubDomains; preload` + xfo:DENY + xcto:nosniff present; CSP identical (triplicated `sos-production.us.auth0.com/oauth/token`, ~60 connect-src origins, recaptcha frame-src, `require-trusted-types-for`/`report-uri` hardening present)
+- NO_DELTA on any other surface (api /status hardened, v1/v2 JWT-gated, /ready trivial, all box paths login catch-all)
+
+**STEP 2 — PRIORITIZE**
+- [PRIO] box.signageos.io/status — score 6.45; attack=8 business=4 tech=5 (Node/infra detail) gate=10 (no auth) cloud=8 (K8s+CloudFront topology) fresh=1 (30+ cycles unchanged, 04:17 probe)
+- [PRIO] box.signageos.io/login/ (CSP) — score 5.90; attack=6 business=4 tech=7 (OAuth0/JWT/postMessage surface) gate=10 cloud=5 fresh=1
+- [PRIO] box.signageos.io/ (ACAO) — score 5.55; attack=5 business=3 tech=6 gate=10 cloud=6 fresh=1
+
+**STEP 3 — HYPOTHESES**
+[HYP] box /status unauthenticated internal-infra info-leak (PoC package, standing)
+class: MISCONFIG
+asset: box.signageos.io/status (GET)
+confidence: 95
+reasoning: Reconfirmed this cycle — HTTP 200 JSON, pod `box-7c8c876945-m9w2q`, 64-hex process.uid, Node v20.20.2, uptime/cpu/mem, full amqp/redis/mongo topology with per-service responseTime; headers ONLY `x-powered-by: Express` + CloudFront (HSTS/xfo/xcto/CSP grep = 0). Edge no-cache (x-cache: Miss), POP rotates DFW56/PHX52. Differential vs hardened api /status persists.
+evidence_needed: none — body + headers re-archived 04:17 this cycle.
+verify_steps: PROBE done: `curl -sD - https://box.signageos.io/status`; security-header grep = 0; 2× Miss.
+impact: unauthenticated internal-infra disclosure (K8s pod identity, Node version, process uid, backend topology, edge geo); MODERATE
+testability: PASSIVE
+
+[HYP] box /login/ CSP origin-trust bloat (standing)
+class: MISCONFIG
+asset: box.signageos.io/login/ (CSP)
+confidence: 60
+reasoning: Reconfirmed — connect-src triplicates `sos-production.us.auth0.com/oauth/token`, spans mapbox/events.mapbox/sentry/5× S3/API Gateway/api.signageos.io + recaptcha frame-src; `require-trusted-types`/`report-uri` present as hardening but ~60 connect origins persist. No direct exploit path without a page-level primitive.
+evidence_needed: no change; requires authenticated page context for postMessage abuse.
+verify_steps: PROBE done: `curl -sI https://box.signageos.io/login/ | grep -i content-security-policy`.
+impact: broadens origin trust for embedded/connected parties; LOW-MODERATE (boundary hygiene)
+testability: PASSIVE
+
+[HYP] box / CORS static whitelist incl plaintext + wildcard (standing)
+class: MISCONFIG
+asset: box.signageos.io/ (ACAO)
+confidence: 55
+reasoning: Reconfirmed — 17 static ACAO incl `http://box.signageos.io` plaintext variant + `https://*.zdusercontent.com` wildcard + api sibling; `access-control-allow-credentials` absent (grep = 0) on every box path.
+evidence_needed: no change; credentials-flag absence removes direct credential-theft path.
+verify_steps: PROBE done: `curl -sI https://box.signageos.io/login/ | grep -c access-control-allow-credentials` = 0.
+impact: defense-in-depth/whitelist hygiene; no direct exploit absent credentials flag; LOW
+testability: PASSIVE
+
+**STEP 4 — SELF-CRITIQUE**
+No standing hypothesis fell below threshold (95/60/55 all ≥40, none on REJECTED list, all have concrete verify_steps). No new hypothesis justified — repeated pod/POP rotation and the CDN switch produced no cache-based primitive (x-cache always Miss, no `age`, no Origin-driven header variance). Nothing dropped.
+- [PARKED] (none this cycle)
+- [FINAL] 1) box /status info-leak (95, PASSIVE, PoC package finalized — unchanged) — 2) box /login/ CSP bloat (60, PASSIVE) — 3) box / CORS static whitelist (55, PASSIVE)
+
+**STEP 5 — NEXT ACTION**
+[NEXT] PROBE: One final passive differential this cycle — fetch box `/status` with a spoofed `Origin: https://evil.test` (HEAD, 1 request) to confirm the ACAO set on /status stays absent/unset (vs /login/ 17-value whitelist), closing out whether the CloudFront edge injects any Origin-reflective header on the unhardened path; if no reflection, revert to standing reconfirmation cadence only.
+
+**STEP 6 — LEARNING**
+- [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live 04:17 — pod `box-7c8c876945-m9w2q`, zero security headers persists behind CloudFront (POP now DFW56-P1); x-cache: Miss (no edge caching primitive). Differential vs hardened api /status persists.
+- [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/login/ & / CORS+CSP: Reconfirmed — 17 static ACAO incl `http://` + `*.zdusercontent.com`, 0 credentials flag; CSP triplicated Auth0 oauth/token + ~60 connect-src origins + trusted-types hardening.
+- [LEARN] REJECTED MISCONFIG @ box.signageos.io: CloudFront edge (30+ cycle window) introduces NO new surface — all non-/status, non-/ready box paths still login catch-all; edge does not cache /status (x-cache Miss), no header-based primitive appeared.
+- [LEARN] REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: class stable (WRONG_JWT_TOKEN/403075/403076/403105) — excluded per scope.yml.
+
+**STEP 7 — RISK SCORE**
+- [RISK] box.signageos.io: 58 — /status leaks pod hostname + Node version + process uid + full backend topology with zero hardening headers (differential vs hardened `/`+`/login/` and api /status), now CloudFront-fronted but edge does not cache; /login/ CSP ~60 origins + 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard but no credentials flag → no direct credential-theft path; all other box paths behind login catch-all.
+- [RISK] api.signageos.io: 50 — /status info leak hardened; all v1/v2 routes solidly JWT/X-Auth-gated, no CORS/GraphQL surface, only descriptive-error bodies (excluded). Residual exposure is the code-verified AUTH_HELPED cross-tenant org/device IDOR chain — CRITICAL if per-path org-membership checks are absent; awaits token-bearing human verification.

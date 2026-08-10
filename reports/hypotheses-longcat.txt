@@ -1,4 +1,4 @@
-## 2026-08-10 04:17:53 UTC [box] (model longcat)
+## 2026-08-10 05:51:07 UTC [box] (model longcat)
 [PRIO] `box.signageos.io/status` — 6.05 (attack=7, business=8, tech=4, gate=10, cloud=6, fresh=2)
 [PRIO] `box.signageos.io` CORS/CSP — 5.05 (attack=6, business=6, tech=5, gate=10, cloud=3, fresh=1)
 [PRIO] `api.signageos.io/v1/organization/{uid}/security-token` — 4.65 (attack=9, business=9, tech=8, gate=2, cloud=4, fresh=3)
@@ -6,8 +6,8 @@
 class: MISCONFIG
 asset: box.signageos.io/status
 confidence: 95
-reasoning: Unauthenticated GET returns JSON with K8s pod hostname, 64-hex process UID, Node version, and full service topology (amqp0, redis0-3, mongoDB0-3) with per-service responseTime. Zero security headers (HSTS/xfo/xcto/CSP all absent) — differential vs `/` and `/login/`. Confirmed across 30+ probes spanning 3 days with rotating pods.
-evidence_needed: Fresh curl with headers + body to PoC-package the leak
+reasoning: Unauthenticated GET returns JSON with K8s pod hostname, 64-hex process UID, Node version, and full service topology (amqp0, redis0-3, mongoDB0-3) with per-service responseTime. Zero security headers (HSTS/xfo/xcto/CSP all absent) — differential vs `/` and `/login/` which are hardened. Confirmed across 30+ probes spanning 3 days with rotating pods.
+evidence_needed: Fresh curl with headers + body to PoC-package the leak behind the new CloudFront edge
 verify_steps: `curl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_status_b.txt`
 impact: Internal infrastructure mapping (pod naming convention, service topology, process UID, Node version) enabling targeted follow-up attacks. Medium severity — reconnaissance enabler, not direct data compromise.
 testability: PASSIVE
@@ -31,9 +31,3 @@ impact: Cross-tenant token minting → account takeover of any org. Critical sev
 testability: AUTH_HELPED
 [PARKED] Cross-tenant security-token minting via X-Auth org UID override: AUTH_HELPED test requires `sos login` + two orgs; current phase is box POC, api target is off-phase for this cycle.
 [FINAL] Ranked surviving hypotheses:
-[NEXT] PROBE: Fresh PoC capture of box /status behind CloudFront edge — `curl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_status_b.txt && echo "---HEADERS---" && cat /tmp/poc_box_status_h.txt && echo "---BODY---" && cat /tmp/poc_box_status_b.txt` — confirms CloudFront switch did not alter the info-leak or add hardening headers.
-[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live across 30+ cycles — pod rotation, zero security headers, full topology leak unchanged. Now fronted by CloudFront (body/headers identical).
-[LEARN] ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: Reconfirmed — 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard, no credentials flag, CSP ~60 connect-src origins. Unchanged behind CloudFront.
-[LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All routes JWT/X-Auth gated (403), no passive bypass across 30+ cycles. Cross-tenant chain remains AUTH_HELPED only.
-[RISK] box.signageos.io: **42** — Unauthenticated info-leak on /status (K8s infra mapping) + broad CORS/CSP trust boundary are real misconfigurations, but no auth bypass, no IDOR, no data compromise surface found. Attack surface is shallow beyond the login catch-all. Medium-low overall exposure.
-[RISK] api.signageos.io: **55** — Deep API surface (60+ v1/v2 endpoints) with confirmed dual-auth mechanism (JWT + X-Auth) and a plausible cross-tenant IDOR vector (org UID decoupling in path vs auth). All endpoints are currently gated, but the authz surface is complex and the CONFIRMED MECHANISM (path uid ≠ auth-derived org) is a structural risk. Requires AUTH_HELPED verification to confirm or exclude.
