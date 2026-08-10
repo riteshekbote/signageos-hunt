@@ -379,3 +379,26 @@
   - | **VALID** | box/api `/status` info leak | Unauthenticated K8s infra disclosure + missing security headers; passive proof; CVSS 5.3 |
   - | **HOLD** | Cross-tenant IDOR family (4 variants) | Credible CRITICAL impact but requires AUTH_HELPED (valid token + second tenant); all /v1/* return 403 |
   - | 1. box/api /status info leak + missing security headers | **VALID** | Low-Medium (5.3) | Unauthenticated infra disclosure + header differential; passive proof |
+
+- 18 lead(s) triaged at 2026-08-10 03:23 UTC (full 7-Question Gate, all 5 models)
+  - | 1 | `box.signageos.io/status` — unauthenticated infra info disclosure | MISCONFIG | **VALID (Low)** | 4.3 | Reconfirmed; passive PoC stable; now fronted by CloudFront but zero security headers |
+  - | 2 | `api.signageos.io/status` — unauthenticated infra info disclosure | MISCONFIG | **VALID (Low)** | 4.3 | Reconfirmed; hardened with HSTS/xfo/xcto |
+  - | 3 | `box.signageos.io` CORS ACAO 18-origin static whitelist (http:// + wildcard) | MISCONFIG | **VALID (Low, border)** | 3.1 | Reconfirmed; static whitelist, no credentials flag |
+  - | 4 | `box.signageos.io` CSP overly broad (40+ origins) | MISCONFIG | **VALID (Info, border)** | 3.1 | Reconfirmed; triplicated Auth0 + wildcard |
+  - | 5 | `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant mint | IDOR | **HOLD** | AUTH_HELPED — requires valid account JWT + second tenant |
+  - | 6 | `api.signageos.io/v1/organization/{uid}` cross-tenant OAuth secret disclosure | IDOR | **HOLD** | AUTH_HELPED — requires valid account JWT + second tenant |
+  - | 7 | `api.signageos.io/v1/device/{uid}/peer-recovery` cross-tenant read/write | IDOR | **HOLD** | AUTH_HELPED — requires valid org X-Auth + second tenant; PUT invasive |
+  - | 8 | `api.signageos.io/v2/*` authz drift | AUTH | **HOLD** | No passive evidence; all routes 403/404 |
+  - | 9 | `box.signageos.io/settings` token-generation over-scope | AUTH | **HOLD** | AUTH_HELPED — requires authenticated session |
+  - | 10 | `api.signageos.io/v1/device/{uid}/*` device-scoped weaker auth | AUTH | **HOLD** | No passive evidence |
+  - | 11 | `api.signageos.io/v1/account/security-token` credentials in query string | MISCONFIG | **HOLD** | Spec-documented but not passively provable |
+  - | 12 | `github.com/signageos/videowall-designer` hardcoded secret (staging) | SECRET_LEAK | **INVALID** | Out-of-scope host |
+  - | 13 | `box.signageos.io/login` Auth0 redirect_uri bypass | AUTH | **INVALID** | Not testable passively without Auth0 tenant config |
+  - | 14 | `box.signageos.io/login` login CSRF via OAuth2 state | AUTH | **INVALID** | Excluded per scope.yml (anonymous-accessible form CSRF) |
+  - | 15 | `api.signageos.io` root JSON API via Accept header | IDOR | **INVALID** | Disproven — returns HTML regardless of headers |
+  - | 16 | `box.signageos.io` subdomains postMessage origin bypass | OTHER | **INVALID** | No passive evidence; impact limited |
+  - | 17 | `api.signageos.io/v1/*` descriptive errors | MISCONFIG | **INVALID** | Excluded per scope.yml |
+  - | 18 | `api.signageos.io/v1/*+v2/*` pre-auth bypass | IDOR | **INVALID** | All endpoints solidly JWT-gated |
+
+- 1 lead(s) marked VALID at 2026-08-10 03:26:37 UTC
+  - | **4** | **VALID** | `box.status`, `api.status` (infra leaks), `box CORS` (http:// + wildcard), `box CSP` (40+ origins) |
