@@ -1483,3 +1483,4 @@ testability: AUTH_HELPED
 [NEXT] PROBE: Finalize box /status PoC evidence package — `curl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_status_b.txt && grep -cE 'strict-transport|x-frame|x-content|content-security' /tmp/poc_box_status_h.txt && wc -c /tmp/poc_box_status_b.txt`. The two AUTH_HELPED cross-tenant IDOR chains ([78]/[75]) remain queued for token-bearing HUMAN cycle — highest-value open verifications, cannot advance passively.
 ## 2026-08-10 13:46:33 UTC [box] (model laguna)
 ## 2026-08-10 14:47:11 UTC [box] (model laguna)
+## 2026-08-10 15:45:14 UTC [box] (model laguna)

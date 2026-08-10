@@ -917,3 +917,6 @@
 - LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 
 
 ## RANKED HYPOTHESES 2026-08-10 14:47:21 UTC
+
+## RANKED HYPOTHESES 2026-08-10 15:46:49 UTC
+- [95] box.signageos.io/status: box /status unauthenticated internal-infra info-leak (PoC finalize) (from reports/hypotheses-bigpickle.txt)
