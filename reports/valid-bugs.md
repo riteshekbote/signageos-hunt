@@ -582,3 +582,14 @@
   - | Q2 Reachable? | **NO** — requires valid org X-Auth (clientId:secret) |
   - | 1 | box.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 5.3 |
   - | 2 | api.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 5.3 |
+
+- 9 lead(s) marked VALID at 2026-08-10 18:41:27 UTC
+  - **Verdict: VALID — DUPLICATE** (already ACCEPTED in knowledge/index.md)
+  - **Verdict: VALID — DUPLICATE** (already ACCEPTED in knowledge/index.md)
+  - **Verdict: VALID — DUPLICATE** (already ACCEPTED in knowledge/index.md)
+  - **Verdict: VALID — DUPLICATE** (already ACCEPTED in knowledge/index.md)
+  - **Verdict: HOLD** — AUTH_HELPED only, not passively provable. Requires valid credentials for two orgs. Per scope.yml passive-first rule, cannot be confirmed in current phase. Candidate for future AUTH
+  - | 1 | box.signageos.io/status K8s info-leak | MISCONFIG | VALID-DUP | Already ACCEPTED; CVSS 5.3 |
+  - | 2 | box.signageos.io CORS ACAO whitelist + wildcard | MISCONFIG | VALID-DUP | Already ACCEPTED; CVSS 4.3 |
+  - | 3 | box.signageos.io CSP broad connect-src/frame-src | MISCONFIG | VALID-DUP | Already ACCEPTED; CVSS 4.3 |
+  - | 4 | api.signageos.io/status K8s info-leak | MISCONFIG | VALID-DUP | Already ACCEPTED; CVSS 5.3 |
