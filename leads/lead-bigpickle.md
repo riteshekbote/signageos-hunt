@@ -1304,3 +1304,31 @@ testability: PASSIVE
 [LEARN] REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: class stable (WRONG_JWT_TOKEN/403075/403076/403105) — excluded per scope.yml.
 [RISK] box.signageos.io: 58 — /status leaks pod hostname + Node version + process uid + full backend topology with zero hardening headers (differential vs hardened `/`+`/login/` and api /status), now edge-fronted by CloudFront but unhardened; /login/ CSP ~60 origins + 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard but no credentials flag → no direct credential-theft path; all other box paths behind login catch-all.
 [RISK] api.signageos.io: 50 — /status info leak hardened; all v1/v2 routes solidly JWT/X-Auth-gated, no CORS/GraphQL surface, only descriptive-error bodies (excluded). Residual exposure is the code-verified AUTH_HELPED cross-tenant org/device IDOR chain — CRITICAL if per-path org-membership checks are absent; awaits token-bearing human verification.
+## 2026-08-10 04:17:30 UTC [box] (model bigpickle)
+[HYP] box /status unauthenticated internal-infra info-leak (PoC package, standing)
+class: MISCONFIG
+asset: box.signageos.io/status (GET)
+confidence: 95
+reasoning: Reconfirmed this cycle — HTTP 200 JSON, pod `box-7c8c876945-gkzcp`, 64-hex process.uid `b341def86252…`, Node v20.20.2, uptime/cpu/mem, full amqp/redis/mongo topology with per-service responseTime; headers ONLY `x-powered-by: Express` + CloudFront (HSTS/xfo/xcto/CSP grep = 0). Edge does not cache (x-cache: Miss twice). Differential vs hardened api /status persists.
+evidence_needed: none — body + headers re-archived this cycle.
+verify_steps: PROBE done: `curl -sD - https://box.signageos.io/status`; security-header grep = 0; double probe = 2× Miss.
+impact: unauthenticated internal-infra disclosure (K8s pod identity, Node version, process uid, backend topology); MODERATE
+testability: PASSIVE
+[HYP] box /login/ CSP origin-trust bloat (standing)
+class: MISCONFIG
+asset: box.signageos.io/login/ (CSP)
+confidence: 60
+reasoning: Reconfirmed — connect-src triplicates `sos-production.us.auth0.com/oauth/token`, spans mapbox/events.mapbox/sentry/Auth0/5× S3/API Gateway/api.signageos.io + recaptcha frame-src. Overly broad postMessage/origin trust boundary. No direct exploit path without a page-level primitive.
+evidence_needed: no change this cycle; requires authenticated page context for postMessage abuse.
+verify_steps: PROBE done: `curl -sI https://box.signageos.io/login/ | grep -i content-security-policy`.
+impact: broadens origin trust for embedded/connected parties; LOW-MODERATE (boundary hygiene)
+testability: PASSIVE
+[HYP] box / CORS static whitelist incl plaintext + wildcard (standing)
+class: MISCONFIG
+asset: box.signageos.io/ (ACAO)
+confidence: 55
+reasoning: Reconfirmed — 17 static ACAO incl `http://box.signageos.io` plaintext variant + `https://*.zdusercontent.com` wildcard + api sibling; no credentials flag on any box path.
+evidence_needed: no change; credentials-flag absence removes direct credential-theft path.
+verify_steps: PROBE done: `curl -sI https://box.signageos.io/login/ | grep -c access-control-allow-credentials` = 0.
+impact: defense-in-depth/whitelist hygiene; no direct exploit absent credentials flag; LOW
+testability: PASSIVE

@@ -235,3 +235,8 @@
 ## 2026-08-10 02:31:10 UTC
 - CHANGED box.signageos.io/status now served behind CloudFront (new headers `x-cache: Miss from cloudfront`, `via: ...cloudfront.net`, `x-amz-cf-pop: PHX52-P1`) — routing/hardening change only; body identical (
 - CHANGED box.signageos.io/login/ chain re-probed — final hop 200, HSTS `max-age=63072000; includeSubDomains; preload` + xfo:DENY + xcto:nosniff present; CSP identical (triplicated Auth0 oauth/token, ~60 connec
+
+## 2026-08-10 04:19:27 UTC
+- CHANGED box.signageos.io/status now fronted by CloudFront (x-cache, via, x-amz-cf-pop headers added) — body unchanged, still zero security headers (no HSTS/xfo/xcto/CSP)
+- CHANGED box.signageos.io/ and /login/ now served via CloudFront with full hardening headers (HSTS max-age=63072000; includeSubDomains; preload, xfo:DENY, xcto:nosniff, CSP) — differential vs /status persists
+- NEW api.signageos.io/status now also fronted by CloudFront (x-cache, via, x-amz-cf-pop) — retains HSTS/xfo/xcto hardening

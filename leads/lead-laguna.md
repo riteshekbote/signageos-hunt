@@ -1445,3 +1445,4 @@ testability: AUTH_HELPED
 [FINAL] re-ranked: 1) api org OAuth-secret IDOR (75) → 2) api security-token mint (78, requires mint evidence) — both AUTH_HELPED, cannot advance this cycle.
 [NEXT] HUMAN: Run token-bearing org-IDOR baseline — `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own-uid>` must =200; then replace `<own-uid>` with a foreign UID → 200 leaking `oauthClientSecret` proves cross-tenant disclosure.
 ## 2026-08-10 02:29:58 UTC [box] (model laguna)
+## 2026-08-10 04:17:37 UTC [box] (model laguna)
