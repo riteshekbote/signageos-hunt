@@ -915,3 +915,5 @@
 - LEARN: ACCEPTED MISCONFIG @ box.signageos.io/ & /login/ CORS+CSP: 17 static ACAO incl. http:// plaintext variant + https://*.zdusercontent.com wildcard + api.signageos
 - LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes JWT/X-Auth-gated, no passive bypass (reconfirmed 30+ cycles)
 - LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 
+
+## RANKED HYPOTHESES 2026-08-10 14:47:21 UTC
