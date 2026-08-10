@@ -532,3 +532,20 @@
   - | 2 | api.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 4.3 |
   - | 3 | box.signageos.io CORS ACAO whitelist (http:// + wildcard) | MISCONFIG | **VALID (Low, border)** | 3.1 |
   - | 4 | box.signageos.io CSP overly broad (40+ origins) | MISCONFIG | **VALID (Info, border)** | 3.1 |
+
+- 15 lead(s) marked VALID at 2026-08-10 13:53:24 UTC
+  - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - | Q7 Triager accept? | MARGINAL — accepted as VALID informational on prior runs |
+  - **Verdict: VALID (Low, borderline)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)
+  - **Verdict: VALID (Informational, borderline)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N)
+  - | Q2 Reachable? | NO — requires valid account JWT (403076 without) |
+  - | Q4 GET/HEAD proof? | NO — requires valid JWT + second tenant |
+  - | Q2 Reachable? | NO — requires valid account JWT |
+  - | Q4 GET/HEAD proof? | NO — requires valid JWT + second tenant |
+  - | Q2 Reachable? | NO — requires valid org X-Auth (clientId:secret) |
+  - | Q2 Reachable? | NO — requires valid org token to observe |
+  - | 1 | box.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 4.3 |
+  - | 2 | api.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 4.3 |
+  - | 3 | box.signageos.io CORS ACAO whitelist (http:// + wildcard) | MISCONFIG | **VALID (Low, border)** | 3.1 |
+  - | 4 | box.signageos.io CSP overly broad (40+ origins) | MISCONFIG | **VALID (Info, border)** | 3.1 |
