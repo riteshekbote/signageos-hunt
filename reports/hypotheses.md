@@ -940,3 +940,9 @@
 - LEARN: CHANGED api.signageos.io/status: Now also fronted by CloudFront (x-cache, via, x-amz-cf-pop) — retains HSTS/xfo/xcto hardening.
 
 ## RANKED HYPOTHESES 2026-08-10 18:33:44 UTC
+
+## RANKED HYPOTHESES 2026-08-10 19:38:47 UTC
+- [95] box.signageos.io/status: box /status unauthenticated internal-infra info-leak (standing, PoC finalized) (from reports/hypotheses-bigpickle.txt)
+- [95] box.signageos.io/status: Box /status unauthenticated K8s topology leak behind CloudFront (from reports/hypotheses-laguna.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Execute the standing cross-tenant chain PoC (only unverified high-value lead): 1) `sos login` (Auth0 device-code) → account JWT; 2) baseline `curl -H "X-
+- NEXT(hypotheses-laguna.txt): PROBE: `curl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_status_b.txt && echo "hardening_headers: $(grep -cE 'st
