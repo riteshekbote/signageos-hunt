@@ -1,1 +1,42 @@
-## 2026-08-10 16:38:54 UTC [box] (model laguna)
+## 2026-08-10 17:36:50 UTC [box] (model laguna)
+[CHANGED] box.signageos.io/status now fronted by CloudFront (new `x-cache`/`via`/`x-amz-cf-pop` headers) — routing change only, body/header security posture unchanged (still zero hardening headers, leaks topology)
+[CHANGED] box.signageos.io/ & /login/ now served via CloudFront with full hardening headers (HSTS `max-age=63072000; includeSubDomains; preload`, `xfo: DENY`, `xcto: nosniff`, CSP) — differential vs `/status` confirmed
+[CHANGED] api.signageos.io/status now also fronted by CloudFront — retains HSTS+xfo+xcto hardening
+[PRIO] box.signageos.io/status: 52 — attack_surface=3, business_value=2, tech_exposure=5, gate_ease=10, cloud_surface=5, freshness=8
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token: 62 — attack_surface=10, business_value=10, tech_exposure=8, gate_ease=3, cloud_surface=5, freshness=5 (code-verified, AUTH_HELPED)
+[PRIO] api.signageos.io/v1/organization/{organizationUid}: 60 — attack_surface=9, business_value=10, tech_exposure=7, gate_ease=3, cloud_surface=5, freshness=5 (code-verified, AUTH_HELPED)
+[HYP] Box /status unauthenticated internal-infra info-leak behind CloudFront
+class: MISCONFIG
+asset: box.signageos.io/status (GET)
+confidence: 95
+reasoning: Confirmed live behind CloudFront — HTTP 200 application/json leaks pod hostname (`box-7c8c876945-*` rotated 30+ cycles), 64-hex process.uid, Node v20.20.2, full amqp0/redis0-3/mongoDB0-3 topology, per-service responseTime; headers ONLY `x-powered-by: Express + CloudFront` (grep=0 HSTS/xfo/xcto/CSP). Differential vs hardened `/`+`/login/` now behind same CloudFront.
+evidence_needed: response body+headers captured with security-header grep = 0
+verify_steps: PROBE: `curl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_status_b.txt && grep -cE 'strict-transport|x-frame|x-content|content-security' /tmp/poc_box_status_h.txt && wc -c /tmp/poc_box_status_b.txt`
+impact: unauthenticated internal-infra disclosure (K8s pod name, Node version, process UID, backend service topology) aiding further targeting; MODERATE
+testability: PASSIVE
+[HYP] Cross-tenant security-token mint via X-Auth org UID override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token (POST)
+confidence: 78
+reasoning: SDK/CLI code-verified — POST body uses client-supplied org {uid} path; X-Auth header is first-part org identity `id:unsafeDecryptedToken`, distinct from path UID. Baseline 403 JWT-gated pre-auth reconfirmed. No per-path org-membership check proven in code.
+evidence_needed: own JWT → 200 on foreign org's /security-token returns a usable token; token accepted on /v1/device
+verify_steps: AUTH_HELPED: baseline `curl -X POST -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own-uid>/security-token -d '{"name":"poc"}'`; replace `<own-uid>` with foreign UID → 200+minted token; then `curl -H "X-Auth: <token>" https://api.signageos.io/v1/device` = 200
+impact: mint valid API tokens for any tenant → full foreign device/content control; CRITICAL
+testability: AUTH_HELPED
+[HYP] Cross-tenant org OAuth-client-secret disclosure via UID path
+class: IDOR
+asset: api.signageos.io/v1/organization/{organizationUid} (GET)
+confidence: 75
+reasoning: SDK/CLI code-verified — GET sends `X-Auth: <JWT>` with client-supplied UID path arg; response maps oauthClientId+oauthClientSecret. 403 pre-auth reconfirmed. Path UID client-supplied ≠ auth-derived org.
+evidence_needed: own JWT → 200 on foreign UID returning oauthClientSecret
+verify_steps: AUTH_HELPED: `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own-uid>` = 200; replace `<own-uid>` with foreign UID → 200+secret = cross-tenant disclosure
+impact: leak any tenant's org OAuth credential → full foreign device/content control; CRITICAL
+testability: AUTH_HELPED
+[FINAL] (ranked)
+[NEXT] PROBE: Finalize box /status PoC evidence package — `curl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_status_b.txt && grep -cE 'strict-transport|x-frame|x-content|content-security' /tmp/poc_box_status_h.txt && wc -c /tmp/poc_box_status_b.txt`
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Unauthenticated GET leaks pod hostname + 64-hex process.uid + Node v20.20.2 + full amqp/redis/mongo topology; headers ONLY x-powered-by: Express + CloudFront — zero hardening headers — now confirmed behind CloudFront
+[LEARN] CHANGED box.signageos.io/ & /login/: Now fronted by CloudFront with full hardening (HSTS+xfo+xcto+CSP) — differential vs /status confirmed
+[LEARN] CHANGED api.signageos.io/status: Now fronted by CloudFront — retains HSTS+xfo+xcto hardening, no new surface
+[LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes 403 JWT/X-Auth-gated, no passive bypass (reconfirmed)
+[RISK] box.signageos.io: 58 — /status leaks pod hostname + Node version + 64-hex process.uid + full backend topology with zero hardening headers behind CloudFront; /login/ CSP 59+ origins + 17 static ACAO incl `http://` variant + `*.zdusercontent.com` wildcard, but no credentials flag → no direct credential-theft path
+[RISK] api.signageos.io: 50 — /status info leak now hardened (HSTS/xfo/xcto); all v1/v2 routes solidly JWT/X-Auth-gated, no CORS/GraphQL surface; only descriptive-error bodies (excluded class). Residual exposure is code-verified AUTH_HELPED cross-tenant IDOR chain — CRITICAL if per-path org checks absent; awaits token-bearing verification

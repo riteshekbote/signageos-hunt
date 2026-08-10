@@ -241,3 +241,10 @@
 - 2026-08-10 ACCEPTED MISCONFIG @ box.signageos.io/ & /login/ CORS+CSP: 17 static ACAO incl. http:// plaintext variant + https://*.zdusercontent.com wildcard + api.signageos.io sibling; evil.test NOT reflected (static whitelist); NO access-control-allow-credentials; CSP 59+ distinct origins with triplicated Auth0 oauth/token on /login/ (reconfirmed)
 - 2026-08-10 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes JWT/X-Auth-gated, no passive bypass (reconfirmed 30+ cycles)
 - 2026-08-10 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 403075/403076/403105 — class descriptive-error excluded per scope.yml (reconfirmed)
+- 2026-08-10 ACCEPTED MISCONFIG @ box.signageos.io/status: Unauthenticated GET leaks pod hostname + 64-hex process.uid + Node v20.20.2 + full amqp/redis/mongo topology; headers ONLY x-powered-by: Express + CloudFront — zero hardening headers — now confirmed behind CloudFront
+- 2026-08-10 CHANGED box.signageos.io/ & /login/: Now fronted by CloudFront with full hardening (HSTS+xfo+xcto+CSP) — differential vs /status confirmed
+- 2026-08-10 CHANGED api.signageos.io/status: Now fronted by CloudFront — retains HSTS+xfo+xcto hardening, no new surface
+- 2026-08-10 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes 403 JWT/X-Auth-gated, no passive bypass (reconfirmed)
+- 2026-08-10 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 403075/403076/403105 — class descriptive-error excluded per scope.yml.
+- 2026-08-10 CHANGED box.signageos.io/status: Now fronted by CloudFront (x-cache, via, x-amz-cf-pop) — routing change only, body and header security posture unchanged.
+- 2026-08-10 CHANGED api.signageos.io/status: Now also fronted by CloudFront (x-cache, via, x-amz-cf-pop) — retains HSTS/xfo/xcto hardening.

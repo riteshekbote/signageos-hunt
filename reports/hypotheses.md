@@ -922,3 +922,19 @@
 - [95] box.signageos.io/status: box /status unauthenticated internal-infra info-leak (PoC finalize) (from reports/hypotheses-bigpickle.txt)
 
 ## RANKED HYPOTHESES 2026-08-10 16:39:17 UTC
+
+## RANKED HYPOTHESES 2026-08-10 17:37:38 UTC
+- [95] box.signageos.io/status: box /status unauthenticated K8s infra info-leak (from reports/hypotheses-longcat.txt)
+- [95] box.signageos.io/status: Box /status unauthenticated internal-infra info-leak behind CloudFront (from reports/hypotheses-laguna.txt)
+- NEXT(hypotheses-laguna.txt): PROBE: Finalize box /status PoC evidence package — `curl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_status_b.tx
+- NEXT(hypotheses-longcat.txt): PROBE: Finalize box /status PoC evidence package — `curl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_status_b.tx
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Unauthenticated GET leaks pod hostname + 64-hex process.uid + Node v20.20.2 + full amqp/redis/mongo topology; head
+- LEARN: CHANGED box.signageos.io/ & /login/: Now fronted by CloudFront with full hardening (HSTS+xfo+xcto+CSP) — differential vs /status confirmed
+- LEARN: CHANGED api.signageos.io/status: Now fronted by CloudFront — retains HSTS+xfo+xcto hardening, no new surface
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes 403 JWT/X-Auth-gated, no passive bypass (reconfirmed)
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live across 30+ cycles — pod rotation, zero security headers, full topology leak unchanged. Now fronte
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: Reconfirmed — 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard, no credentials flag, CSP
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All routes JWT/X-Auth gated (403), no passive bypass across 30+ cycles. Cross-tenant chain remains AUTH_HEL
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 
+- LEARN: CHANGED box.signageos.io/status: Now fronted by CloudFront (x-cache, via, x-amz-cf-pop) — routing change only, body and header security posture unchanged.
+- LEARN: CHANGED api.signageos.io/status: Now also fronted by CloudFront (x-cache, via, x-amz-cf-pop) — retains HSTS/xfo/xcto hardening.
