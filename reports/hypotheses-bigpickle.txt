@@ -1,25 +1,31 @@
-## 2026-08-10 10:11:13 UTC [box] (model bigpickle)
+## 2026-08-10 11:27:48 UTC [box] (model bigpickle)
+[HYP] Cross-tenant security-token minting via X-Auth org UID override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 78
+reasoning: Dual-auth enumerated: X-Auth format `id:unsafeDecryptedToken`; org identity derived from header first-part, while `{uid}` in path is client-supplied and distinct from auth-derived org. `/organization/{uid}`→403075, `/organization/{uid}/security-token`→403076, `/v1/device`→403105 confirms distinct auth branches per endpoint.
+evidence_needed: Valid X-Auth token for orgA + a second orgB `{uid}` in path returning 200/minted token instead of 403.
+verify_steps: AUTH_HELPED: 1) `sos login` (Auth0 device-code) → account JWT; 2) `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<orgA>/security-token"` baseline 200; 3) repeat with `<orgB>` uid → if 200, cross-tenant mint confirmed.
+impact: Attacker with any one org token mints security-tokens for arbitrary orgs → org credential theft, cross-tenant device/data compromise; HIGH
+testability: AUTH_HELPED
+[HYP] box /status unauthenticated internal-infra info-leak (standing)
 class: MISCONFIG
 asset: box.signageos.io/status (GET)
 confidence: 95
-reasoning: HTTP 200 JSON leaks pod `box-7c8c876945-2g8bw`, 64-hex process.uid, Node v20.20.2, uptime/cpu/mem, full amqp/redis/mongo topology + responseTime; headers ONLY `x-powered-by: Express`+CF (security-header grep=0); Origin not reflected (no ACAO on /status); edge no-cache (2× Miss).
-evidence_needed: none — body+headers re-archived this cycle.
-verify_steps: PROBE done: `curl -sD - -H "Origin: https://evil.test" https://box.signageos.io/status`.
-impact: unauthenticated internal-infra disclosure (pod identity, Node version, process uid, backend topology); MODERATE
+reasoning: HTTP 200 JSON leaks pod `box-7c8c876945-496p2`, 64-hex process.uid, Node v20.20.2, uptime/cpu/mem, full amqp/redis/mongo topology + responseTime; headers ONLY `x-powered-by: Express` + CloudFront (HSTS/xfo/xcto/CSP grep=0); spoofed Origin NOT reflected (no ACAO). Reconfirmed this cycle.
+evidence_needed: none — body+headers re-archived this cycle; closure probe done.
+verify_steps: PROBE done: `curl -sD - -H "Origin: https://evil.test" https://box.signageos.io/status` → no ACAO/vary present.
+impact: unauthenticated internal-infra disclosure (pod identity, Node version, process uid, backend topology, edge geo); MODERATE
 testability: PASSIVE
+[HYP] box /login/ static CORS whitelist incl plaintext + wildcard (standing)
 class: MISCONFIG
-asset: box.signageos.io/login/ (CSP)
-confidence: 60
-reasoning: connect-src ~60 origins triplicating `sos-production.us.auth0.com/oauth/token`, spanning mapbox/sentry/Auth0/5× S3/API Gateway/api sibling/zdusercontent; frame-src triplicated Auth0. No page-level primitive available to exploit the trust boundary.
-evidence_needed: authenticated page context to abuse postMessage/origin trust.
-verify_steps: PROBE done: `curl -sI https://box.signageos.io/login/ | grep -i content-security-policy`.
-impact: broadened origin trust for embedded parties; LOW-MODERATE (hygiene)
-testability: PASSIVE
-class: MISCONFIG
-asset: box.signageos.io/ (ACAO)
+asset: box.signageos.io/login/ (ACAO)
 confidence: 55
-reasoning: 17 static ACAO incl `http://` plaintext variant + `https://*.zdusercontent.com` wildcard; `access-control-allow-credentials` absent on every box path (grep=0).
-evidence_needed: no change; missing credentials flag removes direct credential-theft path.
-verify_steps: PROBE done: `curl -sI https://box.signageos.io/login/ | grep -c access-control-allow-credentials` = 0.
-impact: whitelist hygiene only; no direct exploit absent credentials flag; LOW
+reasoning: 17 static ACAO incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + api sibling; evil.test NOT reflected (static whitelist); `access-control-allow-credentials` absent (grep=0) on all box paths. Reconfirmed.
+evidence_needed: no change; absent credentials flag removes direct credential-theft path.
+verify_steps: PROBE done: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/ | grep -c access-control-allow-credentials` = 0.
+impact: whitelist hygiene/defense-in-depth only; no direct exploit absent credentials flag; LOW
 testability: PASSIVE
+[NEXT] HUMAN: Execute the standing H1 POC for the cross-tenant chain — 1) `sos login` (Auth0 device-code) mints account JWT; 2) baseline `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<orgA>/security-token"` expect 200; 3) same request with a second org `<orgB>` uid in path — if response is not 403076/403075, cross-tenant security-token minting is proven (IDOR, HIGH). This is the only remaining unverified high-value lead; it is not passively testable and requires an authenticated second-org reference.
+[RISK] box.signageos.io: 55 — standing unauthenticated /status infra-leak (pod/Node/uid/topology, zero hardening headers) plus static CORS/CSP origin bloat; real but moderate; no pre-auth bypass or credential-theft primitive found.
+[RISK] api.signageos.io: 48 — hardened (HSTS/xfo/xcto + CloudFront), all routes 403 pre-auth; residual exposure concentrates in the unverified X-Auth org-UID-crossing IDOR hypothesis (H1 pending) and descriptive 403 error bodies (excluded class).
