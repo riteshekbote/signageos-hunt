@@ -447,3 +447,25 @@
   - **Verdict: HOLD** — AUTH_HELPED only; requires valid org X-Auth + second tenant. PUT also violates passive-only rule.
   - | Q2 Reachable? | NO — requires valid org token to observe |
   - | 1 | box.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 4.3 |
+
+- 25 lead(s) marked VALID at 2026-08-10 08:22:27 UTC
+  - | **Q5 Novel?** | ❌ NO — reconfirmed 50+ times since 2026-08-07, already in `valid-bugs.md` |
+  - | **Q7 Triager accept?** | ✅ YES — accepted as VALID (Low) on every prior triage run |
+  - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - | **Q2 Reachable?** | ❌ NO — returns 403 `WRONG_JWT_TOKEN`/`403105` without auth; requires valid account JWT |
+  - | **Q4 GET/HEAD proof?** | ❌ NO — cannot prove without valid account JWT + second tenant's UID |
+  - | **Q7 Triager accept?** | ❌ NO — no POC possible without valid token + second tenant; pure hypothesis despite code-verified SDK paths |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant to prove. Not passively provable under `passive_first: true` rule.
+  - | **Q2 Reachable?** | ❌ NO — returns 403 `WRONG_JWT_TOKEN`/`403105` without auth; requires valid JWT |
+  - | **Q4 GET/HEAD proof?** | ❌ NO — cannot prove without valid JWT + foreign device UID |
+  - | **Q7 Triager accept?** | ❌ NO — no POC possible without valid token + second tenant |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid JWT + foreign device UID. Not passively provable.
+  - | **Q5 Novel?** | ❌ NO — reconfirmed 50+ times since 2026-08-07, already in `valid-bugs.md` |
+  - | **Q7 Triager accept?** | ✅ YES — accepted as VALID (Low, borderline) on every prior triage run |
+  - **Verdict: VALID (Low, borderline)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)
+  - | **Q5 Novel?** | ❌ NO — reconfirmed 50+ times since 2026-08-07, already in `valid-bugs.md` |
+  - | **Q7 Triager accept?** | ⚠️ MARGINAL — defense-in-depth finding; triager may accept as informational or reject as "best practice". Kept as VALID informational given breadth. |
+  - **Verdict: VALID (Informational, borderline)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N)
+  - | **Q2 Reachable?** | ❌ NO — returns 403 `403076` without auth; requires valid account JWT |
+  - | **Q4 GET/HEAD proof?** | ❌ NO — cannot prove without valid account JWT + second tenant's UID |
+  - | **Q7 Triager accept?** | ❌ NO — no POC possible without valid token + second tenant |
