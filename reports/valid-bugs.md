@@ -614,3 +614,9 @@
   - | 2 | `api.signageos.io/status` infra leak | MISCONFIG | **VALID (Low)** | 4.3 | Reconfirmed, passive PoC |
   - | 3 | `box.signageos.io` CORS ACAO whitelist | MISCONFIG | **VALID (Low, border)** | 3.1 | Reconfirmed, static http:// + wildcard |
   - | 4 | `box.signageos.io` CSP overly broad | MISCONFIG | **VALID (Info, border)** | 3.1 | Reconfirmed, 40+ origins |
+
+- 4 lead(s) marked VALID at 2026-08-10 20:31:38 UTC
+  - | 1 | box.signageos.io/status — K8s infra leak | **VALID (Low)** | 4.3 |
+  - | 2 | api.signageos.io/status — K8s infra leak | **VALID (Low)** | 4.3 |
+  - | 3 | box CORS ACAO (http:// + wildcard) | **VALID (Low, border)** | 3.1 |
+  - | 4 | box CSP overly broad (40+ origins) | **VALID (Info, border)** | 3.1 |
