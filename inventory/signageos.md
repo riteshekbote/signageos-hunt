@@ -279,3 +279,8 @@
 ## 2026-08-10 21:13:50 UTC
 
 ## 2026-08-10 22:04:33 UTC
+
+## 2026-08-10 22:55:17 UTC
+- CHANGED box.signageos.io/status now fronted by CloudFront (x-cache, via, x-amz-cf-pop headers) — routing change only, body/header security posture unchanged (still zero hardening headers, leaks topology)
+- CHANGED box.signageos.io/ & /login/ now served via CloudFront with full hardening headers (HSTS max-age=63072000; includeSubDomains; preload, xfo:DENY, xcto:nosniff, CSP) — differential vs /status persists
+- CHANGED api.signageos.io/status now also fronted by CloudFront (x-cache, via, x-amz-cf-pop) — retains HSTS+xfo+xcto hardening

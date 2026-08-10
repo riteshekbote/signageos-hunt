@@ -1,4 +1,7 @@
-## 2026-08-10 22:04:21 UTC [api] (model nemotron3)
+## 2026-08-10 22:55:00 UTC [api] (model nemotron3)
+[CHANGED] box.signageos.io/status now fronted by CloudFront (x-cache, via, x-amz-cf-pop headers) — routing change only, body/header security posture unchanged (still zero hardening headers, leaks topology)
+[CHANGED] box.signageos.io/ & /login/ now served via CloudFront with full hardening headers (HSTS max-age=63072000; includeSubDomains; preload, xfo:DENY, xcto:nosniff, CSP) — differential vs /status persists
+[CHANGED] api.signageos.io/status now also fronted by CloudFront (x-cache, via, x-amz-cf-pop) — retains HSTS+xfo+xcto hardening
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token, 7.80, attack=9 business=10 tech=8 gate=3 cloud=6 fresh=8
 [PRIO] api.signageos.io/v1/organization/{uid}, 7.75, attack=9 business=10 tech=8 gate=3 cloud=6 fresh=8
 [PRIO] box.signageos.io/status, 6.85, attack=8 business=5 tech=6 gate=10 cloud=7 fresh=5
@@ -32,7 +35,7 @@ testability: PASSIVE
 [PARKED] Cross-tenant security-token minting via X-Auth org UID override: AUTH_HELPED testability requires valid account JWT + foreign org UID — off-phase for current passive-only cycle; not dropped, parked for HUMAN phase
 [PARKED] Cross-tenant OAuth client-secret disclosure via account JWT: AUTH_HELPED testability requires valid account JWT + foreign org UID — same rationale, parked for HUMAN phase
 [FINAL] Surviving hypotheses (ranked by confidence):
-[NEXT] HUMAN: Execute standing cross-tenant chain PoC for api target — 1) `sos login` (Auth0 device-code) → account JWT; 2) baseline `curl -X POST -H "X-Auth: <accountJWT>" https://api.signageos.io/v1/organization/<own-org-uid>/security-token` → expect 200; 3) repeat with foreign-org UID (from recon/intel) → 200 + securityToken = cross-tenant IDOR confirmed; 4) escalate `curl -H "X-Auth: <leakedSecurityToken>" https://api.signageos.io/v1/device` → foreign org device list
+[NEXT] PROBE: Finalize box /status PoC evidence package — `curl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_status_b.txt && echo "hardening_headers: $(grep -cE 'strict-transport|x-frame|x-content|content-security' /tmp/poc_box_status_h.txt)" && cat /tmp/poc_box_status_b.txt | jq .`
 [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live across 30+ cycles — pod rotation, zero security headers, full topology leak unchanged. Now fronted by CloudFront (x-cache/via/x-amz-cf-pop) — routing change only, body/header security posture unchanged
 [LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened with HSTS (max-age=31536000), x-frame-options: DENY, x-content-type-options: nosniff — differential vs box.status persists; now also fronted by CloudFront (reconfirmed)
 [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/ & /login/ CORS+CSP: 17 static ACAO incl. http:// plaintext variant + https://*.zdusercontent.com wildcard + api.signageos.io sibling; evil.test NOT reflected (static whitelist); NO access-control-allow-credentials; CSP 59+ distinct origins with triplicated Auth0 oauth/token on /login/ (reconfirmed)
