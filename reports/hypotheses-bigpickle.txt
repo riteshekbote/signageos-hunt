@@ -1,1 +1,25 @@
-## 2026-08-10 08:51:44 UTC [box] (model bigpickle)
+## 2026-08-10 10:11:13 UTC [box] (model bigpickle)
+class: MISCONFIG
+asset: box.signageos.io/status (GET)
+confidence: 95
+reasoning: HTTP 200 JSON leaks pod `box-7c8c876945-2g8bw`, 64-hex process.uid, Node v20.20.2, uptime/cpu/mem, full amqp/redis/mongo topology + responseTime; headers ONLY `x-powered-by: Express`+CF (security-header grep=0); Origin not reflected (no ACAO on /status); edge no-cache (2× Miss).
+evidence_needed: none — body+headers re-archived this cycle.
+verify_steps: PROBE done: `curl -sD - -H "Origin: https://evil.test" https://box.signageos.io/status`.
+impact: unauthenticated internal-infra disclosure (pod identity, Node version, process uid, backend topology); MODERATE
+testability: PASSIVE
+class: MISCONFIG
+asset: box.signageos.io/login/ (CSP)
+confidence: 60
+reasoning: connect-src ~60 origins triplicating `sos-production.us.auth0.com/oauth/token`, spanning mapbox/sentry/Auth0/5× S3/API Gateway/api sibling/zdusercontent; frame-src triplicated Auth0. No page-level primitive available to exploit the trust boundary.
+evidence_needed: authenticated page context to abuse postMessage/origin trust.
+verify_steps: PROBE done: `curl -sI https://box.signageos.io/login/ | grep -i content-security-policy`.
+impact: broadened origin trust for embedded parties; LOW-MODERATE (hygiene)
+testability: PASSIVE
+class: MISCONFIG
+asset: box.signageos.io/ (ACAO)
+confidence: 55
+reasoning: 17 static ACAO incl `http://` plaintext variant + `https://*.zdusercontent.com` wildcard; `access-control-allow-credentials` absent on every box path (grep=0).
+evidence_needed: no change; missing credentials flag removes direct credential-theft path.
+verify_steps: PROBE done: `curl -sI https://box.signageos.io/login/ | grep -c access-control-allow-credentials` = 0.
+impact: whitelist hygiene only; no direct exploit absent credentials flag; LOW
+testability: PASSIVE
