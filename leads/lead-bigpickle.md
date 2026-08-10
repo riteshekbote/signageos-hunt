@@ -1419,3 +1419,34 @@ testability: PASSIVE
 [NEXT] HUMAN: Execute the standing H1 POC for the cross-tenant chain — 1) `sos login` (Auth0 device-code) mints account JWT; 2) baseline `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<orgA>/security-token"` expect 200; 3) same request with a second org `<orgB>` uid in path — if response is not 403076/403075, cross-tenant security-token minting is proven (IDOR, HIGH). This is the only remaining unverified high-value lead; it is not passively testable and requires an authenticated second-org reference.
 [RISK] box.signageos.io: 55 — standing unauthenticated /status infra-leak (pod/Node/uid/topology, zero hardening headers) plus static CORS/CSP origin bloat; real but moderate; no pre-auth bypass or credential-theft primitive found.
 [RISK] api.signageos.io: 48 — hardened (HSTS/xfo/xcto + CloudFront), all routes 403 pre-auth; residual exposure concentrates in the unverified X-Auth org-UID-crossing IDOR hypothesis (H1 pending) and descriptive 403 error bodies (excluded class).
+## 2026-08-10 12:11:43 UTC [box] (model bigpickle)
+[HYP] Cross-tenant security-token minting via X-Auth org UID override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 78
+reasoning: Dual-auth enumerated — X-Auth format `id:unsafeDecryptedToken`; org derived from header first-part while path `{uid}` is client-supplied and distinct from auth-derived org (`/organization/{uid}`→403075, `/security-token`→403076, `/v1/device`→403105 distinct branches).
+evidence_needed: Valid X-Auth token for orgA + orgB `{uid}` in path returning 200 instead of 403075/403076.
+verify_steps: AUTH_HELPED: 1) `sos login` (Auth0 device-code) → account JWT; 2) `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<orgA>/security-token"` baseline 200; 3) repeat with `<orgB>` uid — non-403 proves mint.
+impact: one org token mints arbitrary-org security-tokens → cross-tenant device/data compromise; HIGH
+testability: AUTH_HELPED
+[HYP] box /status unauthenticated internal-infra info-leak (standing)
+class: MISCONFIG
+asset: box.signageos.io/status (GET)
+confidence: 95
+reasoning: HTTP 200 JSON leaks pod `box-7c8c876945-496p2`, 64-hex process.uid, Node v20.20.2, uptime/cpu/mem, full amqp/redis/mongo topology; headers ONLY `x-powered-by: Express`+CloudFront (HSTS/xfo/xcto/CSP grep=0); spoofed Origin NOT reflected.
+evidence_needed: none — body+headers re-archived this cycle.
+verify_steps: PROBE done: `curl -sD - https://box.signageos.io/status` → 200 JSON, security-header grep=0, x-cache Miss.
+impact: unauthenticated internal-infra disclosure (pod identity, Node version, process uid, backend topology); MODERATE
+testability: PASSIVE
+[HYP] box /login/ static CORS whitelist incl plaintext + wildcard (standing)
+class: MISCONFIG
+asset: box.signageos.io/login/ (ACAO)
+confidence: 55
+reasoning: 17 static ACAO incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + api sibling; `access-control-allow-credentials` absent (grep=0) on all box paths; evil.test not reflected.
+evidence_needed: no change; absent credentials flag removes direct credential-theft path.
+verify_steps: PROBE done prior cycles: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/` → 0 credentials flag.
+impact: whitelist hygiene/defense-in-depth only; LOW
+testability: PASSIVE
+[NEXT] HUMAN: Execute the standing H1 POC for the cross-tenant chain — 1) `sos login` (Auth0 device-code) mints account JWT; 2) baseline `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<orgA>/security-token"` expect 200; 3) same request with orgB `<uid>` in path — non-403075/403076 response proves cross-tenant mint (IDOR, HIGH). This is the only remaining unverified high-value lead; not passively testable. Passive reconfirmation cadence (1 GET /status per cycle) continues until HUMAN unblocks.
+[RISK] box.signageos.io: 55 — standing unauthenticated /status infra-leak (pod/Node/uid/topology, zero hardening headers, CloudFront edge) plus static CORS/CSP origin bloat; real but moderate; no pre-auth bypass or credential-theft primitive found.
+[RISK] api.signageos.io: 48 — hardened (HSTS/xfo/xcto + CloudFront), all routes 403 pre-auth; residual exposure concentrates in the unverified X-Auth org-UID-crossing IDOR hypothesis (H1 pending) and descriptive 403 bodies (excluded class).

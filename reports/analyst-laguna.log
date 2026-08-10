@@ -14931,3 +14931,84 @@ I'll start by gathering fresh PoC evidence for the box target (phase POC). Let m
 [93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
 [0m✗ [0mRead /tmp/poc_box_root_h.txt failed
 [91m[1mError: [0mThe user rejected permission to use this specific tool call.
+===== ANALYST laguna 2026-08-10 12:17:33 UTC =====
+[0m
+> build · laguna-s-2.1-free
+[0m
+## STEP 1 — DELTA
+- CHANGED box.signageos.io/status: Now fronted by CloudFront (`x-cache`, `via`, `x-amz-cf-pop` headers added) — body + zero-security-headers posture unchanged
+- CHANGED box.signageos.io/ & /login/: CloudFront migration with full hardening headers (HSTS `max-age=63072000; includeSubDomains; preload`, xfo:DENY, xcto:nosniff, CSP) — differential vs /status confirmed
+- NEW api.signageos.io/status also behind CloudFront — retains HSTS+xfo+xcto hardening
+
+## STEP 2 — PRIORITIZE
+- [PRIO] api.signageos.io/v1/organization/{uid}/security-token — 62 | a=9 b=10 t=8 g=3 c=5 f=5 | Code-verified cross-tenant mint (X-Auth org UID override); AUTH_HELPED only
+- [PRIO] api.signageos.io/v1/organization/{organizationUid} — 60 | a=10 b=10 t=7 g=3 c=5 f=5 | Code-verified OAuth-client-secret disclosure (GET, client-supplied UID); AUTH_HELPED only
+- [PRIO] box.signageos.io/status — 52 | a=3 b=2 t=5 g=10 c=5 f=8 | Unauthenticated topology leak, zero headers, PoC finalization pending
+
+## STEP 3 — HYPOTHESES
+```
+[HYP] Box /status unauthenticated internal-topology info-leak (PoC finalize)
+class: MISCONFIG
+asset: box.signageos.io/status (GET)
+confidence: 95
+reasoning: Confirmed live this cycle — HTTP 200 application/json, pod hostname `box-7c8c876945-gkzcp`, 64-hex process.uid, full amqp0/redis0-3/mongoDB0-3 topology, per-service responseTime; headers ONLY `x-powered-by: Express + CloudFront` (grep=0 HSTS/xfo/xcto/CSP). Differential vs hardened `/`+`/login/` and vs api /status. Not on scope.yml rejected list.
+evidence_needed: response body+headers captured to /tmp/poc_box_status_{h,b}.txt with security-header grep = 0
+verify_steps: PROBE: `curl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_status_b.txt`; `grep -cE 'strict-transport|x-frame|x-content|content-security' /tmp/poc_box_status_h.txt` must = 0; archive both files; `wc -c /tmp/poc_box_status_b.txt` for size
+impact: unauthenticated internal-infra disclosure (K8s pod name, Node version, process UID, backend service topology) aiding further targeting; MODERATE
+testability: PASSIVE
+```
+
+```
+[HYP] Cross-tenant security-token mint via X-Auth org UID override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token (POST)
+confidence: 78
+reasoning: SDK/CLI code-verified — POST body uses client-supplied org {uid} path; X-Auth header is first-part org identity `id:unsafeDecryptedToken`, distinct from path UID. Baseline 403 pre-auth reconfirmed. No per-path org-membership check proven.
+evidence_needed: own JWT → 200 on foreign org's /security-token returns a usable token; that token accepted on /v1/device targeting foreign devices
+verify_steps: AUTH_HELPED: baseline `curl -X POST -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own-uid>/security-token -d '{"name":"poc"}'` = 200/201; replace `<own-uid>` with foreign UID → 200 = cross-tenant mint; then `curl -H "X-Auth: <minted-token>" https://api.signageos.io/v1/device` = 200
+impact: mint valid API tokens for any tenant → full foreign device/content control; CRITICAL
+testability: AUTH_HELPED
+```
+
+```
+[HYP] Cross-tenant org OAuth-client-secret disclosure via UID path
+class: IDOR
+asset: api.signageos.io/v1/organization/{organizationUid} (GET)
+confidence: 75
+reasoning: SDK/CLI code-verified — GET sends `X-Auth: <JWT>` with client-supplied UID path arg; response maps oauthClientId+oauthClientSecret. 403 pre-auth reconfirmed. Response field set implies full org credential object returned to any authenticated org member.
+evidence_needed: own JWT → 200 on foreign UID returning oauthClientSecret
+verify_steps: AUTH_HELPED: `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own-uid>` = 200; replace `<own-uid>` with foreign UID → 200+secret = cross-tenant disclosure
+impact: leak any tenant's org API credential → full foreign device/content control via /v1/device X-Auth; CRITICAL
+testability: AUTH_HELPED
+```
+
+## STEP 4 — SELF-CRITIQUE
+- [PARKED] None. All three survive: confidence ≥70, classes (MISCONFIG, IDOR) not on rejected/exclusion list, each has concrete verify_steps.
+
+```
+[FINAL] (ranked)
+1) [78] api.signageos.io/v1/organization/{uid}/security-token — Cross-tenant token mint (AUTH_HELPED, CRITICAL)
+2) [75] api.signageos.io/v1/organization/{organizationUid} — Cross-tenant OAuth secret disclosure (AUTH_HELPED, CRITICAL)
+3) [95] box.signageos.io/status — Internal-topology info-leak PoC finalize (PASSIVE, 95 confidence)
+```
+
+## STEP 5 — NEXT ACTION
+[NEXT] PROBE: Finalize box /status PoC evidence package — `curl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_status_b.txt && grep -cE 'strict-transport|x-frame|x-content|content-security' /tmp/poc_box_status_h.txt && wc -c /tmp/poc_box_status_b.txt`. The two AUTH_HELPED cross-tenant IDOR chains ([78]/[75]) remain queued for token-bearing HUMAN cycle — highest-value open verifications, cannot advance passively.
+[0m$ [0mcurl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_status_b.txt && grep -cE 'strict-transport|x-frame|x-content|content-security' /tmp/poc_box_status_h.txt && wc -c /tmp/poc_box_status_b.txt
+0
+[0m
+[0m$ [0mwc -c /tmp/poc_box_status_h.txt /tmp/poc_box_status_b.txt && grep -iE 'x-cache|via|x-amz-cf' /tmp/poc_box_status_h.txt | head -5
+384 /tmp/poc_box_status_h.txt
+1440 /tmp/poc_box_status_b.txt
+1824 total
+x-cache: Miss from cloudfront
+via: 1.1 5e79d089f5701b7938b599fdf4db1b52.cloudfront.net (CloudFront)
+x-amz-cf-pop: IAD55-P8
+x-amz-cf-id: onOb8jEIwmkqhuGtV72gfvR0CDhxH-xpdfkdk3bIPWJ7xVgHtMHl9Q==
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mRead /tmp/poc_box_status_h.txt failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mRead /tmp/poc_box_status_b.txt failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.

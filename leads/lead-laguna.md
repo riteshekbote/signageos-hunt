@@ -1451,3 +1451,33 @@ testability: AUTH_HELPED
 ## 2026-08-10 08:51:27 UTC [box] (model laguna)
 ## 2026-08-10 10:10:18 UTC [box] (model laguna)
 ## 2026-08-10 11:28:07 UTC [box] (model laguna)
+## 2026-08-10 12:11:52 UTC [box] (model laguna)
+[HYP] Box /status unauthenticated internal-topology info-leak (PoC finalize)
+class: MISCONFIG
+asset: box.signageos.io/status (GET)
+confidence: 95
+reasoning: Confirmed live this cycle — HTTP 200 application/json, pod hostname `box-7c8c876945-gkzcp`, 64-hex process.uid, full amqp0/redis0-3/mongoDB0-3 topology, per-service responseTime; headers ONLY `x-powered-by: Express + CloudFront` (grep=0 HSTS/xfo/xcto/CSP). Differential vs hardened `/`+`/login/` and vs api /status. Not on scope.yml rejected list.
+evidence_needed: response body+headers captured to /tmp/poc_box_status_{h,b}.txt with security-header grep = 0
+verify_steps: PROBE: `curl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_status_b.txt`; `grep -cE 'strict-transport|x-frame|x-content|content-security' /tmp/poc_box_status_h.txt` must = 0; archive both files; `wc -c /tmp/poc_box_status_b.txt` for size
+impact: unauthenticated internal-infra disclosure (K8s pod name, Node version, process UID, backend service topology) aiding further targeting; MODERATE
+testability: PASSIVE
+[HYP] Cross-tenant security-token mint via X-Auth org UID override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token (POST)
+confidence: 78
+reasoning: SDK/CLI code-verified — POST body uses client-supplied org {uid} path; X-Auth header is first-part org identity `id:unsafeDecryptedToken`, distinct from path UID. Baseline 403 pre-auth reconfirmed. No per-path org-membership check proven.
+evidence_needed: own JWT → 200 on foreign org's /security-token returns a usable token; that token accepted on /v1/device targeting foreign devices
+verify_steps: AUTH_HELPED: baseline `curl -X POST -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own-uid>/security-token -d '{"name":"poc"}'` = 200/201; replace `<own-uid>` with foreign UID → 200 = cross-tenant mint; then `curl -H "X-Auth: <minted-token>" https://api.signageos.io/v1/device` = 200
+impact: mint valid API tokens for any tenant → full foreign device/content control; CRITICAL
+testability: AUTH_HELPED
+[HYP] Cross-tenant org OAuth-client-secret disclosure via UID path
+class: IDOR
+asset: api.signageos.io/v1/organization/{organizationUid} (GET)
+confidence: 75
+reasoning: SDK/CLI code-verified — GET sends `X-Auth: <JWT>` with client-supplied UID path arg; response maps oauthClientId+oauthClientSecret. 403 pre-auth reconfirmed. Response field set implies full org credential object returned to any authenticated org member.
+evidence_needed: own JWT → 200 on foreign UID returning oauthClientSecret
+verify_steps: AUTH_HELPED: `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own-uid>` = 200; replace `<own-uid>` with foreign UID → 200+secret = cross-tenant disclosure
+impact: leak any tenant's org API credential → full foreign device/content control via /v1/device X-Auth; CRITICAL
+testability: AUTH_HELPED
+[FINAL] (ranked)
+[NEXT] PROBE: Finalize box /status PoC evidence package — `curl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_status_b.txt && grep -cE 'strict-transport|x-frame|x-content|content-security' /tmp/poc_box_status_h.txt && wc -c /tmp/poc_box_status_b.txt`. The two AUTH_HELPED cross-tenant IDOR chains ([78]/[75]) remain queued for token-bearing HUMAN cycle — highest-value open verifications, cannot advance passively.
