@@ -640,3 +640,6 @@
   - | 2 | api.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 4.3 |
   - | 3 | box.signageos.io CORS ACAO whitelist (http:// + wildcard) | MISCONFIG | **VALID (Low, border)** | 3.1 |
   - | 4 | box.signageos.io CSP overly broad (40+ origins) | MISCONFIG | **VALID (Info, border)** | 3.1 |
+
+- 1 lead(s) marked VALID at 2026-08-10 22:24:48 UTC
+  - | **VALID** | 4 | `/status` infra leaks (box + api), CORS whitelist, CSP bypass — all CVSS 3.1–4.3 |
