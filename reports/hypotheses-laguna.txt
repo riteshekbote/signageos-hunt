@@ -1,37 +1,24 @@
-## 2026-08-10 19:38:28 UTC [box] (model laguna)
-[CHANGED] box.signageos.io now fronted by CloudFront (added `x-cache`/`via`/`x-amz-cf-pop`) — `/` and `/login/` now carry full hardening headers (HSTS `max-age=63072000; includeSubDomains; preload`, `xfo: DENY`, `xcto: nosniff`, CSP); `/status` still zero hardening, behind same CloudFront
-[CHANGED] api.signageos.io/status now also fronted by CloudFront — retains HSTS+xfo+xcto hardening differential vs box.status
-[PRIO] box.signageos.io/status: 80 — attack_surface=10, business_value=10, tech_exposure=8, gate_ease=10, cloud_surface=9, freshness=9
+## 2026-08-10 20:22:42 UTC [box] (model laguna)
+[PRIO] box.signageos.io/status: 80 — attack_surface=10, business_value=10, tech_exposure=6, gate_ease=10, cloud_surface=9, freshness=9
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token: 62 — attack_surface=10, business_value=10, tech_exposure=8, gate_ease=3, cloud_surface=5, freshness=5 (code-verified, AUTH_HELPED)
 [PRIO] api.signageos.io/v1/organization/{organizationUid}: 60 — attack_surface=9, business_value=10, tech_exposure=7, gate_ease=3, cloud_surface=5, freshness=5 (code-verified, AUTH_HELPED)
-[HYP] Box /status unauthenticated K8s topology leak behind CloudFront
+[HYP] Box /status unauthenticated K8s topology leak behind CloudFront with zero hardening headers
 class: MISCONFIG
 asset: box.signageos.io/status (GET)
 confidence: 95
-reasoning: Unauthenticated GET returns application/json (now behind CloudFront) leaking pod hostname (`box-7c8c876945-*` rotated 30+ cycles), 64-hex process.uid, Node v20.20.2, full amqp0/redis0-3/mongoDB0-3 topology, per-service responseTime. Headers ONLY `x-powered-by: Express + CloudFront` — grep=0 HSTS/xfo/xcto/CSP. Differential vs `/` and `/login/` now behind same CloudFront.
-evidence_needed: response body+headers with security-header grep = 0
-verify_steps: PASSIVE: `curl -sD - --max-time 20 https://box.signageos.io/status -o /dev/null | grep -icE 'strict-transport-security|x-frame-options|x-content-type-options|content-security-policy'`
-impact: Unauthenticated internal-infra disclosure (K8s pod name, Node version, process UID, backend service topology) enabling further targeted attacks; MODERATE
+reasoning: Unauthenticated GET returns application/json (now behind CloudFront, x-cache/via/x-amz-cf-pop present) leaking pod hostname (box-7c8c876945-* rotated 30+ cycles), 64-hex process.uid, Node v20.20.2, full amqp0/redis0-3/mongoDB0-3 topology, per-service responseTime. Headers ONLY x-powered-by: Express + CloudFront — grep=0 HSTS/xfo/xcto/CSP. Differential vs `/` and `/login/` now behind same CloudFront (HSTS max-age=63072000, xfo:DENY, xcto:nosniff, CSP present).
+evidence_needed: response body containing hostname+uid+topology, headers with zero hardening-header count
+verify_steps: PASSIVE: `curl -sD /tmp/box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/box_status_b.txt && grep -icE 'strict-transport-security|x-frame-options|x-content-type-options|content-security-policy' /tmp/box_status_h.txt && grep -ic 'x-cache\|via\|x-amz-cf-pop' /tmp/box_status_h.txt && wc -c /tmp/box_status_b.txt`
+impact: Unauthenticated internal-infra disclosure (K8s pod name, Node version, 64-hex process UID, backend service topology incl. redis/mongo/amqp shards) enabling targeted lateral movement against named services; MODERATE
 testability: PASSIVE
 [FINAL]
-[NEXT] PROBE: `curl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_status_b.txt && echo "hardening_headers: $(grep -cE 'strict-transport|x-frame|x-content|content-security' /tmp/poc_box_status_h.txt)" && echo "body_bytes: $(wc -c < /tmp/poc_box_status_b.txt)" && echo "cloudfront_present: $(grep -ic 'x-cache\|via\|x-amz-cf-pop' /tmp/poc_box_status_h.txt)"`
-[RISK] box.signageos.io: 95 — `/status` leaks K8s pod hostname + Node version + process UID + full backend topology unauthenticated behind CloudFront with zero hardening headers; `/login/` CSP 59+ origins + 17 static ACAO incl `http://` + `*.zdusercontent.com` (no credentials flag so no direct credential-theft path yet)
-[RISK] api.signageos.io: 62 — `/status` now hardened (HSTS/xfo/xcto); all v1/v2 routes solidly JWT/X-Auth-gated; only descriptive-error bodies (excluded class); residual exposure is code-verified AUTH_HELPED cross-tenant IDOR chain (security-token mint + org credential disclosure) — CRITICAL if per-path org checks absent
-[CHANGED] box.signageos.io now fronted by CloudFront (added `x-cache`/`via`/`x-amz-cf-pop`) — `/` and `/login/` now carry full hardening headers (HSTS `max-age=63072000; includeSubDomains; preload`, `xfo: DENY`, `xcto: nosniff`, CSP); `/status` still zero hardening, behind same CloudFront
-[CHANGED] api.signageos.io/status now also fronted by CloudFront — retains HSTS+xfo+xcto hardening differential vs box.status
-[PRIO] box.signageos.io/status: 80 — attack_surface=10, business_value=10, tech_exposure=8, gate_ease=10, cloud_surface=9, freshness=9
-[PRIO] api.signageos.io/v1/organization/{uid}/security-token: 62 — attack_surface=10, business_value=10, tech_exposure=8, gate_ease=3, cloud_surface=5, freshness=5 (code-verified, AUTH_HELPED)
-[PRIO] api.signageos.io/v1/organization/{organizationUid}: 60 — attack_surface=9, business_value=10, tech_exposure=7, gate_ease=3, cloud_surface=5, freshness=5 (code-verified, AUTH_HELPED)
-[HYP] Box /status unauthenticated K8s topology leak behind CloudFront
-class: MISCONFIG
-asset: box.signageos.io/status (GET)
-confidence: 95
-reasoning: Unauthenticated GET returns application/json (now behind CloudFront) leaking pod hostname (`box-7c8c876945-*` rotated 30+ cycles), 64-hex process.uid, Node v20.20.2, full amqp0/redis0-3/mongoDB0-3 topology, per-service responseTime. Headers ONLY `x-powered-by: Express + CloudFront` — grep=0 HSTS/xfo/xcto/CSP. Differential vs `/` and `/login/` now behind same CloudFront.
-evidence_needed: response body+headers with security-header grep = 0
-verify_steps: PASSIVE: `curl -sD - --max-time 20 https://box.signageos.io/status -o /dev/null | grep -icE 'strict-transport-security|x-frame-options|x-content-type-options|content-security-policy'`
-impact: Unauthenticated internal-infra disclosure (K8s pod name, Node version, process UID, backend service topology) enabling further targeted attacks; MODERATE
-testability: PASSIVE
-[FINAL]
-[NEXT] PROBE: `curl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/poc_box_status_b.txt && echo "hardening_headers: $(grep -cE 'strict-transport|x-frame|x-content|content-security' /tmp/poc_box_status_h.txt)" && echo "body_bytes: $(wc -c < /tmp/poc_box_status_b.txt)" && echo "cloudfront_present: $(grep -ic 'x-cache\|via\|x-amz-cf-pop' /tmp/poc_box_status_h.txt)"`
-[RISK] box.signageos.io: 95 — `/status` leaks K8s pod hostname + Node version + process UID + full backend topology unauthenticated behind CloudFront with zero hardening headers; `/login/` CSP 59+ origins + 17 static ACAO incl `http://` + `*.zdusercontent.com` (no credentials flag so no direct credential-theft path yet)
-[RISK] api.signageos.io: 62 — `/status` now hardened (HSTS/xfo/xcto); all v1/v2 routes solidly JWT/X-Auth-gated; only descriptive-error bodies (excluded class); residual exposure is code-verified AUTH_HELPED cross-tenant IDOR chain (security-token mint + org credential disclosure) — CRITICAL if per-path org checks absent
+[HYP] Box /status unauthenticated K8s topology leak behind CloudFront with zero hardening headers — confidence 95, MISCONFIG, PASSIVE, concrete verification via single curl. Survives.
+[HYP] api.signageos.io/v1/organization/{uid}/security-token cross-tenant IDOR — confidence 78, IDOR, AUTH_HELPED. Phase=box target; test requires sos login + valid X-Auth + foreign UID → cannot execute in current phase.
+[HYP] api.signageos.io/v1/organization/{organizationUid} credential disclosure — confidence 75, IDOR, AUTH_HELPED. Same AUTH_HELPED blocking on api target; phase/box-target mismatch.
+[NEXT] PROBE: Finalize box `/status` PoC evidence package and record immutable artifacts:
+[LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: Reconfirmed all routes 403 JWT/X-Auth-gated, no passive bypass — cross-tenant chain remains AUTH_HELPED only, cannot execute in box phase.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Unauthenticated GET leaks pod hostname + 64-hex process.uid + Node v20.20.2 + full amqp/redis/mongo topology; headers ONLY x-powered-by: Express + CloudFront — zero hardening headers. Behind CloudFront confirmed (x-cache/via/x-amz-cf-pop). Differential vs `/`+`/login/` (now HSTS/xfo/xcto/CSP hardened) confirmed.
+[LEARN] REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO incl `http://` variant + `https://*.zdusercontent.com` wildcard + api sibling; evil.test NOT reflected (static whitelist); NO `access-control-allow-credentials` → no direct credential-theft path. Class stays MISCONFIG-only (broad origin trust boundary, not exploit without creds flag).
+[LEARN] REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + 403075/403076/403105 — excluded class per scope.yml (descriptive error messages).
+[RISK] box.signageos.io: 95 — `/status` unauthenticated K8s pod hostname + Node v20.20.2 + 64-hex process UID + full backend topology leak with zero security headers behind CloudFront; `/` + `/login/` hardened (HSTS/xfo/xcto/CSP) but 17 static ACAO incl `http://` variant + `*.zdusercontent.com` wildcard expands postMessage/origin trust boundary (no credentials flag limits direct exfil)
+[RISK] api.signageos.io: 62 — `/status` info leak now hardened (HSTS/xfo/xcto behind CloudFront); all v1/v2 routes solidly JWT/X-Auth-gated, no CORS surface; only descriptive-error bodies (excluded class); residual code-verified AUTH_HELPED cross-tenant IDOR chain (security-token mint + org credential disclosure) requiring valid tokens + second tenant — CRITICAL if per-path org checks absent

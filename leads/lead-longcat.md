@@ -202,3 +202,4 @@ testability: AUTH_HELPED
 [RISK] api.signageos.io: **55** — Deep API surface (60+ v1/v2 endpoints) with confirmed dual-auth mechanism (JWT + X-Auth) and a plausible cross-tenant IDOR vector (org UID decoupling in path vs auth). All endpoints are currently gated, but the authz surface is complex and the CONFIRMED MECHANISM (path uid ≠ auth-derived org) is a structural risk. Requires AUTH_HELPED verification to confirm or exclude.
 ## 2026-08-10 18:31:54 UTC [box] (model longcat)
 ## 2026-08-10 19:37:35 UTC [box] (model longcat)
+## 2026-08-10 20:22:06 UTC [box] (model longcat)

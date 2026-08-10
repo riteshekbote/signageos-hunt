@@ -273,3 +273,5 @@
 - CHANGED api.signageos.io/status now also fronted by CloudFront — retains HSTS+xfo+xcto hardening differential vs box.status
 - CHANGED box.signageos.io now fronted by CloudFront (added `x-cache`/`via`/`x-amz-cf-pop`) — `/` and `/login/` now carry full hardening headers (HSTS `max-age=63072000; includeSubDomains; preload`, `xfo: DENY`
 - CHANGED api.signageos.io/status now also fronted by CloudFront — retains HSTS+xfo+xcto hardening differential vs box.status
+
+## 2026-08-10 20:23:24 UTC
