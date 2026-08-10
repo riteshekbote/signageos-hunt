@@ -665,3 +665,13 @@
   - | 2 | `api.signageos.io/status` — infra info disclosure | MISCONFIG | **VALID (Low)** | 4.3 |
   - | 3 | `box.signageos.io` CORS ACAO whitelist (http:// + wildcard) | MISCONFIG | **VALID (Low, border)** | 3.1 |
   - | 4 | `box.signageos.io` CSP overly broad (40+ origins) | MISCONFIG | **VALID (Info, border)** | 3.1 |
+
+- 8 lead(s) marked VALID at 2026-08-10 23:59:22 UTC
+  - | 1 | box.signageos.io/status — infra info disclosure | **VALID (Low)** | 4.3 |
+  - | 2 | api.signageos.io/status — infra info disclosure | **VALID (Low)** | 4.3 |
+  - | 3 | box.signageos.io CORS ACAO whitelist (http:// + wildcard) | **VALID (Low, border)** | 3.1 |
+  - | 4 | box.signageos.io CSP overly broad (40+ origins) | **VALID (Info, border)** | 3.1 |
+  - | 1 | `box.signageos.io/status` — K8s infra info disclosure | **VALID (Low)** | 4.3 |
+  - | 2 | `api.signageos.io/status` — K8s infra info disclosure | **VALID (Low)** | 4.3 |
+  - | 3 | `box.signageos.io` CORS ACAO whitelist (http:// + wildcard) | **VALID (Low, border)** | 3.1 |
+  - | 4 | `box.signageos.io` CSP overly broad (40+ origins) | **VALID (Info, border)** | 3.1 |
