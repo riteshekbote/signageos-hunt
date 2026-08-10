@@ -425,3 +425,25 @@
 
 - 1 lead(s) marked VALID at 2026-08-10 05:05:35 UTC
   - | **VALID** | 4 | `box/api /status` infra leaks (CVSS 4.3), `box` CORS ACAO http://+wildcard (3.1), `box` CSP 40+ origins (3.1) |
+
+- 27 lead(s) marked VALID at 2026-08-10 06:52:02 UTC
+  - | Q5 Novel? | NO — reconfirmed 50+ times since 2026-08-07, already in valid-bugs.md |
+  - | Q7 Triager accept? | YES — accepted as VALID (Low) on every prior triage run |
+  - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - | Q7 Triager accept? | YES — accepted as VALID (Low) on every prior triage run |
+  - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - | Q7 Triager accept? | MARGINAL — accepted as VALID informational on prior runs. No credentials flag means no cookie/auth theft. |
+  - **Verdict: VALID (Low, borderline)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)
+  - **Verdict: VALID (Informational, borderline)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N)
+  - | Q2 Reachable? | NO (under passive-first) — requires valid account JWT |
+  - | Q4 GET/HEAD proof? | NO — requires valid account JWT + second tenant |
+  - | Q7 Triager accept? | NO — no POC possible without a valid account token and a second tenant |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant to prove. Code-verified via SDK (OrganizationTokenManagement.ts:29-32) but unverifiable under passive-first constraint.
+  - | Q2 Reachable? | NO — requires valid account JWT |
+  - | Q4 GET/HEAD proof? | NO — requires valid account JWT + second tenant |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant. Code-verified via SDK (sosControlHelper.ts:130-136).
+  - | Q2 Reachable? | NO — requires valid org X-Auth (clientId:secret) |
+  - | Q4 GET/HEAD proof? | NO — requires valid org X-Auth + second tenant; PUT is invasive |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid org X-Auth + second tenant. PUT also violates passive-only rule.
+  - | Q2 Reachable? | NO — requires valid org token to observe |
+  - | 1 | box.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 4.3 |
