@@ -1590,3 +1590,4 @@ testability: PASSIVE
 [RISK] box.signageos.io: 95 — `/status` unauthenticated K8s pod hostname + Node v20.20.2 + 64-hex process UID + full backend topology leak with zero security headers behind CloudFront; `/` + `/login/` hardened (HSTS/xfo/xcto/CSP) but 17 static ACAO incl `http://` variant + `*.zdusercontent.com` wildcard expands postMessage/origin trust boundary (no credentials flag limits direct exfil)
 [RISK] api.signageos.io: 62 — `/status` info leak now hardened (HSTS/xfo/xcto behind CloudFront); all v1/v2 routes solidly JWT/X-Auth-gated, no CORS surface; only descriptive-error bodies (excluded class); residual code-verified AUTH_HELPED cross-tenant IDOR chain (security-token mint + org credential disclosure) requiring valid tokens + second tenant — CRITICAL if per-path org checks absent
 ## 2026-08-10 21:10:40 UTC [box] (model laguna)
+## 2026-08-10 21:59:53 UTC [box] (model laguna)

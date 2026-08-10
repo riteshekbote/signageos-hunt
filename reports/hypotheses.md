@@ -971,3 +971,15 @@
 - LEARN: ACCEPTED MISCONFIG @ box.signageos.io/ & /login/ CORS+CSP: 17 static ACAO incl. http:// plaintext variant + https://*.zdusercontent.com wildcard + api.signageos
 - LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes JWT/X-Auth-gated, no passive bypass (reconfirmed 30+ cycles)
 - LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 
+
+## RANKED HYPOTHESES 2026-08-10 22:04:33 UTC
+- [95] box.signageos.io/status: box /status unauthenticated internal-infra info-leak (standing, PoC finalized) (from reports/hypotheses-bigpickle.txt)
+- [78] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token minting via X-Auth org UID override (from reports/hypotheses-nemotron3.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Execute standing cross-tenant chain PoC for api target — 1) `sos login` (Auth0 device-code) → account JWT; 2) baseline `curl -X POST -H "X-Auth: <account
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Execute the standing cross-tenant chain PoC (only unverified high-value lead): 1) `sos login` (Auth0 device-code) → account JWT; 2) baseline `curl -H "X-
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live across 30+ cycles — pod rotation, zero security headers, full topology leak unchanged. Now fronte
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened with HSTS (max-age=31536000), x-frame-options: DENY, x-content-type-options: nosniff — differential vs bo
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/ & /login/ CORS+CSP: 17 static ACAO incl. http:// plaintext variant + https://*.zdusercontent.com wildcard + api.signageos
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes JWT/X-Auth-gated, no passive bypass (reconfirmed 30+ cycles)
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 
+- LEARN: REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO incl `http://` variant + `https://*.zdusercontent.com` wildcard + api sibling; evil.test NO
