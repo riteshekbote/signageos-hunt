@@ -593,3 +593,24 @@
   - | 2 | box.signageos.io CORS ACAO whitelist + wildcard | MISCONFIG | VALID-DUP | Already ACCEPTED; CVSS 4.3 |
   - | 3 | box.signageos.io CSP broad connect-src/frame-src | MISCONFIG | VALID-DUP | Already ACCEPTED; CVSS 4.3 |
   - | 4 | api.signageos.io/status K8s info-leak | MISCONFIG | VALID-DUP | Already ACCEPTED; CVSS 5.3 |
+
+- 19 lead(s) marked VALID at 2026-08-10 19:47:55 UTC
+  - | **Q5 Novel?** | ❌ NO — reconfirmed **50+ times** since 2026-08-07, already in `valid-bugs.md` |
+  - | **Q7 Triager accept?** | ✅ YES — accepted as VALID (Low) on every prior triage run |
+  - **Verdict: VALID** — Reconfirmed. CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - **Verdict: VALID** — Reconfirmed. CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - | **Q7 Triager accept?** | ⚠️ MARGINAL — accepted as VALID informational on prior runs. No credentials flag limits exploitability |
+  - **Verdict: VALID (Low, borderline)** — Reconfirmed. CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)
+  - | **Q7 Triager accept?** | ⚠️ MARGINAL — accepted as VALID informational on prior runs |
+  - **Verdict: VALID (Informational, borderline)** — Reconfirmed. CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N)
+  - | **Q2 Reachable?** | ❌ NO — requires valid account JWT. Probe: 403 without auth |
+  - | **Q4 Passive proof?** | ❌ NO — AUTH_HELPED only. Cannot prove without valid JWT + second tenant |
+  - **Verdict: HOLD** — AUTH_HELPED only. Requires valid account JWT + second tenant's org UID. Credible code-verified vector (SDK `OrganizationTokenManagement.ts`) but unverifiable under current `passive
+  - | **Q2 Reachable?** | ❌ NO — requires valid account JWT |
+  - | **Q2 Reachable?** | ❌ NO — requires valid org X-Auth (`clientId:secret`). Probe: 403083 without auth |
+  - **Verdict: HOLD** — AUTH_HELPED only, and PUT verification is invasive. Requires valid org X-Auth + second tenant's device UID.
+  - | **Q2 Reachable?** | ❌ NO — requires valid account credentials |
+  - | 1 | `box.signageos.io/status` infra leak | MISCONFIG | **VALID (Low)** | 4.3 | Reconfirmed, passive PoC |
+  - | 2 | `api.signageos.io/status` infra leak | MISCONFIG | **VALID (Low)** | 4.3 | Reconfirmed, passive PoC |
+  - | 3 | `box.signageos.io` CORS ACAO whitelist | MISCONFIG | **VALID (Low, border)** | 3.1 | Reconfirmed, static http:// + wildcard |
+  - | 4 | `box.signageos.io` CSP overly broad | MISCONFIG | **VALID (Info, border)** | 3.1 | Reconfirmed, 40+ origins |
