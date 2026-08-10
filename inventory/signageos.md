@@ -275,3 +275,5 @@
 - CHANGED api.signageos.io/status now also fronted by CloudFront — retains HSTS+xfo+xcto hardening differential vs box.status
 
 ## 2026-08-10 20:23:24 UTC
+
+## 2026-08-10 21:13:50 UTC
