@@ -1221,3 +1221,43 @@ testability: PASSIVE
 [RISK] box.signageos.io: 58 — /status leaks pod hostname + Node version + process uid + full backend topology with zero hardening headers (differential vs hardened `/`+`/login/` and api /status); /login/ CSP ~50 origins + 17 static ACAO incl `http://` variant + `*.zdusercontent.com` wildcard but no credentials flag → no direct credential-theft path; all other box paths behind login catch-all.
 [RISK] api.signageos.io: 50 — /status info leak now hardened; all v1/v2 routes solidly JWT/X-Auth-gated, no CORS/GraphQL surface, only descriptive-error bodies (excluded). Residual exposure is the code-verified AUTH_HELPED cross-tenant org/device IDOR chain — CRITICAL if per-path org-membership checks are absent; awaits token-bearing human verification.
 ## 2026-08-09 23:30:21 UTC [box] (model bigpickle)
+## 2026-08-10 00:02:25 UTC [box] (model bigpickle)
+[PRIO] box.signageos.io/status (GET) — 7.4 = attack 5, business 5, tech 6 (Express/K8s/health), gate 10 (no auth), cloud 8 (K8s topology), fresh 9 (PoC finalized)
+[PRIO] box.signageos.io/login/ + / (CORS/CSP) — 6.4 = attack 5, business 4, tech 7, gate 10, cloud 6, fresh 6
+[PRIO] box.signageos.io/ready — 3.4 = attack 2, business 2, tech 3, gate 10, cloud 3, fresh 2
+[HYP] box /status unauthenticated internal-infra info-leak (PoC package, standing)
+class: MISCONFIG
+asset: box.signageos.io/status (GET)
+confidence: 95
+reasoning: Reconfirmed this cycle — HTTP 200 JSON, pod `box-7c8c876945-gkzcp`, 64-hex process.uid `b341def86252…`, Node v20.20.2, uptime/cpu/mem, full amqp/redis/mongo topology with per-service responseTime; headers ONLY `x-powered-by: Express` (HSTS/xfo/xcto/CSP grep = 0). Differential vs hardened api /status persists.
+evidence_needed: none — body + headers re-archived this cycle (/tmp/poc_box_status_body.json).
+verify_steps: PROBE done: `curl -sD - https://box.signageos.io/status`; security-header grep = 0.
+impact: unauthenticated internal-infra disclosure (K8s pod identity, Node version, process uid, backend topology); MODERATE
+testability: PASSIVE
+[HYP] box /login/ CSP origin-trust bloat (standing)
+class: MISCONFIG
+asset: box.signageos.io/login/ (CSP)
+confidence: 60
+reasoning: Reconfirmed — connect-src triplicates `sos-production.us.auth0.com/oauth/token`, spans mapbox/events.mapbox/sentry/Auth0/S3/API Gateway/api.signageos.io + recaptcha frame-src. Overly broad postMessage/origin trust boundary. No direct exploit path without a page-level primitive.
+evidence_needed: no change this cycle; requires authenticated page context for postMessage abuse.
+verify_steps: PROBE done: `curl -sD - https://box.signageos.io/login/ | grep content-security-policy`.
+impact: broadens origin trust for embedded/connected parties; LOW-MODERATE (boundary hygiene)
+testability: PASSIVE
+[HYP] box / CORS static whitelist incl plaintext + wildcard (standing)
+class: MISCONFIG
+asset: box.signageos.io/ (ACAO)
+confidence: 55
+reasoning: Reconfirmed — 17 static ACAO incl `http://box.signageos.io` plaintext variant + `https://*.zdusercontent.com` wildcard + api sibling; evil.test NOT reflected (static whitelist); NO access-control-allow-credentials on any box path.
+evidence_needed: no change; credentials-flag absence removes direct credential-theft path.
+verify_steps: PROBE done: `curl -H "Origin: https://evil.test" -sD - https://box.signageos.io/`.
+impact: defense-in-depth/whitelist hygiene; no direct exploit absent credentials flag; LOW
+testability: PASSIVE
+[PARKED] api cross-tenant security-token minting (78): AUTH_HELPED, target=box this phase, no token available — off-phase, carried forward.
+[PARKED] api org OAuth-secret cross-tenant IDOR (75): AUTH_HELPED, same reason — carried forward.
+[FINAL] 1) box /status info-leak (95, PASSIVE, PoC finalized — unchanged) — 2) box /login/ CSP bloat (60, PASSIVE) — 3) box / CORS static whitelist (55, PASSIVE)
+[NEXT] PROBE: box /status is PoC-final and unchanged; instead take one fresh passive look at box response-header differential on the login redirect chain — `curl -sI -L --max-time 20 https://box.signageos.io/login/` to confirm no new security header or header-based primitive appeared on the `/login/` chain (HSTS/xfo/xcto/CSP counts), else revert to reconfirming standing findings only.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle — pod `box-7c8c876945-gkzcp`, uid `b341def86252…`, Node v20.20.2, full topology; zero security headers persists (grep=0) — differential vs hardened api /status persists.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/login/ & / CORS+CSP: Reconfirmed — 17 static ACAO incl `http://` + `*.zdusercontent.com`, evil.test NOT reflected, 0 credentials flag; CSP triplicated Auth0 oauth/token.
+[LEARN] REJECTED IDOR @ box.signageos.io: Path enumeration (/api, /v1, /v2, /graphql, /actuator, /metrics, /swagger, /openapi.json, /.well-known/openid-configuration) → all 302 login catch-all except /ready 200; no unauthenticated bypass surface beyond /status + CORS/CSP.
+[RISK] box.signageos.io: 58 — /status leaks pod hostname + Node version + process uid + full backend topology with zero hardening headers (differential vs hardened `/`+`/login/` and api /status); /login/ CSP ~50+ origins + 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard but no credentials flag → no direct credential-theft path; all other box paths behind login catch-all.
+[RISK] api.signageos.io: 50 — /status info leak hardened; all v1/v2 routes solidly JWT/X-Auth-gated, no CORS/GraphQL surface, only descriptive-error bodies (excluded). Residual exposure is the code-verified AUTH_HELPED cross-tenant org/device IDOR chain — CRITICAL if per-path org-membership checks are absent; awaits token-bearing human verification.
