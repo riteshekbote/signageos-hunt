@@ -2207,3 +2207,28 @@ testability: PASSIVE
 [LEARN] NEW api.signageos.io/status now also fronted by CloudFront (x-cache, via, x-amz-cf-pop) — retains HSTS/xfo/xcto hardening
 [RISK] box.signageos.io: 58 — Unauthenticated /status info leak (pod hostname + Redis/MongoDB/AMQP topology + Node version + process UID); CORS ACAO whitelist with 18 origins (incl zdusercontent wildcard + http:// variant); broad CSP (59+ connect-src/frame-src origins with triplicated Auth0). Still missing HSTS/xfo/xcto on /status despite CloudFront fronting; / and /login/ now hardened.
 [RISK] api.signageos.io: 62 — Unauthenticated /status info leak (pod hostname + service topology) but hardened with HSTS/xfo/xcto + CloudFront; 60+ /v1/*+/v2/* endpoints all solidly JWT/X-Auth-gated (403 without token); no CORS issues. Risk raised due to code-verified cross-tenant IDOR candidates (org OAuth secret disclosure, org-token minting) that are AUTH_HELPED-testable with CRITICAL business impact.
+## 2026-08-10 07:11:35 UTC [api] (model nemotron3)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 95
+reasoning: Live unauthenticated GET returns pod hostname, 64-hex process UID, Node v20.20.2, full amqp/redis/mongo topology with per-service responseTime; headers ONLY x-powered-by: Express + CloudFront (zero hardening: no HSTS/xfo/xcto/CSP) — differential vs api.status which carries all three
+evidence_needed: curl -I https://box.signageos.io/status shows 0 security headers; curl https://box.signageos.io/status returns JSON with topology
+verify_steps: PASSIVE: GET https://box.signageos.io/status → 200 JSON leak; GET -I → grep -cE 'strict-transport|x-frame|x-content|content-security' = 0; differential: same on api.signageos.io/status returns HSTS/xfo/xcto
+impact: infrastructure reconnaissance (pod naming, service mesh topology, Node version) aids chained attacks; LOW direct exploitability
+testability: PASSIVE
+class: MISCONFIG
+asset: box.signageos.io/ & /login/
+confidence: 90
+reasoning: 17 static ACAO values including http://box.signageos.io plaintext + https://*.zdusercontent.com wildcard + api.signageos.io sibling; evil.test NOT reflected (static whitelist); NO access-control-allow-credentials; CSP 59+ distinct origins with triplicated Auth0 oauth/token on /login/
+evidence_needed: curl -I -H "Origin: https://evil.test" shows static ACAO set unchanged; no credentials flag
+verify_steps: PASSIVE: HEAD -H "Origin: https://evil.test" → confirm evil.test not in ACAO; grep access-control-allow-credentials = 0; count distinct ACAO = 17
+impact: expands postMessage/origin trust boundary; no direct credential theft without credentials flag; MEDIUM if combined with XSS on trusted origin
+testability: PASSIVE
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 78
+reasoning: SDK/CLI code-verified — POST /v1/organization/{uid}/security-token with X-Auth: <accountJWT> returns org-scoped token; uid is client-supplied path arg; account JWT carries no org UID, so server-side membership check on path UID is sole barrier
+evidence_needed: own account JWT → HTTP 200 on POST /v1/organization/<foreign-org-uid>/security-token returning securityToken
+verify_steps: AUTH_HELPED: curl -X POST -H "X-Auth: <accountJWT>" https://api.signageos.io/v1/organization/<own-org-uid>/security-token = 200 baseline; repeat with foreign-org UID → 200 + securityToken = cross-tenant; escalate: curl -H "X-Auth: <leakedSecurityToken>" https://api.signageos.io/v1/device → foreign org device list
+impact: any tenant's org token → full device/content/timing/firmware control of foreign org; CRITICAL
+testability: AUTH_HELPED

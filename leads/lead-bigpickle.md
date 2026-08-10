@@ -1361,3 +1361,4 @@ verify_steps: PROBE done: `curl -sI https://box.signageos.io/login/ | grep -c ac
 impact: defense-in-depth/whitelist hygiene; no direct exploit absent credentials flag; LOW
 testability: PASSIVE
 [NEXT] PROBE: One final passive differential this cycle — fetch box `/status` with a spoofed `Origin: https://evil.test` (HEAD, 1 request) to confirm the ACAO set on /status stays absent/unset (vs /login/ 17-value whitelist), closing out whether the CloudFront edge injects any Origin-reflective header on the unhardened path; if no reflection, revert to standing reconfirmation cadence only.
+## 2026-08-10 07:08:59 UTC [box] (model bigpickle)
