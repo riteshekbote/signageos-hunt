@@ -549,3 +549,25 @@
   - | 2 | api.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 4.3 |
   - | 3 | box.signageos.io CORS ACAO whitelist (http:// + wildcard) | MISCONFIG | **VALID (Low, border)** | 3.1 |
   - | 4 | box.signageos.io CSP overly broad (40+ origins) | MISCONFIG | **VALID (Info, border)** | 3.1 |
+
+- 29 lead(s) marked VALID at 2026-08-10 14:52:17 UTC
+  - | Q5 Novel? | **NO** — reconfirmed 50+ times since 2026-08-07, already in `valid-bugs.md` |
+  - | Q7 Triager accept? | **YES** — accepted as VALID (Low) on every prior triage run |
+  - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - | Q5 Novel? | **NO** — reconfirmed 50+ times since 2026-08-07, already in `valid-bugs.md` |
+  - | Q7 Triager accept? | **YES** — accepted as VALID (Low) on every prior triage run. Lower severity than box (API properly gated elsewhere) |
+  - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - | Q5 Novel? | **NO** — reconfirmed 50+ times since 2026-08-07, already in `valid-bugs.md` |
+  - | Q7 Triager accept? | **MARGINAL** — accepted as VALID informational on prior runs. No credentials flag limits exploitability |
+  - **Verdict: VALID (Low, borderline)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)
+  - | Q5 Novel? | **NO** — reconfirmed 50+ times since 2026-08-07, already in `valid-bugs.md` |
+  - | Q7 Triager accept? | **MARGINAL** — defense-in-depth finding; accepted as VALID informational on prior runs given breadth |
+  - **Verdict: VALID (Informational, borderline)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N)
+  - | Q2 Reachable? | **NO** (under passive-first) — returns 403 `WRONG_JWT_TOKEN`/`403076` without auth; requires valid account JWT |
+  - | Q4 GET/HEAD proof? | **NO** — cannot prove without valid account JWT + second tenant's UID |
+  - | Q7 Triager accept? | **NO** — no POC possible without valid token + second tenant; pure hypothesis despite code-verified SDK paths |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant to prove. Code-verified via SDK (`OrganizationTokenManagement.ts:29-32`) but unverifiable under `passive_first: true` c
+  - | Q2 Reachable? | **NO** (under passive-first) — returns 403 without auth; requires valid account JWT |
+  - | Q4 GET/HEAD proof? | **NO** — cannot prove without valid account JWT + second tenant's UID |
+  - | Q7 Triager accept? | **NO** — no POC possible without valid token + second tenant |
+  - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant. Code-verified via SDK (`sosControlHelper.ts:130-136`) but unverifiable under passive-first constraint.
