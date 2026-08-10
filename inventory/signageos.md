@@ -231,3 +231,7 @@
 ## 2026-08-09 23:33:10 UTC
 
 ## 2026-08-10 00:04:25 UTC
+
+## 2026-08-10 02:31:10 UTC
+- CHANGED box.signageos.io/status now served behind CloudFront (new headers `x-cache: Miss from cloudfront`, `via: ...cloudfront.net`, `x-amz-cf-pop: PHX52-P1`) — routing/hardening change only; body identical (
+- CHANGED box.signageos.io/login/ chain re-probed — final hop 200, HSTS `max-age=63072000; includeSubDomains; preload` + xfo:DENY + xcto:nosniff present; CSP identical (triplicated Auth0 oauth/token, ~60 connec
