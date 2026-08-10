@@ -372,3 +372,10 @@
   - | 1 | `box.signageos.io/status` infra leak | MISCONFIG | **VALID (Low)** | 4.3 |
   - | 2 | `api.signageos.io/status` infra leak | MISCONFIG | **VALID (Low)** | 4.3 |
   - | 3 | `box.signageos.io` CORS ACAO whitelist | MISCONFIG | **VALID (Low, border)** | 3.1 |
+
+- 5 lead(s) marked VALID at 2026-08-10 01:22:38 UTC
+  - **Verdict: VALID (Low-Medium)**
+  - | Q2 Reachable? | **CONDITIONAL** — requires valid account JWT or org client-secret (low-priv account) |
+  - | **VALID** | box/api `/status` info leak | Unauthenticated K8s infra disclosure + missing security headers; passive proof; CVSS 5.3 |
+  - | **HOLD** | Cross-tenant IDOR family (4 variants) | Credible CRITICAL impact but requires AUTH_HELPED (valid token + second tenant); all /v1/* return 403 |
+  - | 1. box/api /status info leak + missing security headers | **VALID** | Low-Medium (5.3) | Unauthenticated infra disclosure + header differential; passive proof |
