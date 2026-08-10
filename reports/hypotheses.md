@@ -1003,3 +1003,11 @@
 - LEARN: REJECTED MISCONFIG @ box.signageos.io CSP report-uri: /csp-report → 302 login redirect — not an exposed endpoint.
 - LEARN: ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: 17 static ACAO on `/ + /login/` (no credentials flag); CSP ~59+ origins with triplicated Auth0 oauth/token — unc
 - LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session (carried forward).
+
+## RANKED HYPOTHESES 2026-08-10 23:25:50 UTC
+- [95] box.signageos.io/status: box /status unauthenticated K8s infra info-leak behind CloudFront (from reports/hypotheses-longcat.txt)
+- NEXT(hypotheses-longcat.txt): PROBE: Finalize box `/status` PoC evidence package with immutable sha256 capture and persist to artifacts for PoC archive:
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live across 30+ cycles — pod rotation, zero security headers, full topology leak unchanged. Now fronte
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: Reconfirmed — 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard, no credentials flag, CSP
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All routes JWT/X-Auth gated (403), no passive bypass across 30+ cycles. Cross-tenant chain remains AUTH_HEL
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 
