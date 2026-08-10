@@ -402,3 +402,26 @@
 
 - 1 lead(s) marked VALID at 2026-08-10 03:26:37 UTC
   - | **4** | **VALID** | `box.status`, `api.status` (infra leaks), `box CORS` (http:// + wildcard), `box CSP` (40+ origins) |
+
+- 18 lead(s) triaged at 2026-08-10 05:01 UTC (strict triage pass, all models)
+  - | 1 | box.signageos.io/status infra leak | MISCONFIG | VALID (Low) | 4.3 | Reconfirmed; passive PoC stable
+  - | 2 | api.signageos.io/status infra leak | MISCONFIG | VALID (Low) | 4.3 | Reconfirmed; hardened w/ security headers
+  - | 3 | box.signageos.io CORS ACAO whitelist | MISCONFIG | VALID (Low, border) | 3.1 | Static http:// + wildcard, no creds flag
+  - | 4 | box.signageos.io CSP overly broad | MISCONFIG | VALID (Info, border) | 3.1 | 40+ origins, triplicated Auth0
+  - | 5 | api /v1/org/{uid}/security-token cross-tenant mint | IDOR | HOLD | AUTH_HELPED — needs JWT + 2nd tenant
+  - | 6 | api /v1/org/{uid} OAuth secret disclosure | IDOR | HOLD | AUTH_HELPED — needs JWT + 2nd tenant
+  - | 7 | api /v1/device/{uid}/peer-recovery cross-tenant | IDOR | HOLD | AUTH_HELPED — needs X-Auth + 2nd tenant
+  - | 8 | api /v2/* authz drift | AUTH | HOLD | No passive evidence
+  - | 9 | box /settings token over-scope | AUTH | HOLD | AUTH_HELPED
+  - | 10 | api /v1/device/{uid}/* weaker auth | AUTH | HOLD | No passive evidence
+  - | 11 | api /v1/account/security-token creds in query | MISCONFIG | HOLD | Spec-documented, not provable
+  - | 12 | videowall-designer hardcoded secret (staging) | SECRET_LEAK | INVALID | Out-of-scope host
+  - | 13 | box/login Auth0 redirect_uri bypass | AUTH | INVALID | Not testable passively
+  - | 14 | box/login login CSRF (OAuth2 state) | AUTH | INVALID | Excluded per scope.yml
+  - | 15 | api root JSON API via Accept header | IDOR | INVALID | Disproven
+  - | 16 | box subdomains postMessage origin bypass | OTHER | INVALID | No passive evidence
+  - | 17 | api /v1/* descriptive errors | MISCONFIG | INVALID | Excluded per scope.yml
+  - | 18 | api /v1+/* pre-auth bypass | IDOR | INVALID | All endpoints solidly JWT-gated
+
+- 1 lead(s) marked VALID at 2026-08-10 05:05:35 UTC
+  - | **VALID** | 4 | `box/api /status` infra leaks (CVSS 4.3), `box` CORS ACAO http://+wildcard (3.1), `box` CSP 40+ origins (3.1) |
