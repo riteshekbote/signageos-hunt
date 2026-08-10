@@ -620,3 +620,23 @@
   - | 2 | api.signageos.io/status — K8s infra leak | **VALID (Low)** | 4.3 |
   - | 3 | box CORS ACAO (http:// + wildcard) | **VALID (Low, border)** | 3.1 |
   - | 4 | box CSP overly broad (40+ origins) | **VALID (Info, border)** | 3.1 |
+
+- 18 lead(s) marked VALID at 2026-08-10 21:31:11 UTC
+  - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - | Q7 Triager accept? | MARGINAL — accepted as VALID informational on prior runs; no credentials flag limits impact |
+  - **Verdict: VALID (Low, borderline)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)
+  - **Verdict: VALID (Informational, borderline)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N)
+  - | Q2 Reachable? | NO — requires valid account JWT (AUTH_HELPED) |
+  - | Q4 GET/HEAD proof? | NO — requires valid account JWT + second tenant |
+  - **Verdict: HOLD** — AUTH_HELPED only; code-verified mechanism (OrganizationTokenManagement.ts:29-32) but unverifiable without valid account JWT + second tenant.
+  - | Q2 Reachable? | NO — requires valid account JWT |
+  - | Q4 GET/HEAD proof? | NO — requires valid account JWT + second tenant |
+  - **Verdict: HOLD** — AUTH_HELPED only; code-verified via SDK (sosControlHelper.ts:130-136) but unverifiable without valid credentials.
+  - | Q2 Reachable? | NO — requires valid org X-Auth (clientId:secret) |
+  - | Q4 GET/HEAD proof? | NO — requires valid org X-Auth + second tenant; PUT is invasive |
+  - | Q2 Reachable? | NO — requires valid org token to observe |
+  - | 1 | box.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 4.3 |
+  - | 2 | api.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 4.3 |
+  - | 3 | box.signageos.io CORS ACAO whitelist (http:// + wildcard) | MISCONFIG | **VALID (Low, border)** | 3.1 |
+  - | 4 | box.signageos.io CSP overly broad (40+ origins) | MISCONFIG | **VALID (Info, border)** | 3.1 |
