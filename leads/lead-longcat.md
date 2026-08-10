@@ -150,3 +150,4 @@ testability: AUTH_HELPED
 [PARKED] Cross-tenant security-token minting via X-Auth org UID override: AUTH_HELPED test requires `sos login` + two orgs; current phase is box POC, api target is off-phase for this cycle.
 [FINAL] Ranked surviving hypotheses:
 ## 2026-08-10 07:08:43 UTC [box] (model longcat)
+## 2026-08-10 08:51:25 UTC [box] (model longcat)
