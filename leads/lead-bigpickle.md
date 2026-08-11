@@ -1610,3 +1610,4 @@ testability: PASSIVE
 [RISK] api.signageos.io: 48 — hardened (HSTS/xfo/xcto + CloudFront), all routes 403 pre-auth; residual exposure concentrates in the unverified X-Auth org-UID-crossing IDOR hypothesis (HUMAN pending) and descriptive 403 bodies (excluded class).
 ## 2026-08-11 02:22:25 UTC [box] (model bigpickle)
 ## 2026-08-11 03:59:30 UTC [box] (model bigpickle)
+## 2026-08-11 05:18:05 UTC [box] (model bigpickle)

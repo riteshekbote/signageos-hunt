@@ -1681,3 +1681,4 @@ testability: PASSIVE
 [RISK] api.signageos.io: 72 — /status hardened (HSTS/xfo/xcto behind CloudFront) but still info-leaking; all v1/v2 routes solidly JWT/X-Auth-gated (403 pre-auth, no bypass); descriptive-error bodies (excluded class); residual critical cross-tenant IDOR chain (security-token mint + org credential disclosure via X-Auth org-UID-crossing) requiring valid tokens + 2nd tenant — HIGH if per-path org checks absent.
 ## 2026-08-11 02:23:11 UTC [box] (model laguna)
 ## 2026-08-11 04:01:47 UTC [box] (model laguna)
+## 2026-08-11 05:18:06 UTC [box] (model laguna)
