@@ -1894,3 +1894,4 @@ verify_steps: curl -sI -H "Origin: https://evil.test" https://box.signageos.io/l
 impact: Whitelist hygiene/defense-in-depth issue expanding postMessage origin trust boundary; no direct credential-theft primitive without creds flag; LOW
 testability: PASSIVE
 ## 2026-08-11 16:10:02 UTC [box] (model laguna)
+## 2026-08-11 17:16:03 UTC [box] (model laguna)

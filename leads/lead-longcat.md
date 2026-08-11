@@ -424,3 +424,36 @@ testability: PASSIVE
 [RISK] box.signageos.io: 50 — persistent unauthenticated /status infra-info-leak (pod/uid/Node/topology) with zero hardening headers; broad static CORS whitelist incl plaintext HTTP + wildcard + CSP bloat; remaining surface is login-gated Auth0. No auth bypass, no IDOR, no data compromise surface found.
 [RISK] api.signageos.io: 55 — deep API surface (60+ v1/v2 endpoints) with confirmed dual-auth mechanism (JWT + X-Auth) and plausible cross-tenant IDOR vector (org UID decoupling in path vs auth-derived org). All endpoints currently gated, but authz surface is complex and the unverified cross-tenant chain is a structural risk.
 ## 2026-08-11 16:07:27 UTC [box] (model longcat)
+## 2026-08-11 17:12:48 UTC [box] (model longcat)
+[PRIO] box.signageos.io/status score=6.15 attack=7 business=6 tech=4 gate=10 cloud=5 fresh=2
+[PRIO] box.signageos.io/ + /login/ score=5.20 attack=5 business=4 tech=5 gate=10 cloud=5 fresh=2
+[PRIO] api.signageos.io/status score=5.85 attack=6 business=6 tech=4 gate=10 cloud=5 fresh=2
+[HYP] box /status unauthenticated infra-info-leak
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 95
+reasoning: 30+ cycles confirm unauthenticated GET returns JSON with pod hostname, 40-hex process.uid, Node v20.20.2, full amqp0/redis0-3/mongoDB0-3 topology + per-service responseTime. Headers ONLY x-powered-by: Express — zero hardening (HSTS/xfo/xcto/CSP all absent). `/`+`/`/`login/` hardened (HSTS present).
+evidence_needed: none — PoC complete.
+verify_steps: PROBE done: `curl -s -D /tmp/bh.txt -o /tmp/bb.txt https://box.signageos.io/status` → 200 JSON, `grep -ciE 'strict-transport|x-frame|x-content|content-security' /tmp/bh.txt` = 0.
+impact: unauthenticated disclosure of pod identity, Node version, process uid, internal mongo/redis/amqp topology, edge geo; MODERATE — recon enabler.
+testability: PASSIVE
+[HYP] box /login/ + / static CORS whitelist bloat
+class: MISCONFIG
+asset: box.signageos.io/ and /login/
+confidence: 55
+reasoning: 17 static ACAO values including `http://box.signageos.io` (plaintext HTTP) and `https://*.zdusercontent.com` (wildcard). Static whitelist — spoofed Origin `evil.test` NOT reflected. No `Access-Control-Allow-Credentials` on any box path.
+evidence_needed: Confirm no ACAO+ACAC combination under any Origin; demonstrate wildcard is only theoretically exploitable.
+verify_steps: PROBE done: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/` → 17 ACAO, 0 credentials flag. `curl -sI -H "Origin: https://evil.zdusercontent.com" https://box.signageos.io/` → ACAO present (wildcard match).
+impact: whitelist hygiene/defense-in-depth only; no creds flag removes direct credential-theft path. LOW.
+testability: PASSIVE
+[PARKED] Cross-tenant security-token mint via X-Auth org-UID override: confidence 78 but AUTH_HELPED only — not verifiable passively; requires `sos login` (Auth0 device-code) + 2nd org token. Dropped from this cycle's FINAL (standing lead, off-phase for box target).
+[FINAL]
+[NEXT] PROBE: Standing passive reconfirm at ≤1 rps. `curl -sS https://box.signageos.io/status | sha256sum` (expect 200 JSON, zero hardening headers) + `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/ | grep -ci 'access-control-allow-origin'` (expect 17, 0 credentials). Box surface is fully characterized — this is a durability check, not new discovery. AUTH_HELPED lead (api cross-tenant security-token) remains the only higher-value unverified vector; requires operator-provided X-Auth token from `sos login`.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live across 30+ cycles — pod rotation (`box-7cd9ddcc8c-756mn`), zero security headers, full topology leak unchanged. Behind CloudFront (x-cache/via/x-amz-cf-pop).
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/ + /login/: 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard, 0 creds flag — reconfirmed.
+[LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened with HSTS (max-age=31536000), x-frame-options: DENY, x-content-type-options: nosniff — differential vs box persists.
+[LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All routes JWT/X-Auth gated (403), no passive bypass across 30+ cycles.
+[LEARN] REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + 403075/403076/403105 — excluded class per scope.yml.
+[LEARN] REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes), trivial health check, no data.
+[RISK] box.signageos.io: 50 — persistent unauthenticated /status infra-info-leak (pod/uid/Node/topology) with zero hardening headers; broad static CORS whitelist incl plaintext HTTP + wildcard + CSP bloat; remaining surface is login-gated Auth0. No auth bypass, no IDOR, no data compromise surface found.
+[RISK] api.signageos.io: 55 — deep API surface (60+ v1/v2 endpoints) with confirmed dual-auth mechanism (JWT + X-Auth) and plausible cross-tenant IDOR vector (org UID decoupling in path vs auth-derived org). All endpoints currently gated, but authz surface is complex and the unverified cross-tenant chain is a structural risk.
