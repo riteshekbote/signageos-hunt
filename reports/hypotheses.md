@@ -1022,3 +1022,5 @@
 - LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: /organization/someorg returns 403 (NO_ORGANIZATION_TO_AUTHENTICATE / 403075), confirming org identity deriv
 - LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks NO_ORGANIZATION_TO_AUTHENTICATE/NO_ORGANIZATION (403075) — excluded per scope.yml 
 - LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding still not passively testable without tenant/authenticated session (carried forwa
+
+## RANKED HYPOTHESES 2026-08-11 02:23:21 UTC
