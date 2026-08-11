@@ -1,5 +1,16 @@
 # Validated Bugs
 
+- 8 lead(s) triaged at 2026-08-11 06:40 UTC (strict triage, latest probe cycle 04:17–06:11 UTC)
+  - | 1 | box.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 4.3 | DUPLICATE reconfirmed; passive PoC stable |
+  - | 2 | api.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 4.3 | DUPLICATE reconfirmed; hardened w/ security headers |
+  - | 3 | box.signageos.io CORS ACAO whitelist (http:// + wildcard) | MISCONFIG | **VALID (Low, border)** | 3.1 | DUPLICATE reconfirmed; static whitelist, no creds flag |
+  - | 4 | box.signageos.io CSP overly broad (40+ origins) | MISCONFIG | **VALID (Info, border)** | 3.1 | DUPLICATE reconfirmed; triplicated Auth0 + wildcard |
+  - | 5 | api /v1/org/{uid}/security-token cross-tenant mint | IDOR | **HOLD** | — | AUTH_HELPED — 403-gated, needs JWT + 2nd tenant |
+  - | 6 | api /v1/org/{uid} OAuth secret disclosure | IDOR | **HOLD** | — | AUTH_HELPED — 403-gated, needs JWT + 2nd tenant |
+  - | 7 | api /v1/device cross-tenant operations | IDOR | **HOLD** | — | AUTH_HELPED — 403-gated, PUT invasive |
+  - | 8 | box backtick-injected paths → HTML | ROUTING | **INVALID** | — | SPA catch-all behavior; no security impact |
+  - **0 new VALID findings.** 4 VALID reconfirmations (all previously accepted). 3 HOLD carried. 1 INVALID (non-finding).
+
 - 2026-08-07 ~18:15 UTC - SEED STATE: 0 valid bugs. Pipeline not yet run; hypotheses are recon-based and UNVALIDATED.
 
 - 3 lead(s) marked VALID at 2026-08-07 21:05:33 UTC
@@ -681,3 +692,25 @@
 
 - 1 lead(s) marked VALID at 2026-08-11 05:36:31 UTC
   - | **VALID** | `box.signageos.io/status` (K8s info leak, CVSS 5.3), `api.signageos.io/status` (same class, CVSS 5.3), `box.signageos.io` CORS static whitelist with HTTP variant + wildcard (CVSS 3.7 LOW
+
+- 290 lead(s) marked VALID at 2026-08-11 06:45:25 UTC
+  - - **VERDICT: VALID — Low (CVSS 3.1: 4.3)**
+  - - **VERDICT: VALID — Low (CVSS 3.1: 4.3)**
+  - - **VERDICT: VALID — Informational/Low (CVSS 3.1: 3.1)**
+  - - **VERDICT: VALID — Informational (CVSS 3.1: 3.1)**
+  - - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant to prove. Not passively provable.
+  - - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant.
+  - - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant.
+  - - **Verdict: HOLD** — AUTH_HELPED only; requires valid org X-Auth + second tenant. PUT also violates passive-only rule.
+  - - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N). Minimal proof: `curl -s https://box.signageos.io/status` → JSON with hostname + succeededServices + process.uid + 
+  - - **Verdict: VALID (Low)** — CVSS 3.1: **4.3** (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N). Minimal proof: `curl -s https://api.signageos.io/status` → JSON with hostname + succeededServices + Node version. 
+  - - **Verdict: VALID (Low, borderline)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N). Minimal proof: `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/` → observe static AC
+  - - **Verdict: VALID (Low, borderline)** — CVSS 3.1: **3.1** (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N). Minimal proof: `curl -sI https://box.signageos.io/login/%2F` → CSP header with 40+ distinct origins. R
+  - - **Verdict: VALID (Low)** — reconfirmation of previously accepted finding.
+  - - **Verdict: VALID (Low)** — reconfirmation of previously accepted finding.
+  - - **Verdict: VALID (Low, borderline)** — reconfirmation of previously accepted finding.
+  - - **Verdict: VALID (Low, borderline)** — reconfirmation of previously accepted finding.
+  - - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant to prove. Not passively provable. Carried forward.
+  - - **Verdict: VALID (Low)** | CVSS 3.1: **4.3** (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - - **Verdict: VALID (Low)** | CVSS 3.1: **4.3** (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - - **Verdict: VALID (Low, borderline)** | CVSS 3.1: **3.1** (CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)
