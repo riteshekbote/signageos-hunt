@@ -348,3 +348,8 @@
 - 2026-08-11 REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check, no data.
 - 2026-08-11 REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 access-control-allow-credentials -> no credential-theft path; MISCONFIG-only.
 - 2026-08-11 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session.
+- 2026-08-11 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-7cd9ddcc8c-6m52v`, uid `89e006c0…`, Node v20.20.2, 9 succeededServices, zero hardening headers (grep=0), CloudFront IAD55-P8. New body sha256 `f8927951c406…`; prior `77529aac…` superseded.
+- 2026-08-11 ACCEPTED MISCONFIG @ box.signageos.io/login/ & / CORS+CSP: Reconfirmed — 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard; 0 credentials flag; evil.test NOT reflected; hardened (grep=4).
+- 2026-08-11 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto grep=3) behind CloudFront; info-leak persists but header posture hardened vs box.
+- 2026-08-11 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/: 17 static ACAO incl http:// plaintext + *.zdusercontent.com wildcard, 0 credentials flag, evil.test NOT reflected — unchanged.
+- 2026-08-11 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes JWT/X-Auth gated (403), zero ACAO under evil.test — no passive bypass.
