@@ -1024,3 +1024,13 @@
 - LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding still not passively testable without tenant/authenticated session (carried forwa
 
 ## RANKED HYPOTHESES 2026-08-11 02:23:21 UTC
+
+## RANKED HYPOTHESES 2026-08-11 04:17:36 UTC
+- [95] box.signageos.io/status: box /status unauthenticated K8s infra info-leak behind CloudFront (from reports/hypotheses-longcat.txt)
+- NEXT(hypotheses-longcat.txt): PROBE: Finalize box `/status` PoC evidence package with immutable sha256 capture and persist to artifacts for PoC archive:
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live across 30+ cycles — pod rotation, zero security headers, full topology leak unchanged. Now fronte
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: Reconfirmed — 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard, no credentials flag, CSP
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All routes JWT/X-Auth gated (403), no passive bypass across 30+ cycles. Cross-tenant chain remains AUTH_HEL
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 
+- LEARN: CHANGED box.signageos.io/status: Now fronted by CloudFront (x-cache, via, x-amz-cf-pop) — routing change only, body and header security posture unchanged.
+- LEARN: CHANGED api.signageos.io/status: Now also fronted by CloudFront (x-cache, via, x-amz-cf-pop) — retains HSTS/xfo/xcto hardening.

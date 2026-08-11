@@ -1609,3 +1609,4 @@ testability: PASSIVE
 [RISK] box.signageos.io: 55 — standing unauthenticated /status infra-leak (pod/Node/uid/topology, zero hardening headers behind CloudFront) + static CORS/CSP origin bloat (no credentials flag → no direct theft path); real but moderate; no pre-auth bypass or credential-theft primitive found.
 [RISK] api.signageos.io: 48 — hardened (HSTS/xfo/xcto + CloudFront), all routes 403 pre-auth; residual exposure concentrates in the unverified X-Auth org-UID-crossing IDOR hypothesis (HUMAN pending) and descriptive 403 bodies (excluded class).
 ## 2026-08-11 02:22:25 UTC [box] (model bigpickle)
+## 2026-08-11 03:59:30 UTC [box] (model bigpickle)

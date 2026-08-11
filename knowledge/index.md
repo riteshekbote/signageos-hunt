@@ -266,3 +266,9 @@
 - 2026-08-11 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: /organization/someorg returns 403 (NO_ORGANIZATION_TO_AUTHENTICATE / 403075), confirming org identity derived from X-Auth header first-part before `:`; all routes JWT/X-Auth-gated, no passive bypass — AUTH_HELPED only.
 - 2026-08-11 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks NO_ORGANIZATION_TO_AUTHENTICATE/NO_ORGANIZATION (403075) — excluded per scope.yml (descriptive error messages).
 - 2026-08-11 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding still not passively testable without tenant/authenticated session (carried forward).
+- 2026-08-11 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live across 30+ cycles — pod rotation, zero security headers, full topology leak unchanged. Now fronted by CloudFront (body/headers identical).
+- 2026-08-11 ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: Reconfirmed — 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard, no credentials flag, CSP ~60 connect-src origins. Unchanged behind CloudFront.
+- 2026-08-11 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All routes JWT/X-Auth gated (403), no passive bypass across 30+ cycles. Cross-tenant chain remains AUTH_HELPED only.
+- 2026-08-11 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 403075/403076/403105 — class descriptive-error excluded per scope.yml.
+- 2026-08-11 CHANGED box.signageos.io/status: Now fronted by CloudFront (x-cache, via, x-amz-cf-pop) — routing change only, body and header security posture unchanged.
+- 2026-08-11 CHANGED api.signageos.io/status: Now also fronted by CloudFront (x-cache, via, x-amz-cf-pop) — retains HSTS/xfo/xcto hardening.
