@@ -1011,3 +1011,14 @@
 - LEARN: ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: Reconfirmed — 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard, no credentials flag, CSP
 - LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All routes JWT/X-Auth gated (403), no passive bypass across 30+ cycles. Cross-tenant chain remains AUTH_HEL
 - LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 
+
+## RANKED HYPOTHESES 2026-08-11 00:03:53 UTC
+- [95] box.signageos.io/status: box.signageos.io/status unauthenticated K8s infra leak behind CloudFront (from reports/hypotheses-laguna.txt)
+- [95] box.signageos.io/status: box /status unauthenticated internal-infra info-leak (PoC complete, re-archived) (from reports/hypotheses-bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): PROBE: One passive reconfirmation of the box /status PoC package next cycle (`curl -sD - https://box.signageos.io/status` → verify sha256 delta + grep security 
+- NEXT(hypotheses-laguna.txt): PROBE: Finalize box `/status` PoC evidence package with immutable sha256 capture: `curl -sD /tmp/poc_box_status_h.txt --max-time 20 https://box.signageos.io/sta
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-7c8c876945-gkzcp`, process.uid `772fc40ca8b5733a305b3000d2042557f1502a77b17c00cd07`, N
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live — pod `api-6f69db97d5-9kg9l`, Node v24.19.0, 8 services, hardened with HSTS+xfo+xcto behind Cloud
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: /organization/someorg returns 403 (NO_ORGANIZATION_TO_AUTHENTICATE / 403075), confirming org identity deriv
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks NO_ORGANIZATION_TO_AUTHENTICATE/NO_ORGANIZATION (403075) — excluded per scope.yml 
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding still not passively testable without tenant/authenticated session (carried forwa

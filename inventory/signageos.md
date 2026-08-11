@@ -286,3 +286,5 @@
 - CHANGED api.signageos.io/status now also fronted by CloudFront (x-cache, via, x-amz-cf-pop) — retains HSTS+xfo+xcto hardening
 
 ## 2026-08-10 23:25:50 UTC
+
+## 2026-08-11 00:03:53 UTC
