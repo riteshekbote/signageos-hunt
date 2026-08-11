@@ -1917,3 +1917,95 @@ access-control-allow-origin: https://signageos.zendesk.com
 access-control-allow-origin: https://*.zdusercontent.com
 access-control-allow-origin: https://www.google.com/recaptcha/api2/clr
 [0m
+===== ANALYST longcat 2026-08-11 12:28:10 UTC =====
+[0m
+> build · longcat-2.0-free
+[0m
+[0m$ [0mls -la /home/runner/work/signageos-hunt/signageos-hunt/ 2>/dev/null && echo "---" && ls /tmp/opencode/ 2>/dev/null || echo "no /tmp/opencode"
+total 260
+drwxr-xr-x 11 runner runner  4096 Aug 11 12:24 .
+drwxr-xr-x  3 runner runner  4096 Aug 11 12:24 ..
+drwxr-xr-x  7 runner runner  4096 Aug 11 12:24 .git
+drwxr-xr-x  3 runner runner  4096 Aug 11 12:24 .github
+-rw-r--r--  1 runner runner   944 Aug 11 12:24 README.md
+-rw-r--r--  1 runner runner    38 Aug 11 12:24 analyst-out.txt
+-rw-r--r--  1 runner runner 80904 Aug 11 12:24 analyst-prompt.txt
+-rw-r--r--  1 runner runner 77291 Aug 11 12:24 ctx.txt
+drwxr-xr-x  2 runner runner  4096 Aug 11 12:24 inventory
+drwxr-xr-x  2 runner runner  4096 Aug 11 12:24 knowledge
+drwxr-xr-x  2 runner runner 12288 Aug 11 12:24 leads
+-rw-r--r--  1 runner runner 20412 Aug 11 12:24 probe-results.md
+drwxr-xr-x  2 runner runner  4096 Aug 11 12:24 reports
+drwxr-xr-x  3 runner runner  4096 Aug 11 12:24 reposcan-raw
+-rw-r--r--  1 runner runner  3086 Aug 11 12:24 scope.yml
+drwxr-xr-x  2 runner runner  4096 Aug 11 12:24 scripts
+-rw-r--r--  1 runner runner    33 Aug 11 12:24 state_bigpickle.json
+-rw-r--r--  1 runner runner    33 Aug 11 12:24 state_laguna.json
+-rw-r--r--  1 runner runner    33 Aug 11 12:24 state_ling3.json
+-rw-r--r--  1 runner runner    33 Aug 11 12:24 state_longcat.json
+-rw-r--r--  1 runner runner    33 Aug 11 12:24 state_nemotron3.json
+drwxr-xr-x  2 runner runner  4096 Aug 11 12:24 triage
+---
+[0m
+[0m$ [0mls reports/ 2>/dev/null && echo "---HYPOTHESES---" && cat reports/hypotheses-longcat.txt 2>/dev/null | tail -40 || echo "no reports dir"
+analyst-bigpickle.log
+analyst-laguna.log
+analyst-ling3.log
+analyst-longcat.log
+analyst-nemotron3.log
+hypotheses-bigpickle.txt
+hypotheses-laguna.txt
+hypotheses-ling3.txt
+hypotheses-longcat.txt
+hypotheses-nemotron3.txt
+hypotheses.md
+valid-bugs.md
+---HYPOTHESES---
+## 2026-08-11 11:28:27 UTC [box] (model longcat)
+[0m
+[0m$ [0mcat reports/hypotheses-longcat.txt
+## 2026-08-11 11:28:27 UTC [box] (model longcat)
+[0m
+[0m$ [0mcat reports/hypotheses-bigpickle.txt 2>/dev/null | tail -30
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 95
+reasoning: Fresh probe this cycle: 200 JSON leaks pod `box-7cd9ddcc8c-55pj6`, 40-hex process.uid `3b72b9b9a11f59752d4edb5212e85011f2b66c67b6edac125f`, pid 1, Node v20.20.2, uptime, cpu/mem, full amqp0/redis0-3/mongoDB0-3 topology + per-service responseTime. Headers ONLY x-powered-by: Express + CloudFront — zero hardening vs hardened `/` and api /status.
+evidence_needed: none — body archived `/tmp/opencode/box_status_body.txt`, sha256 `14e5cf1f8e145f96da4be6489d6a5ea9ea469fe356e2285537f92920bfe110c1`.
+verify_steps: PROBE done: `curl -s -D /tmp/opencode/box_status_h.txt -o /tmp/opencode/box_status_body.txt https://box.signageos.io/status` → 200 JSON, security-header grep=0, x-cache Miss (PHX52-P1).
+impact: unauthenticated disclosure of pod identity, Node version, process uid, internal mongo/redis/amqp topology, edge geo; MODERATE
+testability: PASSIVE
+[HYP] Cross-tenant security-token mint via X-Auth org-UID override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 78
+reasoning: Dual-auth enumerated — X-Auth `id:unsafeDecryptedToken`, org derived from header first-part while path `{uid}` is client-supplied and distinct (`/organization/{uid}`→403075, `/security-token`→403076, `/v1/device`→403105 distinct branches). All routes 403 pre-auth across 30+ cycles; unchanged.
+evidence_needed: valid X-Auth (orgA) + orgB `{uid}` in path returning 200 instead of 403075/403076.
+verify_steps: AUTH_HELPED: 1) `sos login` (Auth0 device-code) → account JWT; 2) `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<orgA>/security-token"` baseline 200; 3) repeat with orgB uid — non-403 proves mint.
+impact: one org token mints arbitrary-org security-tokens → cross-tenant device/data compromise; HIGH
+testability: AUTH_HELPED
+[HYP] box /login/ + / static CORS whitelist bloat (standing)
+class: MISCONFIG
+asset: box.signageos.io/login/ (ACAO)
+confidence: 55
+reasoning: 17 static ACAO incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + api sibling; `access-control-allow-credentials` absent; evil.test NOT reflected (static whitelist). Reconfirmed unchanged this cycle.
+evidence_needed: no change; absent credentials flag removes direct credential-theft path.
+verify_steps: PROBE done: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/` → 17 ACAO, 0 credentials flag.
+impact: whitelist hygiene/defense-in-depth only; LOW
+testability: PASSIVE
+[FINAL] 1) box /status infra-leak (95, PASSIVE, PoC done, sha256 archived) 2) Cross-tenant security-token mint (78, AUTH_HELPED) 3) box /login/ CORS whitelist (55, PASSIVE, standing)
+[NEXT] HUMAN: Cross-tenant security-token test is the only higher-value unverified lead and is gated on operator auth. Requires: `sos login` (Auth0 device-code) to obtain account JWT, then 1) baseline `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<orgA>/security-token"` expect 200, 2) repeat with orgB UID in path — non-403/non-403075 response proves cross-tenant mint (HIGH). Until operator provides a token, standing PROBE cycle continues on box /status PoC (immutable sha256 package already archived).
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-7cd9ddcc8c-55pj6`, uid `3b72b9b9a11f59752d4edb5212e85011f2b66c67b6edac125f`, Node v20.20.2, 9 succeededServices (amqp0/redis0-3/mongoDB0-3), zero security headers, behind CloudFront (x-cache Miss, PHX52-P1). Differential vs hardened `/`+`/login/` and api /status persists. New body sha256 `14e5cf1f…0c1`.
+[RISK] box.signageos.io: 55 — persistent unauthenticated /status infra-info-leak (pod/uid/Node/topology) with zero hardening headers; broad static CORS whitelist incl plaintext HTTP + wildcard + CSP bloat; remaining surface is login-gated Auth0. | api.signageos.io: 45 — all 60+ /v1 /v2 endpoints JWT/X-Auth-gated pre-auth (no passive bypass found); /status now hardened (HSTS/xfo/xcto); residual risk is the unverified cross-tenant org/security-token chain (AUTH_HELPED) and descriptive 403 error bodies (excluded class).
+[0m
+[0m$ [0mcat reports/hypotheses-laguna.txt 2>/dev/null | tail -30
+## 2026-08-11 11:36:35 UTC [box] (model laguna)
+[FINAL]
+[NEXT] PROBE: Finalize + archive box `/status` PoC evidence package (already captured this cycle) with immutable sha256 fingerprints persisted to artifacts: `sha256sum /tmp/opencode/box_status_body.txt /tmp/opencode/box_status_h.txt` — sha256_body=`576b1ed9812c9ace351e4d27f297d08a213e01ac37a22716d4a1a3d0c6fa58c6`, sha256_hdr=`abd1eaf53870f184be6932af411d35ab3939089d7f6278b2d1e2a2e92e38006b`, hardening_headers=0, cloudfront=1. Evidence package ready for PoC archive; no AUTH_HELPED execution possible in passive box phase.
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcurl -s -D /tmp/box_status_h.txt --max-time 15 https://box.signageos.io/status -o /tmp/box_status_b.txt 2>&1; echo "EXIT:$?"; echo "---HEADERS---"; cat /tmp/box_status_h.txt; echo "---BODY---"; cat /tmp/box_status_b.txt; echo "---SHA256---"; sha256sum /tmp/box_status_b.txt /tmp/box_status_h.txt failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcurl -s -D /tmp/box_root_h.txt --max-time 15 https://box.signageos.io/ -o /tmp/box_root_b.txt 2>&1; echo "EXIT:$?"; echo "---HEADERS---"; cat /tmp/box_root_h.txt; echo "---SHA256---"; sha256sum /tmp/box_root_b.txt /tmp/box_root_h.txt failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.

@@ -1,35 +1,45 @@
-## 2026-08-11 11:29:16 UTC [box] (model bigpickle)
-[PRIO] box.signageos.io/status: 5.75 (attack 6, business 5, tech 4, gate 10, cloud 5, fresh 4)
+## 2026-08-11 12:27:15 UTC [box] (model bigpickle)
+[CHANGED] box.signageos.io/status pod rotated 55pj6 → 5bnfd, process.uid 3b72b9b9… → 077b032238f6e3e717c868472b7132dcddd615ec206b8aa8cf — new body sha256 884bda3f5b93c53cbf2bae10df34159a12695c430a23240c1c309b61a8e2a540; same ReplicaSet (box-7cd9ddcc8c), zero security headers persists (grep=0), CloudFront x-cache Miss SFO53-P9.
+[CHANGED] Edge POP this cycle SFO53-P9 (box) / SFO53-P12 (api) — was PHX52-P1 (geo rotation only).
+[CHANGED] api.signageos.io/status body sha256 now ba5832802fb18f18844768e92a5d375cc2411c92a2342f193bff4b90eaeb988c (pod rotation); hardening unchanged (HSTS/xfo/xcto grep=3).
+[PRIO] box.signageos.io/status: 5.85 (attack 6, business 5, tech 4, gate 10, cloud 5, fresh 5)
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token: 6.05 (attack 7, business 9, tech 8, gate 1, cloud 4, fresh 3)
-[PRIO] box.signageos.io/login/ CORS: 4.30 (attack 4, business 3, tech 5, gate 8, cloud 3, fresh 3)
-[HYP] box /status unauthenticated infra-info-leak (PoC package live, standing deliverable)
+[PRIO] box.signageos.io/login/ CORS: 4.40 (attack 4, business 3, tech 5, gate 8, cloud 3, fresh 4)
+[HYP] box /status unauthenticated infra-info-leak (PoC package LIVE, now durably archived)
 class: MISCONFIG
 asset: box.signageos.io/status
 confidence: 95
-reasoning: Fresh probe this cycle: 200 JSON leaks pod `box-7cd9ddcc8c-55pj6`, 40-hex process.uid `3b72b9b9a11f59752d4edb5212e85011f2b66c67b6edac125f`, pid 1, Node v20.20.2, uptime, cpu/mem, full amqp0/redis0-3/mongoDB0-3 topology + per-service responseTime. Headers ONLY x-powered-by: Express + CloudFront — zero hardening vs hardened `/` and api /status.
-evidence_needed: none — body archived `/tmp/opencode/box_status_body.txt`, sha256 `14e5cf1f8e145f96da4be6489d6a5ea9ea469fe356e2285537f92920bfe110c1`.
-verify_steps: PROBE done: `curl -s -D /tmp/opencode/box_status_h.txt -o /tmp/opencode/box_status_body.txt https://box.signageos.io/status` → 200 JSON, security-header grep=0, x-cache Miss (PHX52-P1).
+reasoning: Fresh probe 2026-08-11 12:25: 200 JSON leaks pod box-7cd9ddcc8c-5bnfd, 40-hex process.uid 077b032238f6e3e717c868472b7132dcddd615ec206b8aa8cf, pid 1, Node v20.20.2, cpu/mem, full amqp0/redis0-3/mongoDB0-3 topology + per-service responseTime. Headers ONLY x-powered-by: Express + CloudFront (HSTS/xfo/xcto/CSP grep=0) — differential vs hardened /, /login/ and api /status persists across 30+ cycles.
+evidence_needed: none — body+headers archived artifacts/box-status/box_status_body.txt sha256 884bda3f5b93c53cbf2bae10df34159a12695c430a23240c1c309b61a8e2a540 (manifest.sha256).
+verify_steps: PROBE done: curl -s -D box_status_h.txt -o box_status_body.txt https://box.signageos.io/status → 200 JSON, security-header grep=0, x-cache Miss SFO53-P9.
 impact: unauthenticated disclosure of pod identity, Node version, process uid, internal mongo/redis/amqp topology, edge geo; MODERATE
 testability: PASSIVE
 [HYP] Cross-tenant security-token mint via X-Auth org-UID override
 class: IDOR
 asset: api.signageos.io/v1/organization/{uid}/security-token
 confidence: 78
-reasoning: Dual-auth enumerated — X-Auth `id:unsafeDecryptedToken`, org derived from header first-part while path `{uid}` is client-supplied and distinct (`/organization/{uid}`→403075, `/security-token`→403076, `/v1/device`→403105 distinct branches). All routes 403 pre-auth across 30+ cycles; unchanged.
-evidence_needed: valid X-Auth (orgA) + orgB `{uid}` in path returning 200 instead of 403075/403076.
-verify_steps: AUTH_HELPED: 1) `sos login` (Auth0 device-code) → account JWT; 2) `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<orgA>/security-token"` baseline 200; 3) repeat with orgB uid — non-403 proves mint.
+reasoning: Dual-auth enumerated — X-Auth `id:unsafeDecryptedToken`, org derived from header first-part while path {uid} is client-supplied and distinct (/organization/{uid}→403075, /security-token→403076, /v1/device→403105). All routes 403 pre-auth across 30+ cycles; unchanged this cycle.
+evidence_needed: valid X-Auth (orgA) + orgB {uid} in path returning 200 instead of 403075/403076.
+verify_steps: AUTH_HELPED: 1) `sos login` (Auth0 device-code) → account JWT; 2) `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<orgA>/security-token"` baseline 200; 3) repeat with orgB uid — non-403 proves cross-tenant mint.
 impact: one org token mints arbitrary-org security-tokens → cross-tenant device/data compromise; HIGH
 testability: AUTH_HELPED
 [HYP] box /login/ + / static CORS whitelist bloat (standing)
 class: MISCONFIG
 asset: box.signageos.io/login/ (ACAO)
 confidence: 55
-reasoning: 17 static ACAO incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + api sibling; `access-control-allow-credentials` absent; evil.test NOT reflected (static whitelist). Reconfirmed unchanged this cycle.
+reasoning: 17 static ACAO incl http://box.signageos.io plaintext + https://*.zdusercontent.com wildcard + api sibling + malformed path-bearing `https://www.google.com/recaptcha/api2/clr`; access-control-allow-credentials absent (grep=0); evil.test NOT reflected (static whitelist). Reconfirmed unchanged.
 evidence_needed: no change; absent credentials flag removes direct credential-theft path.
 verify_steps: PROBE done: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/` → 17 ACAO, 0 credentials flag.
-impact: whitelist hygiene/defense-in-depth only; LOW
+impact: whitelist hygiene/defense-in-depth only (malformed ACAO value); LOW
 testability: PASSIVE
-[FINAL] 1) box /status infra-leak (95, PASSIVE, PoC done, sha256 archived) 2) Cross-tenant security-token mint (78, AUTH_HELPED) 3) box /login/ CORS whitelist (55, PASSIVE, standing)
-[NEXT] HUMAN: Cross-tenant security-token test is the only higher-value unverified lead and is gated on operator auth. Requires: `sos login` (Auth0 device-code) to obtain account JWT, then 1) baseline `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<orgA>/security-token"` expect 200, 2) repeat with orgB UID in path — non-403/non-403075 response proves cross-tenant mint (HIGH). Until operator provides a token, standing PROBE cycle continues on box /status PoC (immutable sha256 package already archived).
-[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-7cd9ddcc8c-55pj6`, uid `3b72b9b9a11f59752d4edb5212e85011f2b66c67b6edac125f`, Node v20.20.2, 9 succeededServices (amqp0/redis0-3/mongoDB0-3), zero security headers, behind CloudFront (x-cache Miss, PHX52-P1). Differential vs hardened `/`+`/login/` and api /status persists. New body sha256 `14e5cf1f…0c1`.
-[RISK] box.signageos.io: 55 — persistent unauthenticated /status infra-info-leak (pod/uid/Node/topology) with zero hardening headers; broad static CORS whitelist incl plaintext HTTP + wildcard + CSP bloat; remaining surface is login-gated Auth0. | api.signageos.io: 45 — all 60+ /v1 /v2 endpoints JWT/X-Auth-gated pre-auth (no passive bypass found); /status now hardened (HSTS/xfo/xcto); residual risk is the unverified cross-tenant org/security-token chain (AUTH_HELPED) and descriptive 403 error bodies (excluded class).
+[PARKED] none — all 3 hypotheses ≥ 40 confidence, none on REJECTED class list, all have concrete verify_steps.
+[FINAL] 1) box /status infra-leak (95, PASSIVE, PoC archived + sha256 manifest persisted) 2) Cross-tenant security-token mint (78, AUTH_HELPED) 3) box /login/ CORS whitelist (55, PASSIVE, standing)
+[NEXT] PROBE: box /status evidence package is now durably persisted (artifacts/box-status/manifest.sha256) — the standing deliverable is complete and immutable. Highest-value unverified lead remains AUTH_HELPED. Standing probe cycle: one passive reconfirm of box /status next cycle (`curl -s -D /tmp/opencode/box_status_h.txt -o /tmp/opencode/box_status_body.txt https://box.signageos.io/status`) and re-archive if body sha256 changes.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod box-7cd9ddcc8c-5bnfd, uid 077b032238f6e3e717c868472b7132dcddd615ec206b8aa8cf, Node v20.20.2, 9 succeededServices, zero security headers (grep=0), CloudFront SFO53-P9. Evidence package now durable in workspace (artifacts/box-status/, sha256 884bda3f…). Differential vs hardened /+/login/ and api /status persists.
+[LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto grep=3, cache-control: no-store), CloudFront SFO53-P12. Info-leak (hostname/uid/Node) persists but header posture hardened vs box.
+[LEARN] REJECTED CORS-exploit @ box.signageos.io /login/: 17 static ACAO, evil.test NOT reflected, 0 credentials flag — no credential-theft path; MISCONFIG-only. NOTE: ACAO value `https://www.google.com/recaptcha/api2/clr` carries a URL path (non-origin) — malformed but not exploitable without creds flag.
+[LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes JWT/X-Auth-gated, no passive bypass — cross-tenant chain remains AUTH_HELPED only.
+[LEARN] REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + 403075/403076/403105 — excluded class per scope.yml.
+[LEARN] REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session (carried forward).
+[RISK] box.signageos.io: 55 — persistent unauthenticated /status infra-info-leak (pod/uid/Node v20.20.2/topology) with zero hardening headers, now with durable archived PoC; broad static CORS whitelist incl plaintext HTTP + *.zdusercontent.com wildcard + path-bearing recaptcha ACAO; remaining surface login-gated Auth0. | api.signageos.io: 45 — all 60+ /v1 /v2 endpoints JWT/X-Auth-gated pre-auth (no passive bypass found); /status hardened (HSTS/xfo/xcto/no-store); residual risk is unverified cross-tenant org/security-token chain (AUTH_HELPED, HIGH if real) + descriptive 403 bodies (excluded class).
+[FINAL] 1) box /status (95, PASSIVE, PoC done + persisted) 2) cross-tenant token mint (78, AUTH_HELPED) 3) box CORS (55, PASSIVE).

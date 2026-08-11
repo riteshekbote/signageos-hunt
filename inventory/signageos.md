@@ -306,3 +306,8 @@
 ## 2026-08-11 10:43:48 UTC
 
 ## 2026-08-11 11:36:45 UTC
+
+## 2026-08-11 12:28:10 UTC
+- CHANGED box.signageos.io/status pod rotated 55pj6 → 5bnfd, process.uid 3b72b9b9… → 077b032238f6e3e717c868472b7132dcddd615ec206b8aa8cf — new body sha256 884bda3f5b93c53cbf2bae10df34159a12695c430a23240c1c309b61
+- CHANGED Edge POP this cycle SFO53-P9 (box) / SFO53-P12 (api) — was PHX52-P1 (geo rotation only).
+- CHANGED api.signageos.io/status body sha256 now ba5832802fb18f18844768e92a5d375cc2411c92a2342f193bff4b90eaeb988c (pod rotation); hardening unchanged (HSTS/xfo/xcto grep=3).
