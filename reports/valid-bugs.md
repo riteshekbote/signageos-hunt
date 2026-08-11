@@ -714,3 +714,18 @@
   - - **Verdict: VALID (Low)** | CVSS 3.1: **4.3** (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
   - - **Verdict: VALID (Low)** | CVSS 3.1: **4.3** (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
   - - **Verdict: VALID (Low, borderline)** | CVSS 3.1: **3.1** (CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)
+
+- 13 lead(s) marked VALID at 2026-08-11 10:40:44 UTC
+  - | **Q5 Novel?** | NO — Reconfirmed 50+ times since 2026-08-07. Already triaged as VALID in `triage-2026-08-11-strict.md` LEAD 1 and `triage-2026-08-11-0640-strict.md` LEAD A. |
+  - | **Q7 Reasonable triager?** | YES — Accepted as VALID (Low) on every prior triage run. |
+  - **Verdict: VALID (Low) — DUPLICATE reconfirmation**
+  - | **Q5 Novel?** | NO — Reconfirmed 50+ times. Already triaged as VALID in prior reports. |
+  - | **Q7 Reasonable triager?** | YES — Accepted as VALID (Low) on every prior run. |
+  - **Verdict: VALID (Low) — DUPLICATE reconfirmation**
+  - | **Q2 Reachable?** | NO (under passive-first) — Returns HTTP 403 without valid JWT. |
+  - | **Q4 Provable?** | NO — AUTH_HELPED only. Requires valid account JWT + second tenant's UID. |
+  - **Verdict: HOLD — AUTH_HELPED only; requires valid account JWT + second tenant. Not passively provable.**
+  - **Verdict: HOLD — AUTH_HELPED only; requires valid org X-Auth + second tenant. PUT violates passive-only rule.**
+  - **Verdict: HOLD — AUTH_HELPED only; requires valid account JWT + second tenant.**
+  - | 1 | `box.signageos.io/status` infra leak | **VALID (Low)** | 4.3 | DUPLICATE — reconfirmed 50+ times |
+  - | 2 | `api.signageos.io/status` infra leak | **VALID (Low)** | 4.3 | DUPLICATE — reconfirmed 50+ times |
