@@ -1,5 +1,25 @@
 # Validated Bugs
 
+- 17 lead(s) triaged at 2026-08-11 12:30 UTC (strict triage, latest probe cycle 12:28 UTC)
+  - | 1 | box.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 5.3 | DUPLICATE reconfirmed; passive PoC stable |
+  - | 2 | api.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 5.3 | DUPLICATE reconfirmed; hardened w/ security headers |
+  - | 3 | box.signageos.io CORS ACAO whitelist (http:// + wildcard) | MISCONFIG | **VALID (Low, border)** | 3.1 | DUPLICATE reconfirmed; static whitelist, no creds flag |
+  - | 4 | box.signageos.io CSP overly broad (40+ origins) | MISCONFIG | **VALID (Info, border)** | 3.1 | DUPLICATE reconfirmed; triplicated Auth0 + wildcard |
+  - | 5 | api /v1/org/{uid}/security-token cross-tenant mint | IDOR | **HOLD** | — | AUTH_HELPED — 403-gated, needs JWT + 2nd tenant |
+  - | 6 | api /v1/org/{uid} OAuth secret disclosure | IDOR | **HOLD** | — | AUTH_HELPED — 403-gated, needs JWT + 2nd tenant |
+  - | 7 | api /v1/device/{uid}/peer-recovery cross-tenant | IDOR | **HOLD** | — | AUTH_HELPED — 403-gated, PUT invasive |
+  - | 8 | api /v1/account/security-token creds in query | MISCONFIG | **HOLD** | — | Spec-documented, not provable passively |
+  - | 9 | api /v2/* authz drift | AUTH | **HOLD** | — | No passive evidence; all routes 403/404 |
+  - | 10 | box /settings token over-scope | AUTH | **HOLD** | — | AUTH_HELPED only |
+  - | 11 | api /v1/device/{uid}/* weaker auth | AUTH | **HOLD** | — | No passive evidence; all 403-gated |
+  - | 12 | box/login Auth0 redirect_uri bypass | AUTH | **INVALID** | — | Not testable passively without Auth0 tenant config |
+  - | 13 | box/login login CSRF (OAuth2 state) | AUTH | **INVALID** | — | Excluded per scope.yml: CSRF on anonymous forms |
+  - | 14 | api root JSON API via Accept header | IDOR | **INVALID** | — | Disproven — returns HTML regardless |
+  - | 15 | box subdomains postMessage origin bypass | OTHER | **INVALID** | — | Subdomains out of scope; no passive evidence |
+  - | 16 | box backtick-injected paths → HTML | ROUTING | **INVALID** | — | SPA catch-all behavior; no security impact |
+  - | 17 | api /v1/* descriptive errors | MISCONFIG | **INVALID** | — | Excluded per scope.yml |
+  - **0 new VALID findings.** 4 VALID reconfirmations (all previously accepted). 6 HOLD carried. 7 INVALID.
+
 - 8 lead(s) triaged at 2026-08-11 06:40 UTC (strict triage, latest probe cycle 04:17–06:11 UTC)
   - | 1 | box.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 4.3 | DUPLICATE reconfirmed; passive PoC stable |
   - | 2 | api.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 4.3 | DUPLICATE reconfirmed; hardened w/ security headers |
@@ -729,3 +749,25 @@
   - **Verdict: HOLD — AUTH_HELPED only; requires valid account JWT + second tenant.**
   - | 1 | `box.signageos.io/status` infra leak | **VALID (Low)** | 4.3 | DUPLICATE — reconfirmed 50+ times |
   - | 2 | `api.signageos.io/status` infra leak | **VALID (Low)** | 4.3 | DUPLICATE — reconfirmed 50+ times |
+
+- 27 lead(s) marked VALID at 2026-08-11 12:40:28 UTC
+  - | Q5 Novel? | NO | Reconfirmed 50+ times since 2026-08-07. Already in valid-bugs.md. |
+  - | Q7 Triager accept? | YES | Accepted as VALID (Low) on every prior triage run. |
+  - **Verdict: VALID — DUPLICATE reconfirmation**
+  - | Q5 Novel? | NO | Reconfirmed 50+ times. Already in valid-bugs.md. |
+  - | Q7 Triager accept? | YES | Accepted as VALID (Low) on every prior triage run. |
+  - **Verdict: VALID — DUPLICATE reconfirmation**
+  - | Q5 Novel? | NO | Reconfirmed 50+ times. Already in valid-bugs.md. |
+  - | Q7 Triager accept? | MARGINAL | Accepted as VALID informational on prior runs. No credentials flag limits exploitability. |
+  - **Verdict: VALID (borderline) — DUPLICATE reconfirmation**
+  - | Q5 Novel? | NO | Reconfirmed 50+ times. Already in valid-bugs.md. |
+  - | Q7 Triager accept? | MARGINAL | Accepted as VALID informational on prior runs given breadth. |
+  - **Verdict: VALID (borderline) — DUPLICATE reconfirmation**
+  - | Q2 Reachable? | NO | Requires valid account JWT. All probes return 403 without auth. |
+  - | Q4 GET/HEAD proof? | NO | AUTH_HELPED only. Cannot prove without valid JWT + second tenant. |
+  - | Q5 Novel? | NO | Already carried as HOLD in valid-bugs.md. |
+  - **Verdict: HOLD — AUTH_HELPED only; requires valid account JWT + second tenant to prove. Not passively provable under `passive_first: true` constraint.**
+  - | Q2 Reachable? | NO | Requires valid account JWT. 403 without auth. |
+  - **Verdict: HOLD — AUTH_HELPED only; requires valid account JWT + second tenant.**
+  - | Q2 Reachable? | NO | Requires valid org X-Auth (clientId:secret). 403083 without auth. |
+  - **Verdict: HOLD — AUTH_HELPED only; requires valid org X-Auth + second tenant. PUT also violates passive-only rule.**
