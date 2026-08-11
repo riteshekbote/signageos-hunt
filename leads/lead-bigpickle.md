@@ -1643,3 +1643,4 @@ impact: whitelist hygiene/defense-in-depth only; LOW
 testability: PASSIVE
 [FINAL] 1) box /status infra-leak (95, PASSIVE, PoC done) 2) Cross-tenant security-token mint (78, AUTH_HELPED) 3) box /login/ CORS whitelist (55, PASSIVE, standing)
 [NEXT] PROBE: One passive reconfirmation of the box /status PoC package next cycle (`curl -s -D /tmp/opencode/box_status_h.txt -o /tmp/opencode/box_status_body.txt https://box.signageos.io/status` → sha256 delta + grep security headers = 0). PoC evidence package complete for the 95-conf lead; the only higher-value unverified lead (cross-tenant mint) is AUTH_HELPED and requires HUMAN `sos login` + orgA/orgB UIDs.
+## 2026-08-11 09:46:26 UTC [box] (model bigpickle)

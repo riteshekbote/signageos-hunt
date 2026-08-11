@@ -1052,3 +1052,5 @@
 ## RANKED HYPOTHESES 2026-08-11 08:39:48 UTC
 - [95] box.signageos.io/status: box /status unauthenticated infra-info-leak (PoC complete — standing deliverable) (from reports/hypotheses-bigpickle.txt)
 - NEXT(hypotheses-bigpickle.txt): PROBE: One passive reconfirmation of the box /status PoC package next cycle (`curl -s -D /tmp/opencode/box_status_h.txt -o /tmp/opencode/box_status_body.txt htt
+
+## RANKED HYPOTHESES 2026-08-11 09:50:06 UTC
