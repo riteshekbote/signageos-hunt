@@ -319,3 +319,11 @@
 - 2026-08-11 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + 403075/403076/403105 — excluded class per scope.yml (carried forward).
 - 2026-08-11 ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened with HSTS+xfo+xcto — differential vs box persists.
 - 2026-08-11 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: excluded class per scope.yml.
+- 2026-08-11 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live 30+ cycles — pod rotation (box-7cd9ddcc8c-*), zero hardening headers (grep=0), full topology leak (amqp0, redis0-3, mongoDB0-3) unchanged. PoC complete & archived.
+- 2026-08-11 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/: 17 static ACAO incl http:// plaintext + *.zdusercontent.com wildcard, 0 credentials flag, evil.test NOT reflected — reconfirmed unchanged behind CloudFront.
+- 2026-08-11 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + 403075/403076/403105 — excluded class per scope.yml (descriptive error messages).
+- 2026-08-11 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes JWT/X-Auth-gated (403), 0 ACAO under evil.test — not pre-auth bypassable; cross-tenant chain remains AUTH_HELPED only.
+- 2026-08-11 REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 access-control-allow-credentials → no credential-theft path; MISCONFIG-only.
+- 2026-08-11 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session; no unauthenticated authn surface remains on box beyond /status + CORS/CSP.
+- 2026-08-11 REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check, no data leaked.
+- 2026-08-11 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto grep=3) behind CloudFront; info-leak (hostname/uid/Node) persists but header posture hardened vs box /status.

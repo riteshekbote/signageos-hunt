@@ -497,3 +497,4 @@ testability: PASSIVE
 [LEARN] REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: excluded class per scope.yml.
 [RISK] box.signageos.io: 50 — persistent unauthenticated /status infra-info-leak with zero hardening headers; broad static CORS whitelist incl plaintext HTTP + wildcard; remaining surface login-gated Auth0. No auth bypass, no IDOR found.
 [RISK] api.signageos.io: 55 — deep API surface (60+ v1/v2 endpoints) with confirmed dual-auth (JWT + X-Auth) and plausible cross-tenant IDOR vector. All gated, but org-UID decoupling in path vs auth-derived org is structural risk.
+## 2026-08-11 19:20:05 UTC [box] (model longcat)
