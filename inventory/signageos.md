@@ -336,3 +336,12 @@
 - CHANGED box.signageos.io/ root header sha256 now `3ac2f76a…6c15` — nonce hashes rotated, body/CORS/CSP unchanged
 - NEW box.signageos.io/status pod rotated to `box-7cd9ddcc8c-7xc7l` (was szxmq), uid `bba45210…62857`, body sha256 `b0d07ba34cb883ea…` (was `23a4cdd4…`) — data shape unchanged, headers still ONLY `x-powered
 - NEW api.signageos.io/status pod rotated, body sha256 `135ad0771be7df70…` — hardening unchanged (HSTS max-age=31536000, xfo:DENY, xcto:nosniff), POP ORD56-P6.
+
+## 2026-08-11 18:14:29 UTC
+- NEW api.signageos.io/status pod rotated to `api-6d67cd6668-vg7c2` (was `api-6f69db97d5-9kg9l`), body sha256 `ba5832802fb18f18844768e92a5d375cc2411c92a2342f193bff4b90eaeb988c`
+- NEW box.signageos.io/status pod rotated to `box-7cd9ddcc8c-t2w7w` (was `box-7cd9ddcc8c-5bnfd`), uid `e2a3b4…4c77bc`, body sha256 `e3d1ae393f652e3b582cdb1ca23a245af3fc240af4856...`
+- CHANGED Edge POP rotated to SFO53-P9 (box) / SFO53-P12 (api) — was PHX52-P1
+- CHANGED box.signageos.io/status pod rotated to `box-7cd9ddcc8c-756mn` (was t2w7w), process.uid `a3a5ce07…6d6d9`, body sha256 `82f3f196…a808` — data/headers unchanged, CloudFront POP SFO53-P6
+- CHANGED box.signageos.io/ root header sha256 now `3ac2f76a…6c15` — nonce hashes rotated, body/CORS/CSP unchanged
+- NEW box.signageos.io/status pod rotated to `box-7cd9ddcc8c-7xc7l` (was szxmq), uid `bba45210…62857`, body sha256 `b0d07ba34cb883ea…` (was `23a4cdd4…`) — data shape unchanged, headers still ONLY `x-powered
+- NEW api.signageos.io/status pod rotated, body sha256 `135ad0771be7df70…` — hardening unchanged (HSTS max-age=31536000, xfo:DENY, xcto:nosniff), POP ORD56-P6

@@ -1,12 +1,16 @@
-## 2026-08-11 17:15:17 UTC [api] (model nemotron3)
+## 2026-08-11 18:12:50 UTC [api] (model nemotron3)
 [NEW] api.signageos.io/status pod rotated to `api-6d67cd6668-vg7c2` (was `api-6f69db97d5-9kg9l`), body sha256 `ba5832802fb18f18844768e92a5d375cc2411c92a2342f193bff4b90eaeb988c`
 [NEW] box.signageos.io/status pod rotated to `box-7cd9ddcc8c-t2w7w` (was `box-7cd9ddcc8c-5bnfd`), uid `e2a3b4…4c77bc`, body sha256 `e3d1ae393f652e3b582cdb1ca23a245af3fc240af4856...`
 [CHANGED] Edge POP rotated to SFO53-P9 (box) / SFO53-P12 (api) — was PHX52-P1
 [CHANGED] box.signageos.io/status pod rotated to `box-7cd9ddcc8c-756mn` (was t2w7w), process.uid `a3a5ce07…6d6d9`, body sha256 `82f3f196…a808` — data/headers unchanged, CloudFront POP SFO53-P6
 [CHANGED] box.signageos.io/ root header sha256 now `3ac2f76a…6c15` — nonce hashes rotated, body/CORS/CSP unchanged
+[NEW] box.signageos.io/status pod rotated to `box-7cd9ddcc8c-7xc7l` (was szxmq), uid `bba45210…62857`, body sha256 `b0d07ba34cb883ea…` (was `23a4cdd4…`) — data shape unchanged, headers still ONLY `x-powered-by: Express` + CloudFront
+[NEW] api.signageos.io/status pod rotated, body sha256 `135ad0771be7df70…` — hardening unchanged (HSTS max-age=31536000, xfo:DENY, xcto:nosniff), POP ORD56-P6
+[PRIO] box.signageos.io/status, 6.85, attack=8 business=5 tech=6 gate=10 cloud=7 fresh=5
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token, 7.80, attack=9 business=10 tech=8 gate=3 cloud=6 fresh=8
 [PRIO] api.signageos.io/v1/organization/{uid}, 7.75, attack=9 business=10 tech=8 gate=3 cloud=6 fresh=8
-[PRIO] box.signageos.io/status, 6.85, attack=8 business=5 tech=6 gate=10 cloud=7 fresh=5
+[PRIO] box.signageos.io/ & /login/ CORS+CSP, 5.20, attack=5 business=4 tech=5 gate=10 cloud=5 fresh=4
+[PRIO] api.signageos.io/status, 5.50, attack=6 business=4 tech=5 gate=10 cloud=6 fresh=4
 [HYP] Cross-tenant security-token minting via X-Auth org-UID override
 class: IDOR
 asset: api.signageos.io/v1/organization/{uid}/security-token
@@ -37,7 +41,7 @@ testability: PASSIVE
 [PARKED] Cross-tenant security-token minting via X-Auth org-UID override: AUTH_HELPED testability requires valid account JWT + foreign org UID — off-phase for current passive-only cycle; not dropped, parked for HUMAN phase
 [PARKED] Cross-tenant OAuth client-secret disclosure via account JWT: AUTH_HELPED testability requires valid account JWT + foreign org UID — same rationale, parked for HUMAN phase
 [FINAL] Surviving hypotheses (ranked by confidence):
-[NEXT] HUMAN: Cross-tenant security-token test — requires `sos login` (Auth0 device-code) to obtain account JWT, then 1) baseline POST /v1/organization/<own-org-uid>/security-token → 200, 2) repeat with foreign org UID → 200 + securityToken = cross-tenant IDOR, 3) escalate with leaked token to /v1/device → foreign org device list
+[NEXT] PROBE: Re-archive box /status evidence package this cycle — body sha256 changed (`b0d07ba34cb883eace6de41c23550c61cc2bb796c42b5bf93e9c1c5ca9a722d5`, pod 7xc7l, uid `bba45210…62857`). Exact: `curl -sS https://box.signageos.io/status | tee artifacts/box-status/body.json | sha256sum` + `curl -sI https://box.signageos.io/status | tee artifacts/box-status/headers.txt | grep -cE 'strict-transport|x-frame|x-content|content-security'`
 [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live across 30+ cycles — pod rotation, zero security headers, full topology leak unchanged. Now fronted by CloudFront (x-cache/via/x-amz-cf-pop) — routing change only, body/header security posture unchanged
 [LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened with HSTS (max-age=31536000), x-frame-options: DENY, x-content-type-options: nosniff — differential vs box.status persists; now also fronted by CloudFront (reconfirmed)
 [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/ & /login/ CORS+CSP: 17 static ACAO incl. http:// plaintext variant + https://*.zdusercontent.com wildcard + api.signageos.io sibling; evil.test NOT reflected (static whitelist); NO access-control-allow-credentials; CSP 59+ distinct origins with triplicated Auth0 oauth/token on /login/ (reconfirmed)
