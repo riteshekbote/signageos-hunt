@@ -366,3 +366,9 @@
 - CHANGED Box /status still carries ONLY `x-powered-by: Express` + CloudFront (security-header grep=0); differential vs hardened `/`+`/login/` and api /status persists 30+ cycles
 
 ## 2026-08-11 22:06:07 UTC
+
+## 2026-08-11 22:58:24 UTC
+- NEW box.signageos.io/status pod rotated to `box-7cd9ddcc8c-qxz52`, uid `3d32a3ee…`, body sha256 `77529aac…` (was `5cc2ca62…`) — data shape/headers unchanged
+- NEW api.signageos.io/status body sha256 now `f89710b9…` (was `f8f9f7e0…`), pod `api-6d67cd6668-vg7c2` unchanged, hardening intact
+- CHANGED Edge POP rotated to SFO53-P9 (box) / SFO53-P12 (api) — was ORD58-P5/ORD56-P6
+- CHANGED box.signageos.io/ root header sha256 rotated (nonce hashes) — body/CORS/CSP unchanged
