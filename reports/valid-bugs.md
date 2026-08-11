@@ -776,3 +776,14 @@
   - | 1 | `box.signageos.io/status` — unauthenticated K8s infra info leak | **VALID (DUPLICATE)** | 5.3 |
   - | 2 | `api.signageos.io/status` — unauthenticated infra info leak | **VALID (DUPLICATE)** | 5.3 |
   - | 3 | `box.signageos.io` CORS static whitelist (http:// + wildcard) | **VALID (DUPLICATE, LOW)** | 3.7 |
+
+- 9 lead(s) marked VALID at 2026-08-11 16:45:37 UTC
+  - **Verdict: VALID (DUPLICATE — already reported)**
+  - **Verdict: VALID (DUPLICATE — already reported)**
+  - **Verdict: VALID (DUPLICATE — already reported)**
+  - | 1 | box /status infra info leak | **VALID (DUPLICATE)** | Already reported |
+  - | 2 | api /status infra info leak | **VALID (DUPLICATE)** | Already reported |
+  - | 3 | box CORS HTTP variant + wildcard | **VALID (DUPLICATE)** | Already reported |
+  - | 1 | box /status — K8s infra info leak | **VALID (DUPLICATE)** — Already reported, CVSS 5.3 |
+  - | 2 | api /status — K8s infra info leak | **VALID (DUPLICATE)** — Already reported, CVSS 5.3 |
+  - | 3 | box CORS HTTP variant + wildcard | **VALID (DUPLICATE)** — Already reported, CVSS 3.7 |
