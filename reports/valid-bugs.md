@@ -799,3 +799,12 @@
   - | 2 | api.signageos.io/status infra info leak | **VALID** | Same class, different asset |
   - | 3 | box.signageos.io CORS wildcard + HTTP variant | **VALID (LOW)** | Static whitelist trust-boundary expansion |
   - | 7 | Credentials in query string (account/security-token) | **HOLD** | AUTH_HELPED, needs valid creds |
+
+- 7 lead(s) marked VALID at 2026-08-11 20:37:40 UTC
+  - **Verdict: VALID**
+  - **Verdict: VALID**
+  - **Verdict: VALID (LOW)**
+  - | Q2 Reachable? | **NO** — requires valid account JWT/X-Auth token (AUTH_HELPED) |
+  - | 1 | Unauthenticated infra info leak | `box.signageos.io/status` | MISCONFIG | **VALID** | 5.3 Med |
+  - | 2 | Unauthenticated infra info leak | `api.signageos.io/status` | MISCONFIG | **VALID** | 5.3 Med |
+  - | 3 | CORS ACAO static whitelist (HTTP + wildcard) | `box.signageos.io` | MISCONFIG | **VALID (Low)** | 3.1 Low |
