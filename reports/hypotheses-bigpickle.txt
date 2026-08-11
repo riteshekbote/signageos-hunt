@@ -1,1 +1,25 @@
-## 2026-08-11 13:57:10 UTC [box] (model bigpickle)
+## 2026-08-11 15:00:25 UTC [box] (model bigpickle)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 95
+reasoning: Fresh probe 2026-08-11: 200 JSON leaks pod `box-7cd9ddcc8c-p5jrs`, 40-hex process.uid `8f63dc0c…d047f`, pid 1, Node v20.20.2, full amqp0/redis0-3/mongoDB0-3 topology + per-service responseTime. Headers ONLY x-powered-by: Express + CloudFront (HSTS/xfo/xcto/CSP grep=0) — differential vs hardened `/`+`/login/` and api /status persists 30+ cycles.
+evidence_needed: none — body+headers archived artifacts/box-status/ (sha256 `c0fd6ee9…`).
+verify_steps: PROBE done: `curl -s -D box_status_h.txt -o box_status_body.txt https://box.signageos.io/status` → 200 JSON, security-header grep=0, x-cache Miss SFO53-P6.
+impact: unauthenticated disclosure of pod identity, Node version, process uid, internal mongo/redis/amqp topology; MODERATE
+testability: PASSIVE
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 78
+reasoning: Dual-auth enumerated — X-Auth `id:unsafeDecryptedToken`, org derived from header first-part; path {uid} client-supplied and distinct (/organization/{uid}→403075, /security-token→403076, /v1/device→403105). All routes 403 pre-auth across 30+ cycles; unchanged this cycle.
+evidence_needed: valid X-Auth (orgA) + orgB {uid} in path returning 200 instead of 403075/403076.
+verify_steps: AUTH_HELPED: 1) `sos login` (Auth0 device-code) → account JWT; 2) `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<orgA>/security-token"` baseline 200; 3) repeat with orgB uid — non-403 proves cross-tenant mint.
+impact: one org token mints arbitrary-org security-tokens → cross-tenant device/data compromise; HIGH
+testability: AUTH_HELPED
+class: MISCONFIG
+asset: box.signageos.io/login/ (ACAO)
+confidence: 55
+reasoning: 17 static ACAO incl http:// plaintext + https://*.zdusercontent.com wildcard + api sibling + path-bearing `https://www.google.com/recaptcha/api2/clr`; access-control-allow-credentials absent (grep=0); evil.test NOT reflected (static whitelist). Reconfirmed unchanged.
+evidence_needed: no change; absent credentials flag removes direct credential-theft path.
+verify_steps: PROBE done: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/` → 17 ACAO, 0 credentials flag.
+impact: whitelist hygiene/defense-in-depth only; LOW
+testability: PASSIVE
