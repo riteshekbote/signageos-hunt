@@ -2093,3 +2093,4 @@ evidence_needed: no change; absent credentials flag removes direct credential-th
 verify_steps: PROBE done: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/` → 17 ACAO, 0 credentials flag.
 impact: whitelist hygiene/defense-in-depth only; LOW
 testability: PASSIVE
+## 2026-08-11 22:00:47 UTC [box] (model bigpickle)

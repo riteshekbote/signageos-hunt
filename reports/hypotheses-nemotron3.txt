@@ -1,12 +1,7 @@
-## 2026-08-11 21:06:55 UTC [api] (model nemotron3)
-[NEW] box.signageos.io/status pod rotated to `box-7cd9ddcc8c-qxz52` (was 7v5xw), process.uid `3d32a3ee…`, new body sha256 `77529aac…` — data shape, topology, zero hardening headers unchanged
-[NEW] api.signageos.io/status body sha256 now `f89710b9…` (was `f8f9f7e0…`), pod `api-6d67cd6668-vg7c2` unchanged, hardening intact (HSTS/xfo/xcto/no-store)
-[CHANGED] Box /status still carries ONLY `x-powered-by: Express` + CloudFront (security-header grep=0); differential vs hardened `/`+`/login/` and api /status persists 30+ cycles
+## 2026-08-11 22:02:04 UTC [api] (model nemotron3)
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token, 7.80, attack=9 business=10 tech=8 gate=3 cloud=6 fresh=8
 [PRIO] api.signageos.io/v1/organization/{uid}, 7.75, attack=9 business=10 tech=8 gate=3 cloud=6 fresh=8
-[PRIO] box.signageos.io/status, 6.85, attack=8 business=5 tech=6 gate=10 cloud=7 fresh=5
 [PRIO] api.signageos.io/status, 5.75, attack=6 business=4 tech=5 gate=10 cloud=6 fresh=4
-[PRIO] box.signageos.io/ & /login/ CORS+CSP, 5.40, attack=5 business=4 tech=5 gate=10 cloud=5 fresh=4
 [HYP] Cross-tenant security-token minting via X-Auth org-UID override
 class: IDOR
 asset: api.signageos.io/v1/organization/{uid}/security-token
@@ -27,11 +22,11 @@ impact: any tenant's org API credential → full device/content/timing/firmware 
 testability: AUTH_HELPED
 [HYP] Unauthenticated K8s topology leak via /status missing security headers
 class: MISCONFIG
-asset: box.signageos.io/status
-confidence: 95
-reasoning: Live unauthenticated GET returns pod hostname, 64-hex process UID, Node v20.20.2, full amqp/redis/mongo topology with per-service responseTime; headers ONLY x-powered-by: Express + CloudFront (zero hardening: no HSTS/xfo/xcto/CSP) — differential vs api.status which carries all three
-evidence_needed: curl -I https://box.signageos.io/status shows 0 security headers; curl https://box.signageos.io/status returns JSON with topology
-verify_steps: PASSIVE: GET https://box.signageos.io/status → 200 JSON leak; GET -I → grep -cE 'strict-transport|x-frame|x-content|content-security' = 0; differential: same on api.signageos.io/status returns HSTS/xfo/xcto
+asset: api.signageos.io/status
+confidence: 90
+reasoning: Live unauthenticated GET returns pod hostname, process UID, Node v24.19.0, full amqp/redis/mongo topology; now hardened with HSTS/xfo/xcto behind CloudFront — info leak persists but header posture hardened vs box
+evidence_needed: curl -I https://api.signageos.io/status shows HSTS/xfo/xcto; curl returns JSON with topology
+verify_steps: PASSIVE: GET https://api.signageos.io/status → 200 JSON leak; GET -I → grep -cE 'strict-transport|x-frame|x-content' = 3; differential: box.signageos.io/status returns 0 security headers
 impact: infrastructure reconnaissance (pod naming, service mesh topology, Node version) aids chained attacks; LOW direct exploitability
 testability: PASSIVE
 [PARKED] Cross-tenant security-token minting via X-Auth org-UID override: confidence 78 but testability AUTH_HELPED requires human-provided valid account JWT + foreign org UID — not executable in passive-only phase; parked for HUMAN phase
