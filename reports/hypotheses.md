@@ -1054,3 +1054,21 @@
 - NEXT(hypotheses-bigpickle.txt): PROBE: One passive reconfirmation of the box /status PoC package next cycle (`curl -s -D /tmp/opencode/box_status_h.txt -o /tmp/opencode/box_status_body.txt htt
 
 ## RANKED HYPOTHESES 2026-08-11 09:50:06 UTC
+
+## RANKED HYPOTHESES 2026-08-11 10:43:48 UTC
+- [95] box.signageos.io/status: box /status unauthenticated infra-info-leak (PoC package live, standing deliverable) (from reports/hypotheses-bigpickle.txt)
+- [78] api.signageos.io/v1/organization/{uid}/security-token: box / + /login/ static CORS whitelist incl plaintext HTTP + wildcard (standing MISCONFIG) (from reports/hypotheses-laguna.txt)
+- NEXT(hypotheses-laguna.txt): PROBE: Re-confirm box `/status` evidence package with immutable sha256 capture and persist to artifacts for PoC archive:
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Fresh probe confirms HTTP 200 JSON leaking hostname `box-7c8c876945-496p2`, 40-hex process uid `83d7c558844acc458f
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed HTTP 200 "OK" (2 bytes) — trivial health check, no data leaked.
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: Reconfirmed all routes 403 JWT/X-Auth-gated (/v1/device, /v1/organization, /v1/organization/test, /v2/devic
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + 403075/403
+- LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: NO ACAO on any path including /status, /v1/*, /v2/* (grep=0) — not CORS-exploitable.
+- LEARN: REJECTED MISCONFIG @ box.signageos.io CSP report-uri: /csp-report → 302 login redirect — not an exposed endpoint.
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: 17 static ACAO on `/ + /login/` (no credentials flag); CSP ~59+ origins with triplicated Auth0 oauth/token — unc
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session (carried forward).
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-7c8c876945-gkzcp`, process.uid `772fc40ca8b5733a305b3000d2042557f1502a77b17c00cd07`, N
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live — pod `api-6f69db97d5-9kg9l`, Node v24.19.0, 8 services, hardened with HSTS+xfo+xcto behind Cloud
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: /organization/someorg returns 403 (NO_ORGANIZATION_TO_AUTHENTICATE / 403075), confirming org identity deriv
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks NO_ORGANIZATION_TO_AUTHENTICATE/NO_ORGANIZATION (403075) — excluded per scope.yml 
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding still not passively testable without tenant/authenticated session (carried forwa

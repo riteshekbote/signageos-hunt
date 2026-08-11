@@ -414,3 +414,11 @@ https://box.signageos.io/login/` -> 200 len=104078 type=text/html; charset=utf-8
 
 ## 2026-08-11 09:50:07 UTC
 
+
+## 2026-08-11 10:43:50 UTC
+https://api.signageos.io/v1/organization/<orgA>/security-token -> HTTP 403
+https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
+https://box.signageos.io/status -> 200 len=1432 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgA>/security-token` -> HTTP 404
+https://box.signageos.io/status` -> 200 len=104078 type=text/html; charset=utf-8
+https://box.signageos.io/login/` -> 200 len=104078 type=text/html; charset=utf-8
