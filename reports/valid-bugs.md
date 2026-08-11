@@ -771,3 +771,8 @@
   - **Verdict: HOLD — AUTH_HELPED only; requires valid account JWT + second tenant.**
   - | Q2 Reachable? | NO | Requires valid org X-Auth (clientId:secret). 403083 without auth. |
   - **Verdict: HOLD — AUTH_HELPED only; requires valid org X-Auth + second tenant. PUT also violates passive-only rule.**
+
+- 3 lead(s) marked VALID at 2026-08-11 14:14:28 UTC
+  - | 1 | `box.signageos.io/status` — unauthenticated K8s infra info leak | **VALID (DUPLICATE)** | 5.3 |
+  - | 2 | `api.signageos.io/status` — unauthenticated infra info leak | **VALID (DUPLICATE)** | 5.3 |
+  - | 3 | `box.signageos.io` CORS static whitelist (http:// + wildcard) | **VALID (DUPLICATE, LOW)** | 3.7 |
