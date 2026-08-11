@@ -359,3 +359,8 @@
 - NEW box.signageos.io/status pod rotated to `box-7cd9ddcc8c-qxz52` (was 7v5xw), process.uid `3d32a3ee…71b1`, new body sha256 `77529aac…6e48` (was `5cc2ca62…`) — data shape, topology, zero hardening headers
 - NEW api.signageos.io/status body sha256 now `f89710b9…06088` (was `f8f9f7e0…`), pod `api-6d67cd6668-vg7c2` unchanged, hardening intact (HSTS/xfo/xcto/no-store).
 - CHANGED Box /status still carries ONLY `x-powered-by: Express` + CloudFront (security-header grep=0); differential vs hardened `/`+`/login/` and api /status persists 30+ cycles.
+
+## 2026-08-11 21:07:09 UTC
+- NEW box.signageos.io/status pod rotated to `box-7cd9ddcc8c-qxz52` (was 7v5xw), process.uid `3d32a3ee…`, new body sha256 `77529aac…` — data shape, topology, zero hardening headers unchanged
+- NEW api.signageos.io/status body sha256 now `f89710b9…` (was `f8f9f7e0…`), pod `api-6d67cd6668-vg7c2` unchanged, hardening intact (HSTS/xfo/xcto/no-store)
+- CHANGED Box /status still carries ONLY `x-powered-by: Express` + CloudFront (security-header grep=0); differential vs hardened `/`+`/login/` and api /status persists 30+ cycles

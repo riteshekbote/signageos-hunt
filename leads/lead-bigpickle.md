@@ -2065,3 +2065,31 @@ testability: PASSIVE
 [LEARN] REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + 403075/403076/403105 — excluded class per scope.yml (carried forward).
 [LEARN] REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session (carried forward).
 [RISK] box.signageos.io: 55 — persistent unauthenticated /status infra-info-leak (pod/uid/Node v20.20.2/topology) with zero hardening headers, fresh evidence this cycle (sha `77529aac…`, POP SFO53-P6); broad static CORS whitelist incl plaintext HTTP + *.zdusercontent.com wildcard + path-bearing recaptcha ACAO (no creds flag, defense-in-depth only); remaining surface login-gated Auth0. | api.signageos.io: 45 — all 60+ /v1 /v2 endpoints JWT/X-Auth-gated pre-auth (no passive bypass across 30+ cycles); /status hardened (HSTS/xfo/xcto/no-store); residual risk is the unverified cross-tenant org/security-token chain (AUTH_HELPED, CRITICAL if real) + descriptive 403 bodies (excluded class).
+## 2026-08-11 21:04:52 UTC [box] (model bigpickle)
+[HYP] box /status unauthenticated infra-info-leak (standing)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 95
+reasoning: Fresh probe this cycle: 200 JSON leaks pod `box-7cd9ddcc8c-szxmq`, 40-hex uid `79c03bfca3…`, pid 1, Node v20.20.2, 9 succeededServices (amqp0/redis0-3/mongoDB0-3) + responseTime; headers ONLY `x-powered-by: Express` + CloudFront (grep=0), POP SEA900-P9. Differential vs hardened `/`+`/login/` and api /status persists 30+ cycles.
+evidence_needed: none — body sha256 `e69ef58b…d506`, evidence re-archived.
+verify_steps: PROBE done: `curl -s -D bx_h.txt -o bx_b.txt https://box.signageos.io/status` → 200 JSON, security-header grep=0.
+impact: unauthenticated disclosure of pod identity, Node version, process uid, internal mongo/redis/amqp topology; MODERATE
+testability: PASSIVE
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 78
+reasoning: Dual-auth enumerated — X-Auth `id:unsafeDecryptedToken`, org derived from header first-part; path {uid} client-supplied and distinct (/organization/{uid}→403075, /security-token→403076, /v1/device→403105). Docs state one account token mints org tokens for multiple orgs. All routes 403 pre-auth again this cycle.
+evidence_needed: valid X-Auth (orgA) + foreign orgB {uid} in path returning 200 instead of 403075/403076.
+verify_steps: AUTH_HELPED: 1) `sos login` (Auth0 device-code) → account JWT; 2) `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own>/security-token` baseline 200; 3) repeat with foreign orgB uid — non-403 proves cross-tenant mint.
+impact: mint org security-tokens for any tenant → full foreign-device/data control; CRITICAL
+testability: AUTH_HELPED
+[HYP] box /login/ static CORS whitelist bloat (standing)
+class: MISCONFIG
+asset: box.signageos.io/login/ (ACAO)
+confidence: 55
+reasoning: 17 static ACAO reconfirmed incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + path-bearing recaptcha value `https://www.google.com/recaptcha/api2/clr`; access-control-allow-credentials absent (grep=0); evil.test NOT reflected (static whitelist).
+evidence_needed: no change; absent credentials flag removes direct credential-theft path.
+verify_steps: PROBE done: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/` → 17 ACAO, 0 credentials flag.
+impact: whitelist hygiene/defense-in-depth only; LOW
+testability: PASSIVE
