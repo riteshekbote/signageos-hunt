@@ -675,3 +675,6 @@
   - | 2 | `api.signageos.io/status` — K8s infra info disclosure | **VALID (Low)** | 4.3 |
   - | 3 | `box.signageos.io` CORS ACAO whitelist (http:// + wildcard) | **VALID (Low, border)** | 3.1 |
   - | 4 | `box.signageos.io` CSP overly broad (40+ origins) | **VALID (Info, border)** | 3.1 |
+
+- 1 lead(s) marked VALID at 2026-08-11 02:37:13 UTC
+  - | **VALID** | 3 | box/api `/status` infra info disclosure (CVSS 5.3 each), CORS wildcard+HTTP variant (CVSS 3.7) |
