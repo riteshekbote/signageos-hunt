@@ -327,3 +327,11 @@
 - 2026-08-11 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session; no unauthenticated authn surface remains on box beyond /status + CORS/CSP.
 - 2026-08-11 REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check, no data leaked.
 - 2026-08-11 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto grep=3) behind CloudFront; info-leak (hostname/uid/Node) persists but header posture hardened vs box /status.
+- 2026-08-11 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-7cd9ddcc8c-qxz52`, uid `3d32a3ee…`, Node v20.20.2, 9 succeededServices, zero hardening headers (grep=0), CloudFront SFO53-P6. New body sha256 `77529aac…`; prior `5cc2ca62…` superseded.
+- 2026-08-11 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto grep=3, cache-control:no-store), new body sha256 `f89710b9…`. Info-leak persists but header posture hardened vs box.
+- 2026-08-11 ACCEPTED MISCONFIG @ box.signageos.io/login/ & / CORS+CSP: Reconfirmed — 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard; 0 credentials flag; evil.test NOT reflected.
+- 2026-08-11 REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes), trivial health check — no data leaked (unchanged this cycle).
+- 2026-08-11 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session; no unauthenticated authn surface remains on box beyond /status + CORS/CSP (carried forward).
+- 2026-08-11 ACCEPTED MISCONFIG @ box.signageos.io/status: unauthenticated JSON infra-leak (hostname/uid/Node/topology) + zero hardening headers persists; PoC complete & archived (reconfirmed 30+ cycles).
+- 2026-08-11 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/: 17 static ACAO incl http:// + *.zdusercontent.com, 0 access-control-allow-credentials, evil.test not reflected, CSP hardened behind CloudFront (unchanged).
+- 2026-08-11 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes JWT/X-Auth-gated (403), zero ACAO under evil.test — not pre-auth bypassable; cross-tenant chain remains AUTH_HELPED only (carried forward).
