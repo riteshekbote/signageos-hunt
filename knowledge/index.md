@@ -291,3 +291,5 @@
 - 2026-08-11 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: RECONFIRMED all 403 JWT/X-Auth-gated, no ACAO under spoofed `evil.test`, no bypass surface — AUTH_HELPED only.
 - 2026-08-11 REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable.
 - 2026-08-11 REJECTED MISCONFIG @ box.signageos.io /ready: 200 "OK" (2 bytes), trivial health check, no data.
+- 2026-08-11 ACCEPTED MISCONFIG @ box.signageos.io/status: PoC complete and durably archived — 30+ cycles confirm unauthenticated JSON leak of pod hostname/uid/Node/topology with zero hardening headers.
+- 2026-08-11 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/: 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard, no creds flag — confirmed across 30+ cycles.

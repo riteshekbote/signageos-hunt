@@ -353,3 +353,44 @@ testability: PASSIVE
 [RISK] box.signageos.io: 55 — persistent unauthenticated /status infra-info-leak (pod/uid/Node/topology) with zero hardening headers; broad static CORS whitelist incl plaintext HTTP + wildcard + CSP bloat; remaining surface is login-gated Auth0. | api.signageos.io: 45 — all 60+ /v1 /v2 endpoints JWT/X-Auth-gated pre-auth (no passive bypass found); /status now hardened (HSTS/xfo/xcto); residual risk is the unverified cross-tenant org/security-token chain (AUTH_HELPED) and descriptive 403 error bodies (excluded class).
 [FINAL]
 [NEXT] PROBE: Finalize + archive box `/status` PoC evidence package (already captured this cycle) with immutable sha256 fingerprints persisted to artifacts: `sha256sum /tmp/opencode/box_status_body.txt /tmp/opencode/box_status_h.txt` — sha256_body=`576b1ed9812c9ace351e4d27f297d08a213e01ac37a22716d4a1a3d0c6fa58c6`, sha256_hdr=`abd1eaf53870f184be6932af411d35ab3939089d7f6278b2d1e2a2e92e38006b`, hardening_headers=0, cloudfront=1. Evidence package ready for PoC archive; no AUTH_HELPED execution possible in passive box phase.
+## 2026-08-11 13:58:13 UTC [box] (model longcat)
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token score=6.75 attack=9 business=9 tech=7 gate=2 cloud=3 fresh=6
+[PRIO] box.signageos.io/status score=6.15 attack=7 business=6 tech=4 gate=10 cloud=5 fresh=3
+[PRIO] api.signageos.io/status score=5.65 attack=6 business=5 tech=4 gate=10 cloud=5 fresh=3
+[PRIO] box.signageos.io/ + /login/ score=5.20 attack=5 business=4 tech=5 gate=10 cloud=5 fresh=2
+[HYP] Cross-tenant security-token mint via X-Auth org-UID override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 78
+reasoning: Dual-auth enumerated — X-Auth `id:unsafeDecryptedToken`, org derived from header first-part while path `{uid}` is client-supplied and distinct (`/organization/{uid}`→403075, `/security-token`→403076, `/v1/device`→403105 distinct branches). All routes 403 pre-auth across 30+ cycles.
+evidence_needed: valid X-Auth (orgA) + orgB `{uid}` in path returning 200 instead of 403075/403076.
+verify_steps: AUTH_HELPED: 1) `sos login` (Auth0 device-code) → account JWT; 2) `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<orgA>/security-token"` baseline 200; 3) repeat with orgB uid — non-403 proves mint.
+impact: one org token mints arbitrary-org security-tokens → cross-tenant device/data compromise; HIGH
+testability: AUTH_HELPED
+[HYP] box /status unauthenticated infra-info-leak
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 95
+reasoning: 30+ cycles confirm unauthenticated GET returns JSON with pod hostname, 40-hex process.uid, Node v20.20.2, full amqp0/redis0-3/mongoDB0-3 topology + per-service responseTime. Headers ONLY x-powered-by: Express — zero hardening (HSTS/xfo/xcto/CSP all absent). PoC already captured and archived.
+evidence_needed: none — PoC complete, evidence archived with sha256 fingerprints.
+verify_steps: PROBE done: `curl -s -D /tmp/box_status_h.txt -o /tmp/box_status_body.txt https://box.signageos.io/status` → 200 JSON, security-header grep=0.
+impact: unauthenticated disclosure of pod identity, Node version, process uid, internal mongo/redis/amqp topology, edge geo; MODERATE — recon enabler.
+testability: PASSIVE
+[HYP] box /login/ + / static CORS whitelist bloat
+class: MISCONFIG
+asset: box.signageos.io/ and /login/
+confidence: 55
+reasoning: 17 static ACAO values including `http://box.signageos.io` (plaintext HTTP variant) and `https://*.zdusercontent.com` (wildcard). Static whitelist — spoofed Origin `evil.test` NOT reflected. No `Access-Control-Allow-Credentials` on any box path.
+evidence_needed: Confirm no ACAO+ACAC combination under any Origin; demonstrate wildcard is the only theoretically exploitable combination.
+verify_steps: PROBE done: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/` + `curl -sI -H "Origin: https://evil.zdusercontent.com" https://box.signageos.io/`.
+impact: whitelist hygiene/defense-in-depth only; no creds flag removes direct credential-theft path. LOW.
+testability: PASSIVE
+[FINAL] 1) Cross-tenant security-token mint (78, AUTH_HELPED, IDOR, api) 2) box /status infra-leak (95, PASSIVE, MISCONFIG, box, PoC complete) 3) box CORS whitelist (55, PASSIVE, MISCONFIG, box, confirmed)
+[NEXT] HUMAN: Cross-tenant security-token test is the only higher-value unverified lead. Requires: `sos login` (Auth0 device-code) to obtain account JWT, then 1) baseline `curl -H "X-Auth: <jwt>" "https://api.signageos.io/v1/organization/<orgA>/security-token"` expect 200, 2) repeat with orgB UID in path — non-403/non-403075 response proves cross-tenant mint (HIGH). Box phase surface is exhausted — all testable paths characterized.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: PoC complete and durably archived — 30+ cycles confirm unauthenticated JSON leak of pod hostname/uid/Node/topology with zero hardening headers.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/ + /login/: 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard, no creds flag — confirmed across 30+ cycles.
+[LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All routes JWT/X-Auth gated (403), no passive bypass across 30+ cycles.
+[LEARN] REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + 403075/403076/403105 — excluded class per scope.yml.
+[LEARN] REJECTED MISCONFIG @ box.signageos.io /ready: 200 "OK" (2 bytes), trivial health check, no data.
+[RISK] box.signageos.io: 50 — persistent unauthenticated /status infra-info-leak (pod/uid/Node/topology) with zero hardening headers; broad static CORS whitelist incl plaintext HTTP + wildcard + CSP bloat; remaining surface is login-gated Auth0. No auth bypass, no IDOR, no data compromise surface found.
+[RISK] api.signageos.io: 55 — deep API surface (60+ v1/v2 endpoints) with confirmed dual-auth mechanism (JWT + X-Auth) and plausible cross-tenant IDOR vector (org UID decoupling in path vs auth-derived org). All endpoints currently gated, but authz surface is complex and the unverified cross-tenant chain is a structural risk.

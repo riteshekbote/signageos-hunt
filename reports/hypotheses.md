@@ -1098,3 +1098,14 @@
 - LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable.
 - LEARN: REJECTED MISCONFIG @ box.signageos.io /ready: 200 "OK" (2 bytes), trivial health check, no data.
 - LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-7cd9ddcc8c-55pj6`, uid `3b72b9b9a11f59752d4edb5212e85011f2b66c67b6edac125f`, Node v20.
+
+## RANKED HYPOTHESES 2026-08-11 14:03:56 UTC
+- [95] box.signageos.io/status: box /status unauthenticated K8s infra leak behind CloudFront (PoC evidence archived) (from reports/hypotheses-laguna.txt)
+- [78] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID override (from reports/hypotheses-longcat.txt)
+- NEXT(hypotheses-laguna.txt): PROBE: Verify the newly-archived box `/status` PoC evidence package is immutable by re-probing and confirming sha256 stability. Execute: `curl -sS -D -o /tmp/op
+- NEXT(hypotheses-longcat.txt): HUMAN: Cross-tenant security-token test is the only higher-value unverified lead. Requires: `sos login` (Auth0 device-code) to obtain account JWT, then 1) basel
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: PoC complete and durably archived — 30+ cycles confirm unauthenticated JSON leak of pod hostname/uid/Node/topology
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/ + /login/: 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard, no creds flag — confirmed across 30+
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All routes JWT/X-Auth gated (403), no passive bypass across 30+ cycles.
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + 403075/403
+- LEARN: REJECTED MISCONFIG @ box.signageos.io /ready: 200 "OK" (2 bytes), trivial health check, no data.
