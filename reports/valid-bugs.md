@@ -808,3 +808,25 @@
   - | 1 | Unauthenticated infra info leak | `box.signageos.io/status` | MISCONFIG | **VALID** | 5.3 Med |
   - | 2 | Unauthenticated infra info leak | `api.signageos.io/status` | MISCONFIG | **VALID** | 5.3 Med |
   - | 3 | CORS ACAO static whitelist (HTTP + wildcard) | `box.signageos.io` | MISCONFIG | **VALID (Low)** | 3.1 Low |
+
+- 36 lead(s) marked VALID at 2026-08-11 23:32:12 UTC
+  - | Q5 Novel? | NO — reconfirmed 50+ times since 2026-08-07; already in valid-bugs.md |
+  - | Q7 Triager accept? | YES — accepted as VALID (Low) on every prior triage run |
+  - **Verdict: VALID (Low) — CVSS 3.1: 5.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N) — DUPLICATE RECONFIRMED**
+  - | Q5 Novel? | NO — reconfirmed 50+ times since 2026-08-07; already in valid-bugs.md |
+  - | Q7 Triager accept? | YES — accepted as VALID (Low) on every prior triage run |
+  - **Verdict: VALID (Low) — CVSS 3.1: 5.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N) — DUPLICATE RECONFIRMED**
+  - | Q5 Novel? | NO — reconfirmed 50+ times since 2026-08-07; already in valid-bugs.md |
+  - | Q7 Triager accept? | YES — accepted as VALID (Low, borderline) on every prior triage run |
+  - **Verdict: VALID (Low, borderline) — CVSS 3.1: 3.1 (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N) — DUPLICATE RECONFIRMED**
+  - | Q5 Novel? | NO — reconfirmed 50+ times since 2026-08-07; already in valid-bugs.md |
+  - | Q7 Triager accept? | MARGINAL — defense-in-depth; accepted as VALID (Info, borderline) on prior runs given breadth |
+  - **Verdict: VALID (Informational, borderline) — CVSS 3.1: 3.1 (AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N) — DUPLICATE RECONFIRMED**
+  - | Q2 Reachable? | NO (under passive-first) — requires valid account JWT/X-Auth token; all probes return 403 |
+  - | Q4 GET/HEAD provable? | NO — requires valid JWT + second tenant UID to prove |
+  - | Q7 Triager accept? | NO (as-is) — no POC possible without valid token + second tenant |
+  - **Verdict: HOLD — AUTH_HELPED only; requires valid account JWT + second tenant to prove. All passive probes return 403.**
+  - | Q2 Reachable? | NO (under passive-first) — requires valid account JWT; all probes return 403 |
+  - | Q4 GET/HEAD provable? | NO — requires valid JWT + second tenant UID |
+  - | Q7 Triager accept? | NO (as-is) — no POC without valid token + second tenant |
+  - **Verdict: HOLD — AUTH_HELPED only; requires valid account JWT + second tenant. Code-verified via SDK but unverifiable under passive-first.**
