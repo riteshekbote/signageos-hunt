@@ -1,27 +1,28 @@
-# Triage Report — 2026-08-11
+# Triage Report — 2026-08-11 (Strict)
 
 Scope: signageOS Bug Bounty (box.signageos.io, api.signageos.io)
-Probe basis: Passive GET/HEAD only, http_code per url from probe-results.md
+Probe basis: Passive GET/HEAD only per probe-results.md (30+ cycles, 4 days)
+Models: bigpickle, laguna, longcat, nemotron3, ling3 (ling3 produced no hypotheses)
 
 ---
 
-## UNIQUE LEADS DEDUPLICATED ACROSS 5 MODELS
+## UNIQUE LEADS DEDUPLICATED ACROSS ALL MODELS
 
-### LEAD 1: box.signageos.io/status — Infrastructure Information Disclosure
+### LEAD 1: box.signageos.io/status — Unauthenticated Infrastructure Information Disclosure
 
 **Source models:** bigpickle, laguna, longcat, nemotron3 (all 4 box-targeting models converged)
 
 **Q1 In scope?** YES — box.signageos.io is in-scope per scope.yml:7.
 
-**Q2 Reachable?** YES — Unauthenticated GET returns HTTP 200 application/json with zero auth headers required. Confirmed across 30+ probes spanning 4 days with rotating pod hostnames (live runtime state, not cached).
+**Q2 Reachable?** YES — Unauthenticated GET returns HTTP 200 application/json with zero auth headers. Confirmed across 30+ probes spanning 4 days with rotating pod hostnames (live runtime state, not cached).
 
-**Q3 Real impact?** YES — Exposes live K8s pod hostname (rotating: box-7c8c876945-gkzcp → mtnct → 52dpt → xmdhm → 4jk76 → bk4vh → st6zq), 40-hex process UID, Node.js v20.20.2, uptime, CPU/memory metrics, and full backend service topology (amqp0, redis0-3, mongoDB0-3) with per-service response-time deltas confirming live backend probing. This enables targeted SSRF enumeration, informed logic-flaw probing against api.signageos.io, and K8s pod-naming reconnaissance.
+**Q3 Real impact?** YES — Exposes live K8s pod hostname (rotating: box-7c8c876945-gkzcp → mtnct → 52dpt → xmdhm → 4jk76 → bk4vh → st6zq), 40-hex process UID, Node.js v20.20.2, uptime, CPU/memory metrics, and full backend service topology (amqp0, redis0-3, mongoDB0-3) with per-service response-time deltas confirming live backend probing. Enables targeted SSRF enumeration, informed logic-flaw probing against api.signageos.io, and K8s pod-naming reconnaissance.
 
 **Q4 Provable (GET/HEAD only)?** YES — `curl -s https://box.signageos.io/status` returns the full JSON body.
 
 **Q5 Novel?** YES — First confirmed in this hunt. Not a duplicate of any prior report.
 
-**Q6 Not rejected?** YES — Not "banner grabbing" (that's server software banners like "Apache/2.x"), not "descriptive error messages", not "outdated-version-only" (the version is one component of a larger structured leak), not "known public files or directories" (/status is not robots.txt/sitemap.xml — it's a health endpoint exposing internal runtime state). Falls squarely under MISCONFIG: unauthenticated info disclosure.
+**Q6 Not rejected?** YES — Not "banner grabbing" (that's server software banners like "Apache/2.x"), not "descriptive error messages", not "outdated-version-only" (Node version is one component of a larger structured leak), not "known public files or directories" (/status is not robots.txt/sitemap.xml — it's a health endpoint exposing internal runtime state). Falls under MISCONFIG: unauthenticated info disclosure.
 
 **Q7 Reasonable triager?** YES — Structured health endpoint leaking live pod hostnames, process UIDs, internal service topology, and resource metrics is an accepted info-disclosure class.
 
@@ -35,13 +36,13 @@ Expected: HTTP 200 application/json containing `hostname` (pod name), `process.u
 
 Impact: Internal infrastructure mapping enabling targeted follow-up attacks. Low-Medium severity (reconnaissance enabler, not direct data compromise).
 
-CVSS 3.1: **5.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)** — CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+CVSS 3.1: **5.3 (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)**
 
 Reporting channel: signageOS security channel per scope.yml (disclosure policy TBD — operator-provided).
 
 ---
 
-### LEAD 2: api.signageos.io/status — Infrastructure Information Disclosure
+### LEAD 2: api.signageos.io/status — Unauthenticated Infrastructure Information Disclosure
 
 **Source models:** laguna, longcat, nemotron3
 
@@ -49,7 +50,7 @@ Reporting channel: signageOS security channel per scope.yml (disclosure policy T
 
 **Q2 Reachable?** YES — Unauthenticated GET returns HTTP 200 application/json.
 
-**Q3 Real impact?** YES — Same class as LEAD 1 but on the API pod: leaks pod hostname (api-6f69db97d5-9szk2 → 97fjw → dw2j2), Node v24.19.0, process UID, service topology (amqp0, redis0-3, mongoDB0-2). Confirms the API backend's internal architecture, aiding auth-bypass and logic-flaw research against the 60+ JWT-gated endpoints.
+**Q3 Real impact?** YES — Same class as LEAD 1 but on the API pod: leaks pod hostname (api-6f69db97d5-9szk2 → 97fjw → dw2j2 → 22g8d), Node v24.19.0, process UID, service topology (amqp0, redis0-3, mongoDB0-2). Confirms the API backend's internal architecture, aiding auth-bypass and logic-flaw research against the 60+ JWT-gated endpoints. Differential observation: api.status carries HSTS/xfo/xcto hardening headers; box.status does not.
 
 **Q4 Provable?** YES — `curl -s https://api.signageos.io/status`
 
@@ -69,7 +70,7 @@ Expected: HTTP 200 application/json with `hostname`, `process.uid`, `process.ver
 
 Impact: Same reconnaissance-enabler class as LEAD 1, on the high-value API asset.
 
-CVSS 3.1: **5.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)** — CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+CVSS 3.1: **5.3 (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)**
 
 Reporting channel: signageOS security channel per scope.yml.
 
@@ -109,13 +110,13 @@ Expected: 18 static ACAO values including `http://box.signageos.io` and `https:/
 
 Impact: Cross-origin trust boundary expansion; any listed-origin script can read unauthenticated login/redirect HTML. Limited by absent credentials flag.
 
-CVSS 3.1: **3.7 (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)** — CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I/N/A:N
+CVSS 3.1: **3.7 (CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)**
 
 Reporting channel: signageOS security channel per scope.yml.
 
 ---
 
-### LEAD 4: box.signageos.io — Cross-Tenant Org OAuth Client-Secret Disclosure via Account JWT
+### LEAD 4: api.signageos.io/v1/organization/{uid} — Cross-Tenant Org OAuth Client-Secret Disclosure
 
 **Source models:** bigpickle, laguna, nemotron3, longcat (all models converged)
 
@@ -125,7 +126,7 @@ Reporting channel: signageOS security channel per scope.yml.
 
 **Q3 Real impact?** CRITICAL if confirmed — `GET /v1/organization/{uid}` with `X-Auth: <accountJWT>` returns `oauthClientId` + `oauthClientSecret`. If the server does not re-verify that the path-UID belongs to the authenticated account's company, any account holder can read any tenant's full API credential → full device/content/timing/firmware control.
 
-**Q4 Provable without invasive testing?** NO — Requires AUTH_HELPED: a valid account JWT for two distinct tenants. Probe results confirm all v1 endpoints return 403 JWT-gated. No passive bypass found. The program rules enforce `passive_first: true` and `no_account_creation: true`.
+**Q4 Provable without invasive testing?** NO — Requires AUTH_HELPED: a valid account JWT for two distinct tenants. Probe results confirm all v1 endpoints return 403 JWT-gated. No passive bypass found. Program rules enforce `passive_first: true` and `no_account_creation: true`.
 
 **Q5 Novel?** YES — Same finding across models, same single vulnerability.
 
@@ -141,11 +142,11 @@ Reason: Cannot prove without valid account tokens for two tenants. Program rules
 3. Same header on `<foreign-org-uid>` → 200 + oauthClientSecret = confirmed CRITICAL cross-tenant credential disclosure
 4. Escalate: `curl -H "X-Auth: <leakedClientId>:<leakedSecret>" https://api.signageos.io/v1/device`
 
-If confirmed: CVSS ~9.1 (AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:N) — cross-tenant credential disclosure with full device control.
+If confirmed: CVSS ~9.1 (CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:N) — cross-tenant credential disclosure with full device control.
 
 ---
 
-### LEAD 5: Cross-Tenant Org Security-Token Minting via Account JWT
+### LEAD 5: api.signageos.io/v1/organization/{uid}/security-token — Cross-Tenant Org Security-Token Minting
 
 **Source models:** bigpickle, laguna, nemotron3, longcat
 
@@ -172,9 +173,9 @@ Reason: Same barrier as LEAD 4. POC chain:
 
 ---
 
-### LEAD 6: Cross-Tenant Device Peer-Recovery Read/Write via Client-Supplied deviceUid
+### LEAD 6: api.signageos.io/v1/device/{uid}/peer-recovery — Cross-Tenant Device Read/Write via Client-Supplied deviceUid
 
-**Source models:** bigpickle, laguna, nemotron3
+**Source models:** bigpickle, nemotron3
 
 **Q1 In scope?** YES — api.signageos.io/v1/device/{uid}/peer-recovery.
 
@@ -199,17 +200,17 @@ Reason: Requires org credentials to test. POC:
 
 ---
 
-### LEAD 7: v2 API Partial-Migration Authz Drift
+### LEAD 7: api.signageos.io/v2/* — Partial-Migration Authz Drift
 
 **Source models:** bigpickle, nemotron3
 
 **Q1 In scope?** YES — api.signageos.io/v2/*.
 
-**Q2 Reachable?** Partially — /v2/device now returns 403 JWT-gated (was 404 earlier). /v2/account + /v2/organization remain 404.
+**Q2 Reachable?** Partially — /v2/device returns 403 JWT-gated (was 404 earlier — v2 migration advancing). /v2/account + /v2/organization remain 404.
 
 **Q3 Real impact?** HIGH if confirmed — Authz drift on migrated code paths.
 
-**Q4 Provable without invasive testing?** NO — Passive probes show only expected behavior (403 JWT-gated, 404 for non-existent). The hypothesis ("freshly-migrated code paths commonly diverge on authorization checks") is speculative with no supporting evidence. All tested v2 routes behave correctly.
+**Q4 Provable without invasive testing?** NO — Passive probes show only expected behavior (403 JWT-gated, 404 for non-existent). Hypothesis ("freshly-migrated code paths commonly diverge on authorization checks") is speculative with no supporting evidence. All tested v2 routes behave correctly.
 
 **Q5 Novel?** N/A — Not substantiated.
 
@@ -221,7 +222,7 @@ Reason: Requires org credentials to test. POC:
 
 ---
 
-### LEAD 8: box.signageos.io/login CSRF via OAuth2 State
+### LEAD 8: box.signageos.io/login — Login CSRF via OAuth2 State Parameter
 
 **Source models:** nemotron3
 
@@ -243,7 +244,7 @@ Reason: Requires org credentials to test. POC:
 
 ---
 
-### LEAD 9: box.signageos.io Auth0 redirect_uri Validation Bypass
+### LEAD 9: box.signageos.io/login — Auth0 redirect_uri Validation Bypass
 
 **Source models:** nemotron3, laguna, longcat
 
@@ -265,7 +266,7 @@ Reason: Requires org credentials to test. POC:
 
 ---
 
-### LEAD 10: box.signageos.io CSP Overly Broad connect-src/frame-src
+### LEAD 10: box.signageos.io — Overly Broad CSP connect-src/frame-src
 
 **Source models:** bigpickle, laguna, longcat, nemotron3
 
@@ -287,7 +288,7 @@ Reason: Requires org credentials to test. POC:
 
 ---
 
-### LEAD 11: api.signageos.io Descriptive Error Messages in 403 Bodies
+### LEAD 11: api.signageos.io — Descriptive Error Messages in 403 Bodies
 
 **Source models:** bigpickle, laguna, longcat, nemotron3
 
@@ -331,7 +332,7 @@ Reason: Requires org credentials to test. POC:
 
 ---
 
-### LEAD 13: api.signageos.io CORS (No ACAO)
+### LEAD 13: api.signageos.io — CORS (No ACAO on API Responses)
 
 **Source models:** bigpickle, laguna, nemotron3
 
@@ -353,6 +354,28 @@ Reason: Requires org credentials to test. POC:
 
 ---
 
+### LEAD 14: reposcan — Hardcoded Staging Credentials in videowall-designer
+
+**Source models:** nemotron3 (reposcan)
+
+**Q1 In scope?** NO — The hardcoded credentials target `api.kiera.office.signageos.io` (staging, HTTP), which is NOT an in-scope asset. Eligible targets per scope.yml: `box.signageos.io`, `api.signageos.io` only.
+
+**Q2 Reachable?** YES — Public GitHub repo.
+
+**Q3 Real impact?** LOW — Staging credentials, out-of-scope host. Credential reuse risk noted but not directly reportable.
+
+**Q4 Provable?** YES — SHA256 of secret committed per program rules.
+
+**Q5 Novel?** N/A — Already triaged (2026-08-07 ACCEPTED SECRET_LEAK, 2026-08-09 REJECTED class).
+
+**Q6 Not rejected?** Borderline — Out-of-scope host.
+
+**Q7 Reasonable triager?** NO — Targets out-of-scope staging host.
+
+**Verdict: INVALID — Out-of-scope host (api.kiera.office.signageos.io); already triaged**
+
+---
+
 ## SUMMARY
 
 | # | Lead | Verdict | Reason |
@@ -370,10 +393,11 @@ Reason: Requires org credentials to test. POC:
 | 11 | api descriptive error messages | **INVALID** | Excluded: descriptive errors |
 | 12 | box /ready trivial health check | **INVALID** | No data leaked |
 | 13 | api CORS (no ACAO) | **INVALID** | Not exploitable |
+| 14 | reposcan hardcoded staging creds | **INVALID** | Out-of-scope host |
 
 **3 VALID** — reportable now via signageOS security channel.
 **3 HOLD** — high-value AUTH_HELPED candidates awaiting human POC execution with `sos login` + second tenant.
-**7 INVALID** — correctly excluded or unprovable under passive-first constraints.
+**8 INVALID** — correctly excluded or unprovable under passive-first constraints.
 
 ---
 

@@ -678,3 +678,6 @@
 
 - 1 lead(s) marked VALID at 2026-08-11 02:37:13 UTC
   - | **VALID** | 3 | box/api `/status` infra info disclosure (CVSS 5.3 each), CORS wildcard+HTTP variant (CVSS 3.7) |
+
+- 1 lead(s) marked VALID at 2026-08-11 05:36:31 UTC
+  - | **VALID** | `box.signageos.io/status` (K8s info leak, CVSS 5.3), `api.signageos.io/status` (same class, CVSS 5.3), `box.signageos.io` CORS static whitelist with HTTP variant + wildcard (CVSS 3.7 LOW
