@@ -787,3 +787,15 @@
   - | 1 | box /status — K8s infra info leak | **VALID (DUPLICATE)** — Already reported, CVSS 5.3 |
   - | 2 | api /status — K8s infra info leak | **VALID (DUPLICATE)** — Already reported, CVSS 5.3 |
   - | 3 | box CORS HTTP variant + wildcard | **VALID (DUPLICATE)** — Already reported, CVSS 3.7 |
+
+- 10 lead(s) marked VALID at 2026-08-11 17:49:59 UTC
+  - valid-bugs.md
+  - **Verdict: VALID**
+  - **Verdict: VALID**
+  - **Verdict: VALID (LOW)**
+  - | Q4 | NO | AUTH_HELPED — needs valid org legacy creds |
+  - | Q4 | NO | AUTH_HELPED — requires valid credentials to observe |
+  - | 1 | box.signageos.io/status infra info leak | **VALID** | Unauthenticated live K8s topology leak |
+  - | 2 | api.signageos.io/status infra info leak | **VALID** | Same class, different asset |
+  - | 3 | box.signageos.io CORS wildcard + HTTP variant | **VALID (LOW)** | Static whitelist trust-boundary expansion |
+  - | 7 | Credentials in query string (account/security-token) | **HOLD** | AUTH_HELPED, needs valid creds |
