@@ -1893,3 +1893,4 @@ evidence_needed: absence of credentials flag + evil.test non-reflection (reconfi
 verify_steps: curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/ | grep -ciE 'access-control-allow-credentials' → 0; grep -ciE 'access-control-allow-origin' → 17
 impact: Whitelist hygiene/defense-in-depth issue expanding postMessage origin trust boundary; no direct credential-theft primitive without creds flag; LOW
 testability: PASSIVE
+## 2026-08-11 16:10:02 UTC [box] (model laguna)
