@@ -1788,3 +1788,6 @@ evidence_needed: no change; absent credentials flag + evil.test non-reflection r
 verify_steps: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/ | grep -ciE 'access-control-allow-credentials'` → expected 0
 impact: whitelist hygiene / defense-in-depth issue expanding postMessage origin trust boundary; no direct credential-theft primitive without credentials flag; LOW
 testability: PASSIVE
+## 2026-08-11 11:36:35 UTC [box] (model laguna)
+[FINAL]
+[NEXT] PROBE: Finalize + archive box `/status` PoC evidence package (already captured this cycle) with immutable sha256 fingerprints persisted to artifacts: `sha256sum /tmp/opencode/box_status_body.txt /tmp/opencode/box_status_h.txt` — sha256_body=`576b1ed9812c9ace351e4d27f297d08a213e01ac37a22716d4a1a3d0c6fa58c6`, sha256_hdr=`abd1eaf53870f184be6932af411d35ab3939089d7f6278b2d1e2a2e92e38006b`, hardening_headers=0, cloudfront=1. Evidence package ready for PoC archive; no AUTH_HELPED execution possible in passive box phase.

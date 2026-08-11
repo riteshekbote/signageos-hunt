@@ -280,3 +280,4 @@
 - 2026-08-11 REJECTED MISCONFIG @ box.signageos.io CSP report-uri: /csp-report → 302 login redirect — not an exposed endpoint.
 - 2026-08-11 ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: 17 static ACAO on `/ + /login/` (no credentials flag); CSP ~59+ origins with triplicated Auth0 oauth/token — unchanged, REJECTED as credential-theft (no creds flag → MISCONFIG only).
 - 2026-08-11 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session (carried forward).
+- 2026-08-11 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-7cd9ddcc8c-55pj6`, uid `3b72b9b9a11f59752d4edb5212e85011f2b66c67b6edac125f`, Node v20.20.2, 9 succeededServices (amqp0/redis0-3/mongoDB0-3), zero security headers, behind CloudFront (x-cache Miss, PHX52-P1). Differential vs hardened `/`+`/login/` and api /status persists. New body sha256 `14e5cf1f…0c1`.
