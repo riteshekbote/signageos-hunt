@@ -468,3 +468,10 @@
 ## 2026-08-12 22:00:43 UTC
 
 ## 2026-08-12 22:55:22 UTC
+
+## 2026-08-12 23:41:27 UTC
+- NEW box.signageos.io/status pod rotated to `box-8676fb5f57-9s62x` (uid `a5ec22b0…`), Node v20.20.2, 9-service topology, zero hardening headers (grep=0), behind CloudFront IAD55-P8
+- NEW api.signageos.io/status pod rotated to `api-86db648db5-twc7j` (uid `a3356c02…`), Node v24.19.0, 8-service topology (mongoDB3 absent), hardened HSTS/xfo/xcto/no-store (grep=3) behind CloudFront IAD89-P
+- CHANGED Edge POPs: box → IAD55-P8, api → IAD89-P1
+- NEW box.signageos.io/status pod rotated → `box-8676fb5f57-ff2s4` (same rs `8676fb5f57`), uid `7f0e2a37…`, Node v20.20.2, full topology; headers still ONLY `x-powered-by: Express` (secgrep=0), CloudFront P
+- NEW api.signageos.io/status pod rotated (Node v24.19.0, uid `0d0224f7…`), hardening intact (HSTS/xfo/xcto grep=3), CloudFront LAX50-P4. Body sha256 `93ea3555…`. No posture change.
