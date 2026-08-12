@@ -2234,3 +2234,4 @@ verify_steps: PROBE done: `curl -sSI -H "Origin: https://evil.test" https://box.
 impact: whitelist hygiene/defense-in-depth only; LOW
 testability: PASSIVE
 ## 2026-08-12 06:43:25 UTC [box] (model bigpickle)
+## 2026-08-12 08:05:47 UTC [box] (model bigpickle)

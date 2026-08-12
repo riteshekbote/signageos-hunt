@@ -379,3 +379,8 @@
 - 2026-08-12 REJECTED MISCONFIG @ box/signageos.io/ready: 200 "OK" (2 bytes), trivial — not reportable
 - 2026-08-12 REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO — not exploitable
 - 2026-08-12 REJECTED AUTH @ box/signageos.io/login: Auth0 OAuth2 not passively testable without tenant session
+- 2026-08-12 ACCEPTED @ box.signageos.io/status: Pod rotated to `box-7cd9ddcc8c-bh6m7`, uid `d450f1ea…`, full topology (amqp0/redis0-3/mongoDB0-3) + Node v20.20.2 + per-service responseTime leaked with zero hardening headers; evidence re-archived (headers.txt sha `76013792…`, body.json sha `453f4a0b…`). Box POC DONE.
+- 2026-08-12 ACCEPTED @ api.signageos.io/status: Still leaks hostname/uid/Node/topology; hardened with HSTS+xfo+xcto+no-store behind CloudFront SFO53-P12; info-leak persists but header posture hardened vs box.
+- 2026-08-12 REJECTED @ box.signageos.io/ready: 200 OK (2 bytes), trivial health check, no data leaked.
+- 2026-08-12 REJECTED @ api.signageos.io/v1/*+v2/* pre-auth: All routes 403 JWT/X-Auth-gated, no passive bypass; cross-tenant chain remains AUTH_HELPED only (blocked on credentials).
+- 2026-08-12 ACCEPTED @ box.signageos.io/ + /login/ CORS: 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard, 0 credentials flag, evil.test NOT reflected — MISCONFIG-only.
