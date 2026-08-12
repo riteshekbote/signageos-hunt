@@ -18496,3 +18496,89 @@ testability: PASSIVE
 **STEP 7 — RISK SCORE**
 - [RISK] box.signageos.io: 62 — unauthenticated infra-info-leak on /status (POC final, 30+ cycles stable, sha `43325287…`) + 17-origin CORS whitelist incl plaintext `http://` + `*.zdusercontent.com` wildcard (no creds flag → MISCONFIG-only) + zero security headers on /status; app surface Auth0-gated with no pre-auth bypass, `/`+`/login/` hardened (trusted-types + report-uri)
 - [RISK] api.signageos.io: 58 — /status info-leak persists though header-hardened (secgrep=3); dual-auth (JWT + X-Auth) gates all v1/v2 routes with no passive bypass; residual risk is the unverified AUTH_HELPED cross-tenant mint (CRITICAL if real)
+===== ANALYST bigpickle 2026-08-12 21:05:37 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -sS -D - -o /tmp/opencode/box_status_cycle.json https://box.signageos.io/status 2>&1 | tr -d '\r' | grep -iE '^(HTTP|x-cache|via|x-amz-cf-pop|content-type|x-powered|strict-transport|x-frame|x-content)' ; echo "---BODY---"; cat /tmp/opencode/box_status_cycle.json
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 018bc8ac3ac3155b3d0b36b861811052.cloudfront.net (CloudFront)
+x-amz-cf-pop: IAD55-P8
+---BODY---
+{"name":"box","status":"OK","process":{"uid":"ce3b7110f5b14fa0c69147ae78c6a22e20ae55122e7ee3755f","pid":1,"version":"v20.20.2","uptime":35571.152798287,"cpuUsage":{"user":3379114983,"system":307469085},"memoryUsage":{"rss":357343232,"heapTotal":268161024,"heapUsed":247985640,"external":32159677,"arrayBuffers":28641380}},"hostname":"box-8676fb5f57-2lmr2","failedServices":[],"succeededServices":["amqp0","redis0","redis3","redis2","redis1","mongoDB2","mongoDB3","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1786568568569,"respondedAt":1786568568632,"amqp0":{"response":{"requestedAt":1786568568569,"respondedAt":1786568568632,"responseTime":63}},"redis0":{"response":{"requestedAt":1786568568569,"respondedAt":1786568568571,"responseTime":2}},"redis3":{"response":{"requestedAt":1786568568569,"respondedAt":1786568568571,"responseTime":2}},"redis2":{"response":{"requestedAt":1786568568569,"respondedAt":1786568568571,"responseTime":2}},"redis1":{"response":{"requestedAt":1786568568569,"respondedAt":1786568568572,"responseTime":3}},"mongoDB2":{"response":{"requestedAt":1786568568569,"respondedAt":1786568568572,"responseTime":3}},"mongoDB3":{"response":{"requestedAt":1786568568569,"respondedAt":1786568568572,"responseTime":3}},"mongoDB1":{"response":{"requestedAt":1786568568569,"respondedAt":1786568568574,"responseTime":5}},"mongoDB0":{"response":{"requestedAt":1786568568569,"respondedAt":1786568568580,"responseTime":11}}}
+[0m
+[0m$ [0mcurl -sS -D - -o /tmp/opencode/api_status_cycle.json https://api.signageos.io/status 2>&1 | tr -d '\r' | grep -iE '^(HTTP|x-cache|via|x-amz-cf-pop|content-type|strict-transport|x-frame|x-content|cache-control)' ; echo "---BODY---"; cat /tmp/opencode/api_status_cycle.json
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+via: 1.1 ea3bfccd683c652cb849f6ec1b5606a4.cloudfront.net (CloudFront)
+x-amz-cf-pop: IAD89-P1
+---BODY---
+{"name":"api","status":"OK","process":{"uid":"7255671473cb9e59ed0ff0bc0740c1323197d1681fd39fa662","pid":1,"version":"v24.19.0","uptime":46626.843412699,"cpuUsage":{"user":19232439373,"system":1658001433},"memoryUsage":{"rss":943468544,"heapTotal":519380992,"heapUsed":443831808,"external":105449496,"arrayBuffers":101282625}},"hostname":"api-86db648db5-p94sg","failedServices":[],"succeededServices":["amqp0","redis2","redis1","redis0","redis3","mongoDB2","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1786568569471,"respondedAt":1786568569957,"amqp0":{"response":{"requestedAt":1786568569472,"respondedAt":1786568569957,"responseTime":485}},"redis2":{"response":{"requestedAt":1786568569473,"respondedAt":1786568569555,"responseTime":82}},"redis1":{"response":{"requestedAt":1786568569473,"respondedAt":1786568569627,"responseTime":154}},"redis0":{"response":{"requestedAt":1786568569473,"respondedAt":1786568569627,"responseTime":154}},"redis3":{"response":{"requestedAt":1786568569473,"respondedAt":1786568569628,"responseTime":155}},"mongoDB2":{"response":{"requestedAt":1786568569473,"respondedAt":1786568569627,"responseTime":154}},"mongoDB1":{"response":{"requestedAt":1786568569473,"respondedAt":1786568569629,"responseTime":156}},"mongoDB0":{"response":{"requestedAt":1786568569473,"respondedAt":1786568569630,"responseTime":157}}}
+[0m
+NO_DELTA in surface — fresh probes this cycle confirm both status endpoints live with identical data shape/header posture (pod rotations only):
+
+STEP 1 — DELTA
+[CHANGED] api.signageos.io/status pod rotated → `api-86db648db5-p94sg` (uid `72556714…`, Node v24.19.0, 8 svc — mongoDB3 absent), hardening intact (HSTS/xfo/xcto/no-store, secgrep=3), CloudFront IAD89-P1.
+[CHANGED] box.signageos.io/status pod `box-8676fb5f57-2lmr2` (uid `ce3b7110…`, Node v20.20.2, 9-svc topology incl mongoDB3 this cycle), zero hardening headers (only x-powered-by: Express), CloudFront IAD55-P8 — same pod as last confirmed cycle.
+All other surface (box CORS/CSP static 17-ACAO whitelist, v1/v2 403 JWT/X-Auth-gating, descriptive-error class, /ready, Auth0 login) unchanged across 30+ cycles.
+
+STEP 2 — PRIORITIZE
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token: score 6.95 | attack 8 business 9 tech 8 gate 2 cloud 7 fresh 5
+[PRIO] box.signageos.io/status: score 6.00 | attack 7 business 5 tech 4 gate 10 cloud 6 fresh 3
+[PRIO] api.signageos.io/status: score 5.40 | attack 6 business 4 tech 4 gate 10 cloud 5 fresh 3
+
+STEP 3 — HYPOTHESES
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 78
+reasoning: Dual-auth enumerated across 30+ cycles — X-Auth format `id:unsafeDecryptedToken`, org derived from header first-part (403075 NO_ORGANIZATION_TO_AUTHENTICATE / 403076 WRONG_ACCOUNT_SECRET confirm); path {uid} is client-supplied and distinct from auth-derived org. Pre-auth 403 WRONG_JWT_TOKEN/403105 persists unchanged.
+evidence_needed: valid X-Auth (orgA) + foreign orgB {uid} in path returning 200 instead of 403074/403075/403076
+verify_steps: AUTH_HELPED: 1) `sos login` → account JWT; 2) baseline `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own>/security-token` → 200; 3) foreign orgB {uid} → non-403 proves cross-tenant mint
+impact: mint org security-tokens for any tenant → full foreign-device/data control; CRITICAL
+testability: AUTH_HELPED
+
+[HYP] box /status unauthenticated infra-info-leak (standing, POC final)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Fresh probe this cycle — 200 JSON leaks pod hostname `box-8676fb5f57-2lmr2`, 40-hex process uid, Node v20.20.2, full 9-svc amqp0/redis0-3/mongoDB0-3 topology + per-service responseTime; secgrep=0 (x-powered-by only). Differential vs hardened `/`+`/login/` and api /status persists 30+ cycles.
+evidence_needed: none — POC archived
+verify_steps: PROBE done: `curl -sS -D hd.txt -o body.json https://box.signageos.io/status` → 200 JSON, secgrep=0
+impact: unauthenticated disclosure of pod identity, Node version, process uid, internal mongo/redis/amqp topology; MODERATE
+testability: PASSIVE
+
+[HYP] api /status infra-info-leak (hardened differential)
+class: MISCONFIG
+asset: api.signageos.io/status
+confidence: 70
+reasoning: Fresh probe — 200 JSON leaks hostname `api-86db648db5-p94sg`, Node v24.19.0, topology; secgrep=3 (HSTS/xfo/xcto) + cache-control:no-store. Header posture hardened vs box /status; info-leak persists.
+evidence_needed: none — data shape confirmed
+verify_steps: PROBE done: `curl -sS -D ah.txt -o abody.json https://api.signageos.io/status` → 200 JSON, secgrep=3
+impact: unauthenticated disclosure of pod identity/Node/topology; MODERATE, mitigated relative to box by security headers
+testability: PASSIVE
+
+STEP 4 — SELF-CRITIQUE
+[FINAL] 1. Cross-tenant security-token mint via X-Auth org-UID path override (IDOR, 78, AUTH_HELPED) — highest value, concrete 3-step verify, only live lead not blocked by exclusions.
+[FINAL] 2. box /status unauthenticated infra-info-leak (MISCONFIG, 96, PASSIVE) — fully proven, standing.
+[FINAL] 3. api /status infra-info-leak (MISCONFIG, 70, PASSIVE) — proven, lower severity.
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Box POC is final and archived. The only remaining high-value test is the CRITICAL AUTH_HELPED chain: provide a valid account JWT from `sos login` (state: `<accountJWT>` placeholder) to execute baseline `curl -H "X-Auth: <accountJWT>" https://api.signageos.io/v1/organization/<own>/security-token` then a foreign-org {uid} variant to prove/refute cross-tenant token mint. No passive surface remains unprobed on box.
+
+STEP 6 — LEARNING
+[LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: reconfirmed — `/v1/organization/test` → 403 WRONG_JWT_TOKEN/403105, `/v2/device` → 403; all routes JWT/X-Auth-gated, 0 ACAO → no passive bypass; cross-tenant chain remains AUTH_HELPED only.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: reconfirmed live — pod `box-8676fb5f57-2lmr2`, Node v20.20.2, 9-svc topology, secgrep=0, behind CloudFront IAD55-P8.
+[LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: reconfirmed live — pod `api-86db648db5-p94sg`, Node v24.19.0, 8-svc (mongoDB3 absent), hardened HSTS/xfo/xcto/no-store, IAD89-P1.
+
+STEP 7 — RISK SCORE
+[RISK] box.signageos.io: 35 — persistent unauthenticated /status infra-leak (pod/uid/Node/topology) with zero hardening headers; remaining surface (CORS/CSP broad whitelist, /login Auth0) is MISCONFIG-only / not passively testable; no pre-auth bypass.
+[RISK] api.signageos.io: 32 — /status info-leak persisted but hardened (HSTS/xfo/xcto/no-store); all data endpoints 403 JWT/X-Auth-gated with no CORS exposure; primary residual risk is the unproven AUTH_HELPED cross-tenant security-token chain (CRITICAL if real, blocked on credentials).

@@ -460,3 +460,7 @@
 ## 2026-08-12 19:38:19 UTC
 
 ## 2026-08-12 20:10:20 UTC
+
+## 2026-08-12 21:05:37 UTC
+- CHANGED api.signageos.io/status pod rotated → `api-86db648db5-p94sg` (uid `72556714…`, Node v24.19.0, 8 svc — mongoDB3 absent), hardening intact (HSTS/xfo/xcto/no-store, secgrep=3), CloudFront IAD89-P1.
+- CHANGED box.signageos.io/status pod `box-8676fb5f57-2lmr2` (uid `ce3b7110…`, Node v20.20.2, 9-svc topology incl mongoDB3 this cycle), zero hardening headers (only x-powered-by: Express), CloudFront IAD55-P8 —
