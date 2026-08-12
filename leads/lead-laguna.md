@@ -2348,3 +2348,10 @@ verify_steps: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/
 impact: Defense-in-depth issue expanding postMessage origin trust boundary to plaintext HTTP + zendesk wildcard; no cred-theft without creds flag; LOW
 testability: PASSIVE
 [NEXT] HUMAN: Box phase POC complete & archived at `/tmp/opencode/artifacts/box-status/` (30+ cycles, pod `box-7cd9ddcc8c-25fdq`, zero hardening headers, grep=0). **Provide a valid signageOS account JWT (X-Auth: `<accountJWT>:unsafeDecryptedToken`) and a foreign organization UID** to execute the AUTH_HELPED cross-tenant security-token mint test on api.signageos.io: `curl -H "X-Auth: <orgA_jwt>:unsafeDecryptedToken" https://api.signageos.io/v1/organization/<orgB_uid>/security-token`
+## 2026-08-12 10:53:03 UTC [box] (model laguna)
+[PRIO] box.signageos.io/status
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token
+[PRIO] box.signageos.io/ + /login/ (CORS/CSP)
+[PRIO] box.signageos.io/status
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token
+[PRIO] box.signageos.io/ + /login/ (CORS/CSP)

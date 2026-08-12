@@ -415,3 +415,11 @@
 - CHANGED api edge POP → IAD89-P1 (was DFW56-P11) — routing only
 - NEW box.signageos.io/status pod rotated `box-7cd9ddcc8c-f6xwn` → `box-7cd9ddcc8c-bh6m7` (uid `d450f1ea…`, new body sha256 `453f4a0b…`); data shape identical: full amqp0/redis0-3/mongoDB0-3 topology, Node 
 - CHANGED /tmp/opencode/artifacts/box-status/ evidence archive re-archived (prev wiped by workspace reset): headers.txt sha `76013792…`, body.json sha `453f4a0b…`, security-header grep=0
+
+## 2026-08-12 10:53:14 UTC
+- NEW box.signageos.io/status pod rotated to `box-7cd9ddcc8c-9476l` (was `bh6m7`), uid `9eb6708d0cf974931c5cb05a5d741ee4fe078e235da22dada7`, full 9-service topology (amqp0/redis0-3/mongoDB0-3), zero hardeni
+- NEW api.signageos.io/status pod rotated to `api-86db648db5-twc7j` (was `mb2ds`), uid `a3356c027689016d927b8c4945cb68a5bfd8d87a0a35498cbb`, 8 services (mongoDB3 absent), hardened (HSTS/xfo/xcto/no-store)
+- CHANGED Edge POPs: box → IAD55-P8, api → IAD89-P1
+- NEW box.signageos.io/status pod rotated `box-7cd9ddcc8c-bh6m7` → `box-7cd9ddcc8c-dn5db`, uid `ffb245ef…`, body sha256 `578ce714…` (was `453f4a0b…`) — data shape/topology identical, secgrep=0, CloudFront I
+- NEW api.signageos.io/status pod rotated to `api-86db648db5-mrcf8` (was `mb2ds`), body sha256 `7fea10d6…` — hardening intact (secgrep=3), IAD89-P1
+- CHANGED box /login/ CORS reconfirmed — 17 ACAO, 0 access-control-allow-credentials, evil.test NOT reflected (unchanged)
