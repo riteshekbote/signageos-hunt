@@ -2616,3 +2616,31 @@ testability: PASSIVE
 [LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: reconfirmed live — pod `api-86db648db5-p94sg`, Node v24.19.0, 8-svc (mongoDB3 absent), hardened HSTS/xfo/xcto/no-store, IAD89-P1.
 [RISK] box.signageos.io: 35 — persistent unauthenticated /status infra-leak (pod/uid/Node/topology) with zero hardening headers; remaining surface (CORS/CSP broad whitelist, /login Auth0) is MISCONFIG-only / not passively testable; no pre-auth bypass.
 [RISK] api.signageos.io: 32 — /status info-leak persisted but hardened (HSTS/xfo/xcto/no-store); all data endpoints 403 JWT/X-Auth-gated with no CORS exposure; primary residual risk is the unproven AUTH_HELPED cross-tenant security-token chain (CRITICAL if real, blocked on credentials).
+## 2026-08-12 21:58:45 UTC [box] (model bigpickle)
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 78
+reasoning: Dual-auth enumerated across 30+ cycles — X-Auth format `id:unsafeDecryptedToken`, org derived from header first-part (403075 NO_ORGANIZATION_TO_AUTHENTICATE / 403076 WRONG_ACCOUNT_SECRET confirm); path {uid} is client-supplied and distinct from auth-derived org. Pre-auth 403 WRONG_JWT_TOKEN/403105 persists.
+evidence_needed: valid X-Auth (orgA) + foreign orgB {uid} in path returning 200 instead of 403074/403075/403076
+verify_steps: AUTH_HELPED: 1) `sos login` → account JWT; 2) baseline `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own>/security-token` → 200; 3) foreign orgB {uid} → non-403 proves cross-tenant mint
+impact: mint org security-tokens for any tenant → full foreign-device/data control; CRITICAL
+testability: AUTH_HELPED
+[HYP] box /status unauthenticated infra-info-leak (POC final)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Fresh probe this cycle — 200 JSON leaks pod hostname `box-8676fb5f57-2lmr2`, 40-hex process uid `ce3b7110…`, Node v20.20.2, full 9-svc amqp0/redis0-3/mongoDB0-3 topology + per-service responseTime; secgrep=0 (x-powered-by only), CloudFront IAD55-P8. Differential vs hardened `/`+`/login/` and api /status persists.
+evidence_needed: none — POC re-archived (body.json sha `e5e5a236…`)
+verify_steps: PROBE done: `curl -sS -D hd.txt -o body.json https://box.signageos.io/status` → 200 JSON, secgrep=0
+impact: unauthenticated disclosure of pod identity, Node version, process uid, internal mongo/redis/amqp topology; MODERATE
+testability: PASSIVE
+[HYP] api /status infra-info-leak (hardened differential)
+class: MISCONFIG
+asset: api.signageos.io/status
+confidence: 70
+reasoning: Fresh probe — 200 JSON leaks hostname `api-86db648db5-2s2n2`, Node v24.19.0, 8-svc topology; secgrep=3 (HSTS/xfo/xcto) + cache-control:no-store, JFK50-P7. Header posture hardened vs box /status; info-leak persists.
+evidence_needed: none — data shape confirmed this cycle
+verify_steps: PROBE done: `curl -sS -D ah.txt -o abody.json https://api.signageos.io/status` → 200 JSON, secgrep=3
+impact: unauthenticated disclosure of pod identity/Node/topology; MODERATE, mitigated relative to box by security headers
+testability: PASSIVE
