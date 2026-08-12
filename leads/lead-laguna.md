@@ -2355,3 +2355,51 @@ testability: PASSIVE
 [PRIO] box.signageos.io/status
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token
 [PRIO] box.signageos.io/ + /login/ (CORS/CSP)
+## 2026-08-12 11:30:27 UTC [box] (model laguna)
+[CHANGED] box /status pod → `box-8676fb5f57-fs8wj` (new replica set, uid `91fa0a7a…`, Node v20.20.2) — body/headers identical: zero hardening (grep=0), full amqp0/redis0-3/mongoDB0-3 topology leak. CloudFront IAD55-P8.
+[CHANGED] api /status pod → `api-86db648db5-p94sg` (uid `72556714…`, Node v24.19.0, 8 svc — mongoDB3 absent) — hardening intact (grep=3: HSTS/xfo/xcto behind CloudFront).
+[CHANGED] Evidence archive at `/tmp/opencode/artifacts/box-status/` re-archived (workspace reset wiped prior copy): `body.json` sha `bdd3778a…`, `headers.txt` sha `a222bcc5…`, `login-origins.txt` sha `ebe9ddea…`.
+[PRIO] box.signageos.io/status — score 73 | axes atk 9/biz 6/tech 3/gate 10/cloud 8/fresh 8 | unauthenticated JSON infra-leak, zero hardening headers, behind CloudFront, no auth needed. POC DONE.
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token — score 77 | axes atk 9/biz 10/tech 7/gate 2/cloud 7/fresh 9 | dual-auth (X-Auth `id:unsafeDecryptedToken`), org derived from header first-part, path {uid} client-supplied ≠ auth org → cross-tenant mint hypothesis. AUTH_HELPED.
+[PRIO] box.signageos.io/ + /login/ (CORS/CSP) — score 50 | axes atk 5/biz 4/tech 4/gate 10/cloud 3/fresh 3 | 17 static ACAO incl `http://` + `*.zdusercontent.com` wildcard, evil.test NOT reflected, grep(credentials)=0 → MISCONFIG-only.
+[HYP] box /status unauthenticated infra info-leak with zero response hardening
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Fresh probe confirms HTTP 200 JSON leaking hostname `box-8676fb5f57-fs8wj`, 40-hex process.uid `91fa0a7a…`, Node v20.20.2, 9 succeededServices (amqp0/redis0-3/mongoDB0-3) + per-service responseTime. Headers ONLY x-powered-by: Express + CloudFront; security-header grep=0 (no HSTs/xfo/xcto/CSP). Sibling `/`+`/login/` hardened (HSTS present) — differential confirmed.
+evidence_needed: Evidence archived at `/tmp/opencode/artifacts/box-status/` (body.json sha `bdd3778a…`, headers.txt sha `a222bcc5…`); security-header grep=0; hostname/uid/Node/topology parseable from body.
+verify_steps: `curl -sS https://box.signageos.io/status | python3 -c "import sys,json;d=json.load(sys.stdin);print(d['hostname'],d['process']['uid'][:16],d['process']['version'],list(d['succeededServices'].keys()))"` → leaks; `grep -ciE 'strict-transport|x-frame|x-content|content-security' /tmp/opencode/artifacts/box-status/headers.txt` → 0.
+impact: Unauthenticated K8s pod identity + process UID + Node version + internal service topology disclosure with zero response hardening; aids targeted follow-up (KNOWN_NODE_VER vuln search + pod hostname for session-targeted attacks); MODERATE.
+testability: PASSIVE
+[HYP] api cross-tenant security-token mint via X-Auth org-UID override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 78
+reasoning: Dual-auth confirmed: JWT Bearer (main API) + X-Auth `id:unsafeDecryptedToken` for bulk provisioning. Org identity derived from X-Auth header first-part (before `:`) per 403 WRONG_ACCOUNT_SECRET error referencing "first part of x-auth header". Path {uid} is client-supplied and distinct from auth-derived org. All 60+ v1/v2 endpoints return 403 pre-auth (confirmed: /v1/organization/test → 403 WRONG_JWT_TOKEN/403105). No passive bypass, but path-vs-header org derivation creates cross-tenant mint hypothesis.
+evidence_needed: Valid X-Auth JWT for orgA + foreign orgB uid in path returning 200/non-403 (currently 403074/403075/403076 pre-auth) instead of access-denied.
+verify_steps: `curl -s -o /dev/null -w '%{http_code}' https://api.signageos.io/v1/organization/test/security-token` → 403 (passive-confirm); AUTH_HELPED: (1) `sos login` → account JWT for orgA; (2) `curl -sS -H "X-Auth: <orgA_jwt>:unsafeDecryptedToken" https://api.signageos.io/v1/organization/<orgB_uid>/security-token` → any 200/non-403 proves cross-tenant mint.
+impact: One organization's valid token mints security-tokens for arbitrary organizations → cross-tenant device enrollment + data isolation bypass; HIGH/CRITICAL.
+testability: AUTH_HELPED
+[HYP] box static CORS whitelist expanding origin trust boundary to plaintext HTTP + zendesk wildcard
+class: MISCONFIG
+asset: box.signageos.io/ and /login/ (ACAO headers)
+confidence: 55
+reasoning: 17 static access-control-allow-origin values on `/login/` unchanged under spoofed Origin `https://evil.test` (evil.test NOT reflected — static whitelist). Includes `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + `api.signageos.io` sibling + path-bearing recaptcha value. access-control-allow-credentials grep=0 → no credential-theft primitive.
+evidence_needed: Absence of access-control-allow-credentials + evil.test non-reflection; evidence at `/tmp/opencode/artifacts/box-status/login-origins.txt` (sha `ebe9ddea…`).
+verify_steps: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/ | grep -ciE 'access-control-allow-credentials'` → 0; `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/ | grep -i 'access-control-allow-origin.*evil'` → no match.
+impact: Defense-in-depth issue expanding postMessage origin trust boundary to plaintext HTTP + zendesk wildcard; no cred-theft without creds flag; LOW.
+testability: PASSIVE
+[FINAL] (surviving, re-ranked): 1. box /status [96/PASSIVE] (POC DONE) → 2. api security-token [78/AUTH_HELPED] → 3. box CORS [55/PASSIVE, MISCONFIG-only]
+[PARKED] api descriptive errors (WRONG_JWT_TOKEN/403105) — excluded class per scope.yml (descriptive error messages).
+[PARKED] box /ready — trivial 200 OK (2 bytes), no data leaked.
+[PARKED] box /csp-report — GET → 302 login redirect, not exposed endpoint.
+[PARKED] box Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session.
+[NEXT] HUMAN: Box phase POC complete & archived at `/tmp/opencode/artifacts/box-status/` (fresh probe: pod `box-8676fb5f57-fs8wj`, body sha `bdd3778a…`, zero hardening headers, grep=0). **Provide a valid signageOS account JWT (X-Auth: `<accountJWT>:unsafeDecryptedToken`) and a foreign organization UID** to execute the AUTH_HELPED cross-tenant security-token mint test on api.signageos.io:
+[LEARN] ACCEPTED @ box.signageos.io/status: Pod rotated to `box-8676fb5f57-fs8wj` (new rs `8676fb5f57`, was `7cd9ddcc8c`), uid `91fa0a7a…`, Node v20.20.2, 9 succeededServices + per-service responseTime, zero hardening headers (grep=0), behind CloudFront IAD55-P8. Unchanged data shape; PoC complete & re-archived.
+[LEARN] ACCEPTED @ api.signageos.io/status: Pod `api-86db648db5-p94sg` (new rs `86db648db5`, was `86db648db5-*`), uid `72556714…`, Node v24.19.0, 8 services (mongoDB3 absent), hardened HSTS/xfo/xcto (grep=3) behind CloudFront. Info-leak persists but header posture hardened vs box.
+[LEARN] ACCEPTED @ box.signageos.io/ + /login/ CORS: 17 static ACAO incl `http://` + `*.zdusercontent.com` wildcard, grep(credentials)=0, evil.test NOT reflected — MISCONFIG-only, unchanged.
+[LEARN] REJECTED @ box.signageos.io/ready: 200 OK (2 bytes), trivial health check, no data leaked.
+[LEARN] REJECTED @ api.signageos.io/v1/*+v2/* pre-auth: All routes 403 JWT/X-Auth-gated (confirmed /v1/organization/test → 403 WRONG_JWT_TOKEN/403105, /v2/device → 403); no passive bypass; cross-tenant chain remains AUTH_HELPED only (blocked on credentials).
+[LEARN] REJECTED @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + 403075/403076/403105 — excluded class per scope.yml (descriptive error messages).
+[RISK] box.signageos.io: 65 — standing unauthenticated /status infra-leak (pod hostname + 64-hex process UID + Node v20.20.2 + 9-service topology, zero hardening headers: grep=0) behind CloudFront; 17 static ACAO expanding trust to plaintext HTTP + zendesk wildcard (MISCONFIG-only, no creds flag → not credential-theft exploitable); all other paths behind login catch-all/CloudFront hardening; no auth-bypass surface passive-testable; PoC complete & archived at /tmp/opencode/artifacts/box-status/
+[RISK] api.signageos.io: 80 — 60+ JWT/X-Auth-gated v1/v2 endpoints with dual-auth (JWT Bearer + X-Auth id:unsafeDecryptedToken) and confirmed org-UID-derivation mechanism (path {uid} client-supplied vs header-derived org, verified: `fakeorg:unsafeDecryptedToken` → 403 WRONG_ACCOUNT_SECRET referencing "first part before `:`"); cross-tenant security-token mint hypothesis unprovable passively (AUTH_HELPED, blocked on valid foreign-org JWT); /status hardened (HSTS/xfo/xcto) but info-leak persists; v2 advancing (/v2/device→403 not 404); descriptive-error leak (excluded class) fully enumerates auth boundary |
