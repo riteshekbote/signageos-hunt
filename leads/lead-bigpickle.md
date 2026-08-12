@@ -2546,3 +2546,31 @@ evidence_needed: valid X-Auth (orgA) + foreign orgB {uid} in path returning 200 
 verify_steps: AUTH_HELPED: 1) `sos login` → account JWT; 2) baseline `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own>/security-token` → 200; 3) foreign orgB uid → non-403 proves cross-tenant mint
 impact: mint org security-tokens for any tenant → full foreign-device/data control; CRITICAL
 testability: AUTH_HELPED
+## 2026-08-12 20:09:19 UTC [box] (model bigpickle)
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 78
+reasoning: Dual-auth enumerated — X-Auth `id:unsafeDecryptedToken`, org derived from header first-part (403075/403076 confirms); path {uid} client-supplied and distinct from auth-derived org. Re-verified 403 WRONG_JWT_TOKEN/403105 this cycle — pre-auth surface unchanged, still gated.
+evidence_needed: valid X-Auth (orgA) + foreign orgB {uid} in path returning 200 instead of 403074/403075/403076
+verify_steps: AUTH_HELPED: 1) `sos login` → account JWT; 2) baseline `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own>/security-token` → 200; 3) foreign orgB uid → non-403 proves cross-tenant mint
+impact: mint org security-tokens for any tenant → full foreign-device/data control; CRITICAL
+testability: AUTH_HELPED
+[HYP] box /status unauthenticated infra-info-leak (standing, POC final)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Fresh probe this cycle — 200 JSON leaks pod hostname `box-8676fb5f57-9s62x`, uid `7c62c9f1…`, Node v20.20.2, full 9-svc amqp0/redis0-3/mongoDB0-3 topology; secgrep=0 (x-powered-by only), CloudFront ORD58-P5. Differential vs hardened `/`+`/login/` and api /status persists 30+ cycles.
+evidence_needed: none — POC archived (body sha256 `43325287…`)
+verify_steps: PROBE done: `curl -sS -D hd.txt -o body.json https://box.signageos.io/status` → 200 JSON, secgrep=0
+impact: unauthenticated disclosure of pod identity, Node version, process uid, internal mongo/redis/amqp topology; MODERATE
+testability: PASSIVE
+[HYP] Box CORS/CSP broad origin trust boundary (standing, MISCONFIG-only)
+class: MISCONFIG
+asset: box.signageos.io/ + /login/
+confidence: 65
+reasoning: 17 static ACAO incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + api sibling + path-bearing recaptcha value; evil.test NOT reflected; 0 access-control-allow-credentials. CSP 59+ origins with triplicated Auth0 oauth/token, now hardened with HSTS/xfo/xcto.
+evidence_needed: none — reconfirmed this cycle (login_hd sha `aaf2deea…`)
+verify_steps: PROBE done: `curl -sS -H "Origin: https://evil.test" https://box.signageos.io/login/` → 17 static ACAO, evil.test absent, creds grep=0
+impact: expands postMessage/origin trust boundary only; no credential-theft path without creds flag; LOW
+testability: PASSIVE
