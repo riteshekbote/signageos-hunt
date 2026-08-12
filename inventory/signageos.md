@@ -393,3 +393,11 @@
 - CHANGED box.signageos.io/ root header sha rotated (nonce hashes) — body/CORS/CSP unchanged
 
 ## 2026-08-12 05:12:52 UTC
+
+## 2026-08-12 06:49:00 UTC
+- NEW box.signageos.io/status pod rotated to `box-7cd9ddcc8c-szxmq` (was `box-7cd9ddcc8c-6m52v`), process.uid `79c03bfca3a0…`, new body sha256 — data shape/topology/headers identical (zero hardening headers
+- NEW api.signageos.io/status pod rotated (new replica set `api-6d67cd6668-*`), new body sha256 — hardening intact (HSTS/xfo/xcto/no-store)
+- CHANGED Edge POP rotated to DFW56-P1 (box) / DFW56-P11 (api) — was PHX52-P1/SFO53-P12
+- NEW box.signageos.io/status pod rotated to `box-7cd9ddcc8c-f6xwn` (was `6m52v`), uid `c29d3fd0…`, body sha256 `5bafacaff4c33f4c72db84c0f3503e420a56cefb0cc5105ae6a59b7a8502297e` — data shape unchanged
+- NEW api.signageos.io/status service count → 8 (mongoDB3 absent), body sha256 `dc83322e…` — hardening intact
+- CHANGED api edge POP → IAD89-P1 (routing-only)
