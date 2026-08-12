@@ -391,3 +391,5 @@
 - CHANGED box.signageos.io/status pod rotated chain: box-7c8c876945-* → box-7cd9ddcc8c-* (new replica set) across 30+ cycles, latest `box-7cd9ddcc8c-6m52v`, uid `89e006c0…`, body sha `f8927951c406…743ec` (super
 - CHANGED api.signageos.io/status pod rotated to `api-6d67cd6668-*` (new replica set, was `api-6f69db97d5-*`), latest body sha `f89710b9…`
 - CHANGED box.signageos.io/ root header sha rotated (nonce hashes) — body/CORS/CSP unchanged
+
+## 2026-08-12 05:12:52 UTC

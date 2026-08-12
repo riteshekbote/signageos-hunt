@@ -22209,3 +22209,73 @@ testability: PASSIVE
 ## STEP 7 — RISK SCORE
 [RISK] box.signageos.io: 65 — standing unauthenticated /status infra-leak (pod hostname + UID + Node + topology, zero hardening) behind CloudFront; 17 static ACAO expanding trust to plaintext HTTP + zendesk wildcard but no creds flag; all other paths behind login catch-all/CloudFront hardening; no auth-bypass surface passive-testable; PoC complete & archived
 [RISK] api.signageos.io: 80 — 60+ JWT/X-Auth-gated v1/v2 endpoints with dual-auth (JWT Bearer + X-Auth id:unsafeDecryptedToken) and confirmed org-UID-derivation mechanism (path {uid} client-supplied vs header-derived org) creating cross-tenant security-token mint hypothesis; /status hardened but info-leak persists; v2 migration advancing (/v2/device→403 not 404); auth boundary fully enumerable via descriptive errors (excluded class); AUTH_HELPED only to prove IDOR
+===== ANALYST laguna 2026-08-12 05:12:52 UTC =====
+[0m
+> build · laguna-s-2.1-free
+[0m
+[0m$ [0mecho "=== box /status ===" && curl -sS -D /tmp/box_status_h.txt -o /tmp/box_status_b.json https://box.signageos.io/status && echo "--- body excerpt ---" && jq -c '{hostname,uid:.process.uid,version:.process.version,n_svc:(.succeededServices|length)}' /tmp/box_status_b.json 2>/dev/null || head -c 800 /tmp/box_status_b.json
+=== box /status ===
+--- body excerpt ---
+{"hostname":"box-7cd9ddcc8c-7v5xw","uid":"6c51553edcbb39a53b1663a5e5f395f2370c3dcc3733f22a7a","version":"v20.20.2","n_svc":9}
+[0m
+[0m$ [0mecho "=== box / headers (hardened?) ===" && curl -sSI https://box.signageos.io/login/ | grep -ciE 'strict-transport|x-frame|x-content|content-security' && echo "=== box /status hardening grep ===" && grep -ciE 'strict-transport|x-frame|x-content|content-security' /tmp/box_status_h.txt && echo "=== CF fronting on /status ===" && grep -ciE 'x-cache|via|amz-cf' /tmp/box_status_h.txt
+=== box / headers (hardened?) ===
+4
+=== box /status hardening grep ===
+0
+[0m
+[0m$ [0mecho "=== box CORS on /login/ ===" && curl -sSI -H "Origin: https://evil.test" https://box.signageos.io/login/ | grep -iE 'access-control' && echo "=== api /status ===" && curl -sS -D /tmp/api_status_h.txt -o /tmp/api_status_b.json https://api.signageos.io/status && echo "--- api status body ---" && jq -c '{hostname,uid:.process.uid,version:.process.version,n_svc:(.succeededServices|length)}' /tmp/api_status_b.json 2>/dev/null && echo "=== api hardening grep ===" && grep -ciE 'strict-transport|x-frame|x-content|content-security' /tmp/api_status_h.txt && echo "=== api CORS ===" && curl -sSI -H "Origin: https://evil.test" https://api.signageos.io/v1/organization/test | grep -ciE 'access-control-allow-origin'
+=== box CORS on /login/ ===
+access-control-allow-origin: http://box.signageos.io
+access-control-allow-origin: https://2.signageos.io
+access-control-allow-origin: https://static.signageos.io
+access-control-allow-origin: https://upload.signageos.io
+access-control-allow-origin: https://platform.signageos.io
+access-control-allow-origin: https://weinre.signageos.io
+access-control-allow-origin: https://license.signageos.io
+access-control-allow-origin: https://signageos-device-monitoring.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://signageos-public.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://storage.googleapis.com
+access-control-allow-origin: https://remote-desktop.signageos.io
+access-control-allow-origin: https://remote-desktop-us.signageos.io
+access-control-allow-origin: https://api.signageos.io
+access-control-allow-origin: https://signageos.zendesk.com
+access-control-allow-origin: https://*.zdusercontent.com
+access-control-allow-origin: https://www.google.com/recaptcha/api2/clr
+=== api /status ===
+--- api status body ---
+{"hostname":"api-6d67cd6668-gb74v","uid":"995b4b9a800166bbd434f696301a677b9f6edf649672b46913","version":"v24.19.0","n_svc":8}
+=== api hardening grep ===
+3
+=== api CORS ===
+0
+[0m
+I'll run fresh passive probes against the two eligible hosts to validate the standing hypotheses, then produce the structured analyst report.
+[0m$ [0mecho "=== api /v1/organization/test (dual-auth probe) ===" && curl -sS -o /tmp/api_org_test.txt -w "HTTP %{http_code}\n" https://api.signageos.io/v1/organization/test && echo "--- body ---" && head -c 600 /tmp/api_org_test.txt && echo "" && echo "=== api /v1/organization/{uid}/security-token (no auth) ===" && curl -sS -w "\nHTTP %{http_code}\n" https://api.signageos.io/v1/organization/testorg/security-token
+=== api /v1/organization/test (dual-auth probe) ===
+HTTP 403
+--- body ---
+{"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding of provided JWT token has failed"}
+=== api /v1/organization/{uid}/security-token (no auth) ===
+{"status":403,"message":"Access forbidden - Neither \"x-oauth-client_id\" nor \"x-auth\" header set.","errorCode":403074,"errorName":"MISSING_ACCOUNT_ID_TO_AUTHENTICATE","errorDetail":"Both x-oauth-client_id header and first part (before char :) of x-auth header are missing from request thus account not to be authenticated"}
+HTTP 403
+[0m
+Confirmed key mechanisms. Let me verify the credentials flag absence and CloudFront fronting details.
+[0m$ [0mecho "=== box /login/ credentials flag grep ===" && curl -sSI -H "Origin: https://evil.test" https://box.signageos.io/login/ | grep -ciE 'access-control-allow-credentials' && echo "=== evil.test reflected? ===" && curl -sSI -H "Origin: https://evil.test" https://box.signageos.io/login/ | grep -ci 'evil.test' && echo "=== CF fronting /status ===" && grep -ciE 'x-cache|via|amz-cf' /tmp/box_status_h.txt && echo "=== box /ready (trivial?) ===" && curl -sS -w "\nHTTP %{http_code} bytes=%{size_download}\n" https://box.signageos.io/ready
+=== box /login/ credentials flag grep ===
+0
+[0m
+[0m$ [0mecho "=== evil.test reflected? (should be 0 = static whitelist) ==="; curl -sSI -H "Origin: https://evil.test" https://box.signageos.io/login/ | grep -ci 'evil.test'; echo "=== CF fronting /status ==="; grep -ciE 'x-cache|via|amz-cf' /tmp/box_status_h.txt; echo "=== box /ready ==="; curl -sS -w "\nHTTP %{http_code} bytes=%{size_download}\n" https://box.signageos.io/ready
+=== evil.test reflected? (should be 0 = static whitelist) ===
+0
+=== CF fronting /status ===
+4
+=== box /ready ===
+OK
+HTTP 200 bytes=2
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/opencode/artifacts/*, /tmp/*, /tmp/opencode/artifacts/box-status/*); auto-rejecting
+[0m✗ [0mmkdir -p /tmp/opencode/artifacts/box-status && cp /tmp/box_status_h.txt /tmp/opencode/artifacts/box-status/headers.txt && cp /tmp/box_status_b.json /tmp/opencode/artifacts/box-status/body.json && cp /tmp/api_status_h.txt /tmp/opencode/artifacts/box-status/api_status_h.txt && cp /tmp/api_status_b.json /tmp/opencode/artifacts/box-status/api_status_b.json && cp /tmp/api_org_test.txt /tmp/opencode/artifacts/box-status/api_org_test_403.txt && echo "archived:" && ls -la /tmp/opencode/artifacts/box-status/ && echo "--- box status body sha256 ---" && sha256sum /tmp/opencode/artifacts/box-status/body.json failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+All mechanisms confirmed. Let me archive the POC evidence, then emit the structured report.
