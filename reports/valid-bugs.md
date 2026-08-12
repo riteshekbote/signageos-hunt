@@ -830,3 +830,23 @@
   - | Q4 GET/HEAD provable? | NO — requires valid JWT + second tenant UID |
   - | Q7 Triager accept? | NO (as-is) — no POC without valid token + second tenant |
   - **Verdict: HOLD — AUTH_HELPED only; requires valid account JWT + second tenant. Code-verified via SDK but unverifiable under passive-first.**
+
+- 18 lead(s) marked VALID at 2026-08-12 00:54:10 UTC
+  - | Q5 Novel? | **NO** | Duplicate — previously accepted as VALID in `valid-bugs.md` and every triage run since 2026-08-07 |
+  - | Q7 Triager accept? | **YES** | Accepted as VALID (Low) on every prior triage run |
+  - **Verdict: VALID (duplicate reconfirmation)**
+  - | Q5 | **NO** | Duplicate — previously accepted as VALID |
+  - | Q7 | **YES** | Accepted as VALID (Low) on every prior triage run |
+  - **Verdict: VALID (duplicate reconfirmation)**
+  - | Q5 | **NO** | Duplicate — previously accepted as VALID (Low) |
+  - | Q7 | **BORDERLINE** | Accepted as VALID (Low) on prior runs. Limited by absent credentials flag |
+  - **Verdict: VALID (LOW, duplicate reconfirmation)**
+  - | Q2 | **CONDITIONAL** | Requires valid account JWT (low-priv user). Probe: 403 without auth |
+  - | Q4 | **NO** | AUTH_HELPED — requires valid JWT for two distinct tenants. All passive probes return 403 |
+  - **Verdict: HOLD — AUTH_HELPED; requires valid account JWT + second tenant to prove**
+  - | Q4 | **NO** | AUTH_HELPED — requires valid org creds + foreign device UID. PUT is invasive |
+  - **Verdict: HOLD — AUTH_HELPED; requires valid org X-Auth + second tenant; PUT violates passive-only rule**
+  - | Q4 | **NO** | AUTH_HELPED — 403-gated without valid token |
+  - | 1 | `box.signageos.io/status` infra info leak | MISCONFIG | **VALID** | 5.3 | Duplicate reconfirmation; passive PoC stable |
+  - | 2 | `api.signageos.io/status` infra info leak | MISCONFIG | **VALID** | 5.3 | Duplicate reconfirmation; hardened w/ HSTS/xfo/xcto |
+  - | 3 | `box.signageos.io` CORS HTTP variant + wildcard | MISCONFIG | **VALID (LOW)** | 3.7 | Duplicate reconfirmation; static whitelist, no creds |
