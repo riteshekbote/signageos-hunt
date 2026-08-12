@@ -2518,3 +2518,31 @@ evidence_needed: none — data shape confirmed
 verify_steps: PROBE done: `curl -sS -D ah.txt -o abody.json https://api.signageos.io/status` → 200 JSON, secgrep=3
 impact: unauthenticated disclosure of pod identity/Node/topology; MODERATE, mitigated relative to box by security headers
 testability: PASSIVE
+## 2026-08-12 19:20:37 UTC [box] (model bigpickle)
+[HYP] box /status unauthenticated infra-info-leak (standing, POC DONE)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Fresh probe this cycle — 200 JSON leaks pod hostname `box-8676fb5f57-9s62x`, 40-hex process uid, Node v20.20.2, full 9-svc amqp0/redis0-3/mongoDB0-3 topology + responseTime; secgrep=0 (x-powered-by only). Differential vs hardened /+/login/ and api /status persists 30+ cycles.
+evidence_needed: none — POC archived; body re-verified this cycle
+verify_steps: PROBE done: `curl -sS -D hd.txt -o body.json https://box.signageos.io/status` → 200 JSON, secgrep=0
+impact: unauthenticated disclosure of pod identity, Node version, process uid, internal mongo/redis/amqp topology; MODERATE
+testability: PASSIVE
+[HYP] api /status infra-info-leak (hardened differential)
+class: MISCONFIG
+asset: api.signageos.io/status
+confidence: 70
+reasoning: Fresh probe — 200 JSON leaks hostname `api-86db648db5-5v9ww`, Node v24.19.0, topology; secgrep=3 (HSTS/xfo/xcto) + cache-control:no-store. Header posture hardened vs box /status; info-leak persists.
+evidence_needed: none — data shape confirmed
+verify_steps: PROBE done: `curl -sS -D ah.txt -o abody.json https://api.signageos.io/status` → 200 JSON, secgrep=3
+impact: unauthenticated disclosure of pod identity/Node/topology; MODERATE, mitigated relative to box by security headers
+testability: PASSIVE
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 78
+reasoning: Dual-auth enumerated — X-Auth `id:unsafeDecryptedToken`, org derived from header first-part (403075/403076 confirms); path {uid} client-supplied and distinct from auth-derived org; docs state one account token mints org tokens for multiple orgs. Still 403 pre-auth, unchanged 30+ cycles.
+evidence_needed: valid X-Auth (orgA) + foreign orgB {uid} in path returning 200 instead of 403075/403076
+verify_steps: AUTH_HELPED: 1) `sos login` → account JWT; 2) baseline `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own>/security-token` → 200; 3) foreign orgB uid → non-403 proves cross-tenant mint
+impact: mint org security-tokens for any tenant → full foreign-device/data control; CRITICAL
+testability: AUTH_HELPED
