@@ -17780,3 +17780,98 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK SCORE
 [RISK] box.signageos.io: 62 — unauthenticated infra-info-leak on /status (moderate, POC final) + 17-origin CORS whitelist incl plaintext `http://` + `*.zdusercontent.com` wildcard (no creds flag → MISCONFIG-only) + zero security headers on /status; app surface Auth0-gated with no pre-auth bypass and hardened `/`+`/login/` (trusted-types + report-uri) | api.signageos.io: 58 — /status info-leak persists though header-hardened; dual-auth (JWT + X-Auth) gates all v1/v2 routes with no passive bypass; residual risk is the unverified AUTH_HELPED cross-tenant mint (CRITICAL if real)
+===== ANALYST bigpickle 2026-08-12 16:17:06 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -sS -D /tmp/opencode/ax_h.txt -o /tmp/opencode/ax_b.json https://api.signageos.io/status 2>&1; echo "---BODY---"; cat /tmp/opencode/ax_b.json 2>/dev/null | head -c 600
+---BODY---
+{"name":"api","status":"OK","process":{"uid":"13985d21b89763c0e999fc22f268d9f8f753f4c49502f94afe","pid":1,"version":"v24.19.0","uptime":396.501999247,"cpuUsage":{"user":132764811,"system":10862753},"memoryUsage":{"rss":698912768,"heapTotal":507596800,"heapUsed":446125384,"external":80107326,"arrayBuffers":76899333}},"hostname":"api-86db648db5-4qp9z","failedServices":[],"succeededServices":["amqp0","redis1","redis2","redis0","redis3","mongoDB2","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1786550896435,"respondedAt":1786550896572,"amqp0":{"response":{"requestedAt":1786550896435,"respond
+[0m
+[0m$ [0mcurl -sS -D /tmp/opencode/bx_h.txt -o /tmp/opencode/bx_b.json https://box.signageos.io/status 2>&1; echo "---BODY---"; cat /tmp/opencode/bx_b.json 2>/dev/null | head -c 600
+---BODY---
+{"name":"box","status":"OK","process":{"uid":"a5ec22b0d417c6afe633f93e30390697cde8d5c75874183590","pid":1,"version":"v20.20.2","uptime":16062.433342657,"cpuUsage":{"user":1793620151,"system":199921226},"memoryUsage":{"rss":602738688,"heapTotal":492089344,"heapUsed":467581192,"external":43934794,"arrayBuffers":100601096}},"hostname":"box-8676fb5f57-9s62x","failedServices":[],"succeededServices":["amqp0","redis1","redis0","redis2","redis3","mongoDB2","mongoDB3","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1786550900504,"respondedAt":1786550900646,"amqp0":{"response":{"requestedAt":178655
+[0m
+[0m$ [0mecho "=== BOX headers ==="; grep -icE 'strict-transport|x-frame|x-content-type|content-security' /tmp/opencode/bx_h.txt; grep -iE 'x-powered-by|x-cache|via|x-amz-cf-pop|access-control' /tmp/opencode/bx_h.txt; echo "=== API headers ==="; grep -icE 'strict-transport|x-frame|x-content-type|content-security' /tmp/opencode/ax_h.txt; grep -iE 'x-powered-by|strict-transport|x-frame|x-content-type|cache-control|via|access-control' /tmp/opencode/ax_h.txt; echo "=== sha256 ==="; sha256sum /tmp/opencode/bx_b.json /tmp/opencode/ax_b.json
+=== BOX headers ===
+0
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 c942cfe30baa723bd56d66d18e668b12.cloudfront.net (CloudFront)
+x-amz-cf-pop: ORD58-P5
+=== API headers ===
+3
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+via: 1.1 07a4b037827865f8b4d5ae6c04d96b4e.cloudfront.net (CloudFront)
+=== sha256 ===
+1ab65c16a71c0d1bc8138219e07b250442dac8d04b2978d3b0b0ad16d5a40722  /tmp/opencode/bx_b.json
+edfe7b3ded9ca9ca3e5a6be9eca0a9fac01108ed61d9c82b12a12c1ff793664f  /tmp/opencode/ax_b.json
+[0m
+NO_DELTA in surface — pods rotated only. box → `box-8676fb5f57-9s62x`, api → `api-86db648db5-4qp9z`; body/header posture byte-identical to prior cycles (box secgrep=0, api secgrep=3, mongoDB3 absent on api), edge POP ORD58-P5 routing-only. No new/changed endpoint, header, or behavior.
+
+STEP 2 — PRIORITIZE
+
+- [PRIO] api.signageos.io/v1/organization/{uid}/security-token — score 7.45 — attack 9, business 10, tech 8 (dual JWT+X-Auth, cross-tenant mint), gate 2 (needs valid token), cloud 6, fresh 8
+- [PRIO] box.signageos.io/status — score 6.98 — attack 6, business 6, tech 6 (Express/K8s infra), gate 10 (no auth), cloud 7 (CloudFront), fresh 8 — POC DONE, standing reconfirm
+- [PRIO] api.signageos.io/status — score 6.48 — attack 6, business 5, tech 6, gate 10, cloud 7, fresh 7 — hardened differential, standing reconfirm
+
+STEP 3 — HYPOTHESES
+
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 78
+reasoning: Dual-auth enumerated — X-Auth `id:unsafeDecryptedToken`, org derived from header first-part; path {uid} client-supplied and distinct (/organization/{uid}→403075, /security-token→403076, /v1/device→403105). Docs: one account token mints org tokens for multiple orgs. Still 403 pre-auth; unchanged 30+ cycles.
+evidence_needed: valid X-Auth (orgA) + foreign orgB {uid} in path returning 200 instead of 403075/403076
+verify_steps: AUTH_HELPED: 1) `sos login` → account JWT; 2) baseline `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own>/security-token` → 200; 3) foreign orgB uid — non-403 proves cross-tenant mint
+impact: mint org security-tokens for any tenant → full foreign-device/data control; CRITICAL
+testability: AUTH_HELPED
+
+[HYP] box /status unauthenticated infra-info-leak (standing, POC DONE)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Fresh probe — 200 JSON leaks pod `box-8676fb5f57-9s62x`, 40-hex uid `a5ec22b0…`, Node v20.20.2, 9-svc topology + per-service responseTime; secgrep=0 (x-powered-by: Express only); CloudFront ORD58-P5. Differential vs hardened `/`+`/login/` and api /status persists 30+ cycles.
+evidence_needed: none — POC archived; body sha `1ab65c16…` captured this cycle
+verify_steps: PROBE done: `curl -sS -D hd.txt -o body.json https://box.signageos.io/status` → 200 JSON, secgrep=0
+impact: unauthenticated disclosure of pod identity, Node version, process uid, internal mongo/redis/amqp topology; MODERATE
+testability: PASSIVE
+
+[HYP] api /status infra-info-leak (hardened differential)
+class: MISCONFIG
+asset: api.signageos.io/status
+confidence: 70
+reasoning: Fresh probe — 200 JSON leaks hostname `api-86db648db5-4qp9z`, uid `13985d21…`, Node v24.19.0, 8-svc topology + responseTime; secgrep=3 (HSTS/xfo/xcto) + cache-control:no-store. Header posture hardened vs box /status; info-leak persists.
+evidence_needed: none — data shape confirmed; body sha `edfe7b3d…`
+verify_steps: PROBE done: `curl -sS -D ah.txt -o abody.json https://api.signageos.io/status` → 200 JSON, secgrep=3
+impact: unauthenticated disclosure of pod identity/Node/topology; MODERATE, mitigated relative to box by security headers
+testability: PASSIVE
+
+STEP 4 — SELF-CRITIQUE
+
+- KEEP [96] box /status — POC final, standing reconfirm only, above 40, not on rejected list.
+- KEEP [78] cross-tenant security-token mint — class IDOR not on rejected list, concrete verify_steps (AUTH_HELPED), only actionable CRITICAL lead.
+- KEEP [70] api /status — differential component of the box finding.
+- [PARKED] none this cycle.
+
+[FINAL]
+1. box /status unauthenticated infra-info-leak (96, PASSIVE, POC DONE)
+2. Cross-tenant security-token mint via X-Auth org-UID path override (78, AUTH_HELPED)
+3. api /status infra-info-leak hardened differential (70, PASSIVE)
+
+STEP 5 — NEXT ACTION
+
+[NEXT] HUMAN: Box phase POC is final (re-archived: body sha `1ab65c16…`, secgrep=0, CORS 17 static/0-creds, CSP hardened). Only high-value test left is AUTH_HELPED: provide a valid account JWT (`X-Auth: <accountJWT>` after `sos login`) plus one foreign org UID so I can run `curl -H "X-Auth: <accountJWT>" https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token` — a 200 (vs baseline 403075/403076 on own org) proves the CRITICAL cross-tenant mint. Until then, box POC is final and api pre-auth surface is exhausted.
+
+STEP 6 — LEARNING
+
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-8676fb5f57-9s62x`, secgrep=0, full 9-svc topology leak, body sha `1ab65c16…` — unchanged behind CloudFront
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed — pod `api-86db648db5-4qp9z`, 8 svc (mongoDB3 absent), secgrep=3 + no-store; hardening differential vs box persists
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes JWT/X-Auth-gated, no passive bypass (reconfirmed)
+
+STEP 7 — RISK SCORE
+
+[RISK] box.signageos.io: 62 — unauthenticated infra-info-leak on /status (moderate, POC final, 30+ cycles stable) + 17-origin CORS whitelist incl plaintext `http://` + `*.zdusercontent.com` wildcard (no creds flag → MISCONFIG-only) + zero security headers on /status; app surface Auth0-gated with no pre-auth bypass and hardened `/`+`/login/` | api.signageos.io: 58 — /status info-leak persists though header-hardened; dual-auth (JWT + X-Auth) gates all v1/v2 routes with no passive bypass; residual risk is the unverified AUTH_HELPED cross-tenant mint (CRITICAL if real)
