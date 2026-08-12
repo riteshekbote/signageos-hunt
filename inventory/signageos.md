@@ -433,3 +433,12 @@
 - CHANGED box /status pod → `box-8676fb5f57-fs8wj` (new replica set, uid `91fa0a7a…`, Node v20.20.2) — body/headers identical: zero hardening (grep=0), full amqp0/redis0-3/mongoDB0-3 topology leak. CloudFront I
 - CHANGED api /status pod → `api-86db648db5-p94sg` (uid `72556714…`, Node v24.19.0, 8 svc — mongoDB3 absent) — hardening intact (grep=3: HSTS/xfo/xcto behind CloudFront).
 - CHANGED Evidence archive at `/tmp/opencode/artifacts/box-status/` re-archived (workspace reset wiped prior copy): `body.json` sha `bdd3778a…`, `headers.txt` sha `a222bcc5…`, `login-origins.txt` sha `ebe9ddea…
+
+## 2026-08-12 12:36:47 UTC
+- NEW box.signageos.io/status pod rotated to `box-8676fb5f57-2lmr2` (new replica set `8676fb5f57`, was `7cd9ddcc8c`), uid `ce3b7110…`, Node v20.20.2, full 9-service topology (amqp0/redis0-3/mongoDB0-3), zer
+- NEW api.signageos.io/status pod rotated to `api-86db648db5-78kr5` (replica set `86db648db5`), uid `9ecfee19…`, Node v24.19.0, 8 services (mongoDB3 absent), hardened (HSTS/xfo/xcto/no-store), CloudFront IA
+- CHANGED box.signageos.io/ & /login/ CORS/CSP reconfirmed — 17 static ACAO incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + `api.signageos.io` sibling; evil.test NOT reflecte
+- CHANGED api.signageos.io/v1/organization/test → 403 JWT-gated with hardened headers (HSTS/xfo/xcto/no-store), zero ACAO under spoofed Origin
+- CHANGED box.signageos.io/status pod → `box-8676fb5f57-2lmr2` (uid `ce3b7110f5b14fa0c69147ae78c6a22e20ae55122e7ee3755f`, new pod in same rs `8676fb5f57`) — body/headers identical: zero hardening (grep=0), full
+- CHANGED api.signageos.io/status pod rotation continuing, edge POP IAD89-P1 — hardening intact (HSTS/xfo/xcto), info-leak persists.
+- CHANGED Evidence archive re-archived at `/tmp/opencode/artifacts/box-status/` (workspace reset wiped prior copy): body.json sha `0a88b388…`, headers.txt sha `b11ba5ba…`, login-origins.txt sha `99aec0ad…`.
