@@ -667,3 +667,16 @@ https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token` -> HT
 https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
 https://api.signageos.io/v1/device -> HTTP 403
 https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+
+## 2026-08-12 14:10:48 UTC
+https://box.signageos.io/status -> 200 len=1436 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/test/security-token` -> HTTP 404
+https://api.signageos.io/v1/organization/<orgB_uid>/security-token` -> HTTP 404
+https://box.signageos.io/login/ -> 200 len=103953 type=text/html; charset=utf-8
+https://box.signageos.io/status` -> 200 len=103953 type=text/html; charset=utf-8
+https://api.signageos.io/status` -> HTTP 404
+https://api.signageos.io/v1/organization/<own>/security-token` -> HTTP 404
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token` -> HTTP 404
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403

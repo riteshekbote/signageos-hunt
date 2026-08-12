@@ -17546,3 +17546,98 @@ All three survive (≥40; none on REJECTED class list; concrete verify_steps). b
 
 ## STEP 7 — RISK SCORE
 [RISK] box.signageos.io: 62 — unauthenticated infra-info-leak on /status (moderate, POC done) + 17-origin CORS whitelist incl plaintext `http://` + `*.zdusercontent.com` wildcard (no creds flag) + zero security headers on /status; app surface Auth0-gated with no pre-auth bypass and hardened `/`+`/login/` (trusted-types + report-uri now present) | api.signageos.io: 58 — /status info-leak persists though header-hardened; dual-auth (JWT + X-Auth) gates all v1/v2 routes with no passive bypass; residual risk is the unverified AUTH_HELPED cross-tenant mint hypothesis (CRITICAL if real)
+===== ANALYST bigpickle 2026-08-12 14:10:40 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -sS -m 20 -D /tmp/opencode/bx_h.txt -o /tmp/opencode/bx_b.json https://box.signageos.io/status && echo "---HEADERS---" && cat /tmp/opencode/bx_h.txt && echo "---BODY---" && head -c 900 /tmp/opencode/bx_b.json && echo && sha256sum /tmp/opencode/bx_b.json
+---HEADERS---
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1440
+date: Wed, 12 Aug 2026 13:58:52 GMT
+etag: W/"5a0-ZLiUkUMa8AIz7V1xM4Ox72AhSBo"
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 989a43f98d91d3aa341e4e13f89c2064.cloudfront.net (CloudFront)
+x-amz-cf-pop: DFW56-P1
+x-amz-cf-id: CJVzgi-O9XgMyyrAkMuZo5ry54S87j2qdHDzce7mA9yDF2ocKRVRgA==
+
+---BODY---
+{"name":"box","status":"OK","process":{"uid":"ce3b7110f5b14fa0c69147ae78c6a22e20ae55122e7ee3755f","pid":1,"version":"v20.20.2","uptime":10135.416839535,"cpuUsage":{"user":1173632205,"system":105863358},"memoryUsage":{"rss":376483840,"heapTotal":293175296,"heapUsed":197696696,"external":29687137,"arrayBuffers":26168840}},"hostname":"box-8676fb5f57-2lmr2","failedServices":[],"succeededServices":["amqp0","redis1","redis3","redis0","redis2","mongoDB2","mongoDB3","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1786543132831,"respondedAt":1786543132896,"amqp0":{"response":{"requestedAt":1786543132831,"respondedAt":1786543132896,"responseTime":65}},"redis1":{"response":{"requestedAt":1786543132832,"respondedAt":1786543132834,"responseTime":2}},"redis3":{"response":{"requestedAt":1786543132832,"respondedAt":1786543132834,"responseTime":2}},"redis0":{"response":{"requestedAt":1786543132832,"
+e4fc1f3e96570dbefd65934c0cc4971b1ed65dfad6d4b3efdd3cf692fa5ac263  /tmp/opencode/bx_b.json
+[0m
+[0m$ [0mcurl -sS -m 20 -D /tmp/opencode/ax_h.txt -o /tmp/opencode/ax_b.json https://api.signageos.io/status && echo "---HEADERS---" && cat /tmp/opencode/ax_h.txt && echo "---BODY---" && head -c 900 /tmp/opencode/ax_b.json && echo && sha256sum /tmp/opencode/ax_b.json
+---HEADERS---
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1329
+date: Wed, 12 Aug 2026 13:58:53 GMT
+etag: W/"531-vldoWLHMu9sxsL19wVwfzFRVPsA"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+via: 1.1 2f6ad954566775e660f13c39f7c652e6.cloudfront.net (CloudFront)
+x-amz-cf-pop: DFW56-P11
+x-amz-cf-id: 2gWzmMbwgJzU1hJ4sAcB1XRW6Cj1N3WQwTE_zvpFRTehVFbUhb7BYA==
+
+---BODY---
+{"name":"api","status":"OK","process":{"uid":"84b151d12ea1bfd233710953f53ff3d23f7ac36287c9219703","pid":1,"version":"v24.19.0","uptime":7005.571178288,"cpuUsage":{"user":2959403432,"system":240456744},"memoryUsage":{"rss":940716032,"heapTotal":444698624,"heapUsed":370402200,"external":78042680,"arrayBuffers":73945992}},"hostname":"api-86db648db5-622tc","failedServices":[],"succeededServices":["amqp0","redis0","redis1","redis2","redis3","mongoDB2","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1786543133016,"respondedAt":1786543133081,"amqp0":{"response":{"requestedAt":1786543133016,"respondedAt":1786543133081,"responseTime":65}},"redis0":{"response":{"requestedAt":1786543133018,"respondedAt":1786543133022,"responseTime":4}},"redis1":{"response":{"requestedAt":1786543133019,"respondedAt":1786543133022,"responseTime":3}},"redis2":{"response":{"requestedAt":1786543133019,"respondedAt"
+514329921a638c6c2aea4745a4b5923890a7d635ee47295ddc1adce0958bd741  /tmp/opencode/ax_b.json
+[0m
+STEP 1 — DELTA
+- [CHANGED] api.signageos.io/status pod rotated to `api-86db648db5-622tc` (was `78kr5`), uid `84b151d1…`, body sha `51432992…` — data shape identical (8 services, mongoDB3 absent), hardening intact (HSTS/xfo/xcto/no-store)
+- [CHANGED] box.signageos.io/status pod stable `box-8676fb5f57-2lmr2`, uid `ce3b7110…`, body sha `e4fc1f3e…` (timestamp/uptime drift only) — zero hardening headers (secgrep=0), CloudFront DFW56-P1
+- [CHANGED] Edge POPs box→DFW56-P1, api→DFW56-P11 (routing only)
+- NO_DELTA otherwise — no new endpoints, no header posture change, CORS/CSP and /v1·/v2 gating unchanged from prior cycles
+
+STEP 2 — PRIORITIZE
+[PRIO] box.signageos.io/status — score 8.25 — attack 8, business 6, tech 5 (Node/k8s health JSON), gate 10 (unauthenticated), cloud 9 (CloudFront+k8s infra), fresh 10 (live this cycle)
+[PRIO] api.signageos.io/status — score 7.55 — attack 8, business 6, tech 5, gate 10, cloud 9, fresh 9
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token — score 7.45 — attack 9, business 10, tech 8 (dual JWT+X-Auth, cross-tenant mint), gate 2 (needs valid token), cloud 6, fresh 8
+
+STEP 3 — HYPOTHESES
+[HYP] box /status unauthenticated infra-info-leak (standing, POC DONE)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Fresh probe — 200 JSON leaks pod `box-8676fb5f57-2lmr2`, 40-hex uid `ce3b7110…`, Node v20.20.2, 9-service topology + per-service responseTime; secgrep=0 (x-powered-by: Express only); CloudFront DFW56-P1. Differential vs hardened `/`+`/login/` and api /status persists 30+ cycles.
+evidence_needed: none — POC archived; body sha `e4fc1f3e…` captured this cycle
+verify_steps: PROBE done: `curl -sS -D bx_h.txt -o bx_b.json https://box.signageos.io/status` → 200 JSON, secgrep=0
+impact: unauthenticated disclosure of pod identity, Node version, process uid, internal mongo/redis/amqp topology; MODERATE
+testability: PASSIVE
+[HYP] api /status infra-info-leak (hardened differential)
+class: MISCONFIG
+asset: api.signageos.io/status
+confidence: 70
+reasoning: Fresh probe — 200 JSON leaks hostname `api-86db648db5-622tc`, uid `84b151d1…`, Node v24.19.0, 8-service topology + responseTime; secgrep=3 (HSTS/xfo/xcto) + cache-control:no-store. Header posture hardened vs box /status, info-leak persists.
+evidence_needed: none — data shape confirmed; body sha `51432992…`
+verify_steps: PROBE done: `curl -sS -D ax_h.txt -o ax_b.json https://api.signageos.io/status` → 200 JSON, secgrep=3
+impact: unauthenticated disclosure of pod identity/Node/topology; MODERATE, mitigated relative to box by security headers
+testability: PASSIVE
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 78
+reasoning: Dual-auth enumerated — X-Auth `id:unsafeDecryptedToken`, org derived from header first-part; path {uid} client-supplied and distinct (/organization/{uid}→403075, /security-token→403076, /v1/device→403105). Docs: one account token mints org tokens for multiple orgs. Still 403 pre-auth.
+evidence_needed: valid X-Auth (orgA) + foreign orgB {uid} in path returning 200 instead of 403075/403076
+verify_steps: AUTH_HELPED: 1) `sos login` → account JWT; 2) baseline `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own>/security-token` → 200; 3) foreign orgB uid — non-403 proves cross-tenant mint
+impact: mint org security-tokens for any tenant → full foreign-device/data control; CRITICAL
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+- [FINAL] 1. box /status info-leak (96, PASSIVE, POC DONE) — 2. cross-tenant security-token mint (78, AUTH_HELPED, highest impact) — 3. api /status info-leak (70, PASSIVE)
+- No hypotheses dropped this cycle; none on the rejected class list (cross-tenant mint is PARKED-AUTH_HELPED, not rejected), all have concrete verify_steps.
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Box phase POC is complete (artifacts re-archived; /status, CORS/CSP, /ready, login-Auth0 all dispositioned). Only high-value test left is AUTH_HELPED: provide a valid account JWT (`X-Auth: <accountJWT>` after `sos login`) plus one foreign org UID so I can run `curl -H "X-Auth: <accountJWT>" https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token` — a 200 (vs baseline 403075/403076 on own org) proves the CRITICAL cross-tenant mint. Until then, the box POC is final.
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle — pod `box-8676fb5f57-2lmr2`, zero hardening headers (secgrep=0), full 9-service topology leak unchanged behind CloudFront
+- [LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed — pod rotated `api-86db648db5-622tc`, hardening intact (HSTS/xfo/xcto/no-store, secgrep=3); info-leak persists but header posture hardened vs box
+- [LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes still 403 JWT/X-Auth-gated, no passive bypass; cross-tenant chain remains AUTH_HELPED only (blocked on credentials)
+
+STEP 7 — RISK SCORE
+[RISK] box.signageos.io: 62 — unauthenticated infra-info-leak on /status (moderate, POC complete) + 17-origin CORS whitelist incl plaintext `http://` + `*.zdusercontent.com` wildcard (no creds flag → MISCONFIG-only) + zero security headers on /status; app surface Auth0-gated with no pre-auth bypass and hardened `/`+`/login/` | api.signageos.io: 58 — /status info-leak persists though header-hardened; dual-auth (JWT + X-Auth) gates all v1/v2 routes with no passive bypass; residual risk is the unverified AUTH_HELPED cross-tenant mint (CRITICAL if real)
