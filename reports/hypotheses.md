@@ -1561,3 +1561,24 @@
 - LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: Reconfirmed — 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRE
 - LEARN: ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ CORS: Reconfirmed — 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard + api sibling; 0 a
 - LEARN: ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed — /login/ CSP 59+ distinct origins with triplicated Auth0 oauth/token; hardened (HSTS/xfo/xcto/CSP) on /+
+
+## RANKED HYPOTHESES 2026-08-12 15:16:00 UTC
+- [96] box.signageos.io/status: box /status unauthenticated infra-leak with zero response hardening (from reports/hypotheses-laguna.txt)
+- [96] box.signageos.io/status: box /status unauthenticated infra-info-leak (standing, POC DONE) (from reports/hypotheses-bigpickle.txt)
+- [96] box.signageos.io/status: Unauthenticated K8s topology leak via /status missing security headers (from reports/hypotheses-nemotron3.txt)
+- NEXT(hypotheses-nemotron3.txt): PROBE: GET https://box.signageos.io/status (confirm live leak + zero hardening headers; expect 200 JSON with pod hostname/uid/topology, security-header grep=0)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Box phase POC is final (re-archived: body sha `8e6b6596…`, secgrep=0, CORS 17 static/0-creds, CSP hardened). Only high-value test left is AUTH_HELPED: pr
+- NEXT(hypotheses-laguna.txt): PROBE: api.signageos.io/v1/organization/{uid}/security-token
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod rotation, zero security headers, full topology leak unchanged behind CloudFront
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened with HSTS/xfo/xcto/no-store — differential vs box persists
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes JWT/X-Auth-gated, no passive bypass (reconfirmed)
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 
+- LEARN: REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 credentials flag → no credential-theft path; MISCONFIG-only
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant session
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes), trivial health check, no data leaked
+- LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Fresh probe confirms pod box-8676fb5f57-t5z8v, Node v20.20.2, 9-service topology, zero hardening headers (grep=0) 
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Fresh probe confirms pod api-86db648db5-622tc, Node v24.19.0, 9-service topology (mongoDB3 healthy), hardened HSTS
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 OK (2 bytes) — trivial health check, no data leaked
+- LEARN: REJECTED MISCONFIG @ box.signageos.io CORS credential-theft: 17 static ACAO, access-control-allow-credentials grep=0 → no credential-theft path; MISCONFIG-only
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All routes 403 JWT/X-Auth-gated (/organization/test/security-token → 403, /v2/device → 403, /v1/organizatio

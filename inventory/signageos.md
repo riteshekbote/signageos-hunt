@@ -447,3 +447,5 @@
 - NEW box.signageos.io/status pod rotated to `box-8676fb5f57-wqnc6` (replica set `8676fb5f57`), uid `49d30154baafe1fbb7db95e7da7540dd72fae7ebbbc5e80a1c`, Node v20.20.2, full 9-service topology (amqp0/redis0
 - NEW api.signageos.io/status pod rotated to `api-86db648db5-twc7j` (replica set `86db648db5`), uid `a3356c027689016d927b8c4945cb68a5bfd8d87a0a35498cbb`, Node v24.19.0, 8 services (mongoDB3 absent), hardene
 - CHANGED Edge POPs rotated — both box and api now fronted by SFO53 PoPs (was IAD55/IAD89)
+
+## 2026-08-12 15:16:00 UTC
