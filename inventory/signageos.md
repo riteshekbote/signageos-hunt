@@ -385,3 +385,9 @@
 - NEW box.signageos.io/status pod rotated `box-7cd9ddcc8c-qxz52` → `box-7cd9ddcc8c-6m52v`, uid `89e006c08c8b…`, body sha256 `f8927951c406…743ec` (was `77529aac…`) — data shape/topology identical, zero harde
 - CHANGED box /status edge POP IAD55-P8 (was SFO53-P9)
 - CHANGED api.signageos.io/status body sha256 now `f89710b9…` (was `f8f9f7e0…`), pod `api-6d67cd6668-vg7c2` unchanged, hardening intact (HSTS/xfo/xcto/no-store)
+
+## 2026-08-12 03:17:48 UTC
+- NEW box.signageos.io/status now fronted by CloudFront edge (x-cache/via/x-amz-cf-pop observed IAD55-P8/PHX52-P9/SFO53-P6 — was origin-direct per original seed)
+- CHANGED box.signageos.io/status pod rotated chain: box-7c8c876945-* → box-7cd9ddcc8c-* (new replica set) across 30+ cycles, latest `box-7cd9ddcc8c-6m52v`, uid `89e006c0…`, body sha `f8927951c406…743ec` (super
+- CHANGED api.signageos.io/status pod rotated to `api-6d67cd6668-*` (new replica set, was `api-6f69db97d5-*`), latest body sha `f89710b9…`
+- CHANGED box.signageos.io/ root header sha rotated (nonce hashes) — body/CORS/CSP unchanged
