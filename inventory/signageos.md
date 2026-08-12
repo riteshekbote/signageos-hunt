@@ -408,3 +408,10 @@
 - CHANGED api edge POP → IAD89-P1 (was DFW56-P11) — routing only
 - NEW box.signageos.io/status pod rotated `box-7cd9ddcc8c-f6xwn` → `box-7cd9ddcc8c-bh6m7` (uid `d450f1ea…`, new body sha256 `453f4a0b…`); data shape identical: full amqp0/redis0-3/mongoDB0-3 topology, Node 
 - CHANGED /tmp/opencode/artifacts/box-status/ evidence archive re-archived (prev wiped by workspace reset): headers.txt sha `76013792…`, body.json sha `453f4a0b…`, security-header grep=0
+
+## 2026-08-12 09:28:40 UTC
+- NEW box.signageos.io/status pod rotated to `box-7cd9ddcc8c-25fdq` (was `f6xwn`), uid `ff305d7be56fe223f4598de90e10d3fcc219e0f3d07719391b`, new body sha256 — data shape/topology/headers identical (zero har
+- NEW api.signageos.io/status pod rotated to new replica set `api-86db648db5-mb2ds` (was `api-6d67cd6668-*`), uid `b55aabee660c8ae7902cf13e4444d9304568a6ba1a730e6ca3`, mongoDB3 absent (8 services vs 9), new
+- CHANGED api edge POP → IAD89-P1 (was DFW56-P11) — routing only
+- NEW box.signageos.io/status pod rotated `box-7cd9ddcc8c-f6xwn` → `box-7cd9ddcc8c-bh6m7` (uid `d450f1ea…`, new body sha256 `453f4a0b…`); data shape identical: full amqp0/redis0-3/mongoDB0-3 topology, Node 
+- CHANGED /tmp/opencode/artifacts/box-status/ evidence archive re-archived (prev wiped by workspace reset): headers.txt sha `76013792…`, body.json sha `453f4a0b…`, security-header grep=0
