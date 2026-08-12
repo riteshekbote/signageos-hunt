@@ -1358,3 +1358,27 @@
 - LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check, no data.
 - LEARN: REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 access-control-allow-credentials → no credential-theft path; MISCONFIG-only.
 - LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session.
+
+## RANKED HYPOTHESES 2026-08-12 00:51:58 UTC
+- [95] box.signageos.io/status: box/status unauthenticated infra-info-leak with zero hardening headers (reconfirmed with new pod 7v5xw) (from reports/hypotheses-laguna.txt)
+- [95] box.signageos.io/status: box /status unauthenticated infra-info-leak (standing) (from reports/hypotheses-bigpickle.txt)
+- [78] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token minting via X-Auth org-UID override (from reports/hypotheses-nemotron3.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Provide valid account JWT (X-Auth: <accountJWT>) and a foreign org UID to test cross-tenant POST /v1/organization/<foreign-org-uid>/security-token and GE
+- NEXT(hypotheses-bigpickle.txt): PROBE: Standing reconfirm — next cycle `curl -sS https://box.signageos.io/status | sha256sum`; re-archive only if sha changes from `9559bb2a…`. Highest-value op
+- NEXT(hypotheses-laguna.txt): PROBE: Confirm the standing POC durability with the rotated pod — already executed this cycle (pod 7v5xw, body sha `297672ef…4f06b2d`, grep=0). POC is complete 
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live across 30+ cycles — pod rotation, zero security headers, full topology leak unchanged. Now fronte
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened with HSTS (max-age=31536000), x-frame-options: DENY, x-content-type-options: nosniff — differential vs bo
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/ & /login/ CORS+CSP: 17 static ACAO incl. http:// plaintext variant + https://*.zdusercontent.com wildcard + api.signageos
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes JWT/X-Auth-gated, no passive bypass (reconfirmed 30+ cycles)
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 
+- LEARN: REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO incl `http://` variant + `https://*.zdusercontent.com` wildcard + api sibling; evil.test NO
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session (carried forward)
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes), trivial health check, no data leaked
+- LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-7cd9ddcc8c-6m52v` (stable this cycle), uid `89e006c0…`, Node v20.20.2, 9 succeededServ
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto/no-store), pod rotated to `api-6d67cd6668-ddtdf`, new body sha256 `b43532d5…`.
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/login/ & / CORS+CSP: Reconfirmed — 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard; 0 credentials
+- LEARN: REJECTED CORS-exploit @ box.signageos.io /login/: 17 static ACAO, 0 credentials flag → no credential-theft path; MISCONFIG-only (carried forward).
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes JWT/X-Auth-gated, no passive bypass — cross-tenant chain remains AUTH_HELPED only (carried forwa
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + 403075/403
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session (carried forward).

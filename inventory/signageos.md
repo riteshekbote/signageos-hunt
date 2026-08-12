@@ -380,3 +380,8 @@
 - CHANGED box.signageos.io/ root header sha256 rotated (nonce hashes) — body/CORS/CSP unchanged
 - NEW box.signageos.io/status pod rotated `box-7cd9ddcc8c-qxz52` → `box-7cd9ddcc8c-6m52v`, uid `89e006c08c8b…`, body sha256 `f8927951c406…743ec` (was `77529aac…`) — data shape/topology identical, hardening 
 - CHANGED box /status edge POP IAD55-P8 (was SFO53-P9)
+
+## 2026-08-12 00:51:58 UTC
+- NEW box.signageos.io/status pod rotated `box-7cd9ddcc8c-qxz52` → `box-7cd9ddcc8c-6m52v`, uid `89e006c08c8b…`, body sha256 `f8927951c406…743ec` (was `77529aac…`) — data shape/topology identical, zero harde
+- CHANGED box /status edge POP IAD55-P8 (was SFO53-P9)
+- CHANGED api.signageos.io/status body sha256 now `f89710b9…` (was `f8f9f7e0…`), pod `api-6d67cd6668-vg7c2` unchanged, hardening intact (HSTS/xfo/xcto/no-store)

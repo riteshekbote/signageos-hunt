@@ -588,3 +588,4 @@ testability: PASSIVE
 [LEARN] REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session.
 [RISK] box.signageos.io: 50 — persistent unauthenticated /status infra-info-leak (pod/uid/Node/topology) with zero hardening headers; broad static CORS whitelist incl plaintext HTTP + wildcard; remaining surface login-gated Auth0. No auth bypass, no IDOR found.
 [RISK] api.signageos.io: 55 — deep API surface (60+ v1/v2 endpoints) with confirmed dual-auth (JWT + X-Auth) and plausible cross-tenant IDOR vector (org UID decoupling in path vs auth-derived org). All endpoints currently gated, but authz surface is complex and the unverified cross-tenant chain is a structural risk.
+## 2026-08-12 00:49:11 UTC [box] (model longcat)
