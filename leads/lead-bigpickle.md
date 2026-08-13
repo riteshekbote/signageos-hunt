@@ -3081,3 +3081,31 @@ testability: PASSIVE
 ## 2026-08-13 17:15:03 UTC [box] (model bigpickle)
 ## 2026-08-13 18:11:04 UTC [box] (model bigpickle)
 ## 2026-08-13 19:27:15 UTC [box] (model bigpickle)
+## 2026-08-13 20:07:01 UTC [box] (model bigpickle)
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 80
+reasoning: Endpoint is X-Auth/`x-oauth-client_id` gated (403074), NOT JWT; org identity derived from header first-part before `:`, while path `{uid}` is client-supplied and independent — no equality check observed across 3 rs deploys today (86db648db5→7676fc7c89→6cc9959bb4).
+evidence_needed: valid X-Auth (orgA) + foreign orgB `{uid}` returning 200/403076 instead of 403074 → proves security-token mint for orgB
+verify_steps: AUTH_HELPED: 1) `sos login` → account JWT; 2) baseline `curl -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<own>/security-token` → expect 200; 3) orgB `{uid}` variant → non-403 = cross-tenant mint
+impact: mint security tokens for any tenant → foreign device/data control; CRITICAL
+testability: AUTH_HELPED
+[HYP] box /status unauthenticated infra-info-leak (POC final)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Fresh probe — 200 JSON leaks pod `box-8676fb5f57-wmtnp`, 40-hex process uid `f014a05f…`, Node v20.20.2, 9-svc topology + per-service responseTime; secgrep=0. Differential vs hardened `/`+`/login/` persists 30+ cycles.
+evidence_needed: none — POC final & archived
+verify_steps: PROBE done: `curl -sS -D hd.txt -o body.json https://box.signageos.io/status` → 200 JSON, secgrep=0
+impact: unauthenticated disclosure of pod identity, Node version, process uid, internal service topology; MODERATE
+testability: PASSIVE
+[HYP] api /status infra-info-leak persists post-deploy
+class: MISCONFIG
+asset: api.signageos.io/status
+confidence: 72
+reasoning: Fresh probe on rs 6cc9959bb4 — 200 JSON leaks hostname `api-6cc9959bb4-8zg9z`, uid `d0928dca…`, Node v24.19.0, 8-svc topology; secgrep=3 + no-store intact across 3 rs rotations today.
+evidence_needed: none — data shape confirmed across rs rotations
+verify_steps: PROBE done: `curl -sS -D ah.txt -o abody.json https://api.signageos.io/status` → 200 JSON, secgrep=3
+impact: unauthenticated disclosure of pod identity/Node/topology; MODERATE, mitigated vs box
+testability: PASSIVE
