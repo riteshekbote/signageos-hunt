@@ -2968,3 +2968,4 @@ verify_steps: PROBE done: `curl -sS -D hd.txt -o body.json https://box.signageos
 impact: unauthenticated disclosure of pod identity, Node version, process uid, internal service topology; MODERATE
 testability: PASSIVE
 ## 2026-08-13 12:30:22 UTC [box] (model bigpickle)
+## 2026-08-13 14:04:03 UTC [box] (model bigpickle)
