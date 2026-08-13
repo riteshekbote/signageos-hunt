@@ -836,3 +836,8 @@ https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
 https://api.signageos.io/v1/organization/<own>/security-token` -> HTTP 404
 https://box.signageos.io/status` -> 200 len=103953 type=text/html; charset=utf-8
 https://api.signageos.io/status` -> HTTP 404
+
+## 2026-08-13 09:47:49 UTC
+https://api.signageos.io/v1/organization/<own>/security-token` -> HTTP 404
+https://api.signageos.io/status` -> HTTP 404
+https://box.signageos.io/status` -> 200 len=103953 type=text/html; charset=utf-8

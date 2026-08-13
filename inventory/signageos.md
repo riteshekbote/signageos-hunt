@@ -504,3 +504,9 @@
 - NEW box.signageos.io/status pod rotated → `box-8676fb5f57-ld6rr` (uid `ed6d572a…`), Node v20.20.2, 9-svc topology incl mongoDB3, secgrep=0 (x-powered-by: Express only), CloudFront DFW56-P1
 - CHANGED box pod identity `ld6rr` (prev cycles: l4pxv/h6d4t) — same rs `8676fb5f57`, data shape identical
 - CHANGED api /status pod `api-86db648db5-p94sg` (uid `72556714…`) stable this cycle, Node v24.19.0, 8-svc (mongoDB3 absent), secgrep=3 + no-store, DFW56-P11
+
+## 2026-08-13 09:47:47 UTC
+- NEW api.signageos.io/status replica-set rotated to `api-7676fc7c89-t9v9z` (NEW rs `7676fc7c89`, was `86db648db5` for 10+ cycles) — fresh API deploy; data shape + header posture unchanged (Node v24.19.0, 8
+- CHANGED box.signageos.io/status pod rotated to `box-8676fb5f57-dnqvp` (uid `c5d77454…`, Node v20.20.2, 9 svc incl mongoDB3, secgrep=0, SFO53-P6)
+- CHANGED api.signageos.io/v1/organization/test/security-token → 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` (was 403105 WRONG_JWT_TOKEN in prior cycles) — endpoint confirmed X-Auth/`x-oauth-client_id` (org-der
+- CHANGED api.signageos.io/v2/device → 403105 unchanged post-deploy (JWT-gated, no regression on new rs)

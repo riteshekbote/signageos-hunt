@@ -1866,3 +1866,16 @@
 - LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant session.
 - LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check.
 - LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable.
+
+## RANKED HYPOTHESES 2026-08-13 09:47:47 UTC
+- [78] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-id path override (from reports/hypotheses-bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Only remaining CRITICAL is AUTH_HELPED — await credentials, then: 1) `sos login` → account JWT; 2) baseline `curl -H "X-Auth: <orgA-id:token>" https://ap
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle — pod `box-8676fb5f57-dnqvp`, uid `c5d77454…`, Node v20.20.2, 9-svc topology, secgrep=
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live post-deploy — NEW rs `7676fc7c89`, Node v24.19.0, 8 svc, hardened (HSTS/xfo/xcto/no-store) behind
+- LEARN: CONFIRMED MECHANISM @ api.signageos.io/v1/organization/{uid}/security-token: endpoint is X-Auth/`x-oauth-client_id` gated (403074 MISSING_ACCOUNT_ID_TO_AUTHENTI
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: Reconfirmed post-deploy — /v2/device → 403105, /v1/organization/test/security-token → 403074, no pre-auth b
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies still leak WRONG_JWT_TOKEN/MISSING_ACCOUNT_ID_TO_AUTHENTICATE + 403074/403105 — exclud
+- LEARN: REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 credentials flag → no credential-theft path; MISCONFIG-only.
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant session.
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check.
+- LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable.

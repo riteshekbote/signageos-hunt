@@ -2969,3 +2969,4 @@ testability: PASSIVE
 [RISK] api.signageos.io: 80 — /status info-leak persists despite header hardening (HSTS/xfo/xcto/no-store behind CF, zero ACAO) — still leaks pod hostname + process UID + Node v24.19.0 + service topology; 60+ /v1/*+v2/* endpoints all solidly JWT/X-Auth-gated (403 without token, zero ACAO — not CORS-exploitable); dual-auth mechanism (JWT Bearer + X-Auth id:unsafeDecryptedToken) fully exposed; code-verified cross-tenant IDOR candidate (org-token mint) that is AUTH_HELPED-testable with CRITICAL business impact but blocked on valid foreign-org credential; /v2 migration advancing (/v2/device → 403 not 404); descriptive-error leak (excluded) fully enumerates auth boundary; residual CRITICAL risk: unverified cross-tenant token mint
 ## 2026-08-13 06:50:24 UTC [box] (model laguna)
 ## 2026-08-13 08:10:15 UTC [box] (model laguna)
+## 2026-08-13 09:34:36 UTC [box] (model laguna)
