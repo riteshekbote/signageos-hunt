@@ -1,17 +1,34 @@
 [0m
 > build · nemotron-3-ultra-free
 [0m
-[0m$ [0mecho -n '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9' | sha256sum
-564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e  -
+[0m✱ [0mGlob "**/*"[90m 100 matches[0m
+[0m→ [0mRead reposcan-raw/analysis.txt
+[0m→ [0mRead reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
 [0m
+[0m$ [0msha256sum <<< '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'
+dd0ea9903027def9c0bd43e09bf80b5350dfa61685b15176fb15f913c237a26f  -
+[0m
+[0m$ [0msha256sum <<< 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea479d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'
+6241353ed93d452c8205ce4097cc3b029169135b719749623806e7857d53d968  -
+[0m
+[0m$ [0msha256sum <<< 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'
+c509ee43d6dd5cff0c83c2826569dc28fd755c60148548cf12b13565e192a631  -
+[0m
+[0m✱ [0mGrep "(secret|apiKey|api_key|password|token|credential).*[=:]\s*['\"][a-zA-Z0-9]{20,}"[90m in reposcan-raw · 3 matches[0m
+[0m✱ [0mGrep "kiera\.office\.signageos\.io"[90m in reposcan-raw · 2 matches[0m
+Based on the scan results and knowledge base, here's the triage:
+
 ### Classification Table
 
-| Category | File | Line | Secret SHA256 | Classification |
-|----------|------|------|---------------|----------------|
-| REAL_SECRET | reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | Hardcoded client secret targeting internal staging `http://api.kiera.office.signageos.io` (HTTP) — credential reuse risk, out-of-scope host |
+| Category | File | Line | SHA256 (secret material) | Notes |
+|----------|------|------|--------------------------|-------|
+| **REAL_SECRET** | `signageos/videowall-designer/sos/videoTiming.js` | 19 | `dd0ea9903027def9c0bd43e09bf80b5350dfa61685b15176fb15f913c237a26f` | Hardcoded clientId/secret pair targeting internal staging `http://api.kiera.office.signageos.io` over HTTP |
+| **ENDPOINT_LEAK** | `signageos/videowall-designer/sos/videoTiming.js` | 23 | N/A | Internal staging API endpoint `http://api.kiera.office.signageos.io` exposed in source |
 
 ### Verdict
 
-| Candidate | REPORT_CANDIDATE |
-|-----------|------------------|
-| videowall-designer videoTiming.js:19 hardcoded secret | **no** — targets internal staging host (`api.kiera.office.signageos.io`) which is out of program scope (eligible: only `box.signageos.io`, `api.signageos.io`); known duplicate from 2026-08-07 seed scan |
+| Candidate | REPORT_CANDIDATE | Rationale |
+|-----------|------------------|-----------|
+| videowall-designer hardcoded credentials | **no** | Credentials target **out-of-scope host** (`api.kiera.office.signageos.io` — internal staging). Per program scope, only `box.signageos.io` and `api.signageos.io` are eligible. Known since 2026-08-07 (carried forward as "informs prod org-boundary testing" but not directly reportable). |
+
+**No new reportable findings** — single hit is a previously catalogued secret leak against an excluded staging environment.
