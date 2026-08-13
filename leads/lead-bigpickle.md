@@ -2938,3 +2938,4 @@ testability: PASSIVE
 [LEARN] REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable.
 [RISK] box.signageos.io: 35 — persistent unauthenticated /status infra-leak (pod/uid/Node/topology) with zero hardening headers (POC final, 30+ cycles, reconfirmed this cycle); remaining surface (CORS/CSP broad whitelist, /login Auth0) is MISCONFIG-only or not passively testable; no pre-auth bypass. Pod rotation is the only change.
 [RISK] api.signageos.io: 32 — /status info-leak persists but hardened (HSTS/xfo/xcto/no-store) and survives fresh deploy; all data endpoints 403 JWT/X-Auth-gated (403074/403105) with no CORS exposure; primary residual risk is the unproven AUTH_HELPED cross-tenant security-token chain (CRITICAL if real, blocked on credentials).
+## 2026-08-13 10:42:17 UTC [box] (model bigpickle)

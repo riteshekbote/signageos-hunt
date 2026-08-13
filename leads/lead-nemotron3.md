@@ -4390,3 +4390,4 @@ testability: AUTH_HELPED
 [RISK] api.signageos.io: 62 — Unauthenticated /status info leak (pod hostname + service topology) but hardened with HSTS/xfo/xcto + CloudFront; 60+ /v1/*+/v2/* endpoints all solidly JWT/X-Auth-gated (403 without token); no CORS issues. Risk raised due to code-verified cross-tenant IDOR candidates (org OAuth secret disclosure, org-token minting) that are AUTH_HELPED-testable with CRITICAL business impact.
 ## 2026-08-13 08:25:43 UTC [api] (model nemotron3)
 ## 2026-08-13 09:47:32 UTC [api] (model nemotron3)
+## 2026-08-13 10:49:26 UTC [api] (model nemotron3)

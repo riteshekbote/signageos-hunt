@@ -510,3 +510,5 @@
 - CHANGED box.signageos.io/status pod rotated to `box-8676fb5f57-dnqvp` (uid `c5d77454…`, Node v20.20.2, 9 svc incl mongoDB3, secgrep=0, SFO53-P6)
 - CHANGED api.signageos.io/v1/organization/test/security-token → 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` (was 403105 WRONG_JWT_TOKEN in prior cycles) — endpoint confirmed X-Auth/`x-oauth-client_id` (org-der
 - CHANGED api.signageos.io/v2/device → 403105 unchanged post-deploy (JWT-gated, no regression on new rs)
+
+## 2026-08-13 10:49:36 UTC
