@@ -1956,3 +1956,7 @@
 - LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant session
 - LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check
 - LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable
+
+## RANKED HYPOTHESES 2026-08-13 18:26:56 UTC
+- [82] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override on /v1/organization/{uid}/security-token (from reports/hypotheses-laguna.txt)
+- NEXT(hypotheses-laguna.txt): HUMAN: `sos login` to obtain a valid account JWT `<accountJWT>`, then execute AUTH_HELPED verify_steps for the cross-tenant security-token mint: 1) baseline own
