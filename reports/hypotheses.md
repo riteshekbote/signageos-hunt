@@ -1854,3 +1854,15 @@
 - LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant session
 - LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes), trivial health check, no data leaked
 - LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable
+
+## RANKED HYPOTHESES 2026-08-13 08:25:55 UTC
+- [78] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth account-id path override (from reports/hypotheses-bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): PROBE: box /status reconfirmed this cycle (pod ld6rr, secgrep=0, DFW56-P1) — box POC final; only CRITICAL test remaining is AUTH_HELPED, await credentials: base
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod rotation (`box-8676fb5f57-ld6rr`), zero security headers, full topology leak unchanged behi
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto/no-store) — differential vs box persists.
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes JWT/X-Auth-gated (403/403105), no passive bypass.
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/403105 — excluded class per scope.yml.
+- LEARN: REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 credentials flag → no credential-theft path; MISCONFIG-only.
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant session.
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check.
+- LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable.

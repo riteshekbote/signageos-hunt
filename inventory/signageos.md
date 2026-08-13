@@ -499,3 +499,8 @@
 - NEW box.signageos.io/status pod rotated to `box-8676fb5f57-h6d4t` (uid `2eeb6c32...`), Node v20.20.2, 9-service topology, zero hardening headers, CloudFront DFW56-P1
 - NEW api.signageos.io/status pod rotated to `api-86db648db5-p94sg` (uid `72556714...`), Node v24.19.0, 8-service topology (mongoDB3 absent), hardened HSTS/xfo/xcto/no-store, CloudFront DFW56-P11
 - CHANGED Edge POPs rotated: box → DFW56-P1, api → DFW56-P11 (was ORD58-P5/ORD56-P6)
+
+## 2026-08-13 08:25:55 UTC
+- NEW box.signageos.io/status pod rotated → `box-8676fb5f57-ld6rr` (uid `ed6d572a…`), Node v20.20.2, 9-svc topology incl mongoDB3, secgrep=0 (x-powered-by: Express only), CloudFront DFW56-P1
+- CHANGED box pod identity `ld6rr` (prev cycles: l4pxv/h6d4t) — same rs `8676fb5f57`, data shape identical
+- CHANGED api /status pod `api-86db648db5-p94sg` (uid `72556714…`) stable this cycle, Node v24.19.0, 8-svc (mongoDB3 absent), secgrep=3 + no-store, DFW56-P11
