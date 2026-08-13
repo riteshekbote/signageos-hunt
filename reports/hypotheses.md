@@ -1979,3 +1979,27 @@
 - LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant session
 - LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check
 - LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable
+
+## RANKED HYPOTHESES 2026-08-13 21:06:08 UTC
+- [84] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant organization security-token mint via X-Auth org-UID path override (from reports/hypotheses-laguna.txt)
+- [82] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override (from reports/hypotheses-bigpickle.txt)
+- [80] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token minting via X-Auth org-UID override (from reports/hypotheses-nemotron3.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Provide a valid account JWT (`<accountJWT>` after `sos login`) + a foreign org UID to test the CRITICAL cross-tenant chain on api.signageos.io/v1/organiz
+- NEXT(hypotheses-laguna.txt): HUMAN: `sos login` to obtain a valid account JWT `<accountJWT>` for own org, then execute:
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod rotation, zero security headers, full topology leak unchanged behind CloudFront
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened with HSTS/xfo/xcto/no-store — differential vs box persists
+- LEARN: CONFIRMED MECHANISM @ api.signageos.io/v1/organization/{uid}/security-token: endpoint is X-Auth/`x-oauth-client_id` gated (403074 MISSING_ACCOUNT_ID_TO_AUTHENTI
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes JWT/X-Auth-gated, no passive bypass (reconfirmed post-deploy)
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/MISSING_ACCOUNT_ID_TO_AUTHENTICATE + 403074/403105 — excluded cla
+- LEARN: REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 credentials flag → no credential-theft path; MISCONFIG-only
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant session
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check
+- LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable
+- LEARN: ACCEPTED MECHANISM @ api.signageos.io/v1/organization/{uid}/security-token: 403074 error text explicitly confirms org identity derived from "first part (before 
+- LEARN: ACCEPTED @ box.signageos.io/status: reconfirmed live — pod `box-8676fb5f57-c5vpq`, zero hardening (secgrep=0), full topology leak; POC complete & archived (30+ 
+- LEARN: REJECTED class @ api.signageos.io/v1/*+v2/* descriptive errors: 403 bodies leak `MISSING_ACCOUNT_ID_TO_AUTHENTICATE`/`WRONG_JWT_TOKEN`/`NO_ORGANIZATION_TO_AUTHE
+- LEARN: REJECTED @ api.signageos.io CORS: 0 ACAO on /, /status, /v1/*, /v2/* under any Origin (confirmed this cycle) — not CORS-exploitable.
+- LEARN: ACCEPTED @ box.signageos.io/ + /login/ CORS: 17 static ACAO incl `http://` + `*.zdusercontent.com` wildcard; 0 credentials flag → MISCONFIG-only (no credential-
+- LEARN: REJECTED @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check, no data leaked.
+- LEARN: REJECTED @ box.signageos.io/login Auth0 OAuth2: redirect_uri/state binding — not passively testable without tenant/authenticated session; no unauthenticated aut
+- LEARN: CONFIRMED DIFFERENTIAL @ box vs api /status: box /status still 0 hardening headers (secgrep=0); api /status hardened with HSTS+xfo+xcto+no-store (secgrep=3) + 0

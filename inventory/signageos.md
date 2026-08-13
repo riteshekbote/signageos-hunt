@@ -545,3 +545,6 @@
 - NEW api.signageos.io/v1/organization/{uid}/security-token now returns 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` (was 403105) — confirmed X-Auth/`x-oauth-client_id` gated, org derived from header first-p
 - CHANGED box.signageos.io/status pod rotated to `box-8676fb5f57-dnqvp` (uid `c5d77454…`, Node v20.20.2, 9-svc topology incl mongoDB3, zero hardening headers, CloudFront SFO53-P6)
 - CHANGED api.signageos.io/status new replica set `7676fc7c89` (post-deploy; hardening intact, info-leak persists)
+
+## 2026-08-13 21:06:08 UTC
+- NEW NO_DELTA
