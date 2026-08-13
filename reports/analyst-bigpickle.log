@@ -19401,3 +19401,225 @@ No hypotheses dropped — all three ≥70 confidence, none on the REJECTED class
 ## STEP 7 — RISK SCORE
 - [RISK] box.signageos.io: 35 — persistent unauthenticated /status infra-leak (pod/uid/Node/topology) with zero hardening headers (POC final, 30+ cycles, live this cycle); box-version header now leaks build metadata `2.193.0-master.37116`; remaining surface (CORS/CSP broad whitelist, /login Auth0) MISCONFIG-only or not passively testable; no pre-auth bypass.
 - [RISK] api.signageos.io: 32 — /status info-leak persists but hardened (HSTS/xfo/xcto/no-store); all data endpoints 403 JWT/X-Auth-gated with zero ACAO; primary residual risk is the unproven AUTH_HELPED cross-tenant security-token chain (CRITICAL if real, blocked on credentials).
+===== ANALYST bigpickle 2026-08-13 03:27:55 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -sS -D - -o /tmp/opencode/box-status-body.json https://box.signageos.io/status 2>&1 | head -40
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1438
+date: Thu, 13 Aug 2026 03:16:49 GMT
+etag: W/"59e-mxxoTT26ZKzoSmpKic32Z3IryRA"
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 1a5ddecdee7139ebf663ea7d3699cd88.cloudfront.net (CloudFront)
+x-amz-cf-pop: IAD55-P8
+x-amz-cf-id: Rwf7QnoXtqk7BdhgCc3NAk21FZd5XVQZg7hXz8F4zDDrOkscV8e5HA==
+[0m
+[0m$ [0mcurl -sS -D - -o /tmp/opencode/api-status-body.json https://api.signageos.io/status 2>&1 | head -40
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1332
+date: Thu, 13 Aug 2026 03:16:49 GMT
+etag: W/"534-OWrgCU8WRxm3eJCZFW0kcGozO3U"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+via: 1.1 979084a90b32fe3f5fdc377fb6e67b76.cloudfront.net (CloudFront)
+x-amz-cf-pop: IAD89-P1
+x-amz-cf-id: qogT4jTGg6VyL3CGQIowlZDrZbNn0_BbpnTlQqgsU1hxknZwxQzGFQ==
+[0m
+[0m$ [0mcat /tmp/opencode/box-status-body.json | python3 -m json.tool 2>/dev/null | head -40; echo "---"; sha256sum /tmp/opencode/box-status-body.json
+{
+    "name": "box",
+    "status": "OK",
+    "process": {
+        "uid": "2eeb6c32c7669d1a3feb19015e48cde6035b5ec93c828f58d2",
+        "pid": 1,
+        "version": "v20.20.2",
+        "uptime": 26083.42902403,
+        "cpuUsage": {
+            "user": 1111016155,
+            "system": 134749895
+        },
+        "memoryUsage": {
+            "rss": 248360960,
+            "heapTotal": 166158336,
+            "heapUsed": 140737328,
+            "external": 29470419,
+            "arrayBuffers": 26017658
+        }
+    },
+    "hostname": "box-8676fb5f57-h6d4t",
+    "failedServices": [],
+    "succeededServices": [
+        "amqp0",
+        "redis1",
+        "redis0",
+        "redis3",
+        "redis2",
+        "mongoDB2",
+        "mongoDB3",
+        "mongoDB1",
+        "mongoDB0"
+    ],
+    "timeout": 30000,
+    "requestedAt": 1786591009544,
+    "respondedAt": 1786591009603,
+    "amqp0": {
+        "response": {
+            "requestedAt": 1786591009544,
+            "respondedAt": 1786591009603,
+---
+97bd6ec045d3a7819775ad681fc76630854c2efd1b85e2d5e260d543e4d3492a  /tmp/opencode/box-status-body.json
+[0m
+[0m$ [0mcat /tmp/opencode/api-status-body.json | python3 -m json.tool 2>/dev/null | head -40; echo "---"; sha256sum /tmp/opencode/api-status-body.json
+{
+    "name": "api",
+    "status": "OK",
+    "process": {
+        "uid": "84ff40c826b45c9fd4fa5d8eeec291124522ec14e2c5d787a5",
+        "pid": 1,
+        "version": "v24.19.0",
+        "uptime": 45960.069666304,
+        "cpuUsage": {
+            "user": 19736517680,
+            "system": 1837376464
+        },
+        "memoryUsage": {
+            "rss": 913055744,
+            "heapTotal": 594993152,
+            "heapUsed": 528858048,
+            "external": 95120735,
+            "arrayBuffers": 90953884
+        }
+    },
+    "hostname": "api-86db648db5-rw7mv",
+    "failedServices": [],
+    "succeededServices": [
+        "amqp0",
+        "redis1",
+        "redis2",
+        "redis0",
+        "redis3",
+        "mongoDB2",
+        "mongoDB1",
+        "mongoDB0"
+    ],
+    "timeout": 30000,
+    "requestedAt": 1786591009549,
+    "respondedAt": 1786591009619,
+    "amqp0": {
+        "response": {
+            "requestedAt": 1786591009550,
+            "respondedAt": 1786591009619,
+            "responseTime": 69
+---
+78d3576317b3be74933de5a68fd163aaec203e204a321b5b202f7a87ca3ce20e  /tmp/opencode/api-status-body.json
+[0m
+[0m$ [0msleep 1; curl -sS -D - https://api.signageos.io/v1/organization/test 2>&1 | head -20
+HTTP/2 403 
+content-type: application/json; charset=utf-8
+content-length: 194
+date: Thu, 13 Aug 2026 03:16:58 GMT
+etag: W/"c2-bECwGV3d4wIS7DhwOdEtBpojHls"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+vary: Origin
+access-control-expose-headers: *
+x-cache: Error from cloudfront
+via: 1.1 5148e372b4ab17878741ea92be548472.cloudfront.net (CloudFront)
+x-amz-cf-pop: IAD89-P1
+x-amz-cf-id: v-ek1BPa4Jod-vmzVKdTncBVPfLDTk-XgNSY7YQM2Po5Wu5zHl6pXg==
+
+{"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding of provided JWT token has failed"}
+[0m
+[0m$ [0msleep 1; curl -sS -D - -o /dev/null -H "Origin: https://evil.test" https://box.signageos.io/login/ 2>&1 | grep -iE "HTTP/|access-control|strict-transport|x-frame|x-content|content-security" | head -25
+HTTP/2 200 
+content-security-policy: base-uri 'self';default-src 'none';connect-src 'self' wss://box.signageos.io/ https://api.mapbox.com https://events.mapbox.com https://sentry.io https://sos-production.us.auth0.com/oauth/token https://sos-production.us.auth0.com/oauth/token https://auth0.signageos.io/oauth/token https://signageos-public.s3.eu-central-1.amazonaws.com https://*.sentry.io https://heapanalytics.com https://fonts.googleapis.com https://api.rm.moodmedia.com https://api-next.rm.moodmedia.com https://api.soc.broadsign.com https://api-next.soc.broadsign.com https://api.proav-devicemgmt.sony.net https://api-next.proav-devicemgmt.sony.net https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://demo.signageos.io https://marketplace.signageos.io https://signageos-user-data-exports.s3.eu-central-1.amazonaws.com https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com https://qwfin59thg.execute-api.eu-central-1.amazonaws.com https://upload.signageos.io https://upload.signageos.io https://remote-desktop.signageos.io wss://remote-desktop.signageos.io/ https://2.signageos.io https://static.signageos.io https://upload.signageos.io  https://platform.signageos.io  https://weinre.signageos.io  https://license.signageos.io  https://signageos-device-monitoring.s3.eu-central-1.amazonaws.com https://signageos-public.s3.eu-central-1.amazonaws.com https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com https://storage.googleapis.com https://remote-desktop.signageos.io  https://remote-desktop-us.signageos.io https://api.signageos.io  https://signageos.zendesk.com https://*.zdusercontent.com https://www.google.com/recaptcha/api2/clr https://api.signageos.io https://sos-production.us.auth0.com/oauth/token https://sos-production.us.auth0.com/oauth/token https://auth0.signageos.io/oauth/token;img-src 'self' https://s.gravatar.com/avatar/ https://i0.wp.com/cdn.auth0.com/avatars/ data: https://2.signageos.io https://static.signageos.io https://upload.signageos.io  https://platform.signageos.io  https://weinre.signageos.io  https://license.signageos.io  https://signageos-device-monitoring.s3.eu-central-1.amazonaws.com https://signageos-public.s3.eu-central-1.amazonaws.com https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com https://storage.googleapis.com https://remote-desktop.signageos.io  https://remote-desktop-us.signageos.io https://api.signageos.io  https://signageos.zendesk.com https://*.zdusercontent.com https://www.google.com/recaptcha/api2/clr https://heapanalytics.com https://remote-desktop.signageos.io https://demo.signageos.io https://marketplace.signageos.io;worker-src 'self' blob:;font-src 'self' data: https://fonts.gstatic.com https://heapanalytics.com;style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://heapanalytics.com https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/2.7.0/mapbox-gl.min.css https://cdn.jsdelivr.net/npm/monaco-editor@0.55.1/min/vs/editor/editor.main.css;frame-src https://www.google.com/ https://demo.signageos.io/ https://marketplace.signageos.io/ https://sos-production.us.auth0.com/ https://sos-production.us.auth0.com/ https://auth0.signageos.io/ https://www.signageos.io https://demo.signageos.io https://sos-production.us.auth0.com/ https://sos-production.us.auth0.com/ https://auth0.signageos.io/;script-src 'self' 'strict-dynamic' 'wasm-unsafe-eval';script-src-elem https://box.signageos.io/assets/ https://cdn.heapanalytics.com https://heapanalytics.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/releases/ https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.7/purify.min.js https://cdn.jsdelivr.net/npm/monaco-editor@0.55.1/min/vs/ https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/2.7.0/mapbox-gl.min.js https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.43/moment-timezone-with-data.min.js 'nonce-4d7021536680ac287e47e92f' 'nonce-8efe17a8ea1a5133fbaa0d6b' 'nonce-bdf09f4c9d2fd6ec3fdfbc4e' 'nonce-47b65dfed3e3ee62884a3fad' 'nonce-c20a2425bb68c45f213cfd4a' 'nonce-78679ae93d41c3d768aa062c';media-src 'self';manifest-src 'self';upgrade-insecure-requests ;require-trusted-types-for 'script';report-uri /csp-report;form-action 'self';frame-ancestors 'self';object-src 'none';script-src-attr 'none'
+strict-transport-security: max-age=63072000; includeSubDomains; preload
+x-content-type-options: nosniff
+x-frame-options: DENY
+access-control-allow-origin: http://box.signageos.io
+access-control-allow-origin: https://2.signageos.io
+access-control-allow-origin: https://static.signageos.io
+access-control-allow-origin: https://upload.signageos.io
+access-control-allow-origin: https://platform.signageos.io
+access-control-allow-origin: https://weinre.signageos.io
+access-control-allow-origin: https://license.signageos.io
+access-control-allow-origin: https://signageos-device-monitoring.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://signageos-public.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://storage.googleapis.com
+access-control-allow-origin: https://remote-desktop.signageos.io
+access-control-allow-origin: https://remote-desktop-us.signageos.io
+access-control-allow-origin: https://api.signageos.io
+access-control-allow-origin: https://signageos.zendesk.com
+access-control-allow-origin: https://*.zdusercontent.com
+access-control-allow-origin: https://www.google.com/recaptcha/api2/clr
+[0m
+**STEP 1 — DELTA**
+- [CHANGED] box /status pod rotated → `box-8676fb5f57-h6d4t` (uid `2eeb6c32…`, Node v20.20.2), body sha256 `97bd6ec0…`, 9-svc topology (mongoDB3 present), headers still ONLY `x-powered-by: Express` (secgrep=0), IAD55-P8
+- [CHANGED] api /status pod rotated → `api-86db648db5-rw7mv` (uid `84ff40c8…`, Node v24.19.0), body sha256 `78d35763…`, 8-svc (mongoDB3 absent), hardening intact (HSTS/xfo/xcto/no-store, secgrep=3), IAD89-P1
+- [CHANGED] NO other surface change — box /login/ CORS 17 static ACAO (recaptcha path-bearing value present) + CSP/hardening unchanged; api `/v1/organization/test` → 403 `WRONG_JWT_TOKEN`/403105 unchanged.
+
+**STEP 2 — PRIORITIZE**
+- [PRIO] box.signageos.io/status | score 6.4 | attack 7 business 5 tech 6 gate 10 cloud 7 fresh 3
+- [PRIO] api.signageos.io/v1/organization/{uid}/security-token | score 5.9 | attack 4 business 10 tech 8 gate 2 cloud 5 fresh 4
+- [PRIO] api.signageos.io/status | score 6.05 | attack 7 business 4 tech 6 gate 10 cloud 7 fresh 2
+
+**STEP 3 — HYPOTHESES**
+[HYP] box /status unauthenticated infra-info-leak (POC final)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Fresh probe — 200 JSON leaks pod `box-8676fb5f57-h6d4t`, 40-hex uid, Node v20.20.2, full 9-svc topology + per-service responseTime; secgrep=0 (x-powered-by only). Differential vs hardened `/`+`/login/` and api /status persists 30+ cycles.
+evidence_needed: none — POC final & archived
+verify_steps: PROBE done: `curl -sS -D hd.txt -o body.json https://box.signageos.io/status` → 200 JSON, secgrep=0
+impact: unauthenticated disclosure of pod identity, Node version, process uid, internal mongo/redis/amqp topology; MODERATE
+testability: PASSIVE
+
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 78
+reasoning: Dual-auth stable 30+ cycles — X-Auth `id:unsafeDecryptedToken`, org derived from header first-part (403075/403076 confirm); path {uid} client-supplied and distinct from auth-derived org. Pre-auth 403 WRONG_JWT_TOKEN/403105 persists this cycle (probed IAD89-P1).
+evidence_needed: valid X-Auth (orgA) + foreign orgB {uid} in path returning 200 instead of 403074/403075/403076
+verify_steps: AUTH_HELPED: 1) `sos login` → account JWT; 2) baseline `curl -H "X-Auth: <jwt>" https://api.signageos.io/v1/organization/<own>/security-token` → 200; 3) orgB {uid} variant → non-403 proves cross-tenant mint
+impact: mint org security-tokens for any tenant → full foreign-device/data control; CRITICAL
+testability: AUTH_HELPED
+
+[HYP] api /status infra-info-leak (hardened differential)
+class: MISCONFIG
+asset: api.signageos.io/status
+confidence: 70
+reasoning: Fresh probe — 200 JSON leaks hostname `api-86db648db5-rw7mv`, uid, Node v24.19.0, 8-svc topology; secgrep=3 (HSTS/xfo/xcto) + no-store, IAD89-P1. Header posture hardened vs box /status; info-leak persists.
+evidence_needed: none — data shape confirmed
+verify_steps: PROBE done: `curl -sS -D ah.txt -o abody.json https://api.signageos.io/status` → 200 JSON, secgrep=3
+impact: unauthenticated disclosure of pod identity/Node/topology; MODERATE, mitigated relative to box
+testability: PASSIVE
+
+**STEP 4 — SELF-CRITIQUE**
+- [PARKED] none — all 3 hypotheses survive (≥40 confidence, no REJECTED-list class, concrete verify_steps)
+- [FINAL] 1) [96] box /status infra-leak — POC final, archived, stable 30+ cycles. 2) [78] api cross-tenant security-token mint — highest business value, AUTH_HELPED, blocked on credentials. 3) [70] api /status hardened leak — secondary.
+
+**STEP 5 — NEXT ACTION**
+[NEXT] HUMAN: Box POC final/archived (this cycle pod `h6d4t`, secgrep=0, body sha `97bd6ec0…`). Only remaining CRITICAL test is AUTH_HELPED — provide a valid account JWT from `sos login` + a foreign org UID to run baseline `curl -H "X-Auth: <accountJWT>" https://api.signageos.io/v1/organization/<own>/security-token` then the orgB `{uid}` variant to prove/refute cross-tenant security-token mint.
+
+**STEP 6 — LEARNING**
+- [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: reconfirmed live this cycle — pod `box-8676fb5f57-h6d4t`, secgrep=0, full 9-svc topology leak, CloudFront IAD55-P8; POC final.
+- [LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: reconfirmed hardened (HSTS/xfo/xcto grep=3, no-store) behind CloudFront IAD89-P1 — differential vs box persists.
+- [LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: unchanged — all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin; no passive bypass; cross-tenant mint remains AUTH_HELPED only.
+- [LEARN] REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: unchanged — 403 body leaks `WRONG_JWT_TOKEN`/403105/`Account not found`, excluded class per scope.yml.
+- [LEARN] REJECTED CORS-exploit @ box.signageos.io / + /login/: reconfirmed 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard, 0 `access-control-allow-credentials` → no credential-theft path; MISCONFIG-only.
+- [LEARN] REJECTED MISCONFIG @ box.signageos.io/ready: 200 OK (2 bytes), trivial health check, no data leaked.
+- [LEARN] REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant session (carried forward).
+
+**STEP 7 — RISK SCORE**
+[RISK] box.signageos.io: 35 — persistent unauthenticated /status infra-leak (pod/uid/Node/topology) with zero hardening headers (POC final, 30+ cycles, pod rotation only this cycle); remaining surface (CORS/CSP broad whitelist, /login Auth0) is MISCONFIG-only or not passively testable; no pre-auth bypass.
+[RISK] api.signageos.io: 32 — /status info-leak persists but hardened (HSTS/xfo/xcto/no-store); all data endpoints 403 JWT/X-Auth-gated with no CORS exposure; primary residual risk is the unproven AUTH_HELPED cross-tenant security-token chain (CRITICAL if real, blocked on credentials).

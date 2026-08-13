@@ -480,3 +480,10 @@
 - CHANGED box.signageos.io/status pod rotated to `box-8676fb5f57-vt5sf` (uid `23019c763aed64708c1992b7d30dc4e5c3d8fc46ed29abfb5c`), full 9-service topology (mongoDB3 present), zero hardening headers
 - CHANGED api.signageos.io/status pod rotated to `api-86db648db5-qrv57` (uid `ba427f09aa8e1346d2b5130b3652e151adf6500aef3f336dc8`), 8 services (mongoDB3 absent), hardened HSTS/xfo/xcto/no-store
 - CHANGED Edge POPs: box → ORD58-P5, api → ORD56-P6
+
+## 2026-08-13 03:27:55 UTC
+- NEW box.signageos.io/status pod rotated to `box-8676fb5f57-h6d4t` (uid `2eeb6c32...`), Node v20.20.2, 9-service topology, zero hardening headers (grep=0), CloudFront DFW56-P1
+- NEW api.signageos.io/status pod rotated to `api-86db648db5-p94sg` (uid `72556714...`), Node v24.19.0, 8-service topology (mongoDB3 absent), hardened HSTS/xfo/xcto/no-store, CloudFront DFW56-P11
+- CHANGED Edge POPs rotated: box → DFW56-P1, api → DFW56-P11 (was ORD58-P5/ORD56-P6)
+- CHANGED box.signageos.io/status pod rotated from `box-8676fb5f57-vt5sf` (uid `23019c76…`) to `box-8676fb5f57-l4pxv` (uid `dadfa18d…`) — new pod in same replica set `8676fb5f57`, Node v20.20.2 unchanged, zero 
+- CHANGED api.signageos.io/status pod rotated from `api-86db648db5-qrv57` to `api-86db648db5-p94sg` (uid `72556714…`) — Node v24.19.0 unchanged, 8 services (mongoDB3 absent), hardening intact (HSTS/xfo/xcto/no-
