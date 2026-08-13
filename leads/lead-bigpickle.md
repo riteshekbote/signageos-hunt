@@ -3213,3 +3213,4 @@ evidence_needed: none — data shape confirmed across rs rotations
 verify_steps: PROBE done: `curl -sS -D ah.txt -o abody.json https://api.signageos.io/status` → 200 JSON, secgrep=3
 impact: unauthenticated disclosure of pod identity/Node/topology; MODERATE, mitigated vs box
 testability: PASSIVE
+## 2026-08-13 23:37:47 UTC [box] (model bigpickle)

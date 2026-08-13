@@ -950,3 +950,9 @@ https://api.signageos.io/status` -> HTTP 404
 https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
 https://api.signageos.io/v1/device -> HTTP 403
 https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+
+## 2026-08-13 23:39:51 UTC
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://box.signageos.io/status -> 200 len=1438 type=application/json; charset=utf-8

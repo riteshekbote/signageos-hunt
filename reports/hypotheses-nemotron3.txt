@@ -1,4 +1,8 @@
-## 2026-08-13 22:56:34 UTC [api] (model nemotron3)
+## 2026-08-13 23:39:23 UTC [api] (model nemotron3)
+[NEW] api.signageos.io replica set rotated to `7676fc7c89` (fresh deploy; Node v24.19.0, 8 svc, hardened HSTS/xfo/xcto/no-store behind CloudFront SFO53-P12)
+[NEW] api.signageos.io/v1/organization/{uid}/security-token now returns 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` (was 403105) — confirmed X-Auth/`x-oauth-client_id` gated, org derived from header first-part
+[CHANGED] box.signageos.io/status pod rotated to `box-8676fb5f57-dnqvp` (uid `c5d77454…`, Node v20.20.2, 9-svc topology incl mongoDB3, zero hardening headers, CloudFront SFO53-P6)
+[CHANGED] api.signageos.io/status new replica set `7676fc7c89` (post-deploy; hardening intact, info-leak persists)
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token, 7.70, attack=9, business=9, tech=8, gate=2, cloud=8, fresh=9
 [PRIO] api.signageos.io/v1/organization/{uid}, 7.35, attack=8, business=9, tech=8, gate=2, cloud=8, fresh=8
 [PRIO] box.signageos.io/status, 6.70, attack=7, business=4, tech=5, gate=10, cloud=7, fresh=10
@@ -15,7 +19,7 @@ testability: AUTH_HELPED
 class: IDOR
 asset: api.signageos.io/v1/organization/{uid}
 confidence: 78
-reasoning: GET with X-Auth: <accountJWT> returns oauthClientId + oauthClientSecret; uid is client-supplied; legacy creds carry no org UID, so server-side account∈company→org membership check on path UID is sole barrier.
+reasoning: GET with X-Auth: <accountJWT> returns oauthClientId + oauthClientSecret; uid is client-supplied; legacy creds carry no org UID, so server-side accountcompany→org membership check on path UID is sole barrier.
 evidence_needed: own account JWT → HTTP 200 on GET /v1/organization/<foreign-org-uid> returning oauthClientSecret
 verify_steps: AUTH_HELPED: curl -H "X-Auth: <accountJWT>" https://api.signageos.io/v1/organization/<own-org-uid> = 200 baseline; repeat with foreign-org UID → 200 + oauthClientSecret = cross-tenant; escalate: curl -H "X-Auth: <leakedClientId>:<leakedSecret>" https://api.signageos.io/v1/device → foreign org device list
 impact: any tenant's org API credential → full device/content/timing/firmware control of foreign org; CRITICAL
@@ -29,8 +33,8 @@ evidence_needed: curl -sS https://box.signageos.io/status | sha256sum (expect 20
 verify_steps: PASSIVE: GET https://box.signageos.io/status → 200 JSON leak; GET -I → grep -cE 'strict-transport|x-frame|x-content|content-security' = 0
 impact: infrastructure reconnaissance (pod naming, service mesh topology, Node version, process UID) aids chained attacks; LOW direct exploitability
 testability: PASSIVE
+[PARKED] Cross-tenant OAuth client-secret disclosure via account JWT: confidence 78 but requires AUTH_HELPED with valid JWT + foreign org UID — cannot verify passively
 [FINAL] Cross-tenant security-token minting via X-Auth org-UID override (confidence 84)
-[FINAL] Cross-tenant OAuth client-secret disclosure via account JWT (confidence 78)
 [FINAL] Unauthenticated K8s topology leak via /status missing security headers (confidence 96)
 [NEXT] HUMAN: Provide a valid account JWT (`<accountJWT>` after `sos login`) + a foreign org UID to test the CRITICAL cross-tenant chain on api.signageos.io/v1/organization/{uid}/security-token (POST) and /v1/organization/{uid} (GET)
 [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod rotation, zero security headers, full topology leak unchanged behind CloudFront
@@ -42,6 +46,6 @@ testability: PASSIVE
 [LEARN] REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant session
 [LEARN] REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check
 [LEARN] REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable
-[LEARN] CONFIRMED DIFFERENTIAL @ box vs api /status: box /status still 0 hardening headers (secgrep=0); api /status hardened with HSTS+xfo+xcto+no-store (secgrep=3) + 0 ACAO
+[LEARN] CONFIRMED DIFFERENTIAL @ box vs api /status: box /status still 0 hardening headers (secgrep=0); api /status hardened with HSTS/xfo/xcto+no-store (secgrep=3) + 0 ACAO
 [RISK] box.signageos.io: 58 reason: persistent unauthenticated /status info-leak (K8s topology, pod identity, process UID) with zero hardening headers behind CloudFront; broad CORS/CSP trust boundary on / + /login (17 origins, http:// variant, *.zdusercontent.com wildcard) but no credentials flag; all other surfaces behind Auth0 login catch-all
 [RISK] api.signageos.io: 62 reason: dual-auth API (JWT Bearer + X-Auth `id:unsafeDecryptedToken`) with org UID in path client-supplied; cross-tenant IDOR chain on /v1/organization/{uid}/security-token and /v1/organization/{uid} confirmed at mechanism level (403074 gating) but AUTH_HELPED only; descriptive errors leak auth internals (excluded class); /status hardened but still leaks hostname/uid/Node/topology; zero CORS surface
