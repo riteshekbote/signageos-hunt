@@ -1781,3 +1781,16 @@
 - LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: unchanged — 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET 
 - LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 OK (2 bytes), trivial health check, no data leaked.
 - LEARN: REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 access-control-allow-credentials → no credential-theft path; MISCONFIG-only.
+
+## RANKED HYPOTHESES 2026-08-13 00:44:28 UTC
+- [96] box.signageos.io/status: box /status unauthenticated infra-info-leak (POC final) (from reports/hypotheses-bigpickle.txt)
+- [96] box.signageos.io/status: Unauthenticated K8s topology leak via /status missing security headers (from reports/hypotheses-nemotron3.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Provide a valid account JWT (`<accountJWT>` after `sos login`) + a foreign org UID to test the CRITICAL cross-tenant chain on api.signageos.io/v1/organiz
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod rotation, zero security headers, full topology leak unchanged behind CloudFront
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened with HSTS/xfo/xcto/no-store — differential vs box persists
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes JWT/X-Auth-gated, no passive bypass (reconfirmed)
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 
+- LEARN: REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 credentials flag → no credential-theft path; MISCONFIG-only
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant session
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes), trivial health check, no data leaked
+- LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable

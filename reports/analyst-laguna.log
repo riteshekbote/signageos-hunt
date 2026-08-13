@@ -26264,3 +26264,33 @@ All 3 hypotheses: confidence ≥ 40, none on knowledge REJECTED list (all MISCON
 [RISK] box.signageos.io: 68 — standing unauth /status infra-leak (zero hardening headers, 30+ cycles stable, POC final); 17-origin CORS whitelist (MISCONFIG-only, 0 creds flag → not credential-theft exploitable); / + /login/ hardened vs /status differential confirmed; box phase complete.
 [RISK] api.signageos.io: 80 — /status info-leak persists though header-hardened (HSTS/xfo/xcto behind CF, zero ACAO); 60+ v1/v2 JWT/X-Auth-gated routes with dual-auth mechanism fully exposed (org-UID path-override derivation confirmed via 403075/403076 errors); cross-tenant security-token mint hypothesis AUTH_HELPED conf 78 (blocked on valid foreign-org credential); /v2 advancing (/v2/device → 403 not 404); descriptive-error leak (excluded class) fully enumerates auth boundary; residual CRITICAL risk is unverified cross-tenant mint.
 ```
+===== ANALYST laguna 2026-08-13 00:44:28 UTC =====
+[0m
+> build · laguna-s-2.1-free
+[0m
+[0m$ [0mcurl -sS -o /dev/null -w "status=%{http_code} ct=%{content_type} sz=%{size_download}\n" -D /tmp/box-status-headers.txt -H "Origin: https://evil.test" https://box.signageos.io/status 2>&1 | head -5
+status=200 ct=application/json; charset=utf-8 sz=1438
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcurl -sS -o /tmp/api-status-body.json -D /tmp/api-status-headers.txt -H "Origin: https://evil.test" https://api.signageos.io/status 2>&1; echo "---HEADERS---"; cat /tmp/api-status-headers.txt 2>/dev/null | grep -iE 'access-control|strict-transport|x-frame|x-content|content-security|x-powered|via|cloudfront' ; echo "---BODY---"; cat /tmp/api-status-body.json 2>/dev/null | head -c 800 failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[0m
+[0m$ [0mcurl -sS -o /dev/null -w "box-root=%{http_code} sz=%{size_download}\n" -D /tmp/box-root-headers.txt -H "Origin: https://evil.test" https://box.signageos.io/ 2>&1 | head -3; echo "---ACAO+creds---"; grep -ic 'access-control-allow' /tmp/box-root-headers.txt; grep -ic 'allow-credentials' /tmp/box-root-headers.txt; echo "---sec headers---"; grep -icE 'strict-transport|x-frame|x-content|content-security' /tmp/box-root-headers.txt
+box-root=302 sz=32
+---ACAO+creds---
+17
+0
+---sec headers---
+4
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mecho "=== box/status headers ==="; cat /tmp/box-status-headers.txt 2>/dev/null | grep -iE 'access-control|strict-transport|x-frame|x-content|content-security|x-powered|via|x-cache|x-amz' ; echo "=== body sha ==="; curl -sS https://box.signageos.io/status 2>/dev/null | sha256sum | cut -d' ' -f1; echo "=== body preview ==="; curl -sS https://box.signageos.io/status 2>/dev/null | head -c 600 failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+I'll run fresh probes to determine NEW/CHANGED surface against the baseline from 2026-08-12 23:41 UTC, then produce the structured output.
+[0m
+[0m$ [0mecho "=== box /v1/organization/test ==="; curl -sS -o /dev/null -w "%{http_code}" -H "X-Auth: 12345:abc" https://api.signageos.io/v1/organization/test 2>&1; echo ""; echo "=== box /v2/device ==="; curl -sS -o /dev/null -w "%{http_code}" -H "X-Auth: 12345:abc" https://api.signageos.io/v2/device 2>&1; echo ""
+=== box /v1/organization/test ===
+403
+=== box /v2/device ===
+403
+[0m

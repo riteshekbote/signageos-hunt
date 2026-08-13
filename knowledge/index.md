@@ -459,3 +459,11 @@
 - 2026-08-12 ACCEPTED MISCONFIG @ api.signageos.io/status: reconfirmed hardened (HSTS/xfo/xcto grep=3) behind CloudFront LAX50-P4 — differential vs box persists.
 - 2026-08-12 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: unchanged — all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin; no passive bypass; cross-tenant mint remains AUTH_HELPED only.
 - 2026-08-12 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: unchanged — 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + 403075/403076/403105, excluded class per scope.yml.
+- 2026-08-13 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod rotation, zero security headers, full topology leak unchanged behind CloudFront
+- 2026-08-13 ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened with HSTS/xfo/xcto/no-store — differential vs box persists
+- 2026-08-13 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes JWT/X-Auth-gated, no passive bypass (reconfirmed)
+- 2026-08-13 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 403075/403076/403105 — class descriptive-error excluded per scope.yml
+- 2026-08-13 REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 credentials flag → no credential-theft path; MISCONFIG-only
+- 2026-08-13 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant session
+- 2026-08-13 REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes), trivial health check, no data leaked
+- 2026-08-13 REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable
