@@ -3078,3 +3078,4 @@ evidence_needed: none — POC final & archived (fresh sha256 `e33de30e…`)
 verify_steps: PROBE done: `curl -sS -D hd.txt -o body.json https://box.signageos.io/status` → 200 JSON, secgrep=0
 impact: unauthenticated disclosure of pod identity, Node version, process uid, internal service topology; MODERATE
 testability: PASSIVE
+## 2026-08-13 17:15:03 UTC [box] (model bigpickle)

@@ -1941,3 +1941,18 @@
 - LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable.
 
 ## RANKED HYPOTHESES 2026-08-13 16:23:15 UTC
+
+## RANKED HYPOTHESES 2026-08-13 17:19:51 UTC
+- [96] box.signageos.io/status: box /status unauthenticated infra-leak with zero response hardening (from reports/hypotheses-laguna.txt)
+- [80] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token minting via X-Auth org-UID override (from reports/hypotheses-nemotron3.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Provide a valid account JWT (`<accountJWT>` after `sos login`) + a foreign org UID to test the CRITICAL cross-tenant chain on api.signageos.io/v1/organiz
+- NEXT(hypotheses-laguna.txt): PROBE: curl -s -o /tmp/api_status_body.json -D /tmp/api_status_headers.txt https://api.signageos.io/status → confirm HTTP 200 JSON leaking hostname/uid/Node v24
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod rotation, zero security headers, full topology leak unchanged behind CloudFront
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened with HSTS/xfo/xcto/no-store — differential vs box persists
+- LEARN: CONFIRMED MECHANISM @ api.signageos.io/v1/organization/{uid}/security-token: endpoint is X-Auth/`x-oauth-client_id` gated (403074 MISSING_ACCOUNT_ID_TO_AUTHENTI
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes JWT/X-Auth-gated, no passive bypass (reconfirmed post-deploy)
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/MISSING_ACCOUNT_ID_TO_AUTHENTICATE + 403074/403105 — excluded cla
+- LEARN: REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 credentials flag → no credential-theft path; MISCONFIG-only
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant session
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check
+- LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable
