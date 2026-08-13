@@ -4677,3 +4677,4 @@ testability: PASSIVE
 [RISK] box.signageos.io: 58 reason: persistent unauthenticated /status info-leak (K8s topology, pod identity, process UID) with zero hardening headers behind CloudFront; broad CORS/CSP trust boundary on / + /login (17 origins, http:// variant, *.zdusercontent.com wildcard) but no credentials flag; all other surfaces behind Auth0 login catch-all
 [RISK] api.signageos.io: 62 reason: dual-auth API (JWT Bearer + X-Auth `id:unsafeDecryptedToken`) with org UID in path client-supplied; cross-tenant IDOR chain on /v1/organization/{uid}/security-token and /v1/organization/{uid} confirmed at mechanism level (403074 gating) but AUTH_HELPED only; descriptive errors leak auth internals (excluded class); /status hardened but still leaks hostname/uid/Node/topology; zero CORS surface
 ## 2026-08-13 18:26:44 UTC [api] (model nemotron3)
+## 2026-08-13 19:37:30 UTC [api] (model nemotron3)

@@ -1960,3 +1960,7 @@
 ## RANKED HYPOTHESES 2026-08-13 18:26:56 UTC
 - [82] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override on /v1/organization/{uid}/security-token (from reports/hypotheses-laguna.txt)
 - NEXT(hypotheses-laguna.txt): HUMAN: `sos login` to obtain a valid account JWT `<accountJWT>`, then execute AUTH_HELPED verify_steps for the cross-tenant security-token mint: 1) baseline own
+
+## RANKED HYPOTHESES 2026-08-13 19:37:41 UTC
+- [82] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override on /v1/organization/{uid}/security-token (from reports/hypotheses-laguna.txt)
+- NEXT(hypotheses-laguna.txt): HUMAN: `sos login` to obtain a valid account JWT `<accountJWT>`, then execute AUTH_HELPED verify_steps for the cross-tenant security-token mint: 1) baseline own
