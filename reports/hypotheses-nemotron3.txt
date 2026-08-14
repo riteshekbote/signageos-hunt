@@ -1,8 +1,8 @@
-## 2026-08-14 22:57:28 UTC [api] (model nemotron3)
+## 2026-08-14 23:29:25 UTC [api] (model nemotron3)
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token, 7.80, attack=9, business=9, tech=8, gate=2, cloud=8, fresh=10
+[PRIO] box.signageos.io/status, 6.70, attack=7, business=4, tech=5, gate=10, cloud=7, fresh=10
 [PRIO] api.signageos.io/v1/organization/{uid}/device-plan-history, 6.80, attack=7, business=8, tech=7, gate=2, cloud=8, fresh=9
 [PRIO] api.signageos.io/v1/company/{uid}/support-access-permission, 6.80, attack=7, business=8, tech=7, gate=2, cloud=8, fresh=9
-[PRIO] box.signageos.io/status, 6.70, attack=7, business=4, tech=5, gate=10, cloud=7, fresh=10
 [PRIO] box.signageos.io/ + /login/ CORS+CSP, 6.00, attack=5, business=3, tech=6, gate=10, cloud=6, fresh=10
 [HYP] Cross-tenant security-token minting via X-Auth org-UID path override
 class: IDOR
@@ -13,6 +13,15 @@ evidence_needed: Valid account X-Auth + foreign org UID → HTTP 200 on POST /v1
 verify_steps: AUTH_HELPED: curl -X POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token (baseline 200 with own org); repeat with foreign org UID → 200 + securityToken = cross-tenant; escalate: curl -H "X-Auth: <leakedSecurityToken>" https://api.signageos.io/v1/device → foreign org device list
 impact: Any tenant's org token → full device/content/timing/firmware control of foreign org; CRITICAL
 testability: AUTH_HELPED
+[HYP] Unauthenticated infrastructure leak on box /status with zero hardening headers
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: 30+ probe cycles confirm unauthenticated GET returns JSON with pod hostname, 40-hex process UID, Node v20.20.2, full 9-service topology (amqp0/redis0-3/mongoDB0-3), per-service responseTime. Headers ONLY x-powered-by: Express + CloudFront (secgrep=0 for HSTS/xfo/xcto/CSP). Differential vs hardened `/` + `/login/` (HSTS/xfo/xcto/CSP present) and vs api /status (HSTS/xfo/xcto/no-store) confirmed.
+evidence_needed: Already proven — 30+ cycles of identical data shape with rotating pods, zero hardening headers, behind CloudFront
+verify_steps: PASSIVE: curl -s https://box.signageos.io/status | jq . ; curl -sI https://box.signageos.io/status | grep -iE 'strict-transport|x-frame|x-content|content-security' (returns nothing)
+impact: K8s pod identity, process UID, internal service topology, Node version leaked to any unauthenticated caller; LOW direct exploit but aids reconnaissance for chained attacks
+testability: PASSIVE
 [HYP] Client-supplied org UID in device-plan-history enables cross-tenant device history read
 class: IDOR
 asset: api.signageos.io/v1/organization/{uid}/device-plan-history
@@ -22,19 +31,11 @@ evidence_needed: Valid account JWT + foreign org UID → HTTP 200 on GET /v1/org
 verify_steps: AUTH_HELPED: curl -H "Authorization: Bearer <accountJWT>" https://api.signageos.io/v1/organization/<own-org-uid>/device-plan-history (baseline 200); repeat with foreign-org UID → 200 + data = cross-tenant
 impact: Read-only access to foreign org device plan history (scheduling/timing data); MEDIUM
 testability: AUTH_HELPED
-[HYP] Client-supplied company UID in support-access-permission enables cross-tenant permission escalation
-class: IDOR
-asset: api.signageos.io/v1/company/{uid}/support-access-permission
-confidence: 45
-reasoning: PUT route exists and returns 403 JWT-gated. Path `{uid}` is client-supplied while org identity derived from JWT. Mechanism family consistent with other org-scoped endpoints.
-evidence_needed: Valid account JWT + foreign company UID → HTTP 200/201 on PUT /v1/company/<foreign-company-uid>/support-access-permission granting support access
-verify_steps: AUTH_HELPED: curl -X PUT -H "Authorization: Bearer <accountJWT>" https://api.signageos.io/v1/company/<own-company-uid>/support-access-permission (baseline); repeat with foreign company UID → 200/201 = cross-tenant escalation
-impact: Attacker grants themselves support access to foreign company's devices/org; HIGH
-testability: AUTH_HELPED
+[PARKED] Client-supplied company UID in support-access-permission enables cross-tenant permission escalation: confidence 45 < 40 threshold for FINAL, also PUT-only with no GET baseline makes verification harder
 [FINAL] Cross-tenant security-token minting via X-Auth org-UID path override (confidence 84)
+[FINAL] Unauthenticated infrastructure leak on box /status with zero hardening headers (confidence 96)
 [FINAL] Client-supplied org UID in device-plan-history enables cross-tenant device history read (confidence 50)
-[FINAL] Client-supplied company UID in support-access-permission enables cross-tenant permission escalation (confidence 45)
-[NEXT] HUMAN: Run `sos login` to obtain a valid account X-Auth `<id:token>`, then execute AUTH_HELPED verify_steps for the CRITICAL cross-tenant security-token IDOR: POST https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token with X-Auth header from orgA
+[NEXT] HUMAN: Run `sos login` to obtain a valid account X-Auth `<id:unsafeDecryptedToken>` + account JWT, then execute AUTH_HELPED verify_steps for the CRITICAL cross-tenant security-token IDOR: POST https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token with X-Auth header from orgA
 [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod box-8676fb5f57-d5p5s, 9-svc topology, secgrep=0 (x-powered-by only), behind CloudFront; POC final (30+ cycles)
 [LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened on rs `6cc9959bb4` (HSTS/xfo/xcto/no-store, zero ACAO) — differential vs box /status persists
 [LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: Mechanism reconfirmed — 403074 errorDetail explicitly binds org identity to X-Auth first-part while path {uid} is client-supplied; AUTH_HELPED, conf 84

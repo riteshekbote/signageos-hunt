@@ -3863,3 +3863,4 @@ evidence_needed: orgA JWT + foreign orgB {uid} returning 200 (plan/billing histo
 verify_steps: AUTH_HELPED: 1) `sos login`; 2) GET /v1/organization/<own-uid>/device-plan-history → 200 baseline; 3) orgB {uid} → non-403 = cross-tenant read.
 impact: unauthorized disclosure of foreign org device-plan/billing metadata; HIGH
 testability: AUTH_HELPED
+## 2026-08-14 23:28:53 UTC [box] (model bigpickle)

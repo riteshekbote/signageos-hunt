@@ -683,3 +683,5 @@
 - CHANGED api.signageos.io/v1/company/{uid}/support-access-permission (PUT): 403 JWT-gated confirmed on new rs — route exists, no pre-auth bypass
 
 ## 2026-08-14 22:59:34 UTC
+
+## 2026-08-14 23:29:37 UTC
