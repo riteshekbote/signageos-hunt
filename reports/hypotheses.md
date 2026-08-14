@@ -2294,3 +2294,6 @@
 - LEARN: REJECTED IDOR @ box.signageos.io/ + /login/ bundle.js 2.193.0: contains ZERO /v[12]/ API path references — endpoint map dead, pure Auth0 login bundle
 - LEARN: REJECTED MISCONFIG @ box.signageos.io /healthz /livez /readyz /live: all 302 login catch-all — no new unauthenticated endpoints
 - LEARN: CONFIRMED DIFFERENTIAL @ box vs api /status: box /status secgrep=0 (no HSTS/xfo/xcto/CSP); api /status secgrep=3 (HSTS/xfo/xcto) + 0 ACAO — differential persist
+
+## RANKED HYPOTHESES 2026-08-14 16:29:41 UTC
+- [84] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override (from reports/hypotheses-bigpickle.txt)
