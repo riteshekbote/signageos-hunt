@@ -564,3 +564,6 @@
 - CHANGED api.signageos.io/v2/device → 403105 unchanged post-deploy (rs `7676fc7c89`)
 
 ## 2026-08-14 03:17:37 UTC
+
+## 2026-08-14 05:16:01 UTC
+- NEW NO_DELTA — last leads (2026-08-14 03:17:37 UTC) already reflect post-deploy state (rs `7676fc7c89`, 403074 mechanism confirmed, v2/device stable 403105); inventory shows only NO_DELTA entries since

@@ -3235,3 +3235,4 @@ verify_steps: PROBE done: `curl -sS -D ah.txt -o abody.json https://api.signageo
 impact: unauthenticated disclosure of pod identity/Node/topology; MODERATE, mitigated vs box
 testability: PASSIVE
 [NEXT] HUMAN: run `sos login` to obtain a valid account JWT + supply a foreign org UID so the cross-tenant chain on api.signageos.io/v1/organization/{uid}/security-token can be executed per AUTH_HELPED verify_steps (orgB `{uid}` → non-403074 = CRITICAL IDOR)
+## 2026-08-14 05:09:57 UTC [box] (model bigpickle)
