@@ -1061,3 +1061,6 @@ https://box.signageos.io/ -> 200 len=103953 type=text/html; charset=utf-8
 
 ## 2026-08-14 16:29:41 UTC
 
+
+## 2026-08-14 17:33:23 UTC
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404

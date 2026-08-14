@@ -5517,3 +5517,4 @@ testability: AUTH_HELPED
 [RISK] api.signageos.io: 62 reason: Dual-auth API (JWT Bearer + X-Auth `id:unsafeDecryptedToken`) with org UID in path client-supplied; cross-tenant IDOR chain on /v1/organization/{uid}/security-token and /v1/organization/{uid} confirmed at mechanism level (403074 gating) but AUTH_HELPED only; descriptive errors leak auth internals (excluded class); /status hardened but still leaks hostname/uid/Node/topology; zero CORS surface
 ## 2026-08-14 15:33:03 UTC [api] (model nemotron3)
 ## 2026-08-14 16:28:49 UTC [api] (model nemotron3)
+## 2026-08-14 17:32:43 UTC [api] (model nemotron3)

@@ -2297,3 +2297,7 @@
 
 ## RANKED HYPOTHESES 2026-08-14 16:29:41 UTC
 - [84] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override (from reports/hypotheses-bigpickle.txt)
+
+## RANKED HYPOTHESES 2026-08-14 17:33:22 UTC
+- [84] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override (from reports/hypotheses-bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Run `sos login`, then execute the CRITICAL cross-tenant chain: `POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<orgB-uid>/sec
