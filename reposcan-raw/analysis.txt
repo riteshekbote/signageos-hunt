@@ -1,22 +1,19 @@
 [0m
 > build · nemotron-3-ultra-free
 [0m
-**Triaged Hit Classification**
+[0m$ [0mecho -n '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9' | sha256sum
+564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e  -
+[0m
+### Triage Results
 
-| Category | File | Line | SHA256 of Secret Material | Notes |
-|---|---|---|---|---|
-| **REAL_SECRET** | reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | Hardcoded clientId/secret pair targeting staging `http://api.kiera.office.signageos.io` (HTTP, out-of-scope host) |
+| Category | File | Line | SHA256 | Classification |
+|----------|------|------|--------|----------------|
+| **TEST_OR_EXAMPLE** | reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | Staging-only test fixture (targets `http://api.kiera.office.signageos.io`), tested dead on prod |
 
-| Category | File | Line | Notes |
-|---|---|---|---|
-| TEST_OR_EXAMPLE | — | — | None |
-| ENDPOINT_LEAK | — | — | Staging endpoint `api.kiera.office.signageos.io` already known |
-| INTERESTING | — | — | Secret is 64-char hex (32 bytes); paired with clientId `fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47` |
+### Verdict
 
----
+| Candidate | REPORT_CANDIDATE |
+|-----------|------------------|
+| videowall-designer videoTiming.js secret | **no** — Confirmed staging fixture; tested against production api.signageos.io returns 403076 "Account not found" (credential reuse disproven, 2026-08-14) |
 
-**Verdict**
-
-| Candidate | REPORT_CANDIDATE | Rationale |
-|---|---|---|
-| videowall-designer videoTiming.js:19 secret | **no** | Already triaged 2026-08-07/2026-08-14: tested against prod `api.signageos.io` via X-Auth → `403076 WRONG_ACCOUNT_SECRET "Account not found"`. Credential pair parsed past missing-header gate but account does not exist on prod. Confirmed staging-only test fixture; credential reuse disproven. Host `api.kiera.office.signageos.io` is out-of-scope. Per program rules: secrets in commits → sha256 only, never raw; but this secret is dead on eligible targets.
+**Note:** This hit matches the previously analyzed secret leak in the knowledge base (2026-08-07 → 2026-08-14). The credential pair (clientId `fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47` + this secret) was validated as a staging-only test fixture that does not exist on production. No further action needed.
