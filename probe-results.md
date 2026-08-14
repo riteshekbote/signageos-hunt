@@ -1022,3 +1022,13 @@ https://box.signageos.io/ -> 200 len=103953 type=text/html; charset=utf-8
 https://box.signageos.io/status -> 200 len=1439 type=application/json; charset=utf-8
 https://api.signageos.io/v2/firmware` -> HTTP 404
 https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-14 11:24:23 UTC
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://box.signageos.io/ -> 200 len=103953 type=text/html; charset=utf-8
+https://box.signageos.io/status -> 200 len=1436 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token` -> HTTP 404
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token` -> HTTP 404
+https://api.signageos.io/v1/device` -> HTTP 404
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404

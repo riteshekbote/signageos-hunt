@@ -3373,3 +3373,34 @@ verify_steps: AUTH_HELPED: 1) `sos login`; 2) `curl -H "X-Auth: <orgA-id:token>"
 impact: cross-tenant firmware metadata/blob disclosure; HIGH if drift
 testability: AUTH_HELPED
 [NEXT] HUMAN: run `sos login` for a valid account JWT, then `curl -X POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` — 200 or 403076 (WRONG_ACCOUNT_SECRET) = CRITICAL cross-tenant mint (org not bound to path UID); repeat same header against `/v2/firmware`; escalate minted token to /v1/device.
+## 2026-08-14 11:24:05 UTC [box] (model bigpickle)
+[HYP] Cross-tenant device-plan-history read via client-supplied org {uid}
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/device-plan-history
+confidence: 50
+reasoning: New 2.193.0 route, live → 403105 without JWT; same family as security-token (client-supplied path {uid} vs org derived from auth header first-part); bundle registers `fetchDevicePlanHistory` with plain `{uid}` substitution.
+evidence_needed: orgA JWT + foreign orgB {uid} returning 200 (plan/billing history) instead of 403105/403 error → cross-tenant read.
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) baseline `GET /v1/organization/<own-uid>/device-plan-history` → 200; 3) orgB {uid} variant → non-403 = cross-tenant data read.
+impact: unauthorized disclosure of foreign org device-plan/billing metadata; HIGH if verified
+testability: AUTH_HELPED
+[HYP] support-access-permission PUT allows cross-company support-level set
+class: IDOR
+asset: api.signageos.io/v1/company/{uid}/support-access-permission
+confidence: 45
+reasoning: 2.193.0 bundle shows PUT body `{level}`; company {uid} client-supplied; support-access is an elevated agent privilege — no equality check observed; GET→404 confirms PUT-only route.
+evidence_needed: orgA JWT + foreign orgB company {uid} PUT `{level:...}` returning 200 (vs 403) → cross-company privilege grant.
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) baseline PUT own company → 200; 3) orgB {uid} variant → non-403 = cross-tenant support grant; do NOT execute level changes on targets you don't own.
+impact: raise support-access level or grant it for foreign orgs → lateral privilege; CRITICAL if verified
+testability: AUTH_HELPED
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override (carried)
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 84
+reasoning: 403074 errorDetail confirms org from x-auth first-part before `:` while path {uid} client-supplied and independent; mechanism stable across rs 7676fc7c89→6cc9959bb4.
+evidence_needed: valid X-Auth (orgA) + foreign orgB {uid} → 200 or 403076 (not 403074) = cross-tenant mint.
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) POST `/v1/organization/<own-uid>/security-token` → 200 baseline; 3) orgB {uid} variant; 4) escalate minted token to /v1/device.
+impact: mint security tokens for any tenant → foreign device/content/firmware control; CRITICAL
+testability: AUTH_HELPED
+[NEXT] HUMAN: run `sos login`, then with the account JWT/X-Auth execute, in order: a) `POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` (200/403076 = CRITICAL mint), b) `GET /v1/organization/<orgB-uid>/device-plan-history` (non-403 = cross-tenant read), c) `PUT /v1/company/<orgB-uid>/support-access-permission` body `{"level":...}` (non-403 = cross-company support grant). Provide JWT + one foreign org UID; do not modify targets you don't own.
+[RISK] box.signageos.io: 58 — persistent unauthenticated /status infra-leak (pod identity, 40-hex UID, Node, full amqp/redis/mongo topology) with zero hardening headers behind CloudFront; 17-origin static CORS whitelist (incl http:// plaintext + *.zdusercontent.com) with no credentials flag; CSP ~59 origins; all other routes Auth0-gated / 302 catch-all; no unauth WS/XSS surface.
+[RISK] api.signageos.io: 62 — dual-auth (JWT + X-Auth `id:unsafeDecryptedToken`) with client-supplied org/company UIDs in path while org identity derives from header first-part → cross-tenant chain confirmed at mechanism level (security-token mint) and widened this cycle (device-plan-history, support-access-permission); /status hardened (secgrep=3) but still leaks hostname/uid/Node/topology; zero CORS surface; descriptive auth errors (excluded class).

@@ -588,3 +588,5 @@
 - CHANGED api.signageos.io replica set rotated to `7676fc7c89` (fresh deploy; Node v24.19.0, 8 svc, hardened HSTS/xfo/xcto/no-store behind CloudFront SFO53-P12)
 - CHANGED api.signageos.io/v1/organization/{uid}/security-token: now returns 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` (was 403105) — confirmed X-Auth/`x-oauth-client_id` gated, org derived from header first-
 - CHANGED box.signageos.io/status pod rotated within rs `8676fb5f57` → `box-8676fb5f57-xd6mc` (uid `6deaf70c2a3b648ff24e0c699ec55b7a6c4d5715e2a472949b`, Node v20.20.2, 9-svc topology, secgrep=0, CloudFront SFO5
+
+## 2026-08-14 11:24:19 UTC
