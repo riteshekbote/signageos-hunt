@@ -2384,3 +2384,10 @@
 - LEARN: REJECTED IDOR @ api.signageos.io new rs `77955558bc`: replica-set rotation introduced zero auth drift — security-token 403074, device-plan-history 403105, v2/de
 - LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod box-8676fb5f57-d5p5s, 9-svc topology, secgrep=0 (x-powered-by only), behind CloudFront; POC
 - LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened on rs `6cc9959bb4` (HSTS/xfo/xcto/no-store, zero ACAO) — differential vs box /status persists
+
+## RANKED HYPOTHESES 2026-08-14 21:47:42 UTC
+- [84] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override (from reports/hypotheses-bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Run `sos login` to obtain a valid orgA X-Auth `<id:token>`, then execute AUTH_HELPED verify_steps for the CRITICAL cross-tenant security-token IDOR: base
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 mechanism reconfirmed on rs `77955558bc` rotation (pod `api-77955558bc-cfkd4`) — z
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: hardened (secgrep=3, 0 ACAO) across rs rotation; info-leak persists but differential vs box /status (secgrep=0) un
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/status CORS: zero ACAO under spoofed Origin — whitelist strictly scoped to `/`+`/login/`

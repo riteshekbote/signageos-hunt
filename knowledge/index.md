@@ -561,3 +561,6 @@
 - 2026-08-14 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened on rs `77955558bc` (HSTS/xfo/xcto/no-store, zero ACAO) — differential vs box /status persists.
 - 2026-08-14 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod box-8676fb5f57-d5p5s, 9-svc topology, secgrep=0 (x-powered-by only), behind CloudFront; POC final (30+ cycles)
 - 2026-08-14 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened on rs `6cc9959bb4` (HSTS/xfo/xcto/no-store, zero ACAO) — differential vs box /status persists
+- 2026-08-14 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 mechanism reconfirmed on rs `77955558bc` rotation (pod `api-77955558bc-cfkd4`) — zero auth drift across replica-set flip; AUTH_HELPED, conf 84
+- 2026-08-14 ACCEPTED MISCONFIG @ api.signageos.io/status: hardened (secgrep=3, 0 ACAO) across rs rotation; info-leak persists but differential vs box /status (secgrep=0) unchanged
+- 2026-08-14 REJECTED MISCONFIG @ box.signageos.io/status CORS: zero ACAO under spoofed Origin — whitelist strictly scoped to `/`+`/login/`

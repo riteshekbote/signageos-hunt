@@ -666,3 +666,8 @@
 ## 2026-08-14 20:45:47 UTC
 
 ## 2026-08-14 21:11:42 UTC
+
+## 2026-08-14 21:47:42 UTC
+- CHANGED api.signageos.io/status pod rotated within already-seen rs `77955558bc` → `api-77955558bc-cfkd4` (Node v24.19.0, 8-svc mongoDB3 absent, hardened secgrep=3, CloudFront IAD89-P1)
+- CHANGED box.signageos.io/status pod stable `box-8676fb5f57-xd6mc` (uid 6deaf70c…, Node v20.20.2, 9-svc, secgrep=0, CloudFront IAD55-P8) — data shape unchanged
+- CHANGED api /v1/organization/{uid}/security-token: 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` reconfirmed — errorDetail wording identical ("first part (before char :) of x-auth header" vs client-supplied pat

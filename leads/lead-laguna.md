@@ -3438,3 +3438,4 @@ testability: PASSIVE
 [RISK] api.signageos.io: 75 — CRITICAL AUTH_HELPED cross-tenant IDOR on /v1/organization/{uid}/security-token (mechanism CONFIRMED, conf 84); /status hardened with HSTS/xfo/xcto/no-store but still leaks infra details; all 60+ v1/v2 endpoints JWT/X-Auth-gated with zero ACAO — no pre-auth bypass; descriptive error messages excluded per scope.yml
 ## 2026-08-14 20:44:28 UTC [box] (model laguna)
 ## 2026-08-14 21:10:50 UTC [box] (model laguna)
+## 2026-08-14 21:47:33 UTC [box] (model laguna)
