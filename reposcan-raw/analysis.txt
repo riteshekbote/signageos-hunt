@@ -1,12 +1,77 @@
 [0m
 > build · nemotron-3-ultra-free
 [0m
-**Classification Table**
+[0m$ [0mcat reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
+const RestApi = require('@signageos/test/dist/RestApi/RestApi').default;
 
-| Category | File | Line | SHA256 | Verdict |
-|----------|------|------|--------|---------|
-| TEST_OR_EXAMPLE / STAGING_SECRET | reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | **KNOWN DUPLICATE** — Hardcoded secret for staging host `api.kiera.office.signageos.io` (out of scope). Already triaged 2026-08-07/2026-08-09 as non-reportable. |
+/**
+ * @param {Array.<{ index: Number, deviceUid: String, uri: String }>} videos
+ * @param {Object} [auth]
+ * @param {String} [auth].clientId
+ * @param {String} [auth].secret
+ * @param {String} [appletUid]
+ * @param {String} [appletVersion]
+ * @param {String} [apiUrl]
+ * @param {String} [syncGroup]
+ * @param {String} [syncServer]
+ */
+module.exports = exports = {
+    async setupVideoTimings(
+        videos,
+        auth = {
+            clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47',
+            secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+        },
+        appletUid = 'c790b56805154b80e12309453ee2c387511179106563165848',
+        appletVersion = '1.0.0',
+        apiUrl = 'http://api.kiera.office.signageos.io',
+        syncGroup = 'video-' + Math.random(),
+        syncServer,
+    ) {
+        const sos = new RestApi({
+            url: apiUrl,
+            version: 'v1',
+            auth,
+        });
+        const nowDate = new Date();
+        for (const video of videos) {
+            await sos.timing.create({
+                deviceUid: video.deviceUid,
+                appletUid,
+                appletVersion,
+                configuration: {
+                    identification: 'video-' + video.index,
+                    sync_server: syncServer,
+                    sync_group: syncGroup,
+                    video_uri: video.uri,
+                },
+                startsAt: nowDate,
+                endsAt: nowDate,
+                finishEvent: {
+                    type: 'DURATION',
+                    data: null,
+                },
+                position: 1,
+            })
+        }
+    },
+};
+[0m
+[0m$ [0mecho -n '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9' | sha256sum
+564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e  -
+[0m
+[0m$ [0mecho -n 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47' | sha256sum
+efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b  -
+[0m
+### Classification Table
 
-**Verdict**
+| Category | File | Line | SHA256 (secret material) | Details |
+|----------|------|------|---------------------------|---------|
+| **REAL_SECRET** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js` | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | Hardcoded `secret` (64-char hex) in test setup; paired with `clientId` (SHA256 `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b`) |
+| **ENDPOINT_LEAK** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js` | 24 | — | Internal staging endpoint `http://api.kiera.office.signageos.io` (HTTP, not HTTPS) used as default `apiUrl` |
 
-- **REPORT_CANDIDATE: no** — This is a known duplicate of a previously classified staging secret pointing to an out-of-scope host (`api.kiera.office.signageos.io`). The secret targets an internal staging environment over HTTP, not production. Per program scope, only `box.signageos.io` and `api.signageos.io` are eligible targets. No new reportable findings in this scan.
+### Verdict
+
+| Candidate | REPORT_CANDIDATE | Reason |
+|-----------|------------------|--------|
+| Hardcoded clientId/secret in videowall-designer | **no** | Credentials target `api.kiera.office.signageos.io` (staging, HTTP) — **out of scope** (eligible hosts: `box.signageos.io`, `api.signageos.io` only). Known duplicate (KB: 2026-08-07 ACCEPTED SECRET_LEAK). Informs prod org-boundary testing but not directly reportable. |
