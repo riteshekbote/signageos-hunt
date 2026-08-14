@@ -1082,3 +1082,9 @@ https://api.signageos.io/v1/company/<own-company-uid>/support-access-permission 
 https://box.signageos.io/status -> 200 len=1439 type=application/json; charset=utf-8
 https://box.signageos.io/ -> 200 len=103953 type=text/html; charset=utf-8
 https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-14 20:45:49 UTC
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/device-plan-history -> HTTP 403
+https://api.signageos.io/v1/company/<own-company-uid>/support-access-permission -> HTTP 404
