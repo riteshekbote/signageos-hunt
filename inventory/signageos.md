@@ -580,3 +580,11 @@
 - NEW WS handshake to box.signageos.io/ → 302 login redirect (no unauthenticated WebSocket surface)
 
 ## 2026-08-14 09:21:10 UTC
+
+## 2026-08-14 10:31:54 UTC
+- NEW box.signageos.io/ + /login/: 7 rotating `x-*-nonce-hash` response headers (CSP nonce-hash middleware); values differ per request (req1 `53ab2d784cf23671c7472263` vs req2 `e07768a3f2743ed4cac39d0a`)
+- NEW box.signageos.io/status: emits NO `access-control-allow-origin` under spoofed Origin `https://evil.test` (CORS whitelist scoped to `/` + `/login/` only); `/status/`, `/status?x=1` also 200 JSON; `/hea
+- NEW box.signageos.io WebSocket: `wss://box.signageos.io/` upgrade → 302 login redirect (no unauthenticated WebSocket surface)
+- CHANGED api.signageos.io replica set rotated to `7676fc7c89` (fresh deploy; Node v24.19.0, 8 svc, hardened HSTS/xfo/xcto/no-store behind CloudFront SFO53-P12)
+- CHANGED api.signageos.io/v1/organization/{uid}/security-token: now returns 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` (was 403105) — confirmed X-Auth/`x-oauth-client_id` gated, org derived from header first-
+- CHANGED box.signageos.io/status pod rotated within rs `8676fb5f57` → `box-8676fb5f57-xd6mc` (uid `6deaf70c2a3b648ff24e0c699ec55b7a6c4d5715e2a472949b`, Node v20.20.2, 9-svc topology, secgrep=0, CloudFront SFO5

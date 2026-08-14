@@ -1,29 +1,20 @@
-## 2026-08-14 09:18:44 UTC [box] (model bigpickle)
-[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+## 2026-08-14 10:31:41 UTC [box] (model bigpickle)
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override (carried forward)
 class: IDOR
 asset: api.signageos.io/v1/organization/{uid}/security-token
 confidence: 84
-reasoning: 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` reconfirmed on rs `6cc9959bb4`; errorDetail proves org identity derived from x-oauth-client_id / x-auth first-part before `:`; path `{uid}` client-supplied and independent; no equality check observed across rs 7676fc7c89→6cc9959bb4.
-evidence_needed: valid X-Auth (orgA) + foreign orgB `{uid}` returning 200 or 403076 (WRONG_ACCOUNT_SECRET) instead of 403074 → security-token minted for orgB
-verify_steps: AUTH_HELPED: 1) `sos login` → account JWT; 2) baseline `curl -X POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<own-uid>/security-token` → 200; 3) orgB `{uid}` variant → non-403074 = cross-tenant mint; 4) escalate minted token to /v1/device
+reasoning: 403074 reconfirmed this cycle on rs 6cc9959bb4; errorDetail proves org identity from x-auth first-part before `:` while path `{uid}` is client-supplied and independent.
+evidence_needed: valid X-Auth (orgA) + foreign orgB `{uid}` returning 200/403076 instead of 403074
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) baseline POST `/v1/organization/<own-uid>/security-token` → 200; 3) orgB variant → non-403074 = cross-tenant mint; 4) escalate minted token to /v1/device
 impact: mint security tokens for any tenant → foreign device/content/firmware control; CRITICAL
 testability: AUTH_HELPED
-[HYP] box /status unauthenticated infra-info-leak (POC final)
-class: MISCONFIG
-asset: box.signageos.io/status
-confidence: 96
-reasoning: 30+ cycles — 200 JSON leaks pod `box-8676fb5f57-wmtnp`, 40-hex uid `f014a05f…`, Node v20.20.2, 9-svc topology + per-service responseTime; secgrep=0 (x-powered-by + CloudFront only); NO ACAO under spoofed Origin; differential vs hardened `/`+`/login/` and api /status persists.
-evidence_needed: none — POC final & archived
-verify_steps: PROBE done: `curl -sS -D hd.txt -o body.json https://box.signageos.io/status` → 200 JSON, secgrep=0
-impact: unauthenticated disclosure of pod identity, process uid, Node version, internal service topology; MODERATE
-testability: PASSIVE
-[HYP] SPA 2.193.0 bundle exposes new v1/v2 endpoints with authz drift
+[HYP] v2/firmware X-Auth-gated — v2 migration adopting dual-auth org override
 class: IDOR
-asset: box.signageos.io/login/ (bundle.js) → api.signageos.io/v2/*
-confidence: 45
-reasoning: box-version bumped 2.192.0→2.193.0 (fresh SPA deploy, header confirmed this cycle); each prior build added /v1 paths later found JWT-gated; v2 migration is advancing (/v2/device 403 vs prior 404) so a new build may ship additional v2 routes whose authz may lag behind v1 parity.
-evidence_needed: new v2/v1 path present in 2.193 bundle AND that path returning non-403 (authz drift) on api
-verify_steps: PROBE: fetch bundle (GET /login/ asset, grep `/v[12]/` paths, diff vs 40+ known map); then `curl -i https://api.signageos.io/v2/<new-path>` → 403105/403074 = gated (dead), 200/404-with-body = drift (live)
-impact: new v2 endpoint without v1 parity authz = potential unauthorized cross-tenant data; HIGH if found
+asset: api.signageos.io/v2/firmware
+confidence: 48
+reasoning: only v2 route observed in X-Auth mode; 403075 errorDetail explicitly cites "first part (before char :) of x-auth header" — same org-derivation as security-token; present in 2.193.0 bundle.
+evidence_needed: valid X-Auth orgA retrieving firmware scoped to orgB (non-403), or org-B-referencing param accepted
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) `curl -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v2/firmware` → baseline; 3) vary client-supplied org/query → non-403 = drift
+impact: cross-tenant firmware metadata/blob disclosure; HIGH if drift
 testability: AUTH_HELPED
-[NEXT] PROBE: fetch box /login/ SPA asset from the new 2.193.0 build, extract `/v[12]/` path list, and diff against the known 40+ endpoint map to surface any new v2 routes; then single-thread 403-check any new path at api.signageos.io (`curl -sS -i https://api.signageos.io/v2/<new>` → 403074/403105 = gated, else drift). (The security-token chain stays queued for HUMAN `sos login` + foreign org UID.)
+[NEXT] HUMAN: run `sos login` for a valid account JWT, then `curl -X POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` — 200 or 403076 (WRONG_ACCOUNT_SECRET) = CRITICAL cross-tenant mint (org not bound to path UID); repeat same header against `/v2/firmware`; escalate minted token to /v1/device.

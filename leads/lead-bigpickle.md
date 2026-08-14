@@ -3353,3 +3353,23 @@ verify_steps: PROBE: fetch bundle (GET /login/ asset, grep `/v[12]/` paths, diff
 impact: new v2 endpoint without v1 parity authz = potential unauthorized cross-tenant data; HIGH if found
 testability: AUTH_HELPED
 [NEXT] PROBE: fetch box /login/ SPA asset from the new 2.193.0 build, extract `/v[12]/` path list, and diff against the known 40+ endpoint map to surface any new v2 routes; then single-thread 403-check any new path at api.signageos.io (`curl -sS -i https://api.signageos.io/v2/<new>` → 403074/403105 = gated, else drift). (The security-token chain stays queued for HUMAN `sos login` + foreign org UID.)
+## 2026-08-14 10:31:41 UTC [box] (model bigpickle)
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override (carried forward)
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 84
+reasoning: 403074 reconfirmed this cycle on rs 6cc9959bb4; errorDetail proves org identity from x-auth first-part before `:` while path `{uid}` is client-supplied and independent.
+evidence_needed: valid X-Auth (orgA) + foreign orgB `{uid}` returning 200/403076 instead of 403074
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) baseline POST `/v1/organization/<own-uid>/security-token` → 200; 3) orgB variant → non-403074 = cross-tenant mint; 4) escalate minted token to /v1/device
+impact: mint security tokens for any tenant → foreign device/content/firmware control; CRITICAL
+testability: AUTH_HELPED
+[HYP] v2/firmware X-Auth-gated — v2 migration adopting dual-auth org override
+class: IDOR
+asset: api.signageos.io/v2/firmware
+confidence: 48
+reasoning: only v2 route observed in X-Auth mode; 403075 errorDetail explicitly cites "first part (before char :) of x-auth header" — same org-derivation as security-token; present in 2.193.0 bundle.
+evidence_needed: valid X-Auth orgA retrieving firmware scoped to orgB (non-403), or org-B-referencing param accepted
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) `curl -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v2/firmware` → baseline; 3) vary client-supplied org/query → non-403 = drift
+impact: cross-tenant firmware metadata/blob disclosure; HIGH if drift
+testability: AUTH_HELPED
+[NEXT] HUMAN: run `sos login` for a valid account JWT, then `curl -X POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` — 200 or 403076 (WRONG_ACCOUNT_SECRET) = CRITICAL cross-tenant mint (org not bound to path UID); repeat same header against `/v2/firmware`; escalate minted token to /v1/device.
