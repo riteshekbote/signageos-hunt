@@ -681,3 +681,5 @@
 - CHANGED api.signageos.io/v1/organization/{uid}/security-token: 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE reconfirmed on rs `77955558bc` rotation — zero auth drift across replica-set flip
 - CHANGED api.signageos.io/v1/organization/{uid}/device-plan-history: 403105 WRONG_JWT_TOKEN confirmed on new rs — JWT-gated route from 2.193.0 bundle present
 - CHANGED api.signageos.io/v1/company/{uid}/support-access-permission (PUT): 403 JWT-gated confirmed on new rs — route exists, no pre-auth bypass
+
+## 2026-08-14 22:59:34 UTC
