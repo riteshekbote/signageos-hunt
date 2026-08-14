@@ -3214,3 +3214,4 @@ verify_steps: PROBE done: `curl -sS -D ah.txt -o abody.json https://api.signageo
 impact: unauthenticated disclosure of pod identity/Node/topology; MODERATE, mitigated vs box
 testability: PASSIVE
 ## 2026-08-13 23:37:47 UTC [box] (model bigpickle)
+## 2026-08-14 00:43:30 UTC [box] (model bigpickle)
