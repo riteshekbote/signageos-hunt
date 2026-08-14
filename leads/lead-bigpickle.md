@@ -3505,3 +3505,4 @@ evidence_needed: orgA JWT + foreign orgB company `{uid}` PUT `{level}` returning
 verify_steps: AUTH_HELPED: 1) `sos login`; 2) baseline PUT own company → 200; 3) orgB `{uid}` variant → non-403 = cross-tenant grant; do NOT alter targets you don't own.
 impact: raise/grant support-access for foreign orgs → lateral privilege; CRITICAL if verified
 testability: AUTH_HELPED
+## 2026-08-14 15:33:18 UTC [box] (model bigpickle)

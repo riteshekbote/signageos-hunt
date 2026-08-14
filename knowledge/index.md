@@ -541,3 +541,9 @@
 - 2026-08-14 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/device-plan-history: route exists, JWT-gated (403105) pre-auth — mechanism-family (client-supplied {uid}) intact, AUTH_HELPED conf 50
 - 2026-08-14 ACCEPTED IDOR @ api.signageos.io/v1/company/{uid}/support-access-permission: PUT route exists, JWT-gated (403) pre-auth — AUTH_HELPED conf 45
 - 2026-08-14 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes still JWT/X-Auth-gated (403105/403074), no passive bypass (reconfirmed this cycle)
+- 2026-08-14 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/: 7 rotating x-*-nonce-hash headers (CSP nonce-hash middleware) on SPA routes only; absent on /status — hardening differential confirmed
+- 2026-08-14 REJECTED MISCONFIG @ box.signageos.io/status CORS: NO access-control-allow-origin on /status under any Origin (CORS whitelist strictly scoped to / + /login/ only)
+- 2026-08-14 REJECTED MISCONFIG @ box.signageos.io WebSocket: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface
+- 2026-08-14 REJECTED IDOR @ box.signageos.io/ + /login/ bundle.js 2.193.0: contains ZERO /v[12]/ API path references — endpoint map dead, pure Auth0 login bundle
+- 2026-08-14 REJECTED MISCONFIG @ box.signageos.io /healthz /livez /readyz /live: all 302 login catch-all — no new unauthenticated endpoints
+- 2026-08-14 CONFIRMED DIFFERENTIAL @ box vs api /status: box /status secgrep=0 (no HSTS/xfo/xcto/CSP); api /status secgrep=3 (HSTS/xfo/xcto) + 0 ACAO — differential persists
