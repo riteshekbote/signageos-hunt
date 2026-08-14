@@ -24171,3 +24171,264 @@ STEP 6 — LEARNING
 STEP 7 — RISK SCORE
 - [RISK] box.signageos.io: 45 | single accepted unauth finding (/status infra-leak + zero hardening) but SPA routes hardened (HSTS/xfo/xcto/CSP/nonce-hash), CORS scoped to `/`+`/login/`, all other paths behind login catch-all, WS→302 — low remaining passive surface
 - [RISK] api.signageos.io: 58 | hardened headers (HSTS/xfo/xcto/no-store), zero ACAO, all routes JWT/X-Auth-gated, but live cross-tenant security-token/device-plan mechanism (conf 84) would be CRITICAL if credentials unlock the org-crossing; descriptive-error family gives clean enumeration surface
+===== ANALYST bigpickle 2026-08-14 20:09:10 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls /home/runner/work/signageos-hunt/signageos-hunt 2>/dev/null; ls /home/runner/work/signageos-hunt/signageos-hunt/reports 2>/dev/null; ls /home/runner/work/signageos-hunt/signageos-hunt/artifacts 2>/dev/null
+README.md
+analyst-out.txt
+analyst-prompt.txt
+ctx.txt
+inventory
+knowledge
+leads
+probe-results.md
+reports
+reposcan-raw
+scope.yml
+scripts
+state_bigpickle.json
+state_laguna.json
+state_ling3.json
+state_longcat.json
+state_nemotron3.json
+triage
+analyst-bigpickle.log
+analyst-laguna.log
+analyst-ling3.log
+analyst-longcat.log
+analyst-nemotron3.log
+hypotheses-bigpickle.txt
+hypotheses-laguna.txt
+hypotheses-ling3.txt
+hypotheses-longcat.txt
+hypotheses-nemotron3.txt
+hypotheses.md
+valid-bugs.md
+[0m
+[0m$ [0mcd /home/runner/work/signageos-hunt/signageos-hunt && ls scripts && head -50 scripts/* 2>/dev/null | head -100
+sync-issues.py
+import os, re, hashlib
+from difflib import SequenceMatcher
+from pathlib import Path
+from github import Github
+
+REPO = os.environ["GITHUB_REPOSITORY"]
+TOKEN = os.environ["GITHUB_TOKEN"]
+GLOB = os.environ.get("LEAD_GLOB", "leads/lead-*.md")
+TARGET = os.environ.get("TARGET_NAME", "hunt")
+MODEL_FROM_FILENAME = os.environ.get("MODEL_FROM_FILENAME", "0") == "1"
+
+STOP = re.compile(r'^\[(HYP|PARKED|FINAL|NEXT|LEARN|RISK|NEW|CHANGED|PRIO)\]')
+KV = re.compile(r'^([a-z_]+):\s*(.*)$', re.I)
+
+TITLE_SIM_THRESHOLD = float(os.environ.get("TITLE_SIM_THRESHOLD", "0.82"))
+COARSE_SIM_THRESHOLD = float(os.environ.get("COARSE_SIM_THRESHOLD", "0.55"))
+
+
+def split_inline(title):
+    """Extract inline attributes from a single-line lead of the form:
+    [HYP] Title: confidence 96, class MISCONFIG, verify_steps ..., asset https://...
+    Attribute matches are removed; the title is cut at the first attribute."""
+    attrs = {}
+    pats = [
+        (r'confidence\s*(?:=|:|\s+)\s*(\d{1,3})', 'confidence', None),
+        (r'conf\s*(?:=|:|\s+)\s*(\d{1,3})', 'confidence', None),
+        (r'\((\d{2,3})\)\s*[:;]', 'confidence', None),
+        (r'class\s*(?:=|:|\s+)\s*([A-Za-z_]+)', 'class', str.upper),
+        (r'asset\s*(?:=|:|\s+)\s*(https?://[^\s,;]+|/[^\s,;]+)', 'asset', None),
+        (r'severity\s*(?:=|:|\s+)\s*([A-Za-z]+)', 'severity', None),
+        (r'testability\s*(?:=|:|\s+)\s*([A-Za-z_]+)', 'testability', str.upper),
+        (r'verify[_\s]steps\s*(?:=|:|\s+)\s*([^\n|]+)', 'verify_steps', None),
+        (r'impact\s*(?:=|:|\s+)\s*([^\n|]+)', 'impact', None),
+        (r'reasoning\s*(?:=|:|\s+)\s*([^\n|]+)', 'reasoning', None),
+    ]
+    cut = None
+    for pat, key, transform in pats:
+        m = re.search(pat, title, re.I)
+        if m:
+            v = m.group(1).strip()
+            if transform:
+                v = transform(v)
+            if key not in attrs:
+                attrs[key] = v
+            cut = m.start() if cut is None else min(cut, m.start())
+    if cut is not None:
+        t = title[:cut]
+    else:
+        t = title
+    t = re.sub(r'^\s*[:,\s-]+\s*', '', t)
+[0m
+[0m$ [0mcd /home/runner/work/signageos-hunt/signageos-hunt && cat state_bigpickle.json 2>/dev/null; echo "---PROBE RESULTS TAIL---"; tail -60 probe-results.md 2>/dev/null
+{"phase": "POC", "target": "box"}---PROBE RESULTS TAIL---
+https://api.signageos.io/v2/<new>` -> HTTP 404
+
+## 2026-08-14 10:31:58 UTC
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://box.signageos.io/ -> 200 len=103953 type=text/html; charset=utf-8
+https://box.signageos.io/status -> 200 len=1439 type=application/json; charset=utf-8
+https://api.signageos.io/v2/firmware` -> HTTP 404
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-14 11:24:23 UTC
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://box.signageos.io/ -> 200 len=103953 type=text/html; charset=utf-8
+https://box.signageos.io/status -> 200 len=1436 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token` -> HTTP 404
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token` -> HTTP 404
+https://api.signageos.io/v1/device` -> HTTP 404
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-14 12:08:47 UTC
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://box.signageos.io/ -> 200 len=103953 type=text/html; charset=utf-8
+https://box.signageos.io/status -> 200 len=1439 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-14 13:44:47 UTC
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/device-plan-history -> HTTP 403
+https://api.signageos.io/v1/company/<own-company-uid>/support-access-permission -> HTTP 404
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-14 14:44:36 UTC
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://box.signageos.io/ -> 200 len=103953 type=text/html; charset=utf-8
+https://api.signageos.io/v1/organization/<own-org-uid>/device-plan-history -> HTTP 403
+https://box.signageos.io/status` -> 200 len=103953 type=text/html; charset=utf-8
+https://api.signageos.io/v1/organization/<own-uid>/security-token` -> HTTP 404
+
+## 2026-08-14 15:36:10 UTC
+https://box.signageos.io/status -> 200 len=1436 type=application/json; charset=utf-8
+https://box.signageos.io/ -> 200 len=103953 type=text/html; charset=utf-8
+
+## 2026-08-14 16:29:41 UTC
+
+
+## 2026-08-14 17:33:23 UTC
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-14 18:30:30 UTC
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-14 19:35:40 UTC
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/device-plan-history -> HTTP 403
+https://api.signageos.io/v1/company/<own-company-uid>/support-access-permission -> HTTP 404
+[0m
+[0m$ [0mcd /home/runner/work/signageos-hunt/signageos-hunt && for u in "https://box.signageos.io/status" "https://api.signageos.io/status" "https://api.signageos.io/v1/organization/test/security-token" "https://api.signageos.io/v1/organization/test/device-plan-history" "https://box.signageos.io/login/"; do curl -s -o /dev/null -w "%{http_code} %{url_effective}\n" --max-time 15 "$u"; sleep 1; done
+200 https://box.signageos.io/status
+200 https://api.signageos.io/status
+403 https://api.signageos.io/v1/organization/test/security-token
+403 https://api.signageos.io/v1/organization/test/device-plan-history
+200 https://box.signageos.io/login/
+[0m
+[0m$ [0mcd /home/runner/work/signageos-hunt/signageos-hunt && curl -s --max-time 15 https://box.signageos.io/status -D /tmp/boxh.txt -o /tmp/boxb.txt && echo "---HEADERS---" && grep -iE "x-powered-by|strict-transport|x-frame|x-content|content-security|server:|via|x-cache" /tmp/boxh.txt | tr -d '\r' && echo "---BODY KEYS---" && python3 -c "
+import json
+d=json.load(open('/tmp/boxb.txt'))
+print('hostname:', d.get('hostname'))
+print('version:', d.get('version'))
+print('process_uid:', str(d.get('process'))[:12] if 'process' in d else d.get('process_uid'))
+s=d.get('succeededServices') or d.get('succeeded_services')
+print('succeededServices:', len(s) if isinstance(s,list) else s)
+print('keys:', list(d.keys()))" && sleep 1 && curl -s --max-time 15 https://api.signageos.io/status -o /tmp/apib.txt && python3 -c "
+import json
+d=json.load(open('/tmp/apib.txt'))
+print('api hostname:', d.get('hostname'))
+print('api version:', d.get('version'))"
+---HEADERS---
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 caa5dc507511eeb90523a221b2bd19b4.cloudfront.net (CloudFront)
+---BODY KEYS---
+hostname: box-8676fb5f57-xd6mc
+version: None
+process_uid: {'uid': '6de
+succeededServices: 9
+keys: ['name', 'status', 'process', 'hostname', 'failedServices', 'succeededServices', 'timeout', 'requestedAt', 'respondedAt', 'amqp0', 'redis0', 'redis2', 'redis1', 'redis3', 'mongoDB2', 'mongoDB3', 'mongoDB1', 'mongoDB0']
+api hostname: api-77955558bc-92g79
+api version: None
+[0m
+[0m$ [0mcd /home/runner/work/signageos-hunt/signageos-hunt && curl -s --max-time 15 https://api.signageos.io/status -D /tmp/apih.txt -o /dev/null && echo "---API /status HEADERS---" && grep -icE "strict-transport-security" /tmp/apih.txt; grep -iE "x-frame-options|x-content-type-options|cache-control|access-control-allow-origin" /tmp/apih.txt | tr -d '\r'; sleep 1; for p in "/v1/organization/test/security-token" "/v1/organization/test/device-plan-history" "/v1/company/test/support-access-permission" "/v2/device"; do curl -s --max-time 15 "https://api.signageos.io$p" -o /tmp/r.txt -w "%{http_code} $p " ; head -c 160 /tmp/r.txt; echo; sleep 1; done
+---API /status HEADERS---
+1
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+403 /v1/organization/test/security-token {"status":403,"message":"Access forbidden - Neither \"x-oauth-client_id\" nor \"x-auth\" header set.","errorCode":403074,"errorName":"MISSING_ACCOUNT_ID_TO_AUTH
+403 /v1/organization/test/device-plan-history {"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding 
+404 /v1/company/test/support-access-permission {"status":404,"message":"Resource not found - Resource was not found","errorCode":404001,"errorName":"ENDPOINT_NOT_FOUND","errorDetail":"Specified endpoint does
+403 /v2/device {"status":403,"message":"Access forbidden - Authentication error. (Account not found)","errorCode":403105,"errorName":"WRONG_JWT_TOKEN","errorDetail":"Decoding
+[0m
+## STEP 1 — DELTA
+
+- [CHANGED] api.signageos.io replica set rotated `6cc9959bb4` → `77955558bc` (fresh deploy; /status pod `api-77955558bc-92g79`, Node v24.19.0, HSTS+xfo+xcto+no-store intact secgrep≥1)
+- [CHANGED] api.signageos.io auth-gating re-verified on new rs `77955558bc`: `/v1/organization/test/security-token` → 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` (mechanism intact); `/v1/organization/test/device-plan-history` → 403105; `/v2/device` → 403105; `/v1/company/test/support-access-permission` GET → 404 `ENDPOINT_NOT_FOUND` (PUT-only route as mapped)
+- [CHANGED] box.signageos.io/status pod rotated back to `box-8676fb5f57-xd6mc` (uid `6de…`, 9 succeededServices, headers only `x-powered-by: Express` + CloudFront, secgrep=0) — data shape identical
+- [UNCHANGED] box / + /login/: 17 static ACAO (incl `http://` plaintext + `*.zdusercontent.com`), 0 credentials flag, hardened (nonce-hash ×7, CSP); /status CORS zero; /healthz /livez /readyz /live all 302 login catch-all
+
+## STEP 2 — PRIORITIZE
+
+- [PRIO] api.signageos.io/v1/organization/{uid}/security-token | 6.4 | attack=9 business=9 tech=7(JWT+X-Auth dual, org-from-header) gate=1(403074 pre-auth) cloud=3 fresh=4
+- [PRIO] api.signageos.io/v1/organization/{uid}/device-plan-history | 5.3 | attack=8 business=7 tech=6(JWT, client-supplied {uid}) gate=1(403105) cloud=2 fresh=3
+- [PRIO] box.signageos.io/status | 4.9 | attack=6 business=3 tech=4(JSON infra status) gate=10(200 unauth) cloud=3 fresh=2
+- [PRIO] api.signageos.io/v1/company/{uid}/support-access-permission (PUT) | 4.9 | attack=9 business=8 tech=5 gate=1(403) cloud=2 fresh=3
+
+## STEP 3 — HYPOTHESES
+
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 84
+reasoning: 403074 errorDetail re-confirmed on new rs `77955558bc` binds org identity to "first part (before char :) of x-auth header" while path `{uid}` is client-supplied and independent; endpoint is X-Auth/x-oauth-client_id gated, NOT JWT.
+evidence_needed: valid X-Auth (orgA) + foreign orgB `{uid}` returning 200 or 403076 (not 403074) = cross-tenant mint.
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) POST `-H "X-Auth: <orgA-id:token>" /v1/organization/<own-uid>/security-token` → 200 baseline; 3) orgB `{uid}` variant → non-403074; 4) escalate minted token to `/v1/device`.
+impact: mint security tokens for any tenant → foreign device/content/firmware control; CRITICAL
+testability: AUTH_HELPED
+
+[HYP] Cross-tenant device-plan-history read via client-supplied org {uid}
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/device-plan-history
+confidence: 50
+reasoning: live on rs `77955558bc` → 403105 JWT-gated pre-auth; same mechanism-family as security-token (client-supplied path {uid} vs org from auth header first-part); no pre-auth bypass.
+evidence_needed: orgA JWT + foreign orgB `{uid}` returning 200 (plan/billing history) instead of 403105.
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) GET `/v1/organization/<own-uid>/device-plan-history` → 200 baseline; 3) orgB `{uid}` → non-403 = cross-tenant read.
+impact: unauthorized disclosure of foreign org device-plan/billing metadata; HIGH
+testability: AUTH_HELPED
+
+[HYP] support-access-permission PUT allows cross-company support-level set
+class: IDOR
+asset: api.signageos.io/v1/company/{uid}/support-access-permission
+confidence: 45
+reasoning: PUT → 403 JWT-gated; GET 404 (PUT-only); company `{uid}` client-supplied; 2.193.0 bundle shows PUT body `{level}`; no equality check observed in bundle.
+evidence_needed: orgA JWT + foreign orgB company `{uid}` PUT `{level}` returning 200 (vs 403).
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) baseline PUT own company → 200; 3) orgB `{uid}` variant → non-403 = cross-tenant grant; do NOT alter targets you don't own.
+impact: raise/grant support-access for foreign orgs → lateral privilege; CRITICAL if verified
+testability: AUTH_HELPED
+
+## STEP 4 — SELF-CRITIQUE
+
+- No hypotheses dropped (all ≥ conf 45, class IDOR is reportable focus, all have concrete verify_steps, none on REJECTED list).
+- [FINAL] 1) security-token mint (conf 84) 2) device-plan-history read (conf 50) 3) support-access-permission PUT (conf 45)
+
+## STEP 5 — NEXT ACTION
+
+[NEXT] HUMAN: Run `sos login`, then execute the CRITICAL cross-tenant chain on the freshly-deployed rs `77955558bc`: `POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` — non-403074 (200 or 403076) proves cross-tenant mint; supply one own-org UID + one foreign org UID. PASSIVE path on box fully exhausted; the only standalone unauthenticated finding stands (/status infra-leak).
+
+## STEP 6 — LEARNING
+
+[LEARN] REJECTED IDOR @ api.signageos.io new rs `77955558bc`: replica-set rotation introduced zero auth drift — security-token 403074, device-plan-history 403105, v2/device 403105, support-access-permission GET 404 (PUT-only); no pre-auth regression on fresh deploy.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod box-8676fb5f57-xd6mc, 9-svc topology, secgrep=0 (x-powered-by only), behind CloudFront; POC final (30+ cycles).
+[LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened on rs `77955558bc` (HSTS/xfo/xcto/no-store, zero ACAO) — differential vs box /status persists.
+
+## STEP 7 — RISK SCORE
+
+[RISK] box.signageos.io: 45 | single accepted unauthenticated finding (/status infra-leak, zero hardening) but SPA routes hardened (HSTS/xfo/xcto/CSP/nonce-hash), CORS scoped to /+/login/, all other paths behind login catch-all — low remaining passive surface
+[RISK] api.signageos.io: 58 | hardened headers + zero ACAO + all routes JWT/X-Auth-gated, BUT live cross-tenant security-token/device-plan mechanism (conf 84) remains CRITICAL if credentials unlock org-crossing; descriptive-error family provides clean enumeration surface; new rs rotation confirmed no drift

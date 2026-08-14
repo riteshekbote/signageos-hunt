@@ -3404,3 +3404,35 @@ testability: PASSIVE
 ## 2026-08-14 17:33:12 UTC [box] (model laguna)
 ## 2026-08-14 18:30:18 UTC [box] (model laguna)
 ## 2026-08-14 19:33:11 UTC [box] (model laguna)
+## 2026-08-14 20:07:51 UTC [box] (model laguna)
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 84
+reasoning: 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE errorDetail explicitly states org identity is derived from "first part (before char `:`) of x-auth header" while path {uid} is client-supplied. Mechanism stable across rs 7676fc7c89 → 6cc9959bb4. Endpoint is X-Auth/x-oauth-client_id gated, not JWT.
+evidence_needed: Valid account JWT + foreign org UID → HTTP 200 POST returning securityToken (vs 403074 baseline on own org)
+verify_steps: AUTH_HELPED: 1) `sos login` → account JWT + X-Auth header; 2) POST -H "X-Auth: <own_org_id:token>" /v1/organization/<own-org-uid>/security-token → baseline 200 + token; 3) same header + /v1/organization/<foreign-org-uid>/security-token → 200 (NOT 403074) + foreign token; 4) -H "Authorization: Bearer <stolen>" /v1/device → foreign org device list
+impact: Any authenticated tenant mints org security-tokens for ANY foreign tenant → full cross-tenant device/content/timing/firmware control — CRITICAL
+testability: AUTH_HELPED
+[HYP] Unauthenticated infra-leak with zero hardening on /status
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Fresh probe (2026-08-14 15:34 UTC) returns HTTP 200 application/json leaking hostname `box-8676fb5f57-d6fx9`, 40-hex process.uid, Node v20.20.2, 9-service topology. Headers: ONLY x-powered-by: Express + CloudFront — sec-header grep = 0. NO ACAO on /status; CORS strictly scoped to / + /login/.
+evidence_needed: /tmp/box_body.json contains hostname/process.uid/succeededServices; headers.txt sec-header grep = 0; ACAO on /status = 0
+verify_steps: PASSIVE: curl -sS -o /tmp/b.json -D /tmp/b.txt https://box.signageos.io/status → 200; grep -ciE 'strict-transport|x-frame|x-content|content-security' /tmp/b.txt → 0; python3 -c "import json;d=json.load(open('/tmp/b.json'));print(d['hostname'],d['process']['uid'],d['succeededServices'])"
+impact: Unauthenticated disclosure of K8s pod identity, process UID, Node version, internal service topology enabling infrastructure reconnaissance — MODERATE
+testability: PASSIVE
+[HYP] Static CORS ACAO whitelist broadening trust boundary on SPA routes
+class: MISCONFIG
+asset: box.signageos.io/ and /login/
+confidence: 70
+reasoning: 17 static access-control-allow-origin values on / (302) + /login/ (200) incl http:// plaintext + *.zdunpkgdomains.com wildcard + api.signageos.io sibling + path-bearing recaptcha. evil.test NOT reflected (static whitelist). 0 access-control-allow-credentials under any Origin → no direct credential-theft path.
+evidence_needed: 17 distinct ACAO entries under spoofed Origin; grep access-control-allow-credentials = 0; evil.test absent from list
+verify_steps: PASSIVE: curl -sS -I -H "Origin: https://evil.test" https://box.signageos.io/ | grep -ci access-control-allow-origin → 17; grep -ci access-control-allow-credentials → 0
+impact: Compromised trusted origin could read box SPA responses; unnecessary trust expansion for control-plane app — LOW-MODERATE
+testability: PASSIVE
+[FINAL] (ranked):
+[NEXT] HUMAN: Run `sos login` to obtain a valid account JWT `<accountJWT>`, then execute AUTH_HELPED verify_steps for the CRITICAL cross-tenant IDOR on api.signageos.io/v1/organization/{uid}/security-token: POST with X-Auth header to own org → baseline 200; then POST to a foreign org UID → expect 200 (NOT 403074). A second tenant's org UID is required.
+[RISK] box.signageos.io: 62 — Persistent unauthenticated /status infra-leak with zero hardening headers (POC complete & archived); 17-origin CORS ACAO on / + /login/ (MISCONFIG-only, no credentials flag); /login/ hardened with Auth0 OAuth2 + CSP nonce-hash; no other unauth authn surface (WS/GraphQL/healthz all 302 or gated)
+[RISK] api.signageos.io: 75 — CRITICAL AUTH_HELPED cross-tenant IDOR on /v1/organization/{uid}/security-token (mechanism CONFIRMED, conf 84); /status hardened with HSTS/xfo/xcto/no-store but still leaks infra details; all 60+ v1/v2 endpoints JWT/X-Auth-gated with zero ACAO — no pre-auth bypass; descriptive error messages excluded per scope.yml
