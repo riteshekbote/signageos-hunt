@@ -2301,3 +2301,13 @@
 ## RANKED HYPOTHESES 2026-08-14 17:33:22 UTC
 - [84] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override (from reports/hypotheses-bigpickle.txt)
 - NEXT(hypotheses-bigpickle.txt): HUMAN: Run `sos login`, then execute the CRITICAL cross-tenant chain: `POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<orgB-uid>/sec
+
+## RANKED HYPOTHESES 2026-08-14 18:30:29 UTC
+- [84] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override (from reports/hypotheses-bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Run `sos login`, then execute the CRITICAL cross-tenant chain: `POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<orgB-uid>/sec
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-8676fb5f57-d5p5s`, uid c6f334b1..., Node v20.20.2, 9-svc topology, zero hardening head
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto/no-store, secgrep=3) behind CloudFront; info-leak persists but differential vs
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: Mechanism reconfirmed — 403074 errorDetail explicitly binds org identity to X-Auth first-
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All routes still 403 JWT/X-Auth-gated, zero ACAO under spoofed Origin — no passive bypass (reconfirmed post
+- LEARN: REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 credentials flag, evil.test NOT reflected — MISCONFIG-only
+- LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable
