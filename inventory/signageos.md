@@ -567,3 +567,9 @@
 
 ## 2026-08-14 05:16:01 UTC
 - NEW NO_DELTA — last leads (2026-08-14 03:17:37 UTC) already reflect post-deploy state (rs `7676fc7c89`, 403074 mechanism confirmed, v2/device stable 403105); inventory shows only NO_DELTA entries since
+
+## 2026-08-14 06:45:50 UTC
+- NEW box.signageos.io / + /login/ now emit 7 `x-*-nonce-hash` response headers (CSP nonce-hash middleware); values rotate per request (req1 53ab2d784cf23671c7472263 vs req2 e07768a3f2743ed4cac39d0a) — nonc
+- NEW box.signageos.io/status emits NO ACAO under spoofed Origin evil.test (CORS whitelist scoped to / + /login/ only); /status/, /status?x=1 also 200 JSON; /healthz /livez /readyz /live all 302 login catch
+- NEW WS handshake to box / → 302 login redirect (no unauthenticated WebSocket surface)
+- CHANGED box.signageos.io/status pod rotated within rs 8676fb5f57 → box-8676fb5f57-xd6mc (uid 6deaf70c2a3b648ff24e0c699ec55b7a6c4d5715e2a472949b), Node v20.20.2, 9-svc topology, secgrep=0, CloudFront SFO53-P6 
