@@ -3448,3 +3448,32 @@ testability: AUTH_HELPED
 [LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes still JWT/X-Auth-gated (403105/403074), no passive bypass (reconfirmed this cycle)
 [RISK] box.signageos.io: 58 — unauthenticated /status infra-leak (pod hostname, 40-hex UID, Node v20.20.2, full 9-svc topology) with zero hardening headers behind CloudFront persists; 17-origin static CORS (incl http:// plaintext + *.zdusercontent.com, no creds flag) + CSP ~59 origins; login bundle hardened (nonce-hash, trusted-types); all other routes Auth0/302 catch-all; no unauth WS/XSS.
 [RISK] api.signageos.io: 63 — dual-auth (JWT + X-Auth `id:unsafeDecryptedToken`) with client-supplied org/company UIDs in path while org derives from header first-part → cross-tenant chain confirmed at mechanism level (security-token 403074) and widened this cycle (device-plan-history 403105, support-access-permission 403); all pre-auth probes JWT-gated; /status hardened (HSTS/xfo/xcto/no-store) but still leaks hostname/uid/topology; zero CORS surface; descriptive auth errors (excluded class).
+## 2026-08-14 13:38:34 UTC [box] (model bigpickle)
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 84
+reasoning: 403074 errorDetail ("first part (before char :) of x-auth header") reconfirmed this cycle on rs 6cc9959bb4 — org identity derives from auth header, path {uid} is client-supplied and independent. Stable across rs 7676fc7c89→6cc9959bb4.
+evidence_needed: valid X-Auth (orgA) + foreign orgB {uid} → 200 or 403076 (not 403074) = cross-tenant mint.
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) POST `/v1/organization/<own-uid>/security-token` → 200 baseline; 3) orgB {uid} variant → non-403074; 4) escalate minted token to /v1/device.
+impact: mint security tokens for any tenant → foreign device/content/firmware control; CRITICAL
+testability: AUTH_HELPED
+[HYP] Cross-tenant device-plan-history read via client-supplied org {uid}
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/device-plan-history
+confidence: 50
+reasoning: 2.193.0 route, live → 403105 (JWT) this cycle; same mechanism-family as security-token (client-supplied path {uid} vs org from auth header first-part). No pre-auth bypass.
+evidence_needed: orgA JWT + foreign orgB {uid} returning 200 (plan/billing history) instead of 403105.
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) GET `/v1/organization/<own-uid>/device-plan-history` → 200 baseline; 3) orgB {uid} → non-403 = cross-tenant read.
+impact: unauthorized disclosure of foreign org device-plan/billing metadata; HIGH
+testability: AUTH_HELPED
+[HYP] support-access-permission PUT allows cross-company support-level set
+class: IDOR
+asset: api.signageos.io/v1/company/{uid}/support-access-permission
+confidence: 45
+reasoning: 2.193.0 bundle shows PUT body {level}; company {uid} client-supplied; PUT → 403105 JWT-gated (reconfirmed live this cycle). No equality check observed in bundle.
+evidence_needed: orgA JWT + foreign orgB company {uid} PUT {level} returning 200 (vs 403).
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) baseline PUT own company → 200; 3) orgB {uid} variant → non-403 = cross-tenant grant; do NOT alter targets you don't own.
+impact: raise/grant support-access for foreign orgs → lateral privilege; CRITICAL if verified
+testability: AUTH_HELPED
+[NEXT] HUMAN: Run `sos login`, then with the account JWT/X-Auth execute in order: a) `POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` (200/403076 = CRITICAL cross-tenant mint, vs 403074 baseline); b) `GET /v1/organization/<orgB-uid>/device-plan-history` (non-403 = cross-tenant read); c) `PUT -H "Content-Type: application/json" -d '{"level":<own-level>}' /v1/company/<orgB-uid>/support-access-permission` (non-403 = cross-company grant). Provide JWT + one foreign org UID; never modify targets you don't own.
