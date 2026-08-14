@@ -3293,3 +3293,34 @@ verify_steps: PROBE done: `curl -sS -D hd.txt -o body.json https://box.signageos
 impact: unauthenticated infra disclosure; MODERATE
 testability: PASSIVE
 [NEXT] HUMAN: run `sos login` to obtain a valid account JWT + supply a foreign org UID to execute the cross-tenant chain on api.signageos.io/v1/organization/{uid}/security-token (POST with `X-Auth: <orgA-id:token>`; orgB `{uid}` returning 200/403076 instead of 403074 = CRITICAL cross-tenant mint)
+## 2026-08-14 08:03:53 UTC [box] (model bigpickle)
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 84
+reasoning: 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` on rs `6cc9959bb4` — org identity derived from x-oauth-client_id / x-auth first-part before `:`; path `{uid}` is client-supplied and independent; no equality check observed across 3 replica sets.
+evidence_needed: valid X-Auth (orgA) + foreign orgB `{uid}` returning 200/403076 (WRONG_ACCOUNT_SECRET) instead of 403074 → security-token minted for orgB
+verify_steps: AUTH_HELPED: 1) `sos login` → account JWT; 2) baseline `curl -X POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<own-uid>/security-token` → expect 200; 3) orgB `{uid}` variant → non-403074 = cross-tenant mint; 4) escalate with minted token to /v1/device
+impact: mint security tokens for any tenant → foreign device/content/timing/firmware control; CRITICAL
+testability: AUTH_HELPED
+[HYP] box /status unauthenticated infra-info-leak (POC final)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: 30+ cycles — 200 JSON leaks pod `box-8676fb5f57-xd6mc`, 40-hex uid `6deaf70c…`, Node v20.20.2, 9-svc topology + per-service responseTime; secgrep=0 (x-powered-by only); NO ACAO under evil.test; differential vs hardened `/`+`/login/` (nonce-hash middleware) and api /status persists.
+evidence_needed: none — POC final & archived
+verify_steps: PROBE done: `curl -sS -D hd.txt -o body.json https://box.signageos.io/status` → 200 JSON, secgrep=0
+impact: unauthenticated disclosure of pod identity, Node version, process uid, internal service topology; MODERATE
+testability: PASSIVE
+[HYP] Broad CORS/CSP origin trust boundary on SPA
+class: MISCONFIG
+asset: box.signageos.io/ + /login/
+confidence: 62
+reasoning: 17 static ACAO incl `http://` plaintext variant, `https://*.zdusercontent.com` wildcard, and path-bearing recaptcha value; CSP 50+ connect-src origins + 6× Auth0 oauth/token; NO `access-control-allow-credentials` → no direct credential-theft; evil.test not reflected.
+evidence_needed: a credentialed endpoint reachable from a whitelisted-but-untrusted origin (e.g., remote-desktop-us / *.zdusercontent.com) — not demonstrable without a session
+verify_steps: PROBE done: `curl -H "Origin: https://evil.test"` → no ACAO, 0 creds flag; static whitelist unchanged
+impact: expands postMessage/origin trust boundary; third-party origin breach = token exfil vector; LOW-MODERATE (no creds flag)
+testability: PASSIVE
+[NEXT] HUMAN: run `sos login` to obtain a valid account JWT, then `curl -X POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` — orgB `{uid}` returning 200 or 403076 (WRONG_ACCOUNT_SECRET) instead of 403074 = CRITICAL cross-tenant mint (proves org identity not bound to path UID); escalate with minted token against /v1/device
+[RISK] box.signageos.io: 58 reason: persistent unauthenticated /status infra-leak (pod identity, 40-hex process UID, Node v20.20.2, full amqp/redis/mongo topology) with zero hardening headers behind CloudFront; broad static CORS whitelist (17 origins incl http:// plaintext + *.zdusercontent.com wildcard) on / + /login/ without credentials flag; nonce-hash headers benign; no unauth WS surface; all other routes Auth0-gated
+[RISK] api.signageos.io: 62 reason: dual-auth API (JWT Bearer + X-Auth `id:unsafeDecryptedToken`) with client-supplied org UID in path while org identity derived from X-Auth first-part → cross-tenant IDOR chain (security-token mint) confirmed at mechanism level but AUTH_HELPED-blocked on credentials; /status hardened (secgrep=3) but still leaks hostname/uid/Node/topology; zero CORS surface; descriptive auth errors (excluded class)

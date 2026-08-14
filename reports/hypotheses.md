@@ -2130,3 +2130,15 @@
 - LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod box-8676fb5f57-xd6mc, uid 6deaf70c…, Node v20.20.2, 9-svc topology, secgrep=0, CloudFront S
 - LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE reconfirmed on rs 6cc9959bb4 — mechanism intact
 - LEARN: CONFIRMED DIFFERENTIAL @ box vs api /status: box /status still 0 hardening headers (secgrep=0) + no nonce-hash middleware; api /status hardened HSTS/xfo/xcto/no
+
+## RANKED HYPOTHESES 2026-08-14 08:05:52 UTC
+- [84] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override (from reports/hypotheses-laguna.txt)
+- [75] box.signageos.io/: Nonce-hash middleware on SPA routes only (from reports/hypotheses-nemotron3.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Provide a valid account JWT (`<accountJWT>` after `sos login`) + a foreign org UID to test the CRITICAL cross-tenant chain on api.signageos.io/v1/organiz
+- NEXT(hypotheses-laguna.txt): HUMAN: `sos login` to obtain a valid account JWT `<accountJWT>` + a foreign org UID to execute the AUTH_HELPED verify_steps for the CRITICAL cross-tenant securi
+- NEXT(hypotheses-bigpickle.txt): HUMAN: run `sos login` to obtain a valid account JWT, then `curl -X POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<orgB-uid>/securi
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ nonce-hash: 7 rotating x-*-nonce-hash headers on SPA routes only; absent on /status — hardening differential co
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/ CORS scope: ACAO only on / + /login/ (17 static), zero on /status /healthz /livez /readyz /live — CORS whitelist scoped t
+- LEARN: REJECTED MISCONFIG @ box.signageos.io WS: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface
+- LEARN: REJECTED XSS @ box.signageos.io/login/: CSP trusted-types + strict-dynamic + rotating nonces; no reflected/injectable unauth route — no XSS surface
+- LEARN: CONFIRMED MECHANISM @ api.signageos.io/v1/organization/{uid}/security-token: 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE reconfirmed on rs 6cc9959bb4 — mechanism 

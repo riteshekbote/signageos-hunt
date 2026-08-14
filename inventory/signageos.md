@@ -573,3 +573,8 @@
 - NEW box.signageos.io/status emits NO ACAO under spoofed Origin evil.test (CORS whitelist scoped to / + /login/ only); /status/, /status?x=1 also 200 JSON; /healthz /livez /readyz /live all 302 login catch
 - NEW WS handshake to box / → 302 login redirect (no unauthenticated WebSocket surface)
 - CHANGED box.signageos.io/status pod rotated within rs 8676fb5f57 → box-8676fb5f57-xd6mc (uid 6deaf70c2a3b648ff24e0c699ec55b7a6c4d5715e2a472949b), Node v20.20.2, 9-svc topology, secgrep=0, CloudFront SFO53-P6 
+
+## 2026-08-14 08:05:52 UTC
+- NEW box.signageos.io / + /login/ now emit 7 `x-*-nonce-hash` response headers (CSP nonce-hash middleware); values rotate per request
+- NEW box.signageos.io/status emits NO ACAO under spoofed Origin evil.test (CORS whitelist scoped to / + /login/ only); /status/, /status?x=1 also 200 JSON; /healthz /livez /readyz /live all 302 login catch
+- NEW WS handshake to box.signageos.io/ → 302 login redirect (no unauthenticated WebSocket surface)
