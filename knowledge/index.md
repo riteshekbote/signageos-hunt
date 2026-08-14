@@ -537,3 +537,7 @@
 - 2026-08-14 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All routes JWT/X-Auth-gated, no passive bypass (reconfirmed post-deploy)
 - 2026-08-14 REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable
 - 2026-08-14 CONFIRMED DIFFERENTIAL @ box vs api /status: Box /status still 0 hardening headers (secgrep=0); api /status hardened with HSTS/xfo/xcto+no-store (secgrep=3) + 0 ACAO
+- 2026-08-14 REJECTED IDOR @ box /login/ bundle.js v2 path-diff: 2.193.0 login bundle carries zero API paths — endpoint map now auth-gated only, probe dead
+- 2026-08-14 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/device-plan-history: route exists, JWT-gated (403105) pre-auth — mechanism-family (client-supplied {uid}) intact, AUTH_HELPED conf 50
+- 2026-08-14 ACCEPTED IDOR @ api.signageos.io/v1/company/{uid}/support-access-permission: PUT route exists, JWT-gated (403) pre-auth — AUTH_HELPED conf 45
+- 2026-08-14 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes still JWT/X-Auth-gated (403105/403074), no passive bypass (reconfirmed this cycle)

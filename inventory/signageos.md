@@ -590,3 +590,12 @@
 - CHANGED box.signageos.io/status pod rotated within rs `8676fb5f57` → `box-8676fb5f57-xd6mc` (uid `6deaf70c2a3b648ff24e0c699ec55b7a6c4d5715e2a472949b`, Node v20.20.2, 9-svc topology, secgrep=0, CloudFront SFO5
 
 ## 2026-08-14 11:24:19 UTC
+
+## 2026-08-14 12:08:44 UTC
+- NEW api.signageos.io replica set rotated to `6cc9959bb4` (fresh deploy; Node v24.19.0, hardened HSTS/xfo/xcto/no-store behind CloudFront)
+- NEW api.signageos.io/v1/organization/{uid}/security-token reconfirmed 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` on rs `6cc9959bb4` — X-Auth/`x-oauth-client_id` gating intact
+- CHANGED box.signageos.io/status pod rotated to `box-8676fb5f57-xd6mc` (uid `6deaf70c…`, Node v20.20.2, 9-svc topology, secgrep=0, CloudFront SFO53-P6)
+- NEW api.signageos.io/v1/organization/{uid}/device-plan-history: live → 403105 WRONG_JWT_TOKEN ("Decoding of provided JWT token has failed") — JWT-gated route from 2.193.0 bundle confirmed present, no pre-
+- NEW api.signageos.io/v1/company/{uid}/support-access-permission (PUT): live → 403 JWT-gated (no-store, HSTS/xfo/xcto, vary:Origin) — route exists, no pre-auth bypass
+- CHANGED box /login/ bundle.js (2.193.0, 366,190 bytes): contains ZERO `/v[12]/` API path references and 1 signageos ref total — this build is a pure Auth0 login bundle; the 40+ endpoint map from earlier bundl
+- CHANGED box /login/ 7 rotating x-*-nonce-hash headers + full CSP (recaptcha/sentry/dom-purify/bundle/assets/style) reconfirmed (req nonces b39f2641…/19bef40f…)
