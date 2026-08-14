@@ -612,3 +612,16 @@
 - CHANGED box /status CORS: NO ACAO under spoofed Origin evil.test — CORS whitelist strictly scoped to `/` + `/login/` only
 - CHANGED box /healthz /livez /readyz /live: all 302 login catch-all — no new unauthenticated endpoints
 - CHANGED box WebSocket: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface
+
+## 2026-08-14 14:44:33 UTC
+- CHANGED box.signageos.io/status pod rotated to `box-8676fb5f57-d5p5s` (uid `c6f334b11b5e8085e6f549b1286fb91a5784c5a5f68c00577d`), mongoDB3 now healthy, zero hardening headers unchanged (secgrep=0)
+- CHANGED api.signageos.io replica set `6cc9959bb4` stable (Node v24.19.0, hardened HSTS/xfo/xcto/no-store behind CloudFront)
+- CHANGED api.signageos.io/v1/organization/{uid}/security-token 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE confirmed on rs `6cc9959bb4` — X-Auth/x-oauth-client_id gating intact
+- CHANGED api.signageos.io/v1/organization/{uid}/device-plan-history 403105 WRONG_JWT_TOKEN confirmed — JWT-gated route from 2.193.0 bundle present
+- CHANGED api.signageos.io/v1/company/{uid}/support-access-permission (PUT) 403 JWT-gated confirmed — route exists, no pre-auth bypass
+- CHANGED box.signageos.io/ + /login/ 7 rotating x-*-nonce-hash headers + full CSP (59+ connect-src origins, triplicated Auth0 oauth/token) reconfirmed
+- CHANGED box.signageos.io/ + /login/ CORS: 17 static ACAO incl `http://` plaintext + `*.zdusercontent.com` wildcard + api sibling; evil.test NOT reflected
+- CHANGED box.signageos.io/status CORS: NO ACAO under spoofed Origin evil.test — CORS whitelist strictly scoped to `/` + `/login/` only
+- CHANGED box.signageos.io /healthz /livez /readyz /live: all 302 login catch-all — no new unauthenticated endpoints
+- CHANGED box.signageos.io WebSocket: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface
+- CHANGED box.signageos.io /login/ bundle.js (2.193.0): ZERO `/v[12]/` API path references — pure Auth0 login bundle
