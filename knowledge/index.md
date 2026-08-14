@@ -564,3 +564,7 @@
 - 2026-08-14 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 mechanism reconfirmed on rs `77955558bc` rotation (pod `api-77955558bc-cfkd4`) — zero auth drift across replica-set flip; AUTH_HELPED, conf 84
 - 2026-08-14 ACCEPTED MISCONFIG @ api.signageos.io/status: hardened (secgrep=3, 0 ACAO) across rs rotation; info-leak persists but differential vs box /status (secgrep=0) unchanged
 - 2026-08-14 REJECTED MISCONFIG @ box.signageos.io/status CORS: zero ACAO under spoofed Origin — whitelist strictly scoped to `/`+`/login/`
+- 2026-08-14 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 mechanism reconfirmed on rs `77955558bc` rotation (pod `api-77955558bc-hw52n`) — zero auth drift; AUTH_HELPED, conf 84
+- 2026-08-14 ACCEPTED MISCONFIG @ box.signageos.io/status: pod rotated to `box-8676fb5f57-fg67f`, still secgrep=0 (x-powered-by only) with full 9-svc topology leak behind CloudFront — unchanged, POC final
+- 2026-08-14 ACCEPTED MISCONFIG @ api.signageos.io/status: hardened (secgrep=3, zero ACAO) across rs rotation; info-leak persists but differential vs box /status (secgrep=0) intact
+- 2026-08-14 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/: 6 rotating CSP nonces now present on both SPA routes (hardening middleware); 17 static ACAO, 0 credentials flag — hardening differential vs /status persists
