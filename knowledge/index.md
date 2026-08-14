@@ -555,3 +555,4 @@
 - 2026-08-14 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: Mechanism reconfirmed — 403074 errorDetail explicitly binds org identity to X-Auth first-part while path {uid} is client-supplied; AUTH_HELPED, conf 84
 - 2026-08-14 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All routes still 403 JWT/X-Auth-gated, zero ACAO under spoofed Origin — no passive bypass (reconfirmed post-deploy)
 - 2026-08-14 REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 credentials flag, evil.test NOT reflected — MISCONFIG-only
+- 2026-08-14 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — pair parsed past missing-header gate, account does NOT exist on prod (staging-only test fixture, credential reuse disproven)
