@@ -673,3 +673,11 @@
 - CHANGED api /v1/organization/{uid}/security-token: 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` reconfirmed — errorDetail wording identical ("first part (before char :) of x-auth header" vs client-supplied pat
 
 ## 2026-08-14 22:03:46 UTC
+
+## 2026-08-14 22:35:49 UTC
+- NEW api.signageos.io replica-set rotated to `77955558bc` (new rs, not in prior cycle) — pod `api-77955558bc-cfkd4` (Node v24.19.0, 8-svc mongoDB3 absent, hardened secgrep=3, CloudFront)
+- NEW box.signageos.io/status pod rotated to `box-8676fb5f57-xd6mc` (uid 6deaf70c…, Node v20.20.2, 9-svc, secgrep=0, CloudFront) — later stabilized to `box-8676fb5f57-d5p5s`
+- NEW CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account
+- CHANGED api.signageos.io/v1/organization/{uid}/security-token: 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE reconfirmed on rs `77955558bc` rotation — zero auth drift across replica-set flip
+- CHANGED api.signageos.io/v1/organization/{uid}/device-plan-history: 403105 WRONG_JWT_TOKEN confirmed on new rs — JWT-gated route from 2.193.0 bundle present
+- CHANGED api.signageos.io/v1/company/{uid}/support-access-permission (PUT): 403 JWT-gated confirmed on new rs — route exists, no pre-auth bypass

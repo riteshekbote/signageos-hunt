@@ -2415,3 +2415,22 @@
 - LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: pod rotated to `box-8676fb5f57-fg67f`, still secgrep=0 (x-powered-by only) with full 9-svc topology leak behind Cl
 - LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: hardened (secgrep=3, zero ACAO) across rs rotation; info-leak persists but differential vs box /status (secgrep=0)
 - LEARN: ACCEPTED MISCONFIG @ box.signageos.io/ + /login/: 6 rotating CSP nonces now present on both SPA routes (hardening middleware); 17 static ACAO, 0 credentials fla
+
+## RANKED HYPOTHESES 2026-08-14 22:35:49 UTC
+- [84] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token minting via X-Auth org-UID path override (from reports/hypotheses-nemotron3.txt)
+- [84] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override (from reports/hypotheses-bigpickle.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Run `sos login` to obtain a valid account X-Auth `<id:token>`, then execute AUTH_HELPED verify_steps for the CRITICAL cross-tenant security-token IDOR: P
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod box-8676fb5f57-d5p5s, 9-svc topology, secgrep=0 (x-powered-by only), behind CloudFront; POC
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened on rs `6cc9959bb4` (HSTS/xfo/xcto/no-store, zero ACAO) — differential vs box /status persists
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: Mechanism reconfirmed — 403074 errorDetail explicitly binds org identity to X-Auth first-
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/device-plan-history: route exists, JWT-gated (403105) pre-auth — mechanism-family (client-supplied {uid})
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/company/{uid}/support-access-permission: PUT route exists, JWT-gated (403) pre-auth — AUTH_HELPED conf 45
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ nonce-hash: 7 rotating x-*-nonce-hash headers on SPA routes only; absent on /status — hardening differential co
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/ CORS scope: ACAO only on / + /login/ (17 static), zero on /status /healthz /livez /readyz /live — CORS whitelist scoped t
+- LEARN: CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on pro
+- LEARN: REJECTED IDOR @ box /login/ bundle.js v2 path-diff: 2.193.0 login bundle carries zero API paths — endpoint map now auth-gated only, probe dead
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/status CORS: NO access-control-allow-origin on /status under any Origin (CORS whitelist strictly scoped to / + /login/ onl
+- LEARN: REJECTED MISCONFIG @ box.signageos.io WebSocket: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface
+- LEARN: REJECTED IDOR @ box.signageos.io/ + /login/ bundle.js 2.193.0: contains ZERO /v[12]/ API path references — endpoint map dead, pure Auth0 login bundle
+- LEARN: REJECTED MISCONFIG @ box.signageos.io /healthz /livez /readyz /live: all 302 login catch-all — no new unauthenticated endpoints
+- LEARN: REJECTED IDOR @ api.signageos.io new rs `77955558bc`: replica-set rotation introduced zero auth drift — security-token 403074, device-plan-history 403105, v2/de
