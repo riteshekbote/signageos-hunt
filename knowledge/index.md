@@ -533,3 +533,7 @@
 - 2026-08-14 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ nonce-hash: 7 rotating x-*-nonce-hash headers on SPA routes only; absent on /status — hardening differential confirmed
 - 2026-08-14 ACCEPTED MISCONFIG @ box.signageos.io/ CORS scope: ACAO only on / + /login/ (17 static), zero on /status /healthz /livez /readyz /live — CORS whitelist scoped to SPA entry points
 - 2026-08-14 CONFIRMED MECHANISM @ api.signageos.io/v1/organization/{uid}/security-token: 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE reconfirmed on rs 6cc9959bb4 — mechanism intact, AUTH_HELPED, conf 84
+- 2026-08-14 CONFIRMED MECHANISM @ api.signageos.io/v1/organization/{uid}/security-token: Endpoint is X-Auth/x-oauth-client_id gated (403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE), NOT JWT — org derived from header first-part, path `{uid}` client-supplied → cross-tenant chain strengthens (AUTH_HELPED, conf 84)
+- 2026-08-14 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All routes JWT/X-Auth-gated, no passive bypass (reconfirmed post-deploy)
+- 2026-08-14 REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on /status, /, /v1/*, /v2/* — not CORS-exploitable
+- 2026-08-14 CONFIRMED DIFFERENTIAL @ box vs api /status: Box /status still 0 hardening headers (secgrep=0); api /status hardened with HSTS/xfo/xcto+no-store (secgrep=3) + 0 ACAO

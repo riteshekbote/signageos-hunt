@@ -578,3 +578,5 @@
 - NEW box.signageos.io / + /login/ now emit 7 `x-*-nonce-hash` response headers (CSP nonce-hash middleware); values rotate per request
 - NEW box.signageos.io/status emits NO ACAO under spoofed Origin evil.test (CORS whitelist scoped to / + /login/ only); /status/, /status?x=1 also 200 JSON; /healthz /livez /readyz /live all 302 login catch
 - NEW WS handshake to box.signageos.io/ → 302 login redirect (no unauthenticated WebSocket surface)
+
+## 2026-08-14 09:21:10 UTC
