@@ -4169,3 +4169,4 @@ impact: infra/topology disclosure of box fleet; LOW-MEDIUM
 testability: PASSIVE
 [NEXT] HUMAN: Run `sos login` to obtain valid orgA X-Auth `<id>:<token>` + account JWT; then GET -H "X-Auth: <orgA>" /v1/organization/<own-uid>/security-token → expect 200 baseline; repeat with foreign orgB `{uid}` → 200 or 403076 (NOT 403074) proves cross-tenant mint; escalate minted token on GET /v1/device.
 [RISK] box.signageos.io: 30 — /status infra-leak persists (secgrep=0, 30+ cycles) but all authn surface gated (login catch-all), SPA routes hardened (HSTS/xfo/xcto/CSP/nonce-hash), no unauthenticated bypass found | api.signageos.io: 35 — hardened headers + all 60+ routes JWT/X-Auth-gated with zero ACAO, but the documented header-identity vs client-supplied-path-UID auth model leaves an unverified cross-tenant mint vector that, if real, is critical.
+## 2026-08-15 05:57:18 UTC [box] (model bigpickle)

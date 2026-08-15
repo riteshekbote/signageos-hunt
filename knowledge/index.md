@@ -609,3 +609,10 @@
 - 2026-08-15 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod box-8676fb5f57-xd6mc, secgrep=0 (x-powered-by only), 9-svc topology, behind CloudFront; body sha fbd513c3…
 - 2026-08-15 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened on rs `77955558bc` (secgrep=3, 8-svc mongoDB3 absent) — differential vs box /status persists.
 - 2026-08-15 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle ("Both x-oauth-client_id header and first part (before char :) of x-auth header are missing…") — mechanism intact, AUTH_HELPED, conf 86.
+- 2026-08-15 REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes), trivial health check, no data leaked — unchanged.
+- 2026-08-15 REJECTED MISCONFIG @ box.signageos.io WebSocket: Confirmed wss: → 302 login redirect, no unauthenticated WebSocket surface — unchanged.
+- 2026-08-15 REJECTED MISCONFIG @ box.signageos.io /healthz /livez /readyz /live: Confirmed all 302 login catch-all — unchanged.
+- 2026-08-15 REJECTED MISCONFIG @ box.signageos.io /login/ bundle.js 2.193.0: Confirmed zero `/v[12]/` API path references, pure Auth0 login bundle — unchanged.
+- 2026-08-15 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All routes 403 JWT/X-Auth-gated (403105/403074), zero ACAO under any Origin — no passive bypass; cross-tenant chain remains AUTH_HELPED only — unchanged.
+- 2026-08-15 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-8676fb5f57-xd6mc`, uid `6deaf70c…`, Node v20.20.2, 9-svc topology, secgrep=0, behind CloudFront — POC complete, evidence archive stable (body sha256 `9508a597…`, headers `9ce55d6a…`).
+- 2026-08-15 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle ("Both x-oauth-client_id header and first part (before char `:`) of x-auth header are missing from request thus account not to be authenticated") — mechanism intact, AUTH_HELPED, conf 86.

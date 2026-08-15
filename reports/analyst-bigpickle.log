@@ -27329,3 +27329,31 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK SCORE
 [RISK] box.signageos.io: 30 — /status infra-leak persists (secgrep=0, 30+ cycles) but all authn surface gated (login catch-all), SPA routes hardened (HSTS/xfo/xcto/CSP/nonce-hash), no unauthenticated bypass found | api.signageos.io: 35 — hardened headers + all 60+ routes JWT/X-Auth-gated with zero ACAO, but the documented header-identity vs client-supplied-path-UID auth model leaves an unverified cross-tenant mint vector that, if real, is critical.
+===== ANALYST bigpickle 2026-08-15 05:59:14 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s -o /tmp/box_status.json -w "HTTP %{http_code}\n" https://box.signageos.io/status; echo "---headers---"; curl -s -D - -o /dev/null https://box.signageos.io/status | grep -iE 'x-powered-by|strict-transport|x-frame|x-content|content-security|access-control|x-cache|x-amz-cf-pop|server' | head -20
+HTTP 200
+---headers---
+x-powered-by: Express
+x-cache: Miss from cloudfront
+x-amz-cf-pop: ORD58-P5
+[0m
+[0m$ [0mcurl -s -o /tmp/api_status.json -w "HTTP %{http_code}\n" https://api.signageos.io/status; echo "---headers---"; curl -s -D - -o /dev/null https://api.signageos.io/status | grep -iE 'x-powered-by|strict-transport|x-frame|x-content|content-security|access-control|x-cache|x-amz-cf-pop|server' | head -20
+HTTP 200
+---headers---
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+x-amz-cf-pop: ORD56-P6
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcat /tmp/box_status.json | head -c 1200; echo; echo "---"; cat /tmp/api_status.json | head -c 1200 failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[0m
+[0m$ [0msha256sum /tmp/box_status.json /tmp/api_status.json
+92c0088721ce18fa7adb7cdbb2200c836105e3b3cafd759647803815597b6173  /tmp/box_status.json
+67143f9fb48af96c2569b3d1ab2cca838c883c454109fbeecbe6385d2721488a  /tmp/api_status.json
+[0m
