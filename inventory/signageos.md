@@ -746,3 +746,5 @@
 - CHANGED box.signageos.io/ + /login/ CSP nonces rotated (6 new x-*-nonce-hash values) — directives, 17 static ACAO, hardening unchanged
 
 ## 2026-08-15 10:57:21 UTC
+
+## 2026-08-15 11:28:54 UTC
