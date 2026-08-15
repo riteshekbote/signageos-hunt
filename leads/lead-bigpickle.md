@@ -4072,3 +4072,4 @@ impact: n/a
 testability: PASSIVE
 [NEXT] HUMAN: Run `sos login` to obtain a valid account X-Auth `<id>:<token>` + account JWT, then: GET -H "X-Auth: <own>" https://api.signageos.io/v1/organization/<own-uid>/security-token → expect 200 baseline; repeat with a FOREIGN org UID in the path → 200 or 403076 (NOT 403074) proves cross-tenant mint; escalate minted token on GET /v1/device.
 [RISK] box.signageos.io: 30 — /status infra-leak persists (secgrep=0) but all authn surface gated (login catch-all), SPA routes hardened (HSTS/xfo/xcto/CSP/nonce-hash), no unauthenticated bypass found | api.signageos.io: 35 — hardened headers + all routes JWT/X-Auth-gated with zero ACAO, v2 surface frozen at JWT-only, but the documented header-identity vs client-supplied-path-UID auth model leaves an unverified cross-tenant mint vector that, if real, is critical.
+## 2026-08-15 03:53:06 UTC [box] (model bigpickle)

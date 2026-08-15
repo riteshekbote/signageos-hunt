@@ -26967,3 +26967,23 @@ testability: PASSIVE
 
 ## STEP 7 — RISK SCORE
 [RISK] box.signageos.io: 30 — /status infra-leak persists (secgrep=0) but all authn surface gated (login catch-all), SPA routes hardened (HSTS/xfo/xcto/CSP/nonce-hash), no unauthenticated bypass found | api.signageos.io: 35 — hardened headers + all routes JWT/X-Auth-gated with zero ACAO, v2 surface frozen at JWT-only, but the documented header-identity vs client-supplied-path-UID auth model leaves an unverified cross-tenant mint vector that, if real, is critical.
+===== ANALYST bigpickle 2026-08-15 03:56:09 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s -D - -o /dev/null --max-time 20 https://box.signageos.io/status | grep -iE 'HTTP/|x-powered|strict-transport|x-frame|x-content|content-security|cache-control' | head -20
+HTTP/2 200 
+x-powered-by: Express
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "box_status_http=%{http_code}\n" --max-time 20 https://box.signageos.io/status; curl -s --max-time 20 https://box.signageos.io/status | head -c 600; echo
+box_status_http=200
+{"name":"box","status":"OK","process":{"uid":"b02c28b5b3b9d13d3b75b3e5a4ec654c7aa6180e94cccb9331","pid":1,"version":"v20.20.2","uptime":6260.36516622,"cpuUsage":{"user":138891410,"system":20980544},"memoryUsage":{"rss":172011520,"heapTotal":103051264,"heapUsed":90953536,"external":24722132,"arrayBuffers":21271419}},"hostname":"box-8676fb5f57-fdph6","failedServices":[],"succeededServices":["amqp0","redis3","redis1","redis2","redis0","mongoDB2","mongoDB3","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1786765982813,"respondedAt":1786765982878,"amqp0":{"response":{"requestedAt":178676598281
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcurl -s --max-time 20 -D - -X GET 'https://api.signageos.io/v1/organization/test/security-token' -o /tmp/st.json; echo "---BODY---"; cat /tmp/st.json failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "api_status_http=%{http_code}\n" --max-time 20 https://api.signageos.io/status; curl -s --max-time 20 https://api.signageos.io/status | head -c 400; echo
+api_status_http=200
+{"name":"api","status":"OK","process":{"uid":"143af22cb6e27b5575132923ed6df10b5fb978a182ef25c642","pid":1,"version":"v24.19.0","uptime":353.982891648,"cpuUsage":{"user":110331428,"system":9528218},"memoryUsage":{"rss":726937600,"heapTotal":462381056,"heapUsed":375936336,"external":74755107,"arrayBuffers":71547626}},"hostname":"api-77955558bc-4zs7h","failedServices":[],"succeededServices":["amqp0",
+[0m
