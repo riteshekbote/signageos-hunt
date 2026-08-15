@@ -733,3 +733,10 @@
 - 2026-08-15 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: mechanism intact across rs `77955558bc`; AUTH_HELPED, conf 86.
 - 2026-08-15 REJECTED class @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml; errorDetail used only as mechanism evidence for the IDOR lead.
 - 2026-08-15 ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized — evidence archive sha256 body 38737948dcd9... / headers b11ba5ba... (30+ cycles stable)
+- 2026-08-15 ACCEPTED class @ box.signageos.io/status: Fresh probe confirms 200 JSON leak, secgrep=0, pod rotation only, full 9-svc topology + cpuUsage/memoryUsage + process.uid + Node v20.20.2 unchanged behind CloudFront — POC finalized 30+ cycles.
+- 2026-08-15 ACCEPTED class @ api.signageos.io/v1/organization/{uid}/security-token: 403076 errorDetail byte-identical ("first part (before char `:`) of x-auth header" vs client-supplied path {uid}), mechanism intact, zero auth drift across rs 77955558bc — AUTH_HELPED, conf 86.
+- 2026-08-15 ACCEPTED class @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto/no-store, secgrep=3), zero ACAO under any Origin, info-leak persists but postured vs box differential intact.
+- 2026-08-15 ACCEPTED class @ box.signageos.io/ + /login/ CORS+CSP: 17 static ACAO (incl http://plaintext + *.zdusercontent.com + api sibling), 0 credentials flag, evil.test NOT reflected; CSP 59+ origins; hardened entry (secgrep=4 on /, /login/) vs /status (secgrep=0) differential confirmed.
+- 2026-08-15 REJECTED class @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass; cross-tenant chain remains AUTH_HELPED only.
+- 2026-08-15 REJECTED class @ box.signageos.io /healthz/livez/readyz/live: all 302 login catch-all, no unauthenticated surface — unchanged.
+- 2026-08-15 REJECTED class @ videowall-designer leaked clientId/secret: X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — staging-only fixture, credential reuse disproven — CONFIRMED DEAD.

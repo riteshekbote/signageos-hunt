@@ -1,4 +1,4 @@
-## 2026-08-15 15:58:03 UTC [box] (model bigpickle)
+## 2026-08-15 16:34:03 UTC [box] (model bigpickle)
 [HYP] Cross-tenant security-token mint via X-Auth org-UID path override
 class: IDOR
 asset: api.signageos.io/v1/organization/{uid}/security-token
@@ -12,7 +12,7 @@ testability: AUTH_HELPED
 class: MISCONFIG
 asset: box.signageos.io/status
 confidence: 96
-reasoning: Fresh probe 200 JSON leaks hostname `box-8676fb5f57-7zpgc`, 40-hex process.uid, Node v20.20.2, 9-svc topology + responseTime; headers ONLY x-powered-by + CloudFront (secgrep=0). Stable 30+ cycles; POC final & archived.
+reasoning: Fresh probe 200 JSON leaks hostname `box-8676fb5f57-r5w8r`, 40-hex process.uid, Node v20.20.2, 9-svc topology + responseTime; headers ONLY x-powered-by + CloudFront (secgrep=0). Stable 30+ cycles; POC final & archived.
 evidence_needed: n/a — accepted finding.
 verify_steps: curl -s https://box.signageos.io/status → 200 JSON infra-leak; header grep = 0 hardening headers.
 impact: infra/topology disclosure of box fleet; LOW-MEDIUM
@@ -26,3 +26,5 @@ evidence_needed: n/a — accepted finding; no credential-theft path.
 verify_steps: curl -s -D - -H "Origin: https://evil.test" https://box.signageos.io/login/ → ACAO unchanged (17 static), grep credentials = 0.
 impact: expands postMessage/origin trust boundary for SPA surfaces; LOW
 testability: PASSIVE
+[FINAL]
+[NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → capture account JWT + X-Auth `<orgId>:<unsafeDecryptedToken>`; then GET -H "X-Auth: <orgA-id:token>" /v1/organization/<own-uid>/security-token (200 baseline) then /v1/organization/<foreign-orgB-uid>/security-token (expect non-403074 = cross-tenant mint). This is the only remaining vector with real impact; all PASSIVE surface is exhausted and POC-final.
