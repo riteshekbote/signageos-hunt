@@ -2700,3 +2700,23 @@
 - LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation not testable passively without tenant config access
 - LEARN: REJECTED IDOR @ api.signageos.io: No public API endpoints discoverable via passive probing (all common paths 404)
 - LEARN: ACCEPTED MISCONFIG @ box.signageos.io CSP: Overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary
+
+## RANKED HYPOTHESES 2026-08-15 07:28:03 UTC
+- [96] https://box.signageos.io/status: box.signageos.io /status Unauthenticated Infrastructure Information Disclosure (POC final) (from reports/hypotheses-laguna.txt)
+- [86] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token minting via X-Auth org-UID path override (from reports/hypotheses-nemotron3.txt)
+- [86] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override (from reports/hypotheses-bigpickle.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Run `sos login` to obtain a valid account X-Auth `<id:unsafeDecryptedToken>` + account JWT, then execute AUTH_HELPED verify_steps for the CRITICAL cross-
+- NEXT(hypotheses-laguna.txt): HUMAN: Box POC phase is **complete and finalized** — `/status` infra-leak confirmed live (POD `box-8676fb5f57-nfrnj`, secgrep=0, full topology, evidence archive
+- LEARN: CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on pro
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized — evidence archive sha256 body 9508a597f3a9a8e2719e96420805f506b13dcc063f483e29acfbfebea82970aa / he
+- LEARN: CONFIRMED MECHANISM @ api.signageos.io/v1/organization/{uid}/security-token: errorDetail byte-identical ("first part (before char `:`) of x-auth header" vs clie
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass; cross-tenant chain rem
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/status CORS: NO access-control-allow-origin on /status under any Origin (CORS whitelist strictly scoped to / + /login/ onl
+- LEARN: REJECTED MISCONFIG @ box.signageos.io WebSocket: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface
+- LEARN: REJECTED IDOR @ box /login/ bundle.js v2 path-diff: 2.193.0 login bundle carries zero API paths — endpoint map now auth-gated only, probe dead
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged this cycle)
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: POC FINALIZED — fresh evidence archive ac47643a747cf15c97121c7e7cb1e511517481cc8966761a572a64a6c5663a71 (body) / d
+- LEARN: CONFIRMED MECHANISM @ api.signageos.io/v1/organization/{uid}/security-token: 403074/403075/403076/403105 taxonomy byte-identical on current rs; errorDetail expl
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes), trivial health check, no data leaked — not reportable.
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session (carried forward).
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml (desc

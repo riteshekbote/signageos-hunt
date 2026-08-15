@@ -4256,3 +4256,22 @@ impact: infra/topology disclosure of box fleet; LOW-MEDIUM
 testability: PASSIVE
 [NEXT] HUMAN: Run `sos login` to obtain valid orgA X-Auth `<id>:<token>` + account JWT; then GET -H "X-Auth: <orgA>" /v1/organization/<own-uid>/security-token → expect 200 baseline; repeat with foreign orgB `{uid}` → 200 or 403076 (NOT 403074) proves cross-tenant mint; escalate minted token on GET /v1/device.
 [RISK] box.signageos.io: 30 — /status infra-leak persists (secgrep=0, 30+ cycles) but all authn surface gated (login catch-all), SPA routes hardened (HSTS/xfo/xcto/CSP/nonce-hash), no unauthenticated bypass found | api.signageos.io: 35 — hardened headers + all 60+ routes JWT/X-Auth-gated with zero ACAO, but the documented header-identity vs client-supplied-path-UID auth model leaves an unverified cross-tenant mint vector that, if real, is critical.
+## 2026-08-15 07:23:30 UTC [box] (model bigpickle)
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: 403074 errorDetail byte-identical this cycle — account identity bound to X-Auth first-part (before `:`), path `{uid}` client-supplied and independent; endpoint X-Auth/x-oauth-client_id gated, not JWT; stable across rs rotations (zero auth drift, 30+ cycles).
+evidence_needed: orgA valid X-Auth + foreign orgB `{uid}` in path → 200 or 403076 (NOT 403074) = path-uid not validated against auth'd org = cross-tenant mint.
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) GET -H "X-Auth: <orgA-id:token>" /v1/organization/<own-uid>/security-token → 200 baseline; 3) repeat with foreign orgB `{uid}` → non-403074 = mint; 4) escalate minted token on GET /v1/device.
+impact: mint security tokens for any tenant → foreign device/content/firmware control; severity CRITICAL
+testability: AUTH_HELPED
+[HYP] Unauthenticated infra-leak on box /status (maintained accepted finding)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Reconfirmed live this cycle — pod box-8676fb5f57-xd6mc, uid 6deaf70c…, Node v20.20.2, 9-svc topology, secgrep=0 (x-powered-by only), behind CloudFront ORD58-P5; stable across 30+ cycles.
+evidence_needed: n/a — accepted finding, POC archived.
+verify_steps: curl -s https://box.signageos.io/status → 200 JSON infra-leak; header grep secgrep=0.
+impact: infra/topology disclosure of box fleet; LOW-MEDIUM
+testability: PASSIVE

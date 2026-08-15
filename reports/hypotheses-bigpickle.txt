@@ -1,86 +1,19 @@
-## 2026-08-15 06:51:52 UTC [box] (model bigpickle)
-[NEW] api.signageos.io: Root (/) serves static HTML landing page (37KB), not API JSON — no public API surface exposed (404 on /v1, /v2, /health, /docs, /api, /swagger.json, /openapi.json)
-[NEW] box.signageos.io: 302 → /login/%2F with Auth0 OAuth2 flow (sos-production.us.auth0.com, auth0.signageos.io in CSP connect-src) — confirms Auth0 as IdP
-[NEW] box.signageos.io CSP reveals extensive 3rd-party integrations: Mapbox, Sentry, MoodMedia/BroadSign/Sony device APIs, remote-desktop.signageos.io, upload.signageos.io, platform.signageos.io, license.signageos.io, S3 buckets, Zendesk — broad attack surface via postMessage/origin trust
-[CHANGED] api.signageos.io auth model unknown — no public docs, no swagger, no obvious auth headers on root; SDK/cli repos (signageos org, 59 repos) likely contain actual endpoint mappings and auth schemes
-[PRIO] box.signageos.io/login (Auth0 callback/origin flow), score=72, axes: attack=8, business=9, tech=8 (OAuth2/Auth0/nonce-CSP/trusted-types), gate=8 (no auth needed to probe login), cloud=7 (Auth0, S3, Mapbox, device APIs), fresh=7
-[PRIO] api.signageos.io (root + hidden endpoints), score=68, axes: attack=7, business=9, tech=6 (CloudFront, no public spec), gate=10 (public root), cloud=7 (AWS, likely internal microservices), fresh=6
-[PRIO] box.signageos.io CSP origins (remote-desktop, upload, platform, license, device APIs), score=65, axes: attack=8, business=8, tech=7 (postMessage/origin checks, websockets), gate=6 (requires login), cloud=8 (many subdomains/AWS), fresh=7
-[HYP] Auth0 redirect_uri validation bypass on box.signageos.io
-class: AUTH
-asset: box.signageos.io/login
-confidence: 65
-reasoning: Auth0 OAuth2 flow with redirect to /login/%2F; CSP allows multiple auth0 origins (sos-production.us.auth0.com, auth0.signageos.io); nonce-based CSP with strict-dynamic may allow gadget chaining if redirect_uri not strictly validated against allowlist
-evidence_needed: Test redirect_uri parameter manipulation to arbitrary allowed CSP origins (e.g., https://auth0.signageos.io, https://sos-production.us.auth0.com) or subdomain takeover targets
-verify_steps: GET https://box.signageos.io/login/%2F?redirect_uri=https://auth0.signageos.io/xxx — observe if Auth0 accepts and redirects back with code; test state parameter reuse
-impact: Account takeover via OAuth code theft; severity HIGH
-testability: PASSIVE (initial probe), AUTH_HELPED (full flow)
-[HYP] IDOR on api.signageos.io via undiscovered versioned endpoints
-class: IDOR
-asset: api.signageos.io
-confidence: 55
-reasoning: No public API spec; 404 on /v1,/v2,/health,/docs; SDK/cli repos (TypeScript) likely contain actual endpoint paths and auth headers; API root serves HTML not JSON suggesting versioned paths exist elsewhere or require specific headers
-evidence_needed: Discovery of actual API base path (e.g., /api/v1, /rest, /graphql) and auth scheme (API key? JWT? mTLS?)
-verify_steps: GET https://api.signageos.io/api/v1 (and common variants) with/without Authorization: Bearer <null>; check SDK source for baseURL patterns (passive: clone signageos/sdk repo)
-impact: Unauthorized access to device management, content distribution, user data; severity CRITICAL
-testability: PASSIVE (recon), AUTH_HELPED (with token)
-[HYP] postMessage/origin confusion across box.signageos.io subdomains (remote-desktop, upload, platform, license)
-class: OTHER
-asset: box.signageos.io (CSP origins)
-confidence: 50
-reasoning: CSP connect-src/frame-src allows 20+ subdomains including remote-desktop.signageos.io, upload.signageos.io, platform.signageos.io, license.signageos.io; if any embed box in iframe or receive postMessage, origin validation flaws could leak tokens or trigger actions
-evidence_needed: Identify which origins embed box or listen for postMessage; test messageEvent.origin checks
-verify_steps: PASSIVE: enumerate subdomains via cert transparency; AUTH_HELPED: login, open devtools, inspect iframe/postMessage listeners on each CSP-listed origin
-impact: Cross-origin data leakage, action forgery on integrated services; severity MEDIUM-HIGH
-testability: AUTH_HELPED
-[PARKED] Auth0 redirect_uri validation bypass on box.signageos.io: confidence 65 but verify_steps require Auth0 tenant interaction — may be blocked by Auth0 allowlist config; cannot confirm without tenant access
-[PARKED] IDOR on api.signageos.io via undiscovered versioned endpoints: confidence 55 but no concrete endpoint discovered; pure speculation without SDK mapping
-[PARKED] postMessage/origin confusion across box.signageos.io subdomains: confidence 50 but requires authenticated session and manual iframe analysis; no passive evidence of vulnerable listeners
-[FINAL] (no surviving hypotheses above threshold — all parked due to insufficient passive evidence or auth-required verification)
-[NEXT] RAG: Clone and grep signageos/sdk (TypeScript) and signageos/cli repos for API baseURL patterns, auth header construction, and endpoint paths — this maps the hidden api.signageos.io surface passively
-[LEARN] REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation not testable passively without tenant config access
-[LEARN] REJECTED IDOR @ api.signageos.io: No public API endpoints discoverable via passive probing (all common paths 404)
-[LEARN] ACCEPTED MISCONFIG @ box.signageos.io CSP: Overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary
-[RISK] box.signageos.io: 75 — Auth0 OAuth2 flow, broad CSP trust boundary (20+ origins including device mgmt APIs, S3, websockets), Sentry/reCAPTCHA nonces, CloudFront; high business value (player/dashboard admin)
-[RISK] api.signageos.io: 60 — No public API surface, hidden behind CloudFront, auth model unknown, but high business value (core backend); risk driven by unknown attack surface via SDK/cli code
-[PRIO] box.signageos.io/login (Auth0 OAuth2 callback), score=8.05, axes: attack=8, business=9, tech=8 (OAuth2/Auth0/nonce-CSP/trusted-types), gate=8 (no auth needed), cloud=7 (Auth0,S3,Mapbox,device APIs), fresh=7
-[PRIO] api.signageos.io (root + hidden endpoints), score=7.70, axes: attack=7, business=9, tech=6 (CloudFront,no public spec), gate=10 (public root), cloud=7 (AWS,internal microservices), fresh=6
-[PRIO] signageos/sdk & cli repos (GitHub), score=7.70, axes: attack=7, business=8, tech=7 (TS,auth headers,baseURL), gate=10 (public), cloud=6 (code refs), fresh=8 (active)
-[PRIO] box.signageos.io CSP origins (remote-desktop,upload,platform,license), score=7.45, axes: attack=8, business=8, tech=7 (postMessage,WS,Express), gate=6 (needs login), cloud=8 (subdomains,AWS,S3), fresh=7
-[HYP] api.signageos.io responds with API JSON when proper Accept header sent
-class: IDOR
-asset: api.signageos.io/
-confidence: 50
-reasoning: Root serves static HTML (37KB) with 404 on all common paths; SDK/cli repos likely reference actual API via headers (Accept: application/json, Authorization, x-api-key); CloudFront vary: Origin suggests content negotiation
-evidence_needed: Response with JSON content-type and API structure when requesting with Accept: application/json or SDK-observed headers
-verify_steps: GET https://api.signageos.io/ -H "Accept: application/json" -H "Authorization: Bearer null" -H "x-api-key: test" — observe Content-Type and body; passive RAG: clone signageos/sdk repo grep for baseURL, headers, auth patterns
-impact: Unauthorized access to device management, content distribution, user data; severity CRITICAL
+## 2026-08-15 07:23:30 UTC [box] (model bigpickle)
 [HYP] Cross-tenant security-token mint via X-Auth org-UID path override
 class: IDOR
 asset: api.signageos.io/v1/organization/{uid}/security-token
 confidence: 86
-reasoning: 403074 errorDetail byte-identical this cycle — account identity bound to X-Auth first-part (before `:`), path `{uid}` client-supplied and independent; endpoint X-Auth/x-oauth-client_id gated, not JWT; stable across rs rotations (zero auth drift).
+reasoning: 403074 errorDetail byte-identical this cycle — account identity bound to X-Auth first-part (before `:`), path `{uid}` client-supplied and independent; endpoint X-Auth/x-oauth-client_id gated, not JWT; stable across rs rotations (zero auth drift, 30+ cycles).
 evidence_needed: orgA valid X-Auth + foreign orgB `{uid}` in path → 200 or 403076 (NOT 403074) = path-uid not validated against auth'd org = cross-tenant mint.
 verify_steps: AUTH_HELPED: 1) `sos login`; 2) GET -H "X-Auth: <orgA-id:token>" /v1/organization/<own-uid>/security-token → 200 baseline; 3) repeat with foreign orgB `{uid}` → non-403074 = mint; 4) escalate minted token on GET /v1/device.
-impact: mint security tokens for any tenant → foreign device/content/firmware control; CRITICAL
-testability: AUTH_HELPED
-[HYP] Cross-tenant device-plan-history read via client-supplied org {uid}
-class: IDOR
-asset: api.signageos.io/v1/organization/{uid}/device-plan-history
-confidence: 50
-reasoning: JWT-gated (403105) pre-auth; same mechanism-family as security-token (client-supplied path `{uid}` vs auth-derived org); route confirmed live from 2.193.0 bundle.
-evidence_needed: orgA JWT + foreign orgB `{uid}` returning 200 (plan/billing) instead of 403105.
-verify_steps: AUTH_HELPED: 1) `sos login`; 2) GET /v1/organization/<own-uid>/device-plan-history → 200 baseline; 3) orgB `{uid}` → non-403 = cross-tenant read.
-impact: unauthorized disclosure of foreign org device-plan/billing metadata; HIGH
+impact: mint security tokens for any tenant → foreign device/content/firmware control; severity CRITICAL
 testability: AUTH_HELPED
 [HYP] Unauthenticated infra-leak on box /status (maintained accepted finding)
 class: MISCONFIG
 asset: box.signageos.io/status
 confidence: 96
-reasoning: Reconfirmed live this cycle — pod box-8676fb5f57-nfrnj, uid 7a9f94b4…, Node v20.20.2, 9-svc topology, secgrep=0 (x-powered-by only), behind CloudFront IAD55-P8; stable across 30+ cycles.
+reasoning: Reconfirmed live this cycle — pod box-8676fb5f57-xd6mc, uid 6deaf70c…, Node v20.20.2, 9-svc topology, secgrep=0 (x-powered-by only), behind CloudFront ORD58-P5; stable across 30+ cycles.
 evidence_needed: n/a — accepted finding, POC archived.
 verify_steps: curl -s https://box.signageos.io/status → 200 JSON infra-leak; header grep secgrep=0.
 impact: infra/topology disclosure of box fleet; LOW-MEDIUM
 testability: PASSIVE
-[NEXT] HUMAN: Run `sos login` to obtain valid orgA X-Auth `<id>:<token>` + account JWT; then GET -H "X-Auth: <orgA>" /v1/organization/<own-uid>/security-token → expect 200 baseline; repeat with foreign orgB `{uid}` → 200 or 403076 (NOT 403074) proves cross-tenant mint; escalate minted token on GET /v1/device.
-[RISK] box.signageos.io: 30 — /status infra-leak persists (secgrep=0, 30+ cycles) but all authn surface gated (login catch-all), SPA routes hardened (HSTS/xfo/xcto/CSP/nonce-hash), no unauthenticated bypass found | api.signageos.io: 35 — hardened headers + all 60+ routes JWT/X-Auth-gated with zero ACAO, but the documented header-identity vs client-supplied-path-UID auth model leaves an unverified cross-tenant mint vector that, if real, is critical.
