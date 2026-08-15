@@ -3402,3 +3402,26 @@
 - LEARN: REJECTED class @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml (descriptive er
 - LEARN: REJECTED class @ box.signageos.io probe set (/status/ /api /v1 /v2 /graphql /actuator /metrics /env /config.json /ready /livez /healthz /readyz /live /csp-repor
 - LEARN: REJECTED class @ videowall-designer leaked clientId/secret on PROD: confirmed staging-only fixture, credential reuse disproven (403076 WRONG_ACCOUNT_SECRET "Acc
+
+## RANKED HYPOTHESES 2026-08-15 21:34:27 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology, process identity, and resource leak via /status (from reports/hypotheses-laguna.txt)
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-nemotron3.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id:unsafeD
+- NEXT(hypotheses-laguna.txt): HUMAN: Execute `sos login` on box.signageos.io (Auth0 device-code flow) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<orgA-i
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized — evidence archive sha256 body 38737948dcd9... / headers b11ba5ba... (30+ cycles stable)
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle — mechanism intact, zero auth drift; AUTH_HE
+- LEARN: CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on pro
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass; cross-tenant chain rem
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml (desc
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged)
+- LEARN: REJECTED MISCONFIG @ box.signageos.io WebSocket: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Live 2026-08-15 21:06 confirms pod `box-8676fb5f57-7zpgc` (uid `4c8489246a1989ced6834eea5e97581862adb015a1ab727fa2
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ CORS+CSP: Live confirms 17 static ACAO (http://plaintext + *.zdusercontent.com + api sibling + path-bearing rec
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status CORS scope: Confirmed zero ACAO on /status under spoofed Origin — CORS strictly scoped to SPA entry points, not exp
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto/no-store, secgrep=3), zero ACAO under any Origin; info-leak (hostname/uid/Node
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: Live confirms 403076 errorDetail byte-identical ("No API security token found by first pa
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass; cross-tenant chain rem
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml (descriptiv
+- LEARN: REJECTED MISCONFIG @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /ready /csp-report wss://): all → 302 login catch-all 
+- LEARN: REJECTED class @ videowall-designer leaked clientId/secret on PROD: confirmed staging-only fixture, credential reuse disproven (403076 WRONG_ACCOUNT_SECRET on p
