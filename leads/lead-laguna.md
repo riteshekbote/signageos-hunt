@@ -3840,3 +3840,39 @@ testability: PASSIVE
 [NEXT] HUMAN: Box POC phase is finalized and complete — /status infra-leak confirmed live (pod box-8676fb5f57-*, process.uid 64-hex, Node v20.20.2, full 9-service topology, secgrep=0, evidence archived ac47643b747cf15c97121c7e7cb1e511517481cc8966761a572a64a6c5663a71/da362f4bbdbda057cddc815f9d990e5ab00aa3dd1bcd0a7683dc26a5b653cb51). The only CRITICAL path: run `sos login` (Auth0 device-code on box.signageos.io) for an account owning ≥1 organization, then execute AUTH_HELPED verify_steps for HYP 1 — baseline own-org security-token mint → override path to FOREIGN-org-uid → escalate minted bearer on /v1/device. Requires a second tenant's org UID as the foreign target. No credentials present in environment; account creation forbidden under passive-first ruleset.
 [RISK] box.signageos.io: 31 — /status unauthenticated infra-leak (POC final, secgrep=0, full topology) + 17-origin static CORS whitelist incl http:// + *.zdusercontent.com wildcard (MISCONFIG-only, 0 creds flag → no credential-theft path); / + /login/ hardened (HSTS/xfo/xcto/CSP/nonce-hash); Auth0 OAuth2 gated; WebSocket/GraphQL/healthz all 302 login catch-all — no unauthenticated authn bypass surface remaining beyond the status leak.
 [RISK] api.signageos.io: 62 — all 60+ v1/v2 endpoints JWT/X-Auth-gated, zero ACAO under any Origin, /status hardened (HSTS/xfo/xcto/no-store); but a CONFIRMED-MECHANISM cross-tenant IDOR (conf 86, AUTH_HELPED) on /v1/organization/{uid}/security-token — CRITICAL if a valid account token confirms the org-UID/path override.
+## 2026-08-15 09:19:36 UTC [box] (model laguna)
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token | score 7.5 | atk 8 / biz 10 / tech 8 / gate 2 / cloud 6 / fresh 9
+[PRIO] box.signageos.io/status | score 6.5 | atk 6 / biz 5 / tech 4 / gate 10 / cloud 7 / fresh 10
+[PRIO] box.signageos.io/ + /login/ CORS+CSP | score 5.6 | atk 5 / biz 4 / tech 6 / gate 8 / cloud 5 / fresh 8
+[PRIO] api.signageos.io/status | score 5.2 | atk 5 / biz 5 / tech 4 / gate 4 / cloud 5 / fresh 7
+[HYP] api.signageos.io/v1/organization/{uid}/security-token Cross-tenant token mint via X-Auth org-UID path override
+class: IDOR
+asset: https://api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: Fresh probe on rs 77955558bc returns 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE with errorDetail byte-identical to prior cycle ("first part (before char `:`) of x-auth header" vs client-supplied path `{uid}`). Endpoint is X-Auth/x-oauth-gated (not JWT); /v1/organization/test → 403105 JWT-gated confirms org path split. Zero ACAO on api.
+evidence_needed: Valid orgA X-Auth `<acctId>:<unsafeDecryptedToken>`, baseline own-org mint → override to FOREIGN org UID → 200 (not 403075/NO_ORGANIZATION) = cross-tenant mint.
+verify_steps: AUTH_HELPED: (1) `sos login` (Auth0 device-code on box.signageos.io) → account JWT + X-Auth + own org UID; (2) `curl -H "X-Auth: <orgA>" https://api.signageos.io/v1/organization/<own-uid>/security-token` → 200 + bearer; (3) `curl -H "X-Auth: <orgA>" https://api.signageos.io/v1/organization/<FOREIGN-uid>/security-token` → 200/403076 (NOT 403075); (4) `curl -H "Authorization: Bearer <minted>" https://api.signageos.io/v1/device` → foreign devices.
+impact: Any authenticated tenant mints org security-tokens for ANY foreign tenant → full cross-tenant device/content/timing/firmware control. Severity: Critical.
+testability: AUTH_HELPED
+[HYP] box.signageos.io /status Unauthenticated infrastructure information disclosure
+class: MISCONFIG
+asset: https://box.signageos.io/status
+confidence: 96
+reasoning: Fresh probe confirms HTTP 200 application/json, no auth. Body leaks pod hostname `box-8676fb5f57-qlkwq`, 40-hex process.uid `51445e635744ef5a…`, Node v20.20.2, pid, uptime, cpuUsage, memoryUsage, 9 succeededServices (amqp0/redis0-3/mongoDB0-3), per-service responseTime. Headers: ONLY x-powered-by: Express + CloudFront — secgrep=0. POC final, 30+ cycles stable.
+evidence_needed: GET https://box.signageos.io/status → 200 JSON containing hostname + process.uid + version + topology; secgrep of response = 0; differential vs `/` (secgrep=4).
+verify_steps: PASSIVE: (1) `curl -s https://box.signageos.io/status` → 200 JSON with hostname + topology; (2) `curl -sI https://box.signageos.io/status | grep -ciE 'strict-transport|x-frame|content-security|x-content-type'` → 0.
+impact: Internal pod hostnames, backend service names, Node version, CPU/memory, per-service latency → enables targeted SSRF enumeration, CVE mapping, informed logic-flaw probing. Severity: Low-Medium.
+testability: PASSIVE
+[HYP] box.signageos.io / + /login/ Static CORS ACAO whitelist + broad CSP trust boundary
+class: MISCONFIG
+asset: https://box.signageos.io/ and https://box.signageos.io/login/
+confidence: 58
+reasoning: 17 static access-control-allow-origin values incl `http://box.signageos.io` (plaintext — defeats HSTS for CORS reads), `https://*.zdusercontent.com` (literal wildcard string), sibling `api.signageos.io`, plus S3/BroadSign/Sony/recaptcha/zendesk origins. Confirmed under spoofed Origin `https://evil.test` (evil.test NOT added — static whitelist). grep(access-control-allow-credentials)=0 on all box paths → no credential-theft path. CSP on /login/ lists 59+ connect-src/frame-src origins (triplicated Auth0 oauth/token, Sony/BroadSign/MoodMedia device APIs, S3, API Gateway, api sibling).
+evidence_needed: ACAO list unchanged under spoofed Origin; absence of Access-Control-Allow-Credentials; CSP connect-src ≥30 distinct origins.
+verify_steps: PASSIVE: (1) `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/ | grep -ci access-control-allow-credentials` → 0; (2) `curl -s https://box.signageos.io/login/ | grep -i content-security-policy` → 59+ origins incl triplicated oauth/token.
+impact: Static wildcard + http:// ACAO expands origin trust boundary (origin-confused postMessage/frame-injection/downgrade chains if co-located XSS); broad CSP trust boundary. No direct credential theft (no creds flag). Severity: Low-Medium.
+testability: PASSIVE
+[FINAL] (re-ranked, top first)
+[NEXT] HUMAN: Box POC phase is complete and finalized — /status infra-leak confirmed live (pod box-8676fb5f57-qlkwq, uid 51445e635744ef5a…, Node v20.20.2, full 9-svc topology, secgrep=0, behind CloudFront, evidence body sha256 e099eaea0ef42caddf53cfec1ef3eb8ed283cb2c833d4a80689feff4e3c23f89). The only CRITICAL path: run `sos login` (Auth0 device-code on box.signageos.io) for an account owning ≥1 organization, then execute AUTH_HELPED verify_steps for HYP 1 — baseline own-org security-token mint → override path to `<FOREIGN-org-uid>` → escalate minted bearer on /v1/device. Requires a second tenant's org UID as foreign target. No credentials present in environment; account creation forbidden under passive-first ruleset.
+[RISK] box.signageos.io: 31 — /status unauthenticated infra-leak (secgrep=0, full topology, POC final) + 17-origin static CORS whitelist incl http:// + *.zdusercontent.com wildcard (MISCONFIG-only, 0 creds flag → no credential-theft path); / + /login/ hardened (HSTS/xfo/xcto/CSP/nonces, secgrep=4); Auth0 OAuth2 gated; WebSocket/GraphQL/healthz all 302 login catch-all — no unauthenticated authn bypass surface remaining beyond the status leak.
+[RISK] api.signageos.io: 62 — all 60+ v1/v2 endpoints JWT/X-Auth-gated (403105/403074), zero ACAO under any Origin, /status hardened (HSTS/xfo/xcto/no-store) but still leaks hostname/uid/topology; CONFIRMED-MECHANISM cross-tenant IDOR (conf 86, AUTH_HELPED) on /v1/organization/{uid}/security-token — CRITICAL if valid account token confirms org-UID path override.

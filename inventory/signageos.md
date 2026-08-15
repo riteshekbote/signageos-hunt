@@ -723,3 +723,8 @@
 ## 2026-08-15 08:23:56 UTC
 
 ## 2026-08-15 08:58:17 UTC
+
+## 2026-08-15 09:19:47 UTC
+- CHANGED box.signageos.io/status pod rotated to `box-8676fb5f57-844gw` (uid `d5bdab36…`, Node v20.20.2, 9-svc amqp0/redis0-3/mongoDB0-3, CloudFront SEA900-P9) — body shape byte-identical, secgrep=0
+- CHANGED api.signageos.io/status pod rotated to `api-77955558bc-shv9w` (Node v24.19.0, hardened HSTS/xfo/xcto/no-store) — same rs `77955558bc`, no drift
+- CHANGED box / + /login/ CSP nonces rotated (6 new nonce values) — directives, 17 static ACAO, hardening all unchanged

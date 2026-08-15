@@ -4375,3 +4375,45 @@ testability: PASSIVE
 [NEXT] HUMAN: Box POC phase is finalized. Run `sos login` to obtain valid orgA X-Auth `<id>:<token>`; then GET -H "X-Auth: <orgA>" /v1/organization/<own-uid>/security-token → 200 baseline; repeat with foreign orgB `{uid}` → 200 or 403076 (NOT 403074) proves cross-tenant mint; escalate minted token on GET /v1/device.
 [RISK] box.signageos.io: 30 — /status infra-leak persists (accepted, POC final, secgrep=0) but all authn surface gated (login catch-all), SPA routes hardened (HSTS/xfo/xcto/CSP/nonces); no unauthenticated bypass found.
 [RISK] api.signageos.io: 35 — all 60+ routes JWT/X-Auth-gated with zero ACAO and hardened headers, but the documented header-identity vs client-supplied-path-UID auth model leaves an unverified cross-tenant mint vector that, if real, is critical.
+## 2026-08-15 09:18:02 UTC [box] (model bigpickle)
+[CHANGED] box.signageos.io/status pod rotated to `box-8676fb5f57-844gw` (uid `d5bdab36…`, Node v20.20.2, 9-svc amqp0/redis0-3/mongoDB0-3, CloudFront SEA900-P9) — body shape byte-identical, secgrep=0
+[CHANGED] api.signageos.io/status pod rotated to `api-77955558bc-shv9w` (Node v24.19.0, hardened HSTS/xfo/xcto/no-store) — same rs `77955558bc`, no drift
+[CHANGED] box / + /login/ CSP nonces rotated (6 new nonce values) — directives, 17 static ACAO, hardening all unchanged
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token — attack 7, business 10, tech 8, gate 2, cloud 4, fresh 3 → 6.35
+[PRIO] box.signageos.io/status — attack 4, business 4, tech 5, gate 10, cloud 6, fresh 2 → 5.10
+[PRIO] box.signageos.io/ + /login/ (CORS/CSP) — attack 4, business 3, tech 6, gate 10, cloud 4, fresh 2 → 4.75
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: 403074 errorDetail byte-identical this cycle ("first part (before char `:`) of x-auth header" vs client-supplied path {uid}); endpoint X-Auth/x-oauth-client_id gated, not JWT; zero auth drift across rs `77955558bc`/`6cc9959bb4` (30+ cycles).
+evidence_needed: orgA valid X-Auth + foreign orgB {uid} in path → 200 or 403076 (NOT 403074) proves path-uid unvalidated against auth'd org.
+verify_steps: AUTH_HELPED: `sos login`; GET -H "X-Auth: <orgA-id:token>" /v1/organization/<own-uid>/security-token → 200 baseline; repeat with orgB `{uid}` → non-403074 = cross-tenant mint; escalate minted token on GET /v1/device.
+impact: mint security tokens for any tenant → foreign device/content/firmware control; CRITICAL
+testability: AUTH_HELPED
+[HYP] Unauthenticated infra-leak on box /status (maintained accepted finding)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Fresh probe: 200 JSON leaks hostname `box-8676fb5f57-844gw`, 40-hex process.uid, Node v20.20.2, full 9-svc topology + per-service responseTime; headers ONLY `x-powered-by: Express` + CloudFront (secgrep=0). Stable 30+ cycles.
+evidence_needed: n/a — accepted finding, POC final & archived.
+verify_steps: curl -s https://box.signageos.io/status → 200 JSON infra-leak; header grep = 0 hardening headers.
+impact: infra/topology disclosure of box fleet; LOW-MEDIUM
+testability: PASSIVE
+[HYP] Broad static ACAO origin whitelist on box SPA entry points (maintained accepted finding)
+class: MISCONFIG
+asset: box.signageos.io / + /login/
+confidence: 92
+reasoning: 17 static ACAO incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + api sibling + path-bearing recaptcha value; evil.test NOT reflected (static whitelist); 0 `access-control-allow-credentials` → MISCONFIG-only.
+evidence_needed: n/a — accepted finding; class = broad origin trust boundary, no credential-theft path.
+verify_steps: curl -s -D - -H "Origin: https://evil.test" https://box.signageos.io/ → ACAO unchanged (static), grep credentials = 0.
+impact: expands postMessage/origin trust boundary for SPA surfaces; LOW
+testability: PASSIVE
+[FINAL] 1. api security-token cross-tenant mint (86, IDOR, AUTH_HELPED — CRITICAL, only open vector) | 2. box /status infra-leak (96, maintained accepted, POC final) | 3. box CORS/CSP (92, maintained accepted, MISCONFIG-only)
+[NEXT] HUMAN: Run `sos login` to obtain valid orgA X-Auth `<id>:<token>`; then GET -H "X-Auth: <orgA>" /v1/organization/<own-uid>/security-token → 200 baseline; repeat with foreign orgB `{uid}` → 200 or 403076 (NOT 403074) proves cross-tenant mint; escalate minted token on GET /v1/device. Box POC is finalized — no passive work remains on box.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-8676fb5f57-844gw` (new uid `d5bdab36…`), Node v20.20.2, 9-svc topology, secgrep=0 (x-powered-by only), behind CloudFront SEA900-P9; unchanged 30+ cycles, POC final.
+[LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto/no-store, secgrep=3) on rs `77955558bc` pod `shv9w` — differential vs box persists.
+[LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle — mechanism intact, zero auth drift; AUTH_HELPED, conf 86.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io / + /login/: 17 static ACAO + 0 credentials flag + HSTS/xfo/xcto/CSP/nonces reconfirmed — MISCONFIG-only, unchanged.
+[RISK] box.signageos.io: 30 — /status infra-leak persists (accepted, POC final, secgrep=0, 30+ cycles) but all authn surface behind login catch-all, SPA routes hardened (HSTS/xfo/xcto/CSP/nonces); no unauthenticated bypass found.
+[RISK] api.signageos.io: 35 — all 60+ routes JWT/X-Auth-gated (403105/403074) with zero ACAO and hardened headers, but the documented header-identity vs client-supplied-path-UID auth model leaves an unverified cross-tenant mint vector (conf 86) that, if real, is critical.

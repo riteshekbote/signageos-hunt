@@ -631,3 +631,6 @@
 - 2026-08-15 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle — mechanism intact, zero auth drift; AUTH_HELPED, conf 86.
 - 2026-08-15 ACCEPTED MISCONFIG @ box.signageos.io / + /login/ CORS/CSP: 17 static ACAO + 0 credentials flag + hardened HSTS/xfo/xcto/CSP/nonces reconfirmed — MISCONFIG-only, unchanged.
 - 2026-08-15 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes still 403 JWT/X-Auth-gated (403105/403074), zero ACAO under spoofed Origin — no passive bypass; cross-tenant chain remains AUTH_HELPED only.
+- 2026-08-15 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-8676fb5f57-844gw` (new uid `d5bdab36…`), Node v20.20.2, 9-svc topology, secgrep=0 (x-powered-by only), behind CloudFront SEA900-P9; unchanged 30+ cycles, POC final.
+- 2026-08-15 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto/no-store, secgrep=3) on rs `77955558bc` pod `shv9w` — differential vs box persists.
+- 2026-08-15 ACCEPTED MISCONFIG @ box.signageos.io / + /login/: 17 static ACAO + 0 credentials flag + HSTS/xfo/xcto/CSP/nonces reconfirmed — MISCONFIG-only, unchanged.
