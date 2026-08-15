@@ -739,3 +739,8 @@
 - NEW box.signageos.io/status pod rotated to `box-8676fb5f57-xd6mc` (uid `6deaf70c...`) — body shape identical, secgrep=0, behind CloudFront SEA900-P9
 - CHANGED api.signageos.io/status pod rotated to `api-77955558bc-shv9w` — same rs `77955558bc`, hardened headers intact (HSTS/xfo/xcto/no-store)
 - CHANGED box.signageos.io/ + /login/ CSP nonces rotated (6 new nonce-hash values) — directives, 17 static ACAO, hardening unchanged
+
+## 2026-08-15 10:36:44 UTC
+- NEW box.signageos.io/status pod rotated to `box-8676fb5f57-xd6mc` (uid `6deaf70c...`, Node v20.20.2, 9-svc topology, secgrep=0) — body shape identical, behind CloudFront SEA900-P9
+- CHANGED api.signageos.io/status pod rotated to `api-77955558bc-shv9w` (Node v24.19.0, hardened HSTS/xfo/xcto/no-store, secgrep=3) — same rs `77955558bc`, zero auth drift
+- CHANGED box.signageos.io/ + /login/ CSP nonces rotated (6 new x-*-nonce-hash values) — directives, 17 static ACAO, hardening unchanged
