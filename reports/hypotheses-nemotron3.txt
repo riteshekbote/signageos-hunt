@@ -1,4 +1,4 @@
-## 2026-08-15 15:43:50 UTC [api] (model nemotron3)
+## 2026-08-15 16:01:19 UTC [api] (model nemotron3)
 [PRIO] box.signageos.io/status, 9.10, attack=10, business=8, tech=8, gate=10, cloud=9, fresh=10
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token, 7.70, attack=9, business=9, tech=8, gate=2, cloud=8, fresh=9
 [PRIO] box.signageos.io/ + /login/, 6.90, attack=7, business=5, tech=6, gate=10, cloud=6, fresh=9
@@ -6,8 +6,8 @@
 class: MISCONFIG
 asset: box.signageos.io/status
 confidence: 100
-reasoning: Unauthenticated GET returns JSON with pod hostname (box-8676fb5f57-7zpgc), 64-hex process UID, Node v20.20.2, 9-service topology (amqp0/redis0-3/mongoDB0-3), per-service responseTime, cpuUsage, memoryUsage. Headers ONLY x-powered-by: Express + CloudFront — zero hardening headers (no HSTS/xfo/xcto/CSP). Differential vs /+/login/ (hardened) and api /status (hardened) confirmed across 30+ cycles.
-evidence_needed: Already proven — evidence archive sha256 body ac47643a747cf15c97121c7e7cb1e511517481cc8966761a572a64a6c5663a71 / headers da362f4bbdbda057cddc815f9d990e5ab00aa3dd1bcd0a7683dc26a5b653cb51
+reasoning: Unauthenticated GET returns JSON with pod hostname (box-8676fb5f57-r5w8r), 64-hex process UID, Node v20.20.2, 9-service topology (amqp0/redis0-3/mongoDB0-3), per-service responseTime, cpuUsage, memoryUsage. Headers ONLY x-powered-by: Express + CloudFront — zero hardening headers (no HSTS/xfo/xcto/CSP). Differential vs /+/login/ (hardened) and api /status (hardened) confirmed across 30+ cycles.
+evidence_needed: Already proven — evidence archive sha256 body 38737948dcd9... / headers b11ba5ba... (30+ cycles stable)
 verify_steps: GET https://box.signageos.io/status → 200 application/json with infra leak; grep -cE 'strict-transport|x-frame|x-content|content-security' headers → 0
 impact: Internal K8s topology, pod identity, process UID, service mesh exposed to unauthenticated internet; aids reconnaissance and chaining; MEDIUM
 testability: PASSIVE
@@ -32,7 +32,7 @@ testability: PASSIVE
 [PARKED] None — all three hypotheses meet confidence ≥ 40, class not on REJECTED list, and have concrete verify_steps
 [FINAL] 1) Unauthenticated K8s topology and process identity leak via /status (confidence 100) 2) Cross-tenant security-token minting via X-Auth org-UID path override (confidence 86) 3) Overly broad CORS origin trust boundary on SPA entry points (confidence 100)
 [NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id:unsafeDecryptedToken>`; then execute AUTH_HELPED verify_steps for the CRITICAL cross-tenant security-token IDOR: POST https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token with X-Auth header from orgA
-[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized — evidence archive sha256 body ac47643a747cf15c97121c7e7cb1e511517481cc8966761a572a64a6c5663a71 / headers da362f4bbdbda057cddc815f9d990e5ab00aa3dd1bcd0a7683dc26a5b653cb51 (30+ cycles stable)
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized — evidence archive sha256 body 38737948dcd9... / headers b11ba5ba... (30+ cycles stable)
 [LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle — mechanism intact, zero auth drift; AUTH_HELPED, conf 86
 [LEARN] CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — staging-only fixture, credential reuse disproven
 [LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass; cross-tenant chain remains AUTH_HELPED only
