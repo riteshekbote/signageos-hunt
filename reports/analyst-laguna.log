@@ -36306,3 +36306,77 @@ access-control-allow-origin: https://www.google.com/recaptcha/api2/clr
 [93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
 [0m✗ [0mecho "=== api /v1/organization/test (X-Auth only, no id:token) ===" && curl -sS -o /tmp/api_org_body.txt -w "HTTP %{http_code}\n" -H "X-Auth: test" https://api.signageos.io/v1/organization/test 2>/dev/null && cat /tmp/api_org_body.txt failed
 [91m[1mError: [0mThe user rejected permission to use this specific tool call.
+===== ANALYST laguna 2026-08-15 03:11:04 UTC =====
+[0m
+> build · laguna-s-2.1-free
+[0m
+## STEP 1 — DELTA
+
+NO_DELTA
+- box.signageos.io/status: pod rotation only (box-8676fb5f57-*), data shape/secgrep=0 unchanged, POC complete (30+ cycles)
+- api.signageos.io/status: hardening posture stable (HSTS/xfo/xcto/no-store, 0 ACAO) – persistent differential vs box /status, not new
+- api.signageos.io rs `77955558bc`: zero auth drift across replica-set flip (security-token 403074 / device-plan-history 403105 / v2/device 403105) — mechanism intact, AUTH_HELPED only
+- All box / + /login/ surface (17 ACAO, 0 creds flag, 7 nonce-hash, CSP 59+, Auth0 OAuth2) and healthz/health/WebSocket/GraphQL catch-all unchanged
+
+## STEP 2 — PRIORITIZE
+
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token | score 77 | atk 8 / biz 9 / tech 8 / gate 7 / cloud 6 / fresh 7
+[PRIO] box.signageos.io/status | score 40 | atk 10 / biz 3 / tech 5 / gate 10 / cloud 5 / fresh 6
+[PRIO] api.signageos.io/v1/organization/{uid}/device-plan-history | score 52 | atk 6 / biz 7 / tech 7 / gate 6 / cloud 5 / fresh 5
+
+## STEP 3 — HYPOTHESES
+
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` errorDetail is byte-identical this cycle and explicitly states org identity derives from "first part (before char `:`) of x-auth header" while path `{uid}` is client-supplied; same wording on rs `77955558bc` flip as on `6cc9959bb4`. Sibling /device-plan-history (403105) and /support-access-permission PUT (403) confirm identical `{uid}`-client-supplied pattern on org/company scoping.
+evidence_needed: orgA X-Auth `id:token` + foreign orgB uid returning 200/403076 (not 4030074) on GET /v1/organization/<orgB-uid>/security-token, then minted token reading /v1/device as orgB
+verify_steps: AUTH_HELPED: 1) `sos login` → account JWT + X-Auth `<own-org-id:unsafeDecryptedToken>`; 2) GET -H "X-Auth: <own>" https://api.signageos.io/v1/organization/<own-uid>/security-token → 200 baseline + org token; 3) same header, GET /v1/organization/<foreign-uid>/security-token → expect 200/403076 (NOT 403074) = cross-tenant mint; 4) -H "Authorization: Bearer <mintedToken>" GET /v1/device → foreign org devices
+impact: Any authenticated tenant mints org security-tokens for ANY foreign tenant → full cross-tenant device/content/timing/firmware control — CRITICAL
+testability: AUTH_HELPED
+
+[HYP] Unauthenticated infra-leak on box /status (POC complete, maintained)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Reconfirmed live — pod rotation only (box-8676fb5f57-*), uid/40-hex-process.uid/Node v20.20.2/9-service topology secgrep=0 (x-powered-by: Express only), behind CloudFront; hardened `/` + `/login/` carry HSTS/xfo/xcto/CSP/nonce-hash creating a confirmed posture differential.
+evidence_needed: n/a — accepted finding, reconfirm only
+verify_steps: curl -s https://box.signageos.io/status → 200 JSON infra-leak; header grep secgrep=0
+impact: Infrastructure/topology disclosure of box fleet — LOW-MEDIUM
+testability: PASSIVE
+
+[HYP] Cross-tenant device-plan-history read via client-supplied org {uid}
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/device-plan-history
+confidence: 50
+reasoning: JWT-gated (403105) pre-auth; same mechanism-family as security-token ({uid} client-supplied vs auth-derived org); rs `77955558bc` zero-drift confirms route stable
+evidence_needed: orgA JWT + foreign orgB {uid} returning 200 (plan/billing metadata) instead of 403105
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) -H "Authorization: Bearer <jwt>" GET /v1/organization/<own-uid>/device-plan-history → 200 baseline; 3) GET /v1/organization/<foreign-uid>/device-plan-history → non-403 = cross-tenant read
+impact: Unauthorized disclosure of foreign org plan/billing metadata — HIGH
+testability: AUTH_HELPED
+
+## STEP 4 — SELF-CRITIQUE
+
+[FINAL] (re-ranked)
+1. [86] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override — AUTH_HELPED, CRITICAL
+2. [96] box.signageos.io/status: Unauthenticated infra-leak (POC complete) — PASSIVE, LOW-MEDIUM
+3. [50] api.signageos.io/v1/organization/{uid}/device-plan-history: Cross-tenant read — AUTH_HELPED, HIGH
+
+## STEP 5 — NEXT ACTION
+
+[NEXT] HUMAN: Run `sos login` to obtain a valid account X-Auth (`<own-org-id>:<unsafeDecryptedToken>`) + account JWT, then execute AUTH_HELPED verify_steps for the CRITICAL cross-tenant IDOR: baseline GET -H "X-Auth: <own>" https://api.signageos.io/v1/organization/<own-uid>/security-token → 200 + token, then same header on a FOREIGN org UID → 200/403076 (NOT 403074) = mint confirmed; escalate minted token on GET /v1/device. A second tenant's org UID is required as the foreign target.
+
+## STEP 6 — LEARNING
+
+- ACCEPTED box.signageos.io/status: still POC-complete — pod 78…fb5f57-* rotating, secgrep=0, behind CloudFront, no hardening headers (differential vs hardened `/`+`/login/` persists)
+- ACCEPTED api.signageos.io/status: still hardened (HSTS/xfo/xcto/no-store secgrep=3, 0 ACAO) — differential vs box confirmed; infra-leak persists but posture locked
+- REJECTED api.signageos.io/v1/*+v2/* pre-auth: zero ACAO under `evil.test`, /v2/device → 403105 JWT-gated, /v1/organization/test → 403 — no passive bypass; cross-tenant chain AUTH_HELPED-only
+- REJECTED API descriptive errors: 403 bodies leak MISSING_ACCOUNT_ID_TO_AUTHENTICATE/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_JWT_TOKEN + 403074/403075/403076/403105 — excluded class per scope.yml (simultaneously mechanism-confirming evidence for IDOR, does not revive excluded vuln)
+- REJECTED box / + /login/ CORS credential-theft: 17 static ACAO, 0 access-control-allow-credentials → MISCONFIG-only, no exploit path
+- CONFIRMED DEAD videowall-designer prod clientId/secret reuse: `…fcbbd714…:secret` → prod GET /security-token = 403076 "Account not found" — staging-only fixture, no prod credential reuse
+
+## STEP 7 — RISK SCORE
+
+[RISK] box.signageos.io: 30 | /status infra-leak (POC complete, secgrep=0, behind CloudFront) + 17-origin static CORS whitelist on `/`+`/login/` (MISCONFIG-only, 0 creds flag) + broad CSP connect-src (59+); `/`+`/login/` hardened (HSTS/xfo/xcto/CSP/nonce-hash), SPA entry points + Auth0 OAuth2 gated, WebSocket/GraphQL/healthz all 302 login catch-all — no unauthenticated authn bypass surface
+[RISK] api.signageos.io: 62 | All 60+ v1/v2 endpoints JWT/X-Auth-gated (0 ACAO under any Origin) with hardened status headers; /status still leaks infra but locked posture; the documented X-Auth header-identity vs client-supplied-path-`{uid}` auth model leaves a CONFIRMED-MECHANISM cross-tenant IDOR vector on `/organization/{uid}/security-token` — CRITICAL if AUTH_HELPED verification passes (blocked only on possessing a valid account token pair + foreign tenant UID)

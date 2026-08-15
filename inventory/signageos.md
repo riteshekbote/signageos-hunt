@@ -694,3 +694,6 @@
 - NEW api.signageos.io replica-set rotated to `77955558bc` (new rs) — zero auth drift across flip: security-token 403074, device-plan-history 403105, v2/device 403105, support-access-permission PUT 403
 - NEW box.signageos.io/status pod rotated to `box-8676fb5f57-d5p5s` (uid c6f334b1..., Node v20.20.2, 9-svc, secgrep=0, CloudFront SFO53-P6) — data shape unchanged
 - NEW CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account
+
+## 2026-08-15 03:11:04 UTC
+- NEW NO_DELTA — inventory, knowledge base, and last leads all aligned at 2026-08-15 02:14 UTC; no new endpoints, auth drift, or surface changes detected

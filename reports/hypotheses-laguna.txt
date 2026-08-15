@@ -1,30 +1,35 @@
-## 2026-08-15 02:13:20 UTC [box] (model laguna)
+## 2026-08-15 03:08:14 UTC [box] (model laguna)
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token | score 77 | atk 8 / biz 9 / tech 8 / gate 7 / cloud 6 / fresh 7
+[PRIO] box.signageos.io/status | score 40 | atk 10 / biz 3 / tech 5 / gate 10 / cloud 5 / fresh 6
+[PRIO] api.signageos.io/v1/organization/{uid}/device-plan-history | score 52 | atk 6 / biz 7 / tech 7 / gate 6 / cloud 5 / fresh 5
 [HYP] Cross-tenant security-token mint via X-Auth org-UID path override
 class: IDOR
 asset: api.signageos.io/v1/organization/{uid}/security-token
 confidence: 86
-reasoning: 403074 errorDetail byte-identical on GET+POST this cycle — binds account identity to "first part (before char :) of x-auth header"; path {uid} client-supplied and independent. Public docs corroborate: /organization endpoints use USER token X-Auth with client-supplied organizationUid path for org resource listing — documented trust split exactly matches the mechanism.
-evidence_needed: orgA X-Auth + foreign orgB {uid} returning 200 or 403076 (not 403074) = cross-tenant mint.
-verify_steps: AUTH_HELPED: 1) `sos login`; 2) GET -H "X-Auth: <orgA-id:token>" /v1/organization/<own-uid>/security-token → 200 baseline; 3) GET orgB {uid} variant → non-403074 = cross-tenant mint; 4) escalate minted token on GET /v1/device.
-impact: mint security tokens for any tenant → foreign device/content/firmware control; CRITICAL
+reasoning: 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` errorDetail is byte-identical this cycle and explicitly states org identity derives from "first part (before char `:`) of x-auth header" while path `{uid}` is client-supplied; same wording on rs `77955558bc` flip as on `6cc9959bb4`. Sibling /device-plan-history (403105) and /support-access-permission PUT (403) confirm identical `{uid}`-client-supplied pattern on org/company scoping.
+evidence_needed: orgA X-Auth `id:token` + foreign orgB uid returning 200/403076 (not 4030074) on GET /v1/organization/<orgB-uid>/security-token, then minted token reading /v1/device as orgB
+verify_steps: AUTH_HELPED: 1) `sos login` → account JWT + X-Auth `<own-org-id:unsafeDecryptedToken>`; 2) GET -H "X-Auth: <own>" https://api.signageos.io/v1/organization/<own-uid>/security-token → 200 baseline + org token; 3) same header, GET /v1/organization/<foreign-uid>/security-token → expect 200/403076 (NOT 403074) = cross-tenant mint; 4) -H "Authorization: Bearer <mintedToken>" GET /v1/device → foreign org devices
+impact: Any authenticated tenant mints org security-tokens for ANY foreign tenant → full cross-tenant device/content/timing/firmware control — CRITICAL
 testability: AUTH_HELPED
-[HYP] Unauthenticated infra-leak on box /status (POC complete)
+[HYP] Unauthenticated infra-leak on box /status (POC complete, maintained)
 class: MISCONFIG
 asset: box.signageos.io/status
 confidence: 96
-reasoning: reconfirmed live this cycle — pod box-8676fb5f57-xd6mc, uid 6deaf70c…, Node v20.20.2, 9-svc topology, secgrep=0 (x-powered-by only), CloudFront PHX52-P1. Proven across 30+ cycles.
-evidence_needed: n/a — accepted finding, maintained.
-verify_steps: curl -s https://box.signageos.io/status → 200 JSON infra-leak; header grep secgrep=0.
-impact: infra/topology disclosure of box fleet; LOW-MEDIUM
+reasoning: Reconfirmed live — pod rotation only (box-8676fb5f57-*), uid/40-hex-process.uid/Node v20.20.2/9-service topology secgrep=0 (x-powered-by: Express only), behind CloudFront; hardened `/` + `/login/` carry HSTS/xfo/xcto/CSP/nonce-hash creating a confirmed posture differential.
+evidence_needed: n/a — accepted finding, reconfirm only
+verify_steps: curl -s https://box.signageos.io/status → 200 JSON infra-leak; header grep secgrep=0
+impact: Infrastructure/topology disclosure of box fleet — LOW-MEDIUM
 testability: PASSIVE
 [HYP] Cross-tenant device-plan-history read via client-supplied org {uid}
 class: IDOR
 asset: api.signageos.io/v1/organization/{uid}/device-plan-history
 confidence: 50
-reasoning: JWT-gated (403105) pre-auth; same mechanism-family as security-token (client-supplied path {uid} vs auth-derived org); no pre-auth bypass.
-evidence_needed: orgA JWT + foreign orgB {uid} returning 200 (plan/billing) instead of 403105.
-verify_steps: AUTH_HELPED: 1) `sos login`; 2) GET /v1/organization/<own-uid>/device-plan-history → 200 baseline; 3) orgB {uid} → non-403 = cross-tenant read.
-impact: unauthorized disclosure of foreign org device-plan/billing metadata; HIGH
+reasoning: JWT-gated (403105) pre-auth; same mechanism-family as security-token ({uid} client-supplied vs auth-derived org); rs `77955558bc` zero-drift confirms route stable
+evidence_needed: orgA JWT + foreign orgB {uid} returning 200 (plan/billing metadata) instead of 403105
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) -H "Authorization: Bearer <jwt>" GET /v1/organization/<own-uid>/device-plan-history → 200 baseline; 3) GET /v1/organization/<foreign-uid>/device-plan-history → non-403 = cross-tenant read
+impact: Unauthorized disclosure of foreign org plan/billing metadata — HIGH
 testability: AUTH_HELPED
-[NEXT] HUMAN: Run `sos login` to obtain a valid user X-Auth `<token_id>:<token_secret>` (+ account JWT), then: GET -H "X-Auth: <own>" https://api.signageos.io/v1/organization/<own-uid>/security-token → expect 200 baseline; then GET same with a FOREIGN org UID in the path → 200 or 403076 (NOT 403074) proves cross-tenant token mint; escalate minted token on GET /v1/device. Docs confirm GET is the documented method and account-level X-Auth + client-supplied organizationUid is the documented model.
-[RISK] box.signageos.io: 30 — /status infra-leak + broad static CORS whitelist persist, but all authn surface gated (login catch-all), SPA routes hardened (HSTS/xfo/xcto/CSP/nonce-hash), no unauthenticated bypass found | api.signageos.io: 35 — hardened headers + all routes JWT/X-Auth-gated with zero ACAO, but the documented header-identity vs client-supplied-path-UID auth model leaves an unverified cross-tenant vector that, if real, is critical
+[FINAL] (re-ranked)
+[NEXT] HUMAN: Run `sos login` to obtain a valid account X-Auth (`<own-org-id>:<unsafeDecryptedToken>`) + account JWT, then execute AUTH_HELPED verify_steps for the CRITICAL cross-tenant IDOR: baseline GET -H "X-Auth: <own>" https://api.signageos.io/v1/organization/<own-uid>/security-token → 200 + token, then same header on a FOREIGN org UID → 200/403076 (NOT 403074) = mint confirmed; escalate minted token on GET /v1/device. A second tenant's org UID is required as the foreign target.
+[RISK] box.signageos.io: 30 | /status infra-leak (POC complete, secgrep=0, behind CloudFront) + 17-origin static CORS whitelist on `/`+`/login/` (MISCONFIG-only, 0 creds flag) + broad CSP connect-src (59+); `/`+`/login/` hardened (HSTS/xfo/xcto/CSP/nonce-hash), SPA entry points + Auth0 OAuth2 gated, WebSocket/GraphQL/healthz all 302 login catch-all — no unauthenticated authn bypass surface
+[RISK] api.signageos.io: 62 | All 60+ v1/v2 endpoints JWT/X-Auth-gated (0 ACAO under any Origin) with hardened status headers; /status still leaks infra but locked posture; the documented X-Auth header-identity vs client-supplied-path-`{uid}` auth model leaves a CONFIRMED-MECHANISM cross-tenant IDOR vector on `/organization/{uid}/security-token` — CRITICAL if AUTH_HELPED verification passes (blocked only on possessing a valid account token pair + foreign tenant UID)
