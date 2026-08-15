@@ -3714,3 +3714,9 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle ("Both x-oauth-client_id header and first part (before char `:`) of x-auth header are missing from request thus account not to be authenticated") — mechanism intact, AUTH_HELPED, conf 86.
 [RISK] box.signageos.io: 30 — `/status` infra-leak (POC final, secgrep=0, behind CloudFront) + 17-origin static CORS whitelist on `/`+`/login/` (MISCONFIG-only, 0 creds flag → no credential-theft path); `/`/`/login/` hardened (HSTS/xfo/xcto/CSP/nonce-hash), Auth0 OAuth2 gated, WebSocket/GraphQL/healthz all 302 login catch-all — **no unauthenticated authn bypass surface remains**
 [RISK] api.signageos.io: 62 — All 60+ v1/v2 endpoints JWT/X-Auth-gated (0 ACAO under any Origin), hardened `/status` headers; `/status` still leaks infra but posture locked; the documented X-Auth header-identity vs client-supplied-path-`{uid}` auth model leaves a **CONFIRMED-MECHANISM cross-tenant IDOR** on `/v1/organization/{uid}/security-token` — CRITICAL if AUTH_HELPED verification passes (blocked only on possessing a valid account token pair + foreign tenant UID)
+## 2026-08-15 06:51:54 UTC [box] (model laguna)
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token | score 8 | atk 10 / biz 10 / tech 9 / gate 2 / cloud 9 / fresh 9
+[PRIO] api.signageos.io/v1/organization/{uid}/device-plan-history | score 6 | atk 7 / biz 8 / tech 7 / gate 2 / cloud 6 / fresh 7
+[PRIO] box.signageos.io/status | score 5 | atk 4 / biz 3 / tech 4 / gate 10 / cloud 3 / fresh 6
+[PRIO] api.signageos.io/status | score 4 | atk 3 / biz 2 / tech 4 / gate 10 / cloud 4 / fresh 6
+[PRIO] box.signageos.io/ + /login/ CORS+CSP | score 4 | atk 5 / biz 4 / tech 5 / gate 1 / cloud 5 / fresh 5

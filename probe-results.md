@@ -1217,3 +1217,15 @@ https://api.signageos.io/v1/organization/<own-uid>/device-plan-history -> HTTP 4
 https://api.signageos.io/v1/organization/<own-uid>/security-token` -> HTTP 404
 https://api.signageos.io/v1/organization/<FOREIGN-uid>/security-token` -> HTTP 404
 https://api.signageos.io/v1/device` -> HTTP 404
+
+## 2026-08-15 06:52:15 UTC
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/device-plan-history -> HTTP 403
+https://api.signageos.io/v1/company/<own-company-uid>/support-access-permission -> HTTP 404
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://auth0.signageos.io -> 200 len=724679 type=text/html
+https://box.signageos.io/login/%2F?redirect_uri=https://auth0.signageos.io/xxx -> 200 len=103953 type=text/html; charset=utf-8
+https://api.signageos.io/api/v1 -> HTTP 404
+https://api.signageos.io/ -> 200 len=37036 type=text/html; charset=utf-8
+https://box.signageos.io/status -> 200 len=1439 type=application/json; charset=utf-8
