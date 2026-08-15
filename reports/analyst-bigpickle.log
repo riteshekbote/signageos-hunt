@@ -29147,3 +29147,90 @@ STEP 6 — LEARNING:
 STEP 7 — RISK SCORE:
 - [RISK] box.signageos.io: 30 — /status infra-leak persists (accepted, POC final, secgrep=0, 30+ cycles) but all authn surface behind login catch-all; SPA routes hardened (HSTS/xfo/xcto/CSP/nonces); CORS whitelist MISCONFIG-only with no credential flag; no unauthenticated bypass found.
 - [RISK] api.signageos.io: 35 — all 60+ routes JWT/X-Auth-gated (403105/403074/403076) with zero ACAO and hardened headers, but the documented header-identity vs client-supplied-path-UID auth model leaves an unverified cross-tenant mint vector (conf 86) that, if real, is critical.
+===== ANALYST bigpickle 2026-08-15 12:57:50 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la /home/runner/work/signageos-hunt/signageos-hunt 2>/dev/null | head -30
+total 492
+drwxr-xr-x 11 runner runner   4096 Aug 15 12:55 .
+drwxr-xr-x  3 runner runner   4096 Aug 15 12:54 ..
+drwxr-xr-x  7 runner runner   4096 Aug 15 12:55 .git
+drwxr-xr-x  3 runner runner   4096 Aug 15 12:55 .github
+-rw-r--r--  1 runner runner    944 Aug 15 12:55 README.md
+-rw-r--r--  1 runner runner     32 Aug 15 12:55 analyst-out.txt
+-rw-r--r--  1 runner runner 162765 Aug 15 12:55 analyst-prompt.txt
+-rw-r--r--  1 runner runner 158776 Aug 15 12:55 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Aug 15 12:55 inventory
+drwxr-xr-x  2 runner runner   4096 Aug 15 12:55 knowledge
+drwxr-xr-x  2 runner runner  20480 Aug 15 12:55 leads
+-rw-r--r--  1 runner runner  76998 Aug 15 12:55 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Aug 15 12:55 reports
+drwxr-xr-x  3 runner runner   4096 Aug 15 12:55 reposcan-raw
+-rw-r--r--  1 runner runner   3086 Aug 15 12:55 scope.yml
+drwxr-xr-x  2 runner runner   4096 Aug 15 12:55 scripts
+-rw-r--r--  1 runner runner     33 Aug 15 12:55 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Aug 15 12:55 state_laguna.json
+-rw-r--r--  1 runner runner     33 Aug 15 12:55 state_ling3.json
+-rw-r--r--  1 runner runner     33 Aug 15 12:55 state_longcat.json
+-rw-r--r--  1 runner runner     33 Aug 15 12:55 state_nemotron3.json
+drwxr-xr-x  2 runner runner  12288 Aug 15 12:55 triage
+[0m
+[0m$ [0mfind /home/runner/work/signageos-hunt/signageos-hunt -maxdepth 3 -type d 2>/dev/null | head -40
+/home/runner/work/signageos-hunt/signageos-hunt
+/home/runner/work/signageos-hunt/signageos-hunt/inventory
+/home/runner/work/signageos-hunt/signageos-hunt/.git
+/home/runner/work/signageos-hunt/signageos-hunt/.git/refs
+/home/runner/work/signageos-hunt/signageos-hunt/.git/refs/heads
+/home/runner/work/signageos-hunt/signageos-hunt/.git/refs/tags
+/home/runner/work/signageos-hunt/signageos-hunt/.git/refs/remotes
+/home/runner/work/signageos-hunt/signageos-hunt/.git/info
+/home/runner/work/signageos-hunt/signageos-hunt/.git/objects
+/home/runner/work/signageos-hunt/signageos-hunt/.git/objects/info
+/home/runner/work/signageos-hunt/signageos-hunt/.git/objects/pack
+/home/runner/work/signageos-hunt/signageos-hunt/.git/hooks
+/home/runner/work/signageos-hunt/signageos-hunt/.git/logs
+/home/runner/work/signageos-hunt/signageos-hunt/.git/logs/refs
+/home/runner/work/signageos-hunt/signageos-hunt/triage
+/home/runner/work/signageos-hunt/signageos-hunt/.github
+/home/runner/work/signageos-hunt/signageos-hunt/.github/workflows
+/home/runner/work/signageos-hunt/signageos-hunt/reports
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge
+/home/runner/work/signageos-hunt/signageos-hunt/leads
+/home/runner/work/signageos-hunt/signageos-hunt/scripts
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/vscode-sops
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/platform
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/applet-sandbox
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/applet-examples
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/videowall-designer
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/sdk
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/server-bootstrap
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/cli
+[0m
+[0m$ [0mcurl -s -m 15 -o /tmp/boxstatus.json -D /tmp/boxstatus.hdr -w "HTTP %{http_code}\n" https://box.signageos.io/status; echo "---"; head -c 400 /tmp/boxstatus.json; echo; echo "---secgrep---"; grep -icE 'strict-transport|x-frame|x-content-type|content-security' /tmp/boxstatus.hdr; echo "---hostname/uid---"; python3 -c "import json;d=json.load(open('/tmp/boxstatus.json'));print('hostname:',d.get('hostname'));print('version:',d.get('version'));print('svc:',len(d.get('succeededServices',[])))" 2>/dev/null
+HTTP 200
+---
+{"name":"box","status":"OK","process":{"uid":"f37ee69232479d4f3f4387d4aa6e7cb8a36fa65ca5a267cd26","pid":1,"version":"v20.20.2","uptime":6096.091748523,"cpuUsage":{"user":97473360,"system":16398951},"memoryUsage":{"rss":166268928,"heapTotal":103313408,"heapUsed":90894344,"external":22724165,"arrayBuffers":19273472}},"hostname":"box-8676fb5f57-g96fp","failedServices":[],"succeededServices":["amqp0",
+---secgrep---
+0
+---hostname/uid---
+hostname: box-8676fb5f57-g96fp
+version: None
+svc: 9
+[0m
+[0m$ [0msleep 1; curl -s -m 15 -o /tmp/apistatus.json -D /tmp/apistatus.hdr -w "HTTP %{http_code}\n" https://api.signageos.io/status; echo "---secgrep---"; grep -icE 'strict-transport|x-frame|x-content-type|content-security' /tmp/apistatus.hdr; echo "---hostname---"; python3 -c "import json;d=json.load(open('/tmp/apistatus.json'));print('hostname:',d.get('hostname'));print('svc:',len(d.get('succeededServices',[])))" 2>/dev/null; echo "---ACAO grep---"; grep -ic 'access-control-allow-origin' /tmp/apistatus.hdr
+HTTP 200
+---secgrep---
+3
+---hostname---
+hostname: api-77955558bc-f8rzv
+svc: 8
+---ACAO grep---
+0
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0msleep 1; curl -s -m 15 -o /tmp/sectok.json -D /tmp/sectok.hdr -w "HTTP %{http_code}\n" https://api.signageos.io/v1/organization/test/security-token; echo "---body---"; cat /tmp/sectok.json | head -c 600; echo; echo "---errorDetail---"; python3 -c "import json;d=json.load(open('/tmp/sectok.json'));print(d.get('errorName'), d.get('errorCode'));print((d.get('errorDetail') or '')[:200])" 2>/dev/null failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.

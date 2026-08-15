@@ -4085,3 +4085,4 @@ testability: PASSIVE
 [LEARN] REJECTED: box.signageos.io/login Auth0 OAuth2 — redirect_uri/state binding not passively testable without tenant/authenticated session, no unauthenticated authn surface beyond /status + CORS/CSP (carried forward).
 [LEARN] REJECTED: videowall-designer leaked clientId/secret on PROD — testing X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only fixture, credential reuse disproven (CONFIRMED DEAD).
 [LEARN] REJECTED: api.signageos.io/v1/organization/{uid}/security-token pre-auth bypass — 403 403074, not a pre-auth bypass; requires valid orgX X-Auth (carried forward as AUTH_HELPED).
+## 2026-08-15 12:57:40 UTC [box] (model laguna)
