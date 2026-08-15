@@ -792,3 +792,9 @@
 ## 2026-08-15 18:03:44 UTC
 
 ## 2026-08-15 18:44:55 UTC
+
+## 2026-08-15 19:08:58 UTC
+- NEW None — inventory shows only pod rotations (box-8676fb5f57-*, api-77955558bc-*) with zero auth drift, no new endpoints, no surface changes since 2026-08-15 04:30
+- CHANGED box.signageos.io/status — pod rotated to `box-8676fb5f57-7zpgc` (uid `4c8489246a1989…`, Node v20.20.2, 9 succeededServices amqp0/redis0-3/mongoDB0-3), shape byte-identical, secgrep=0 (x-powered-by onl
+- CHANGED api.signageos.io/status — secgrep=3 (HSTS max-age=31536000, x-frame-options DENY, x-content-type-options nosniff), 0 ACAO, CloudFront IAD89-P1 — hardening differential vs box intact
+- CHANGED api.signageos.io/v1/organization/test/security-token — 403074 errorDetail byte-identical ("Both x-oauth-client_id header and first part (before char :) of x-auth header are missing…") — mechanism inta
