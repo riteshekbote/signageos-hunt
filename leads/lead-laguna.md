@@ -4906,3 +4906,38 @@ testability: PASSIVE
 [RISK] api.signageos.io: 86 — CRITICAL cross-tenant security-token mint IDOR mechanism CONFIRMED (403076 errorDetail byte-identical, zero auth drift across rs rotations, conf 86) at `/v1/organization/{uid}/security-token` behind X-Auth org-UID path override — unproven end-to-end only due to AUTH_HELPED gating (requires `sos login` + valid org credentials); `/status` hardened (secgrep=3, zero ACAO) but still leaks hostname/uid/Node; all 60+ routes JWT/X-Auth-gated pre-auth; the sole path to a demonstrable CRITICAL reportable requires the HUMAN `sos login` step.
 ## 2026-08-15 22:18:03 UTC [box] (model laguna)
 ## 2026-08-15 22:42:38 UTC [box] (model laguna)
+## 2026-08-15 23:02:26 UTC [box] (model laguna)
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token, score 7.10 — attack 7/biz 9/tech 8/gate 2/cloud 6/fresh 10
+[PRIO] box.signageos.io/ & /login/, score 6.55 — attack 5/biz 5/tech 7/gate 10/cloud 5/fresh 10
+[PRIO] box.signageos.io/status, score 5.60 — attack 3/biz 6/tech 3/gate 10/cloud 4/fresh 10
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: 403076/403074 errorDetail byte-identical across all cycles and rs rotations (77955558bc/6cc9959bb4) confirms org identity derived from X-Auth header first-part before `:` while path `{uid}` is client-supplied and distinct; endpoint X-Auth/x-oauth-client_id gated (NOT JWT); zero auth drift confirmed this cycle on current rs.
+evidence_needed: Valid orgA X-Auth `<id:unsafeDecryptedToken>` + path {uid}=foreign orgB uid → non-403074/403076 response (200 securityToken body OR 403104 proving path-uid reaches a different org than header)
+verify_steps: AUTH_HELPED: (1) `sos login` on box.signageos.io (Auth0 device-code flow) → obtain account owning ≥1 org → acquire account JWT + X-Auth `<orgA-id:unsafeDecryptedToken>` + own orgA uid; (2) POST -H "X-Auth: <orgA-id:token>" -H "x-oauth-client_id: <orgA-id>" -d '{}' https://api.signageos.io/v1/organization/<orgA-id>/security-token → baseline 200/403104 (own-org control); (3) repeat IDENTICAL headers but path {uid}=foreign orgB uid → if 200+securityToken body → cross-tenant mint CONFIRMED; (4) escalate: curl -H "Authorization: Bearer <mintedBearer>" https://api.signageos.io/v1/device?organization_uid=<orgB> → expect 200 with foreign tenant devices
+impact: Authenticated tenant mints org security-tokens for arbitrary foreign tenants → full cross-tenant device/content/timing/firmware control; CRITICAL
+testability: AUTH_HELPED
+[HYP] Overly broad static CORS origin trust boundary + CSP on SPA entry points
+class: MISCONFIG
+asset: box.signageos.io/ & /login/
+confidence: 100
+reasoning: 17 static access-control-allow-origin values incl http://box.signageos.io plaintext + https://*.zdunpkgdomains.com wildcard + api.signageos.io sibling + path-bearing recaptcha; evil.test NOT reflected under spoofed Origin (static whitelist confirmed); access-control-allow-credentials grep=0 → no credential-theft path (MISCONFIG-only); CSP 59+ connect-src/frame-src origins (triplicated Auth0 oauth/token, Sony/BroadSign/MoodMedia device APIs, 5× S3 buckets, AWS API Gateway).
+evidence_needed: GET -H "Origin: https://evil.test" https://box.signageos.io/ → 17 ACAO + evil.test NOT in list + credentials flag absent; GET /status → 0 ACAO
+verify_steps: PASSIVE: (1) curl -sI -H "Origin: https://evil.test" https://box.signageos.io/ | grep -c access-control-allow-origin → 17; grep -i access-control-allow-credentials → 0; (2) curl -sI -H "Origin: https://evil.test" https://box.signageos.io/status | grep -ci access-control-allow-origin → 0 (scope boundary); (3) curl -sI https://box.signageos.io/ | grep -oP "content-security-policy[^;]*" | grep -oP "[\w.-]+://[\w.-]+" | wc -l → ≥50 (CSP breadth)
+impact: 59+ origin trust boundary expands postMessage/CSP trust surface across third-party device APIs, S3 buckets, AWS API Gateway, Auth0, Zendesk wildcard; no credential-theft path without access-control-allow-credentials; LOW-MEDIUM
+testability: PASSIVE
+[HYP] Unauthenticated K8s topology, process identity, and resource leak via /status
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 100
+reasoning: HTTP 200 JSON returns only x-powered-by: Express + CloudFront (secgrep=0); leaks pod hostname, 64-hex process UID, Node v20.20.2, 9-service topology (amqp0, redis0-3, mongoDB0-3), cpuUsage/memoryUsage, per-service responseTime; / and /login/ carry HSTS+xfo+xcto+CSP (secgrep=4) — hardening differential; 30+ cycles stable, POC finalized.
+evidence_needed: curl -s https://box.signageos.io/status → 200 JSON with hostname/uid/Node/CPU+mem/topology; curl -sI https://box.signageos.io/status | grep -ciE 'strict-transport|x-frame|x-content|content-security' → 0
+verify_steps: PASSIVE: (1) curl -s https://box.signageos.io/status — confirms hostname, uid, Node v20.20.2, succeededServices [amqp0,redis0-3,mongoDB0-3], cpuUsage+memoryUsage, responseTime; (2) curl -sI https://box.signageos.io/status | grep -ciE 'strict-transport|x-frame|x-content|content-security' → 0; (3) curl -sI https://box.signageos.io/ | grep -ciE 'strict-transport|x-frame|x-content|content-security' → 4 (differential)
+impact: Internal K8s pod identity, process UID (64-hex), backend Redis/MongoDB/AMQP cluster topology, real-time CPU/memory exposed unauthenticated → SSRF/pivot reconnaissance, fleet enumeration, Node v20.20.2 CVE research; LOW-MEDIUM
+testability: PASSIVE
+[FINAL] 1) api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override (conf 86, AUTH_HELPED, CRITICAL)
+[FINAL] 2) box.signageos.io/ & /login/: Overly broad static CORS origin trust boundary + CSP on SPA entry points (conf 100, PASSIVE, MISCONFIG, LOW-MEDIUM)
+[FINAL] 3) box.signageos.io/status: Unauthenticated K8s topology, process identity, and resource leak via /status (conf 100, PASSIVE, MISCONFIG, LOW-MEDIUM, POC finalized 30+ cycles)
+[NEXT] HUMAN: Run `sos login` on box.signageos.io (Auth0 device-code flow) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<orgA-id:unsafeDecryptedToken>` + own orgA uid → execute AUTH_HELPED verify_steps for HYP #1: baseline `POST /v1/organization/<orgA-id>/security-token` (expect 200/403104 own-org control), then repeat IDENTICAL headers with foreign orgB uid in path (non-403074/403076 = cross-tenant mint CONFIRMED). Passive surface is fully exhausted (NO_DELTA, 30+ cycles); this is the sole path to escalate the conf-86 AUTH_HELPED mechanism to a demonstrable CRITICAL reportable.
