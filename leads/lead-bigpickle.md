@@ -4275,3 +4275,31 @@ evidence_needed: n/a — accepted finding, POC archived.
 verify_steps: curl -s https://box.signageos.io/status → 200 JSON infra-leak; header grep secgrep=0.
 impact: infra/topology disclosure of box fleet; LOW-MEDIUM
 testability: PASSIVE
+## 2026-08-15 07:52:52 UTC [box] (model bigpickle)
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: 403074 errorDetail byte-identical this cycle — org identity bound to X-Auth first-part (before `:`) while path `{uid}` is client-supplied and independent; endpoint X-Auth/x-oauth-client_id gated (not JWT); zero auth drift across rs rotations.
+evidence_needed: orgA valid X-Auth + foreign orgB `{uid}` in path → 200 or 403076 (NOT 403074) = path-uid not validated against auth'd org = cross-tenant mint.
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) GET -H "X-Auth: <orgA-id:token>" /v1/organization/<own-uid>/security-token → 200 baseline; 3) repeat with foreign orgB `{uid}` → non-403074 = mint; 4) escalate minted token on GET /v1/device.
+impact: mint security tokens for any tenant → foreign device/content/firmware control; severity CRITICAL
+testability: AUTH_HELPED
+[HYP] Unauthenticated infra-leak on box /status (maintained accepted finding)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Reconfirmed live this cycle — pod box-8676fb5f57-xd6mc, uid 6deaf70c…, Node v20.20.2, 9-svc topology + per-service responseTime, secgrep=0 (x-powered-by only), behind CloudFront; stable 30+ cycles, POC archived.
+evidence_needed: n/a — accepted finding, POC final.
+verify_steps: curl -s https://box.signageos.io/status → 200 JSON infra-leak; header grep secgrep=0.
+impact: infra/topology disclosure of box fleet; LOW-MEDIUM
+testability: PASSIVE
+[HYP] Cross-tenant device-plan-history read via client-supplied org {uid}
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/device-plan-history
+confidence: 50
+reasoning: JWT-gated (403105) pre-auth; same mechanism-family as security-token (client-supplied path `{uid}` vs auth-derived org); route live on current rs.
+evidence_needed: orgA JWT + foreign orgB `{uid}` → 200 (plan/billing data) instead of 403105.
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) GET /v1/organization/<own-uid>/device-plan-history → 200 baseline; 3) repeat orgB `{uid}` → non-403 = cross-tenant read.
+impact: unauthorized disclosure of foreign org device-plan/billing metadata; HIGH
+testability: AUTH_HELPED
