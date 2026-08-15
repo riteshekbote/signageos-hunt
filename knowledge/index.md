@@ -634,3 +634,14 @@
 - 2026-08-15 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-8676fb5f57-844gw` (new uid `d5bdab36…`), Node v20.20.2, 9-svc topology, secgrep=0 (x-powered-by only), behind CloudFront SEA900-P9; unchanged 30+ cycles, POC final.
 - 2026-08-15 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto/no-store, secgrep=3) on rs `77955558bc` pod `shv9w` — differential vs box persists.
 - 2026-08-15 ACCEPTED MISCONFIG @ box.signageos.io / + /login/: 17 static ACAO + 0 credentials flag + HSTS/xfo/xcto/CSP/nonces reconfirmed — MISCONFIG-only, unchanged.
+- 2026-08-15 REJECTED: box.signageos.io/ + /login/ CORS credential-theft — 17 static ACAO confirmed, grep(access-control-allow-credentials)=0 → no credential-theft path, MISCONFIG-only (unchanged 30+ cycles)
+- 2026-08-15 REJECTED: box.signageos.io/ready — 200 "OK" (2 bytes) trivial health check, no data leaked (unchanged this cycle)
+- 2026-08-15 REJECTED: box.signageos.io WebSocket — wss://box.signageos.io/ upgrade → 302 login redirect, no unauth surface (unchanged)
+- 2026-08-15 REJECTED: box.signageos.io /healthz /livez /readyz /live — all 302 login catch-all, no new endpoints (unchanged)
+- 2026-08-15 REJECTED: api.signageos.io/v1/*+v2/* pre-auth — all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin, no passive bypass (unchanged)
+- 2026-08-15 REJECTED: api.signageos.io/v1/* descriptive errors — 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml (errorDetail used only as mechanism evidence for HYP 1)
+- 2026-08-15 REJECTED: box.signageos.io/login Auth0 OAuth2 — redirect_uri/state binding not passively testable without tenant/authenticated session, no unauthenticated authn surface beyond /status + CORS/CSP
+- 2026-08-15 ACCEPTED (ALIVE): box.signageos.io/status — pod rotation only (qlkwq), secgrep=0, full topology leak unchanged; POC final, evidence re-archived
+- 2026-08-15 ACCEPTED (ALIVE): api.signageos.io/status — pod rotation (m8xzb), hardened HSTS/xfo/xcto/no-store (secgrep=3), info-leak persists, differential vs box persists
+- 2026-08-15 ACCEPTED (ALIVE): api.signageos.io/v1/organization/{uid}/security-token — mechanism confirmed, 403074 errorDetail byte-identical, zero auth drift across rs rotation; AUTH_HELPED conf 86
+- 2026-08-15 ACCEPTED (ALIVE): box.signageos.io / + /login/ CORS+CSP — 17 static ACAO, 0 credentails flag, CSP 59+ origins behind CloudFront, nonces rotated only

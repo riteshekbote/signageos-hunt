@@ -728,3 +728,9 @@
 - CHANGED box.signageos.io/status pod rotated to `box-8676fb5f57-844gw` (uid `d5bdab36…`, Node v20.20.2, 9-svc amqp0/redis0-3/mongoDB0-3, CloudFront SEA900-P9) — body shape byte-identical, secgrep=0
 - CHANGED api.signageos.io/status pod rotated to `api-77955558bc-shv9w` (Node v24.19.0, hardened HSTS/xfo/xcto/no-store) — same rs `77955558bc`, no drift
 - CHANGED box / + /login/ CSP nonces rotated (6 new nonce values) — directives, 17 static ACAO, hardening all unchanged
+
+## 2026-08-15 09:48:16 UTC
+- NEW api.signageos.io replica-set `77955558bc` stable across cycles — zero auth drift on security-token (403074), device-plan-history (403105), v2/device (403105)
+- NEW box.signageos.io/status pod rotated to `box-8676fb5f57-xd6mc` (uid `6deaf70c...`) — body shape identical, secgrep=0, behind CloudFront SEA900-P9
+- CHANGED box.signageos.io/ + /login/ CSP nonces rotated (6 new nonce-hash values) — directives, 17 static ACAO, hardening unchanged
+- CHANGED api.signageos.io/status pod rotated to `api-77955558bc-shv9w` — same rs `77955558bc`, hardened headers intact (HSTS/xfo/xcto/no-store)

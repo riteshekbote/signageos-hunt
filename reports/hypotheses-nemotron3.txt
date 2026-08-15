@@ -1,4 +1,8 @@
-## 2026-08-15 09:18:15 UTC [api] (model nemotron3)
+## 2026-08-15 09:46:48 UTC [api] (model nemotron3)
+[NEW] api.signageos.io replica-set `77955558bc` stable across cycles — zero auth drift on security-token (403074), device-plan-history (403105), v2/device (403105)
+[NEW] box.signageos.io/status pod rotated to `box-8676fb5f57-xd6mc` (uid `6deaf70c...`) — body shape identical, secgrep=0, behind CloudFront SEA900-P9
+[CHANGED] box.signageos.io/ + /login/ CSP nonces rotated (6 new nonce-hash values) — directives, 17 static ACAO, hardening unchanged
+[CHANGED] api.signageos.io/status pod rotated to `api-77955558bc-shv9w` — same rs `77955558bc`, hardened headers intact (HSTS/xfo/xcto/no-store)
 [PRIO] box.signageos.io/status, 9.10, attack=10, business=8, tech=8, gate=10, cloud=9, fresh=10
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token, 7.70, attack=9, business=9, tech=8, gate=2, cloud=8, fresh=9
 [PRIO] box.signageos.io/ + /login/, 6.90, attack=7, business=5, tech=6, gate=10, cloud=6, fresh=9
@@ -6,7 +10,7 @@
 class: MISCONFIG
 asset: box.signageos.io/status
 confidence: 100
-reasoning: Unauthenticated GET returns JSON with pod hostname, 64-hex process UID, Node v20.20.2, 9-service topology (amqp0/redis0-3/mongoDB0-3), per-service responseTime. Headers ONLY x-powered-by: Express + CloudFront — zero hardening headers (no HSTS/xfo/xcto/CSP). Differential vs /+/login/ (hardened) and api /status (hardened) confirmed across 30+ cycles. POC complete and archived.
+reasoning: Unauthenticated GET returns JSON with pod hostname (box-8676fb5f57-xd6mc), 64-hex process UID, Node v20.20.2, 9-service topology (amqp0/redis0-3/mongoDB0-3), per-service responseTime. Headers ONLY x-powered-by: Express + CloudFront — zero hardening headers (no HSTS/xfo/xcto/CSP). Differential vs /+/login/ (hardened) and api /status (hardened) confirmed across 30+ cycles.
 evidence_needed: Already proven — evidence archive sha256 body ac47643a747cf15c97121c7e7cb1e511517481cc8966761a572a64a6c5663a71 / headers da362f4bbdbda057cddc815f9d990e5ab00aa3dd1bcd0a7683dc26a5b653cb51
 verify_steps: GET https://box.signageos.io/status → 200 application/json with infra leak; grep -cE 'strict-transport|x-frame|x-content|content-security' headers → 0
 impact: Internal K8s topology, pod identity, process UID, service mesh exposed to unauthenticated internet; aids reconnaissance and chaining; MEDIUM
@@ -29,6 +33,9 @@ evidence_needed: Already proven — reconfirmed across 30+ cycles behind CloudFr
 verify_steps: GET https://box.signageos.io/ -H "Origin: https://evil.test" → ACAO unchanged (static whitelist); grep access-control-allow-credentials → 0; GET /status -H "Origin: https://evil.test" → no ACAO header
 impact: Broad postMessage/origin trust boundary expands attack surface for future chain; no direct credential-theft path without credentials flag; LOW-MEDIUM
 testability: PASSIVE
+[PARKED] CSRF on box.signageos.io/login via Auth0 OAuth2 state parameter: class AUTH excluded as "CSRF on anonymous-accessible forms" per scope.yml
+[PARKED] Descriptive error messages on api.signageos.io/v1/* (403074/403075/403076/403105): class MISCONFIG excluded as "descriptive error messages" per scope.yml
+[PARKED] Pre-auth IDOR on api.signageos.io/v1/*+v2/*: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass
 [FINAL] 1) Unauthenticated K8s topology and process identity leak via /status (confidence 100) 2) Cross-tenant security-token minting via X-Auth org-UID path override (confidence 86) 3) Overly broad CORS origin trust boundary on SPA entry points (confidence 100)
 [NEXT] HUMAN: Run `sos login` to obtain a valid account X-Auth `<id:unsafeDecryptedToken>` + account JWT, then execute AUTH_HELPED verify_steps for the CRITICAL cross-tenant security-token IDOR: POST https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token with X-Auth header from orgA
 [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized — evidence archive sha256 body ac47643a747cf15c97121c7e7cb1e511517481cc8966761a572a64a6c5663a71 / headers da362f4bbdbda057cddc815f9d990e5ab00aa3dd1bcd0a7683dc26a5b653cb51 (30+ cycles stable)
