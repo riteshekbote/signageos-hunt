@@ -776,3 +776,5 @@
 - NEW box.signageos.io/status: pod rotated to `box-8676fb5f57-r5w8r` (uid `43bb70d304978090…`, Node v20.20.2) — body sha `38737948dcd9…`, shape byte-identical, secgrep=0 (headers: only x-powered-by: Express
 - CHANGED box.signageos.io probe set `/healthz /livez /readyz /live /metrics /env /config.json /swagger /openapi.json`: all → 302 login catch-all (`/login/%2F<path>`) — no new unauthenticated surface, unchanged
 - CHANGED api.signageos.io: no drift observed this cycle; rs `77955558bc` + hardened /status posture carried forward.
+
+## 2026-08-15 15:44:02 UTC
