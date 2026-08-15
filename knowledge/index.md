@@ -719,3 +719,16 @@
 - 2026-08-15 REJECTED class @ videowall-designer leaked clientId/secret: testing X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only fixture, credential reuse disproven (CONFIRMED DEAD) — unchanged.
 - 2026-08-15 REJECTED class @ box.signageos.io/login Auth0 OAuth2: redirect_uri/state binding not passively testable without tenant/authenticated session; no unauthenticated authn surface beyond /status + CORS/CSP — unchanged.
 - 2026-08-15 REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged)
+- 2026-08-15 REJECTED class @ box.signageos.io /login/ bundle.js 2.193.0: zero /v[12]/ API path references, pure Auth0 login bundle — endpoint map dead.
+- 2026-08-15 REJECTED class @ api.signageos.io CORS: zero ACAO on /, /status, /v1/*, /v2/* under any Origin — not CORS-exploitable.
+- 2026-08-15 REJECTED class @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO — no passive bypass; cross-tenant chain remains AUTH_HELPED only.
+- 2026-08-15 REJECTED class @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml (descriptive error messages).
+- 2026-08-15 REJECTED class @ videowall-designer leaked clientId/secret: X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — staging-only fixture, credential reuse disproven.
+- 2026-08-15 REJECTED class @ box.signageos.io/login Auth0 OAuth2: redirect_uri/state binding — not passively testable without tenant/authenticated session.
+- 2026-08-15 ACCEPTED class @ box.signageos.io/status: HTTP 200 JSON leaks hostname + 64-hex process.uid + Node v20.20.2 + 9-service topology + cpuUsage/memoryUsage, only x-powered-by: Express + CloudFront (secgrep=0) — POC finalized 30+ cycles.
+- 2026-08-15 ACCEPTED class @ api.signageos.io/v1/organization/{uid}/security-token: 403074/403076 errorDetail byte-identical across rs rotation — mechanism intact, zero auth drift; AUTH_HELPED conf 86.
+- 2026-08-15 ACCEPTED class @ api.signageos.io/status: hardened (HSTS/xfo/xcto/no-store, secgrep=3) — header posture hardened, info-leak persists, differential vs box persists.
+- 2026-08-15 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle — pod rotated to `box-8676fb5f57-r5w8r`, secgrep=0, full 9-svc topology leak; POC final (30+ cycles).
+- 2026-08-15 REJECTED MISCONFIG @ box.signageos.io probe set: /healthz /livez /readyz /live /metrics /env /config.json /swagger /openapi.json all 302 login catch-all — no new unauthenticated endpoints, unchanged.
+- 2026-08-15 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: mechanism intact across rs `77955558bc`; AUTH_HELPED, conf 86.
+- 2026-08-15 REJECTED class @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml; errorDetail used only as mechanism evidence for the IDOR lead.

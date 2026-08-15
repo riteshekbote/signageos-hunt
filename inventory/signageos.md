@@ -771,3 +771,8 @@
 
 ## 2026-08-15 14:53:22 UTC
 - NEW NO_DELTA — inventory shows only pod rotations (box-8676fb5f57-*, api-77955558bc-*) with zero auth drift, no new endpoints, no surface changes since 2026-08-15 04:30
+
+## 2026-08-15 15:15:56 UTC
+- NEW box.signageos.io/status: pod rotated to `box-8676fb5f57-r5w8r` (uid `43bb70d304978090…`, Node v20.20.2) — body sha `38737948dcd9…`, shape byte-identical, secgrep=0 (headers: only x-powered-by: Express
+- CHANGED box.signageos.io probe set `/healthz /livez /readyz /live /metrics /env /config.json /swagger /openapi.json`: all → 302 login catch-all (`/login/%2F<path>`) — no new unauthenticated surface, unchanged
+- CHANGED api.signageos.io: no drift observed this cycle; rs `77955558bc` + hardened /status posture carried forward.
