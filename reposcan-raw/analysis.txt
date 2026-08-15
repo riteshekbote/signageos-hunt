@@ -1,16 +1,16 @@
 [0m
 > build · nemotron-3-ultra-free
 [0m
-**Triage Results**
+**Classification:**
 
-| Category | File | Line | SHA256 of Secret | Classification | Verdict |
-|----------|------|------|------------------|----------------|---------|
-| SECRET_LEAK | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js` | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | **TEST_OR_EXAMPLE** (staging test fixture) | **REPORT_CANDIDATE: no** |
+| Category | File | Line | SHA256(secret) | Notes |
+|----------|------|------|----------------|-------|
+| REAL_SECRET | `signageos/videowall-designer/sos/videoTiming.js` | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | Hardcoded clientId/secret pair targeting staging `http://api.kiera.office.signageos.io` (HTTP, not HTTPS) |
 
-**Analysis**
-- The hardcoded secret `9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9` targets `http://api.kiera.office.signageos.io` (internal staging, HTTP)
-- **Confirmed DEAD on production** (2026-08-14): Tested as `X-Auth: <clientId>:<secret>` against `api.signageos.io/v1/organization/{cid}/security-token` → returns `403076 WRONG_ACCOUNT_SECRET "Account not found"` — the account does not exist on prod
-- This is a staging-only test fixture, not a production credential; credential reuse risk disproven
-- Already documented in knowledge base (2026-08-07 ACCEPTED SECRET_LEAK, 2026-08-14 CONFIRMED DEAD)
+**Verdict:**
 
-**No new reportable findings** in this scan delta. The single hit is a known, triaged, non-exploitable staging fixture.
+| Candidate | REPORT_CANDIDATE | Reason |
+|-----------|------------------|--------|
+| videowall-designer hardcoded secret | **no** | Already triaged (2026-08-07, 2026-08-14). Credentials target internal staging host (`api.kiera.office.signageos.io` over HTTP). Tested against production API — returns `403076 WRONG_ACCOUNT_SECRET "Account not found"` confirming the account doesn't exist on prod. Credential reuse disproven; staging-only test fixture. Out-of-scope host for this program. |
+
+**Note:** The scan references `gladiaio/` org but the hit is in `signageos/videowall-designer` — different GitHub org. The secret is real but already fully triaged and confirmed non-exploitable on production.
