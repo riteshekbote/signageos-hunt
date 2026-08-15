@@ -813,3 +813,7 @@
 - CHANGED box.signageos.io/status — body sha256 rotated to `caed9f79…` (pod rotation only; pod reverts between `xd6mc`/`r5w8r`); secgrep=0, x-powered-by: Express + CloudFront only
 - CHANGED api.signageos.io/v1/organization/test/security-token — 403074 errorDetail byte-identical this cycle ("…first part (before char `:`) of x-auth header…") on rs `77955558bc` — mechanism intact
 - CHANGED box.signageos.io/login/ — 17 static ACAO, 0 `access-control-allow-credentials`, HSTS/xfo/xcto/CSP present (hardened) — unchanged
+
+## 2026-08-15 21:04:45 UTC
+- NEW NO_DELTA — inventory shows only pod rotations (box-8676fb5f57-*, api-77955558bc-*) with zero auth drift, no new endpoints, no surface changes since 2026-08-15 04:30
+- NEW none — live re-probe (box `/status` → HTTP 200, body sha256 `caed9f79…`, secgrep=0; box `/` → 17 ACAO incl `http://`+`*.zdunpkgdomains.com`, 0 credentials flag, secgrep=4; api `/status` → secgrep=3, 0
