@@ -4052,3 +4052,27 @@ testability: PASSIVE
 [FINAL] [HYP] box.signageos.io/ + /login/ — Static CORS ACAO whitelist + broad CSP trust boundary (class: MISCONFIG, conf 100, PASSIVE, MISCONFIG-only no creds flag, severity: Low-Medium)
 [NEXT] HUMAN: Run `sos login` (Auth0 device-co[0m← [0mWrite analyst-out.txt
 [NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id>:<unsafeDecryptedToken>` + own org UID → execute AUTH_HELPED verify_steps for HYP 1 (baseline own-org mint → override to FOREIGN org UID → escalate bearer on /v1/device). No credentials in environment; account creation forbidden under passive-first ruleset; this is the documented CRITICAL path handoff.
+## 2026-08-15 11:47:49 UTC [box] (model laguna)
+verify_steps: PASSIVE: (1) `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/ | grep -ci access-control-allow-origin` → 17; (2) `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/ | grep -ci access-control-allow-credentials` → 0; (3) `curl -sI https://box.signageos.io/login/ | grep -i content-security-policy` → 59+ origins; (4) `curl -sI https://box.signageos.io/status | grep -ciE 'strict-transport|x-frame|content-security|x-content-type'` → 0.
+impact: Broad origin trust boundary expands postMessage/frame-injection/downgrade-chain attack surface on SPA entry points; no direct credential theft (no creds flag). Severity: Low-Medium.
+testability: PASSIVE
+[FINAL] (re-ranked, top first):
+[FINAL] [HYP] api.signageos.io/v1/organization/{uid}/security-token — Cross-tenant security-token mint via X-Auth org-UID path override (class: IDOR, conf 86, AUTH_HELPED, severity: Critical)
+[FINAL] [HYP] box.signageos.io/status — Unauthenticated K8s topology and process identity leak via /status (class: MISCONFIG, conf 100, PASSIVE, POC finalized, severity: Low-Medium)
+[FINAL] [HYP] box.signageos.io/ + /login/ — Static CORS ACAO whitelist + broad CSP trust boundary (class: MISCONFIG, conf 100, PASSIVE, MISCONFIG-only no creds flag, severity: Low-Medium)
+[NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id>:<unsafeDecryptedToken>` + own org UID → execute AUTH_HELPED verify_steps for HYP 1: (1) baseline own-org POST /v1/organization/<own-uid>/security-token → expect 200 + bearer; (2) same X-Auth, override path to FOREIGN org UID → expect 200 or 403076 (NOT 403075/NO_ORGANIZATION); (3) escalate minted bearer on /v1/device → foreign tenant devices. No credentials in environment; account creation forbidden under passive-first ruleset; this is the documented CRITICAL path handoff.
+[LEARN] ACCEPTED (ALIVE): box.signageos.io/status — pod rotation only (xd6mc), secgrep=0, full 9-svc topology leak, POC finalized & archived (30+ cycles). No hardening added.
+[LEARN] ACCEPTED (ALIVE): api.signageos.io/status — pod rotation (77955558bc-shv9w), hardened HSTS/xfo/xcto/no-store (secgrep=3), zero ACAO under any Origin; info-leak persists but header posture hardened vs box.
+[LEARN] ACCEPTED (ALIVE): api.signageos.io/v1/organization/{uid}/security-token — 403074 errorDetail byte-identical ("first part (before char `:`) of x-auth header" vs client-supplied path {uid}); mechanism intact, zero auth drift across rs rotation; AUTH_HELPED conf 86.
+[LEARN] ACCEPTED (ALIVE): box.signageos.io/ + /login/ CORS+CSP — 17 static ACAO (http://plaintext + *.zdunpkgdomains.com wildcard + api sibling + path-bearing recaptcha), 0 credentials flag, evil.test NOT reflected, CSP 59+ origins, 6 rotating nonces; /+/login/ hardened (secgrep=4), /status not (secgrep=0).
+[LEARN] REJECTED: box.signageos.io/ready — 200 "OK" (2 bytes), trivial health check, no data leaked (unchanged 30+ cycles).
+[LEARN] REJECTED: box.signageos.io WebSocket — wss:// → 302 login redirect, no unauthenticated surface (unchanged).
+[LEARN] REJECTED: box.signageos.io /healthz/lavez/readyz/live — all 302 login catch-all, no new endpoints (unchanged).
+[LEARN] REJECTED: box.signageos.io /login/ bundle.js 2.193.0 — zero /v[12]/ API path references, pure Auth0 login bundle, endpoint map dead (unchanged).
+[LEARN] REJECTED: api.signageos.io/v1/*+v2/* pre-auth — all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin, no passive bypass; cross-tenant chain remains AUTH_HELPED only (unchanged).
+[LEARN] REJECTED: api.signageos.io/v1/* descriptive errors — 403074/403075/403076/403105 bodies leak account/error detail, excluded class per scope.yml (descriptive error messages) (unchanged).
+[LEARN] REJECTED: api.signageos.io CORS — zero ACAO on /, /status, /v1/*, /v2/* under any Origin, not CORS-exploitable (unchanged).
+[LEARN] REJECTED: box.signageos.io CORS credential-theft — 17 static ACAO, 0 access-control-allow-credentials → no credential-theft path, MISCONFIG-only (unchanged).
+[LEARN] REJECTED: box.signageos.io/login Auth0 OAuth2 — redirect_uri/state binding not passively testable without tenant/authenticated session, no unauthenticated authn surface beyond /status + CORS/CSP (carried forward).
+[LEARN] REJECTED: videowall-designer leaked clientId/secret on PROD — testing X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only fixture, credential reuse disproven (CONFIRMED DEAD).
+[LEARN] REJECTED: api.signageos.io/v1/organization/{uid}/security-token pre-auth bypass — 403 403074, not a pre-auth bypass; requires valid orgX X-Auth (carried forward as AUTH_HELPED).
