@@ -1,1 +1,28 @@
-## 2026-08-15 03:53:06 UTC [box] (model bigpickle)
+## 2026-08-15 04:26:51 UTC [box] (model bigpickle)
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: This cycle 403074 errorDetail byte-identical — auth identity bound to X-Auth first-part (before `:`) while path `{uid}` is client-supplied and independent; any X-Auth first-part + client_id advances 403074→403076, proving caller-supplied org identity is parsed and credential-checked.
+evidence_needed: orgA valid X-Auth + foreign orgB `{uid}` in path → 200 or 403076 (NOT 403074) = path-uid not validated against auth'd org = cross-tenant mint.
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) GET -H "X-Auth: <orgA-id:token>" /v1/organization/<own-uid>/security-token → 200 baseline; 3) repeat with foreign orgB `{uid}` → non-403074 = mint; 4) escalate minted token on GET /v1/device.
+impact: mint security tokens for any tenant → foreign device/content/firmware control; CRITICAL
+testability: AUTH_HELPED
+[HYP] Unauthenticated infra-leak on box /status (maintained accepted finding)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Reconfirmed live this cycle — pod box-8676fb5f57-d5p5s, uid c6f334b1…, Node v20.20.2, 9-svc topology, secgrep=0 (x-powered-by: Express only), behind CloudFront; stable across 30+ cycles.
+evidence_needed: n/a — accepted finding, POC archived.
+verify_steps: curl -s https://box.signageos.io/status → 200 JSON infra-leak; header grep secgrep=0.
+impact: infra/topology disclosure of box fleet; LOW-MEDIUM
+testability: PASSIVE
+[HYP] Cross-tenant device-plan-history read via client-supplied org {uid}
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/device-plan-history
+confidence: 50
+reasoning: JWT-gated (403105) pre-auth; same mechanism-family as security-token (client-supplied path {uid} vs auth-derived org); no pre-auth bypass exists.
+evidence_needed: orgA JWT + foreign orgB `{uid}` returning 200 (plan/billing) instead of 403105.
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) GET /v1/organization/<own-uid>/device-plan-history → 200 baseline; 3) orgB `{uid}` → non-403 = cross-tenant read.
+impact: unauthorized disclosure of foreign org device-plan/billing metadata; HIGH
+testability: AUTH_HELPED

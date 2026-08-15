@@ -1,5 +1,5 @@
-## 2026-08-15 03:55:33 UTC [api] (model nemotron3)
-[NEW] NO_DELTA — inventory, knowledge base, and last leads all aligned at 2026-08-15 02:14 UTC; no new endpoints, auth drift, or surface changes detected
+## 2026-08-15 04:30:13 UTC [api] (model nemotron3)
+[NEW] NO_DELTA — inventory, knowledge base, and last leads all aligned at 2026-08-15 02:14 UTC; no new endpoints, auth drift, or surface changes detected since last analysis cycle
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token, 8.10, attack=9, business=9, tech=8, gate=2, cloud=8, fresh=10
 [PRIO] api.signageos.io/v1/organization/{uid}/device-plan-history, 6.80, attack=7, business=8, tech=7, gate=2, cloud=8, fresh=9
 [PRIO] api.signageos.io/v1/company/{uid}/support-access-permission, 6.80, attack=7, business=8, tech=7, gate=2, cloud=8, fresh=9
@@ -48,5 +48,12 @@ testability: AUTH_HELPED
 [LEARN] REJECTED MISCONFIG @ box.signageos.io/status CORS: NO access-control-allow-origin on /status under any Origin (CORS whitelist strictly scoped to / + /login/ only)
 [LEARN] REJECTED MISCONFIG @ box.signageos.io WebSocket: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface
 [LEARN] REJECTED IDOR @ api.signageos.io new rs `77955558bc`: replica-set rotation introduced zero auth drift — security-token 403074, device-plan-history 403105, v2/device 403105, support-access-permission GET 404 (PUT-only); no pre-auth regression on fresh deploy
+[LEARN] REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged this cycle)
+[LEARN] REJECTED MISCONFIG @ box.signageos.io WebSocket: Confirmed wss:// → 302 login redirect — no unauthenticated WebSocket surface (unchanged)
+[LEARN] REJECTED MISCONFIG @ box.signageos.io /healthz /livez /readyz /live: Confirmed all 302 login catch-all — no new unauthenticated endpoints (unchanged)
+[LEARN] REJECTED MISCONFIG @ box.signageos.io CORS credential-theft: 17 static ACAO, access-control-allow-credentials grep=0 → no credential-theft path; MISCONFIG-only (unchanged)
+[LEARN] REJECTED MISCONFIG @ box/signageos.io /login/ bundle.js 2.193.0: Confirmed — zero `/v[12]/` API path references; pure Auth0 login bundle, endpoint map dead (unchanged)
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized — evidence archive sha256 body 9508a597f3a9a8e2719e96420805f506b13dcc063f483e29acfbfebea82970aa / headers 9ce55d6a2d05b24a50bb768430628a3781658e574dd516b26edcc1ce5f902c49 (30+ cycles stable)
+[LEARN] CONFIRMED MECHANISM @ api.signageos.io/v1/organization/{uid}/security-token: errorDetail byte-identical ("first part (before char `:`) of x-auth header" vs client-supplied path {uid}) confirms auth-identity/header split; X-Auth gating intact on rs `77955558bc` — AUTH_HELPED, conf 86
 [RISK] box.signageos.io: 58 reason: Persistent unauthenticated /status info-leak (K8s topology, pod identity, process UID) with zero hardening headers behind CloudFront; nonce-hash middleware only on SPA routes; CORS whitelist scoped to / + /login/ (17 origins, http:// variant, *.zdusercontent.com wildcard) but no credentials flag; all other surfaces behind Auth0 login catch-all
 [RISK] api.signageos.io: 62 reason: Dual-auth API (JWT Bearer + X-Auth `id:unsafeDecryptedToken`) with org UID in path client-supplied; cross-tenant IDOR chain on /v1/organization/{uid}/security-token and /v1/organization/{uid} confirmed at mechanism level (403074 gating) but AUTH_HELPED only; descriptive errors leak auth internals (excluded class); /status hardened but still leaks hostname/uid/Node/topology; zero CORS surface
