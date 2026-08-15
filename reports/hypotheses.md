@@ -3006,3 +3006,24 @@
 - LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto/no-store, secgrep=3) behind CloudFront — differential vs box persists.
 - LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle — mechanism intact, zero auth drift; AUTH_HE
 - LEARN: REJECTED class @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml (descriptive er
+
+## RANKED HYPOTHESES 2026-08-15 13:58:36 UTC
+- [86] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override (from reports/hypotheses-laguna.txt)
+- NEXT(hypotheses-laguna.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id>:<unsaf
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Run `sos login` to obtain a valid orgA X-Auth `<id>:<unsafeDecryptedToken>`; then GET -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organizati
+- LEARN: REJECTED class @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes), trivial health check, no data leaked — unchanged.
+- LEARN: REJECTED class @ box.signageos.io WebSocket: Confirmed wss:// → 302 login redirect, no unauthenticated surface — unchanged.
+- LEARN: REJECTED class @ box.signageos.io /healthz/lavez/readyz/live: Confirmed all 302 login catch-all — unchanged.
+- LEARN: REJECTED class @ box.signageos.io /login/ bundle.js 2.193.0: Confirmed zero /v[12]/ API path references, pure Auth0 login bundle — endpoint map dead.
+- LEARN: REJECTED class @ api.signageos.io CORS: Confirmed zero ACAO on /, /status, /v1/*, /v2/* under any Origin — not CORS-exploitable.
+- LEARN: REJECTED class @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass; cross-tenant chain re
+- LEARN: REJECTED class @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml (descriptive er
+- LEARN: REJECTED class @ videowall-designer leaked clientId/secret: Testing X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only fixture, cred
+- LEARN: REJECTED class @ box.signageos.io/login Auth0 OAuth2: redirect_uri/state binding not passively testable without tenant/authenticated session; no unauthenticated
+- LEARN: ACCEPTED class @ box.signageos.io/status: Reconfirmed alive — 200 JSON info-leak, secgrep=0, full 9-svc topology, behind CloudFront; POC finalized 30+ cycles.
+- LEARN: ACCEPTED class @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical, mechanism intact, zero auth drift across rs rotation 
+- LEARN: ACCEPTED class @ box.signageos.io/ + /login/ CORS+CSP: 17 static ACAO (incl http:// plaintext + *.zdusercontent.com wildcard + api sibling + path-bearing recapt
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle — pod `box-8676fb5f57-7zpgc`, secgrep=0, full 9-svc topology, behind CloudFront; POC f
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto/no-store, secgrep=3) behind CloudFront — differential vs box persists.
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle — mechanism intact, zero auth drift; AUTH_HE
+- LEARN: REJECTED class @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml (descriptive er

@@ -760,3 +760,8 @@
 - NEW NO_DELTA — inventory shows only pod rotations (box-8676fb5f57-*, api-77955558bc-*) with zero auth drift, no new endpoints, no surface changes since 2026-08-15 04:30
 - CHANGED box.signageos.io/status pod rotated to `box-8676fb5f57-g96fp` (uid `f37ee692…`, Node v20.20.2, 9-svc topology, responseTime present) — body shape byte-identical, secgrep=0 (x-powered-by: Express + Clo
 - CHANGED api.signageos.io/status pod/handler reconfirmed hardened (HSTS max-age=31536000, xfo DENY, xcto nosniff, cache-control no-store, CloudFront PHX50-P2) — zero auth drift
+
+## 2026-08-15 13:58:36 UTC
+- NEW None — only pod rotation: box/status pod → `box-8676fb5f57-7zpgc` (uid `4c848924…`, Node v20.20.2, body sha `47eeade9…`, shape byte-identical, secgrep=0 x-powered-by only, CloudFront) — zero auth drif
+- CHANGED api.signageos.io/v1/organization/test/security-token — 403074 errorDetail byte-identical ("Both x-oauth-client_id header and first part (before char :) of x-auth header are missing…") on rs `77955558b
+- CHANGED api.signageos.io/status — body sha `1725fe6e…` (pod rotation only), HSTS/xfo/xcto/no-store hardening intact
