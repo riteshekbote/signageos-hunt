@@ -626,3 +626,8 @@
 - 2026-08-15 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session (carried forward).
 - 2026-08-15 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml (descriptive error messages); errorDetail used only as mechanism evidence for HYP #2.
 - 2026-08-15 ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized — evidence archive sha256 body ac47643a747cf15c97121c7e7cb1e511517481cc8966761a572a64a6c5663a71 / headers da362f4bbdbda057cddc815f9d990e5ab00aa3dd1bcd0a7683dc26a5b653cb51 (30+ cycles stable)
+- 2026-08-15 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle — pod `box-8676fb5f57-nfrnj`, secgrep=0, full 9-svc topology, behind CloudFront; unchanged (30+ cycles).
+- 2026-08-15 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto/no-store, secgrep=3) on rs `77955558bc` — differential vs box persists.
+- 2026-08-15 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle — mechanism intact, zero auth drift; AUTH_HELPED, conf 86.
+- 2026-08-15 ACCEPTED MISCONFIG @ box.signageos.io / + /login/ CORS/CSP: 17 static ACAO + 0 credentials flag + hardened HSTS/xfo/xcto/CSP/nonces reconfirmed — MISCONFIG-only, unchanged.
+- 2026-08-15 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes still 403 JWT/X-Auth-gated (403105/403074), zero ACAO under spoofed Origin — no passive bypass; cross-tenant chain remains AUTH_HELPED only.
