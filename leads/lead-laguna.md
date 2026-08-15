@@ -3515,3 +3515,4 @@ testability: PASSIVE
 [RISK] box.signageos.io: 62 | Persistent unauthenticated /status infra-leak with zero hardening headers (POC complete & archived, 30+ cycles); 17-origin static CORS ACAO on / + /login/ (MISCONFIG-only, no credentials flag); /login/ hardened with Auth0 OAuth2 + CSP nonce-hash; no other unauth authn surface (WS/GraphQL/healthz all 302 or gated).
 [RISK] api.signageos.io: 75 | CRITICAL AUTH_HELPED cross-tenant IDOR on /v1/organization/{uid}/security-token (mechanism CONFIRMED via 403074, conf 84, stable across rs flips); /status hardened with HSTS/xfo/xcto/no-store but still leaks infra; all 60+ v1/v2 endpoints JWT/X-Auth-gated with 0 ACAO — no pre-auth bypass; descriptive error messages excluded per scope.yml.
 ## 2026-08-14 23:54:15 UTC [box] (model laguna)
+## 2026-08-15 00:53:10 UTC [box] (model laguna)

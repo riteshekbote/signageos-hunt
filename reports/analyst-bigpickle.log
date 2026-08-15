@@ -26516,3 +26516,172 @@ STEP 6 — LEARNING
 STEP 7 — RISK SCORE
 - [RISK] box.signageos.io: 40 | single accepted unauthenticated finding (/status infra-leak, secgrep=0) but SPA routes hardened (HSTS/xfo/xcto/CSP + rotating nonces), CORS scoped to /+/login/ (17 static ACAO, no creds flag), all other paths behind login catch-all — surface fully saturated, no new passive surface in 30+ cycles
 - [RISK] api.signageos.io: 58 | hardened headers + zero ACAO + all routes JWT/X-Auth-gated, BUT live cross-tenant security-token mechanism (conf 84, errorDetail live on fresh rs) remains CRITICAL if credentials unlock org-crossing; descriptive-error family gives clean enumeration surface; rs rotations show zero auth drift
+===== ANALYST bigpickle 2026-08-15 00:55:29 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -sS -o /tmp/opencode/box_status.json -D /tmp/opencode/box_status.hdr -w "HTTP %{http_code}\n" https://box.signageos.io/status
+HTTP 200
+[0m
+[0m$ [0mcat /tmp/opencode/box_status.hdr
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1439
+date: Sat, 15 Aug 2026 00:52:44 GMT
+etag: W/"59f-k9iISQgahl6Jj8Ge/n3YmJEjGxw"
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 43d7135d078d4d8e84b4e09ae5af0800.cloudfront.net (CloudFront)
+x-amz-cf-pop: PHX52-P1
+x-amz-cf-id: mhglhNiihnbaXgaAcjEpfhVL0Bt5kOF9JR01mQCSEy_rVxw5PK2FEA==
+[0m
+[0m→ [0mRead /tmp/opencode/box_status.json
+[0m
+[0m$ [0msleep 1; curl -sS -o /tmp/opencode/api_status.json -D /tmp/opencode/api_status.hdr -w "HTTP %{http_code}\n" https://api.signageos.io/status
+HTTP 200
+[0m
+[0m$ [0mcat /tmp/opencode/api_status.hdr
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1328
+date: Sat, 15 Aug 2026 00:52:50 GMT
+etag: W/"530-Gt7cGUulxD8YD38dSLHkJUonr8o"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+via: 1.1 d271ae42a90c964f044b45ab273be490.cloudfront.net (CloudFront)
+x-amz-cf-pop: PHX50-P2
+x-amz-cf-id: if5OWcvEGXMDp2BKXGG6TP0O2fHvVI4L2FqJu0n2Y-r2JjA6rrfT9A==
+[0m
+[0m→ [0mRead /tmp/opencode/api_status.json
+[0m
+[0m$ [0msleep 1; curl -sS -o /tmp/opencode/sec_token.json -D /tmp/opencode/sec_token.hdr -w "HTTP %{http_code}\n" -X POST https://api.signageos.io/v1/organization/test/security-token
+HTTP 403
+[0m
+[0m$ [0mcat /tmp/opencode/sec_token.hdr; echo "---BODY---"; cat /tmp/opencode/sec_token.json
+HTTP/2 403 
+content-type: application/json; charset=utf-8
+content-length: 326
+date: Sat, 15 Aug 2026 00:52:56 GMT
+etag: W/"146-fj8PODy5yJPHl8tjg58lQ2aMPQg"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+vary: Origin
+access-control-expose-headers: *
+x-cache: Error from cloudfront
+via: 1.1 f1558f9342310964ab873537313daedc.cloudfront.net (CloudFront)
+x-amz-cf-pop: PHX50-P2
+x-amz-cf-id: Qer-Yh3G3xBSbrp7KPriYG52gH-E1P4DowzNPS1zNMUL2nl3pudH4w==
+
+---BODY---
+{"status":403,"message":"Access forbidden - Neither \"x-oauth-client_id\" nor \"x-auth\" header set.","errorCode":403074,"errorName":"MISSING_ACCOUNT_ID_TO_AUTHENTICATE","errorDetail":"Both x-oauth-client_id header and first part (before char :) of x-auth header are missing from request thus account not to be authenticated"}
+[0m
+[0m$ [0msleep 1; curl -sS -o /dev/null -D /tmp/opencode/login.hdr -H "Origin: https://evil.test" -w "HTTP %{http_code}\n" https://box.signageos.io/login/
+HTTP 200
+[0m
+[0m$ [0mgrep -ciE 'strict-transport|x-frame|x-content|content-security' /tmp/opencode/login.hdr; echo "---ACAO count---"; grep -c 'access-control-allow-origin' /tmp/opencode/login.hdr; echo "---creds---"; grep -ci 'access-control-allow-credentials' /tmp/opencode/login.hdr; echo "---nonce-hash---"; grep -ci 'nonce-hash' /tmp/opencode/login.hdr; echo "---ACAO lines---"; grep -i 'access-control-allow-origin' /tmp/opencode/login.hdr | head -20
+4
+---ACAO count---
+17
+---creds---
+0
+---nonce-hash---
+7
+---ACAO lines---
+access-control-allow-origin: http://box.signageos.io
+access-control-allow-origin: https://2.signageos.io
+access-control-allow-origin: https://static.signageos.io
+access-control-allow-origin: https://upload.signageos.io
+access-control-allow-origin: https://platform.signageos.io
+access-control-allow-origin: https://weinre.signageos.io
+access-control-allow-origin: https://license.signageos.io
+access-control-allow-origin: https://signageos-device-monitoring.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://signageos-public.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://storage.googleapis.com
+access-control-allow-origin: https://remote-desktop.signageos.io
+access-control-allow-origin: https://remote-desktop-us.signageos.io
+access-control-allow-origin: https://api.signageos.io
+access-control-allow-origin: https://signageos.zendesk.com
+access-control-allow-origin: https://*.zdusercontent.com
+access-control-allow-origin: https://www.google.com/recaptcha/api2/clr
+[0m
+All core assets reconfirmed. Let me do one RAG fetch of the public REST API docs to sharpen the AUTH_HELPED verify steps, then emit the structured analysis.
+[0m✗ [0mWebFetch https://docs.signageos.io/hc/en-us/articles/4405231278482 failed
+[91m[1mError: [0mStatusCode: non 2xx status code (404 GET https://docs.signageos.io/hc/en-us/articles/4405231278482)
+[0m◈ [0mExa Web Search "signageOS REST API documentation x-auth organization security-token endpoint"
+The docs confirm the endpoint and expose a critical auth nuance. Let me verify the documented method (GET) for the security-token route to correct the AUTH_HELPED baseline.
+[0m
+[0m$ [0msleep 1; curl -sS -o /tmp/opencode/sec_token_get.json -D /tmp/opencode/sec_token_get.hdr -w "HTTP %{http_code}\n" -X GET https://api.signageos.io/v1/organization/test/security-token; cat /tmp/opencode/sec_token_get.json
+HTTP 403
+{"status":403,"message":"Access forbidden - Neither \"x-oauth-client_id\" nor \"x-auth\" header set.","errorCode":403074,"errorName":"MISSING_ACCOUNT_ID_TO_AUTHENTICATE","errorDetail":"Both x-oauth-client_id header and first part (before char :) of x-auth header are missing from request thus account not to be authenticated"}
+[0m
+## ANALYSIS — 2026-08-15 00:53 UTC
+
+### STEP 1 — DELTA
+- [CHANGED] api.signageos.io/status pod rotated within rs `77955558bc` → `api-77955558bc-vrw7l` (Node v24.19.0, 8-svc, hardened secgrep=3, CloudFront PHX50-P2) — rotation only, no functional change
+- [CHANGED] api.signageos.io/v1/organization/{uid}/security-token: 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` reconfirmed on **both GET and POST** (method-agnostic X-Auth gate, errorDetail byte-identical)
+- [RAG-NEW] Public docs (developers.signageos.io/api) confirm: `GET /v1/organization/:organizationUID/security-token` retrieves org tokens; `/organization` endpoints authenticated with **USER token** `token_id:token_secret` in X-Auth; account-level auth requires client-supplied `organizationUid` for org-resource listing — documentation explicitly models the header-identity vs path-UID split
+- [RAG-NEW] Prior bigpickle NEXT doc URL `docs.signageos.io/hc/en-us/articles/4405231278482` → 404 (dead), superseded by developers.signageos.io/api/
+- box /status (pod `box-8676fb5f57-xd6mc`, uid `6deaf70c…`, secgrep=0, PHX52-P1) and box /login/ (17 ACAO, 0 creds, 7 nonce-hash, secgrep=4) — unchanged vs last inventory
+
+### STEP 2 — PRIORITIZE
+- [PRIO] api.signageos.io/v1/organization/{uid}/security-token — score 7.0 — attack 8, business 10, tech 8, gate 2, cloud 4, fresh 6
+- [PRIO] api.signageos.io/v1/organization/{uid}/device-plan-history — score 5.75 — attack 7, business 7, tech 7, gate 2, cloud 4, fresh 5
+- [PRIO] box.signageos.io/status — score 5.25 — attack 6, business 3, tech 4, gate 10, cloud 4, fresh 5
+
+### STEP 3 — HYPOTHESES
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: 403074 errorDetail byte-identical on GET+POST this cycle — binds account identity to "first part (before char :) of x-auth header"; path {uid} client-supplied and independent. Public docs corroborate: /organization endpoints use USER token X-Auth with client-supplied organizationUid path for org resource listing — documented trust split exactly matches the mechanism.
+evidence_needed: orgA X-Auth + foreign orgB {uid} returning 200 or 403076 (not 403074) = cross-tenant mint.
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) GET -H "X-Auth: <orgA-id:token>" /v1/organization/<own-uid>/security-token → 200 baseline; 3) GET orgB {uid} variant → non-403074 = cross-tenant mint; 4) escalate minted token on GET /v1/device.
+impact: mint security tokens for any tenant → foreign device/content/firmware control; CRITICAL
+testability: AUTH_HELPED
+
+[HYP] Unauthenticated infra-leak on box /status (POC complete)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: reconfirmed live this cycle — pod box-8676fb5f57-xd6mc, uid 6deaf70c…, Node v20.20.2, 9-svc topology, secgrep=0 (x-powered-by only), CloudFront PHX52-P1. Proven across 30+ cycles.
+evidence_needed: n/a — accepted finding, maintained.
+verify_steps: curl -s https://box.signageos.io/status → 200 JSON infra-leak; header grep secgrep=0.
+impact: infra/topology disclosure of box fleet; LOW-MEDIUM
+testability: PASSIVE
+
+[HYP] Cross-tenant device-plan-history read via client-supplied org {uid}
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/device-plan-history
+confidence: 50
+reasoning: JWT-gated (403105) pre-auth; same mechanism-family as security-token (client-supplied path {uid} vs auth-derived org); no pre-auth bypass.
+evidence_needed: orgA JWT + foreign orgB {uid} returning 200 (plan/billing) instead of 403105.
+verify_steps: AUTH_HELPED: 1) `sos login`; 2) GET /v1/organization/<own-uid>/device-plan-history → 200 baseline; 3) orgB {uid} → non-403 = cross-tenant read.
+impact: unauthorized disclosure of foreign org device-plan/billing metadata; HIGH
+testability: AUTH_HELPED
+
+### STEP 4 — SELF-CRITIQUE
+- security-token IDOR conf 86: keep — docs corroboration raised confidence, concrete steps, class IDOR (reportable focus), not on rejected list
+- box /status conf 96: keep — accepted finding, PASSIVE, complete
+- device-plan-history conf 50: keep — above floor, same mechanism-family, AUTH_HELPED
+- No drops (all ≥40, none on rejected list, all with verify_steps)
+- [FINAL]
+  1. [86] Cross-tenant security-token mint — api.signageos.io/v1/organization/{uid}/security-token (AUTH_HELPED)
+  2. [96] box /status unauthenticated infra-leak (PASSIVE, maintained)
+  3. [50] Cross-tenant device-plan-history read (AUTH_HELPED)
+
+### STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Run `sos login` to obtain a valid user X-Auth `<token_id>:<token_secret>` (+ account JWT), then: GET -H "X-Auth: <own>" https://api.signageos.io/v1/organization/<own-uid>/security-token → expect 200 baseline; then GET same with a FOREIGN org UID in the path → 200 or 403076 (NOT 403074) proves cross-tenant token mint; escalate minted token on GET /v1/device. Docs confirm GET is the documented method and account-level X-Auth + client-supplied organizationUid is the documented model.
+
+### STEP 6 — LEARNING
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: public docs (developers.signageos.io/api) confirm documented X-Auth model = user token identity (header first-part) + client-supplied organizationUid path for org listing — directly corroborates cross-tenant mechanism, conf 84→86
+- LEARN: REJECTED IDOR @ prior bigpickle RAG NEXT: `docs.signageos.io/hc/en-us/articles/4405231278482` → 404 dead — superseded by developers.signageos.io/api/ + /api/get-organization-tokens/
+- LEARN: CONFIRMED MECHANISM @ api.signageos.io/v1/organization/{uid}/security-token: 403074 X-Auth gate is method-agnostic (GET and POST both gated before dispatch) — baseline for AUTH_HELPED must use GET
+
+### STEP 7 — RISK SCORE
+[RISK] box.signageos.io: 30 — /status infra-leak + broad static CORS whitelist persist, but all authn surface gated (login catch-all), SPA routes hardened (HSTS/xfo/xcto/CSP/nonce-hash), no unauthenticated bypass found | api.signageos.io: 35 — hardened headers + all routes JWT/X-Auth-gated with zero ACAO, but the documented header-identity vs client-supplied-path-UID auth model leaves an unverified cross-tenant vector that, if real, is critical

@@ -34900,3 +34900,69 @@ curl -s -D /tmp/"$D"/hs-login.txt -o /dev/null --max-time 15 -A 'Mozilla/5.0 (pa
 echo "=== box /login/ ACAO count ==="; grep -ci 'access-control-allow-origin' /tmp/"$D"/hs-login.txt failed
 [91m[1mError: [0mThe user rejected permission to use this specific tool call.
 Network access confirmed. Live state largely matches the knowledge base, but I notice `box /login/` is now 103953 bytes (was 104078 in the 2026-08-14 cycle) — a 125-byte delta suggesting a bundle.js version change. Let me capture headers and bodies to confirm the delta.
+===== ANALYST laguna 2026-08-15 00:55:29 UTC =====
+[0m
+> build · laguna-s-2.1-free
+[0m
+[0m$ [0mcurl -sS -o /dev/null -w "box /: HTTP %{http_code}\n" https://box.signageos.io/ --max-time 10 2>&1; curl -sS -o /dev/null -w "box /status: HTTP %{http_code}\n" https://box.signageos.io/status --max-time 10 2>&1; curl -sS -o /dev/null -w "api /: HTTP %{http_code}\n" https://api.signageos.io/ --max-time 10 2>&1; curl -sS -o /dev/null -w "api /status: HTTP %{http_code}\n" https://api.signageos.io/status --max-time 10 2>&1
+box /: HTTP 302
+box /status: HTTP 200
+api /: HTTP 200
+api /status: HTTP 200
+[0m
+I'll analyze the current surface against the knowledge base and probe the live hosts to detect deltas.
+[0m$ [0mecho "=== box /status body sha + headers ===" ; curl -sS -H "Origin: https://evil.test" https://box.signageos.io/status -D /tmp/box_status_h.txt -o /tmp/box_status_b.json --max-time 10 2>&1 ; sha256sum /tmp/box_status_b.json /tmp/box_status_h.txt ; echo "=== box / headers + ACAO count ===" ; curl -sS -I -H "Origin: https://evil.test" https://box.signageos.io/ --max-time 10 2>&1 | grep -i -E 'access-control|via|x-cache|strict-transport|x-frame|content-security' ; echo "=== box / ACAO count ===" ; curl -sS -H "Origin: https://evil.test" https://box.signageos.io/ -D /tmp/box_root_h.txt -o /dev/null --max-time 10 2>&1 ; grep -ci access-control-allow-origin /tmp/box_root_h.txt ; echo "=== api /status headers ===" ; curl -sS -I https://api.signageos.io/status --max-time 10 2>&1 | grep -i -E 'access-control|strict-transport|x-frame|content-security|x-powered'
+=== box /status body sha + headers ===
+a23137f80632d68a01865c70a566becd819404f15d0940eef6b0243caaf23ce7  /tmp/box_status_b.json
+9b05048a439fa97b7b464d4608607268c2e7abc1c394e7a6d7ec1f50f1ad40f8  /tmp/box_status_h.txt
+=== box / headers + ACAO count ===
+content-security-policy: base-uri 'self';default-src 'none';connect-src 'self' wss://box.signageos.io/ https://api.mapbox.com https://events.mapbox.com https://sentry.io https://sos-production.us.auth0.com/oauth/token https://sos-production.us.auth0.com/oauth/token https://auth0.signageos.io/oauth/token https://signageos-public.s3.eu-central-1.amazonaws.com https://*.sentry.io https://heapanalytics.com https://fonts.googleapis.com https://api.rm.moodmedia.com https://api-next.rm.moodmedia.com https://api.soc.broadsign.com https://api-next.soc.broadsign.com https://api.proav-devicemgmt.sony.net https://api-next.proav-devicemgmt.sony.net https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://demo.signageos.io https://marketplace.signageos.io https://signageos-user-data-exports.s3.eu-central-1.amazonaws.com https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com https://qwfin59thg.execute-api.eu-central-1.amazonaws.com https://upload.signageos.io https://upload.signageos.io https://remote-desktop.signageos.io wss://remote-desktop.signageos.io/ https://2.signageos.io https://static.signageos.io https://upload.signageos.io  https://platform.signageos.io  https://weinre.signageos.io  https://license.signageos.io  https://signageos-device-monitoring.s3.eu-central-1.amazonaws.com https://signageos-public.s3.eu-central-1.amazonaws.com https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com https://storage.googleapis.com https://remote-desktop.signageos.io  https://remote-desktop-us.signageos.io https://api.signageos.io  https://signageos.zendesk.com https://*.zdusercontent.com https://www.google.com/recaptcha/api2/clr https://api.signageos.io;img-src 'self' https://s.gravatar.com/avatar/ https://i0.wp.com/cdn.auth0.com/avatars/ data: https://2.signageos.io https://static.signageos.io https://upload.signageos.io  https://platform.signageos.io  https://weinre.signageos.io  https://license.signageos.io  https://signageos-device-monitoring.s3.eu-central-1.amazonaws.com https://signageos-public.s3.eu-central-1.amazonaws.com https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com https://storage.googleapis.com https://remote-desktop.signageos.io  https://remote-desktop-us.signageos.io https://api.signageos.io  https://signageos.zendesk.com https://*.zdusercontent.com https://www.google.com/recaptcha/api2/clr https://heapanalytics.com https://remote-desktop.signageos.io https://demo.signageos.io https://marketplace.signageos.io;worker-src 'self' blob:;font-src 'self' data: https://fonts.gstatic.com https://heapanalytics.com;style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://heapanalytics.com https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/2.7.0/mapbox-gl.min.css https://cdn.jsdelivr.net/npm/monaco-editor@0.55.1/min/vs/editor/editor.main.css;frame-src https://www.google.com/ https://demo.signageos.io/ https://marketplace.signageos.io/ https://sos-production.us.auth0.com/ https://sos-production.us.auth0.com/ https://auth0.signageos.io/ https://www.signageos.io https://demo.signageos.io;script-src 'self' 'strict-dynamic' 'wasm-unsafe-eval';script-src-elem https://box.signageos.io/assets/ https://cdn.heapanalytics.com https://heapanalytics.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/releases/ https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.7/purify.min.js https://cdn.jsdelivr.net/npm/monaco-editor@0.55.1/min/vs/ https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/2.7.0/mapbox-gl.min.js https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.43/moment-timezone-with-data.min.js 'nonce-7bf2ee61c277093f63fedf27' 'nonce-c9e5e243c5ce175d78bb5221' 'nonce-83b87edb068144ab9160df5d' 'nonce-179d13e7e642df9b469addef' 'nonce-157c7276b0d792bd2e53de19' 'nonce-c71add7db83889f62d8eba23';media-src 'self';manifest-src 'self';upgrade-insecure-requests ;require-trusted-types-for 'script';report-uri /csp-report;form-action 'self';frame-ancestors 'self';object-src 'none';script-src-attr 'none'
+strict-transport-security: max-age=63072000; includeSubDomains; preload
+x-frame-options: DENY
+access-control-allow-origin: http://box.signageos.io
+access-control-allow-origin: https://2.signageos.io
+access-control-allow-origin: https://static.signageos.io
+access-control-allow-origin: https://upload.signageos.io
+access-control-allow-origin: https://platform.signageos.io
+access-control-allow-origin: https://weinre.signageos.io
+access-control-allow-origin: https://license.signageos.io
+access-control-allow-origin: https://signageos-device-monitoring.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://signageos-public.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://storage.googleapis.com
+access-control-allow-origin: https://remote-desktop.signageos.io
+access-control-allow-origin: https://remote-desktop-us.signageos.io
+access-control-allow-origin: https://api.signageos.io
+access-control-allow-origin: https://signageos.zendesk.com
+access-control-allow-origin: https://*.zdusercontent.com
+access-control-allow-origin: https://www.google.com/recaptcha/api2/clr
+x-cache: Miss from cloudfront
+via: 1.1 b7f67574068333a51eb10f999105d790.cloudfront.net (CloudFront)
+=== box / ACAO count ===
+17
+=== api /status headers ===
+x-frame-options: DENY
+strict-transport-security: max-age=31536000
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mecho "=== box /status body ===" ; cat /tmp/box_status_b.json ; echo "" ; echo "=== box /status headers ===" ; cat /tmp/box_status_h.txt failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[0m
+[0m$ [0mecho "=== api /status body ===" ; curl -sS https://api.signageos.io/status --max-time 10 2>&1 ; echo "" ; echo "=== api /status headers ===" ; curl -sS -I https://api.signageos.io/status --max-time 10 2>&1
+=== api /status body ===
+{"name":"api","status":"OK","process":{"uid":"6bc4b124a1b058faf2bded09365719a30e612d1789c759229e","pid":1,"version":"v24.19.0","uptime":9561.109641172,"cpuUsage":{"user":3602538085,"system":298080727},"memoryUsage":{"rss":848814080,"heapTotal":412835840,"heapUsed":303354872,"external":74128304,"arrayBuffers":70031636}},"hostname":"api-77955558bc-vrw7l","failedServices":[],"succeededServices":["amqp0","redis3","redis0","redis2","redis1","mongoDB2","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1786755189781,"respondedAt":1786755189842,"amqp0":{"response":{"requestedAt":1786755189781,"respondedAt":1786755189842,"responseTime":61}},"redis3":{"response":{"requestedAt":1786755189781,"respondedAt":1786755189783,"responseTime":2}},"redis0":{"response":{"requestedAt":1786755189781,"respondedAt":1786755189783,"responseTime":2}},"redis2":{"response":{"requestedAt":1786755189781,"respondedAt":1786755189783,"responseTime":2}},"redis1":{"response":{"requestedAt":1786755189781,"respondedAt":1786755189784,"responseTime":3}},"mongoDB2":{"response":{"requestedAt":1786755189782,"respondedAt":1786755189783,"responseTime":1}},"mongoDB1":{"response":{"requestedAt":1786755189782,"respondedAt":1786755189786,"responseTime":4}},"mongoDB0":{"response":{"requestedAt":1786755189782,"respondedAt":1786755189792,"responseTime":10}}}
+=== api /status headers ===
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1329
+date: Sat, 15 Aug 2026 00:53:10 GMT
+etag: W/"531-LqMp6bI+eRc1uFgrY/iSSLQLNXM"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+via: 1.1 7b7ed180a68f72f1dd6bcc5c75fd0210.cloudfront.net (CloudFront)
+x-amz-cf-pop: PHX50-P2
+x-amz-cf-id: 6-rWgTwlHwmwJcRV5cB9sbvczLebyuzSLbpqxa_HWqlBd2tPb_4yeQ==
+[0m
