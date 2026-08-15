@@ -2758,3 +2758,9 @@
 - LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle — mechanism intact, zero auth drift; AUTH_HE
 - LEARN: ACCEPTED MISCONFIG @ box.signageos.io / + /login/ CORS/CSP: 17 static ACAO + 0 credentials flag + hardened HSTS/xfo/xcto/CSP/nonces reconfirmed — MISCONFIG-only
 - LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all routes still 403 JWT/X-Auth-gated (403105/403074), zero ACAO under spoofed Origin — no passive bypass; 
+
+## RANKED HYPOTHESES 2026-08-15 08:58:17 UTC
+- [86] https://api.signageos.io/v1/organization/{uid}/security-token: api.signageos.io Cross-tenant security-token mint via X-Auth org-UID path override (from reports/hypotheses-laguna.txt)
+- [86] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override (from reports/hypotheses-bigpickle.txt)
+- NEXT(hypotheses-laguna.txt): HUMAN: Box POC phase is finalized and complete — /status infra-leak confirmed live (pod box-8676fb5f57-*, process.uid 64-hex, Node v20.20.2, full 9-service topo
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Box POC phase is finalized. Run `sos login` to obtain valid orgA X-Auth `<id>:<token>`; then GET -H "X-Auth: <orgA>" /v1/organization/<own-uid>/security-
