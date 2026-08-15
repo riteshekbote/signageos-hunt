@@ -5223,3 +5223,4 @@ verify_steps: curl -s -D - -H "Origin: https://evil.test" https://box.signageos.
 impact: expands postMessage/origin trust boundary for SPA surfaces; LOW
 testability: PASSIVE
 ## 2026-08-15 21:31:33 UTC [box] (model bigpickle)
+## 2026-08-15 21:52:26 UTC [box] (model bigpickle)

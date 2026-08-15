@@ -3425,3 +3425,24 @@
 - LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml (descriptiv
 - LEARN: REJECTED MISCONFIG @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /ready /csp-report wss://): all → 302 login catch-all 
 - LEARN: REJECTED class @ videowall-designer leaked clientId/secret on PROD: confirmed staging-only fixture, credential reuse disproven (403076 WRONG_ACCOUNT_SECRET on p
+
+## RANKED HYPOTHESES 2026-08-15 21:53:57 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology, process identity, and resource leak via /status (from reports/hypotheses-laguna.txt)
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-nemotron3.txt)
+- NEXT(hypotheses-laguna.txt): HUMAN: Execute `sos login` on box.signageos.io (Auth0 device-code flow) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<orgA-i
+- LEARN: ACCEPTED class @ box.signageos.io/status: Live re-probe 2026-08-15 21:06 confirms pod `box-8676fb5f57-7zpgc` (uid `4c8489246a1989ced6834eea5e97581862adb015a1ab7
+- LEARN: ACCEPTED class @ box.signageos.io/ & /login/ CORS+CSP: Live confirms 17 static ACAO (http://plaintext + *.zdunpkgdomains.com wildcard + api sibling + path-beari
+- LEARN: ACCEPTED class @ api.signageos.io/status: Live re-probe confirms hardened (HSTS/xfo/xcto/no-store, secgrep=3), zero ACAO under any Origin; info-leak (hostname/u
+- LEARN: ACCEPTED class @ api.signageos.io/v1/organization/{uid}/security-token: Live re-probe confirms 403076 errorDetail byte-identical ("No API security token found b
+- LEARN: REJECTED class @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes still 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass; cross-tenant ch
+- LEARN: REJECTED class @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml (descriptive er
+- LEARN: REJECTED class @ box.signageos.io probe set (/status/ /api /v1 /v2 /graphql /actuator /metrics /env /config.json /ready /livez /healthz /readyz /live /csp-repor
+- LEARN: REJECTED class @ videowall-designer leaked clientId/secret on PROD: confirmed staging-only fixture, credential reuse disproven (403076 WRONG_ACCOUNT_SECRET "Acc
+- LEARN: ACCEPTED class @ box.signageos.io/status: Live re-probe 2026-08-15 21:06 confirms pod `box-8676fb5f57-7zpgc` (uid `4c8489246a1989ced6834eea5e97581862adb015a1ab7
+- LEARN: ACCEPTED class @ box.signageos.io/ & /login/ CORS+CSP: Live confirms 17 static ACAO (http://plaintext + *.zdunpkgdomains.com wildcard + api sibling + path-beari
+- LEARN: ACCEPTED class @ api.signageos.io/status: Live re-probe confirms hardened (HSTS/xfo/xcto/no-store, secgrep=3), zero ACAO under any Origin; info-leak (hostname/u
+- LEARN: ACCEPTED class @ api.signageos.io/v1/organization/{uid}/security-token: Live re-probe confirms 403076 errorDetail byte-identical ("No API security token found b
+- LEARN: REJECTED class @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes still 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass; cross-tenant ch
+- LEARN: REJECTED class @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml (descriptive er
+- LEARN: REJECTED class @ box.signageos.io probe set (/status/ /api /v1 /v2 /graphql /actuator /metrics /env /config.json /ready /livez /healthz /readyz /live /csp-repor
+- LEARN: REJECTED class @ videowall-designer leaked clientId/secret on PROD: confirmed staging-only fixture, credential reuse disproven (403076 WRONG_ACCOUNT_SECRET "Acc
