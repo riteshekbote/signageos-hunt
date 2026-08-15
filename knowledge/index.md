@@ -784,3 +784,4 @@
 - 2026-08-15 REJECTED class @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /swagger /openapi.json /csp-report /ready wss://): all → 302 login catch-all — no unauthenticated surface beyond /status
 - 2026-08-15 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle — pod `box-8676fb5f57-xd6mc` (uid `6deaf70c2a3b648ff24e0c699ec55b7a6c4d5715e2a472949b`), Node v20.20.2, 9-svc topology, secgrep=0; POC final (30+ cycles), evidence archive stable.
 - 2026-08-15 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS max-age=31536000, xfo DENY, xcto nosniff, cache-control no-store, secgrep=3, 0 ACAO) on rs `77955558bc` pod `k96px` — differential vs box /status persists.
+- 2026-08-15 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle — pod `box-8676fb5f57-r5w8r` (uid `43bb70d3…`), Node v20.20.2, 9-svc topology, secgrep=0; POC final (30+ cycles), evidence archive stable.

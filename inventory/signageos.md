@@ -800,3 +800,6 @@
 - CHANGED api.signageos.io/v1/organization/test/security-token — 403074 errorDetail byte-identical ("Both x-oauth-client_id header and first part (before char :) of x-auth header are missing…") — mechanism inta
 
 ## 2026-08-15 19:35:42 UTC
+
+## 2026-08-15 19:58:29 UTC
+- NEW NO_DELTA — inventory shows only pod rotations (box-8676fb5f57-*, api-77955558bc-*) with zero auth drift, no new endpoints, no surface changes since 2026-08-15 04:30
