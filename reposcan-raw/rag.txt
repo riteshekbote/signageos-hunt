@@ -576,6 +576,18 @@
 - 2026-08-14 REJECTED class @ videowall-designer leaked clientId/secret on PROD: Confirmed DEAD — `fcbbd714b3f794…:secret` tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; credential reuse disproven (staging-only fixture).
 - 2026-08-14 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ nonce-hash: Confirmed live — 6 rotating x-*-nonce-hash headers + full CSP (59+ connect-src origins) reconfirmed on both SPA routes.
 - 2026-08-14 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: Mechanism reconfirmed on rs 6cc9959bb4 — 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE errorDetail wording identical ("first part (before char `:`) of x-auth header" vs client-supplied path {uid}).
+- 2026-08-15 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod rotation, zero security headers (secgrep=0), full topology leak unchanged behind CloudFront; POC final (30+ cycles)
+- 2026-08-15 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened on rs `6cc9959bb4`/`77955558bc` (HSTS/xfo/xcto/no-store, zero ACAO) — differential vs box /status persists
+- 2026-08-15 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: Mechanism reconfirmed — 403074 errorDetail explicitly binds org identity to X-Auth first-part while path {uid} is client-supplied; AUTH_HELPED, conf 84
+- 2026-08-15 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/device-plan-history: route exists, JWT-gated (403105) pre-auth — mechanism-family (client-supplied {uid}) intact, AUTH_HELPED conf 50
+- 2026-08-15 ACCEPTED IDOR @ api.signageos.io/v1/company/{uid}/support-access-permission: PUT route exists, JWT-gated (403) pre-auth — AUTH_HELPED conf 45
+- 2026-08-15 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ nonce-hash: 7 rotating x-*-nonce-hash headers on SPA routes only; absent on /status — hardening differential confirmed
+- 2026-08-15 ACCEPTED MISCONFIG @ box.signageos.io/ CORS scope: ACAO only on / + /login/ (17 static), zero on /status /healthz /livez /readyz /live — CORS whitelist scoped to SPA entry points
+- 2026-08-15 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — pair parsed past missing-header gate, account does NOT exist on prod (staging-only test fixture, credential reuse disproven)
+- 2026-08-15 REJECTED IDOR @ box /login/ bundle.js v2 path-diff: 2.193.0 login bundle carries zero API paths — endpoint map now auth-gated only, probe dead
+- 2026-08-15 REJECTED MISCONFIG @ box.signageos.io/status CORS: NO access-control-allow-origin on /status under any Origin (CORS whitelist strictly scoped to / + /login/ only)
+- 2026-08-15 REJECTED MISCONFIG @ box.signageos.io WebSocket: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface
+- 2026-08-15 REJECTED IDOR @ api.signageos.io new rs `77955558bc`: replica-set rotation introduced zero auth drift — security-token 403074, device-plan-history 403105, v2/device 403105, support-access-permission GET 404 (PUT-only); no pre-auth regression on fresh deploy
 === INVENTORY gladia ===
 # Inventory: signageos
 
