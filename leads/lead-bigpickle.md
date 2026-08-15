@@ -5147,3 +5147,4 @@ testability: PASSIVE
 [LEARN] REJECTED class @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml (descriptive error messages); errorDetail used only as mechanism evidence.
 [RISK] box.signageos.io: 42 — unauth `/status` infra/topology/process disclosure (secgrep=0, behind CloudFront, pod rotation only) + 17-entry static ACAO whitelist incl `http://` plaintext + `*.zdusercontent.com` wildcard (MISCONFIG-only, no creds flag); otherwise hardened entry points (HSTS/xfo/xcto/CSP/nonces) and login catch-all containment.
 [RISK] api.signageos.io: 38 — hardened (HSTS/xfo/xcto/no-store), zero ACAO, all routes JWT/X-Auth-gated; residual risk concentrated in one unproven AUTH_HELPED cross-tenant security-token mint chain (conf 86, unverified) + minor `/status` info-leak under hardened headers.
+## 2026-08-15 20:15:18 UTC [box] (model bigpickle)
