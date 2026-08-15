@@ -4926,3 +4926,31 @@ evidence_needed: n/a — accepted finding.
 verify_steps: curl -s https://box.signageos.io/status → 200 JSON infra-leak; header grep = 0 hardening headers.
 impact: infra/topology/process disclosure of box fleet; LOW-MEDIUM
 testability: PASSIVE
+## 2026-08-15 17:48:32 UTC [box] (model bigpickle)
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: This cycle 403074 errorDetail byte-identical ("…first part (before char `:`) of x-auth header…") — auth identity bound to X-Auth/x-oauth-client_id first-part while path `{uid}` is client-supplied; X-Auth gated (not JWT); zero auth drift across rs `77955558bc`/`6cc9959bb4`.
+evidence_needed: valid orgA X-Auth `<id>:<token>` + foreign orgB `{uid}` in path → 200 or 403076 (NOT 403074) proves path-uid unvalidated against authenticated org.
+verify_steps: AUTH_HELPED: `sos login`; GET -H "X-Auth: <orgA-id:token>" /v1/organization/<own-uid>/security-token → 200 baseline; repeat with orgB `{uid}` → non-403074 = cross-tenant mint; escalate minted token on GET /v1/device.
+impact: mint security tokens for any tenant → foreign device/content/firmware control; CRITICAL
+testability: AUTH_HELPED
+[HYP] Broad static ACAO origin whitelist on box SPA entry points (maintained accepted finding)
+class: MISCONFIG
+asset: box.signageos.io / + /login/
+confidence: 92
+reasoning: 17 static ACAO confirmed this cycle (incl `http://` plaintext + `*.zdusercontent.com` wildcard + api sibling + path-bearing recaptcha); evil.test NOT reflected; grep(access-control-allow-credentials)=0 → MISCONFIG-only.
+evidence_needed: n/a — accepted finding; no credential-theft path without credentials flag.
+verify_steps: curl -s -D - -H "Origin: https://evil.test" https://box.signageos.io/login/ → ACAO unchanged (17 static), credentials grep = 0.
+impact: expands postMessage/origin trust boundary for SPA surfaces; LOW
+testability: PASSIVE
+[HYP] Unauthenticated infra-leak on box /status (maintained accepted finding)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: 200 JSON leaks hostname `box-8676fb5f57-xd6mc`, 40-hex process.uid, Node v20.20.2, cpu/memory usage, 9-svc topology + responseTime; headers ONLY x-powered-by + CloudFront (secgrep=0); stable 30+ cycles, POC final & archived.
+evidence_needed: n/a — accepted finding.
+verify_steps: curl -s https://box.signageos.io/status → 200 JSON infra-leak; header grep = 0 hardening headers.
+impact: infra/topology/process disclosure of box fleet; LOW-MEDIUM
+testability: PASSIVE
