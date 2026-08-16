@@ -5385,3 +5385,14 @@ testability: PASSIVE
 [NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<orgA-id>:<unsafeDecryptedToken>`; then execute the two-step cross-tenant test on `GET /v1/organization/{uid}/security-token` — baseline with own `{uid}` → 200, then foreign `{uid}` → non-403074 = cross-tenant mint (CRITICAL chain). Passive surface fully exhausted (30+ cycles NO_DELTA); this is the only remaining high-value path.
 [RISK] box.signageos.io: 42 — unauth `/status` infra/topology/process disclosure (secgrep=0, behind CloudFront, pod rotation only) + 17-entry static ACAO whitelist incl `http://` plaintext + `*.zdusercontent.com` wildcard (MISCONFIG-only, no creds flag); otherwise hardened entry points (HSTS/xfo/xcto/CSP/nonces) and login catch-all containment. | api.signageos.io: 38 — hardened (HSTS/xfo/xcto/no-store), zero ACAO, all routes JWT/X-Auth-gated; residual risk concentrated in one unproven AUTH_HELPED cross-tenant security-token mint chain (conf 86, unverified) + minor `/status` info-leak under hardened headers.
 ## 2026-08-16 00:36:39 UTC [box] (model bigpickle)
+## 2026-08-16 02:10:59 UTC [box] (model bigpickle)
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: Probe 2026-08-16 confirms 403074 errorDetail byte-identical — account identity bound to X-Auth first-part before `:`, path `{uid}` is client-supplied and distinct from authenticated org; X-Auth/x-oauth-client_id gated (not JWT); zero auth drift across rs `77955558bc`/`6cc9959bb4`.
+evidence_needed: valid orgA X-Auth `<id>:<token>` + foreign orgB `{uid}` in path → response ≠ 403074 (200 or 403076) proves path-uid unvalidated against authenticated org.
+verify_steps: AUTH_HELPED: `sos login`; GET -H "X-Auth: <orgA-id>:<token>" /v1/organization/<own-uid>/security-token → 200 baseline; repeat with foreign `{uid}` → non-403074 = cross-tenant mint; escalate minted token on GET /v1/device.
+impact: mint security tokens for any tenant → foreign device/content/firmware control; CRITICAL
+testability: AUTH_HELPED
+[NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain an account owning ≥1 organization; acquire account JWT + X-Auth `<orgA-id>:<unsafeDecryptedToken>`; then GET /v1/organization/<own-uid>/security-token → 200 baseline, then foreign `{uid}` → non-403074 = CRITICAL cross-tenant mint. Passive surface exhausted (30+ cycles NO_DELTA); this is the only remaining high-value path.
