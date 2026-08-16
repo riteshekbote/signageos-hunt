@@ -5631,3 +5631,9 @@ evidence_needed: n/a — accepted finding; no credential-theft path without cred
 verify_steps: `curl -s -D - -H "Origin: https://evil.test" https://box.signageos.io/login/` → 17 static ACAO, credentials grep = 0.
 impact: expands postMessage/origin trust boundary for SPA surfaces; LOW
 testability: PASSIVE
+## 2026-08-16 09:43:56 UTC [box] (model bigpickle)
+reasoning: Live probe confirms 17 static ACAO (incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + path-bearing recaptcha + api sibling) under `Origin: https://evil.test`; evil.test NOT reflected; grep(access-control-allow-credentials)=0; entry hardened (HSTS 63072000 preload / xfo DENY / xcto / CSP ~60 origins, 6 nonces).
+evidence_needed: n/a — accepted finding; no credential-theft path without credentials flag.
+verify_steps: `curl -s -D - -H "Origin: https://evil.test" https://box.signageos.io/login/` → 17 static ACAO, credentials grep = 0.
+impact: expands postMessage/origin trust boundary for SPA surfaces; LOW
+testability: PASSIVE
