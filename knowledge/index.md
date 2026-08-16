@@ -897,3 +897,7 @@
 - 2026-08-16 REJECTED @ box.signageos.io /ready: HTTP 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged).
 - 2026-08-16 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: staging-only fixture, X-Auth `<orgA-id:secret>` on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; credential reuse disproven (CONFIRMED DEAD).
 - 2026-08-16 CONFIRMED @ box vs api /status header differential: box /status secgrep=0 (no HSTS/xfo/xcto/CSP — only x-powered-by: Express + CloudFront); api /status secgrep=3 (HSTS max-age=31536000 + x-frame-options: DENY + x-content-type-options: nosniff) — differential persists, confirms api team hardened /status but box team left it bare.
+- 2026-08-16 ACCEPTED @ box.signageos.io/status: reconfirmed live 2026-08-16 (pod box-8676fb5f57-mffl6, uid 48e1a938…, Node v20.20.2, 9-svc topology, secgrep=0) — POC stable across 30+ cycles, zero hardening added.
+- 2026-08-16 ACCEPTED @ box.signageos.io/ & /login/: 17 static ACAO under evil.test (evil.test NOT reflected), 0 access-control-allow-credentials, / secgrep=4 (HSTS/xfo/xcto/CSP) vs /status secgrep=0 — hardening differential confirmed unchanged.
+- 2026-08-16 REJECTED @ api.signageos.io/v1/organization/{uid}/security-token CORS exfil: curl -sI -H "Origin: evil.test" → acapcount=0, zero ACAO on 403 response — not CORS-exploitable, pure AUTH_HELPED IDOR.
+- 2026-08-16 REJECTED @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO — no passive bypass (NO_DELTA, 30+ cycles).

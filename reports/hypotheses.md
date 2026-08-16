@@ -3742,3 +3742,24 @@
 - LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged)
 - LEARN: REJECTED MISCONFIG @ box.signageos.io WebSocket: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface
 - LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session
+
+## RANKED HYPOTHESES 2026-08-16 08:04:27 UTC
+- [100] box.signageos.io/status: box.signageos.io/status: Unauthenticated K8s infra + process identity leak (from reports/hypotheses-laguna.txt)
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-nemotron3.txt)
+- [86] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override (from reports/hypotheses-bigpickle.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id:unsafeD
+- NEXT(hypotheses-laguna.txt): HUMAN: Provide valid org-scoped X-Auth credentials via `sos login` (Auth0 device-code flow on box.signageos.io) to execute cross-tenant mint verification at GET
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Provide a valid org-scoped X-Auth credential via `sos login` (Auth0 device-code on box.signageos.io) to test cross-tenant mint at `GET /v1/organization/{
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized — evidence archive sha256 body 38737948dcd9... / headers b11ba5ba... (30+ cycles stable)
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle — mechanism intact, zero auth drift; AUTH_HE
+- LEARN: CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on pro
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass; cross-tenant chain rem
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml (desc
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged)
+- LEARN: REJECTED MISCONFIG @ box.signageos.io WebSocket: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session
+- LEARN: ACCEPTED @ box.signageos.io/status: reconfirmed live 2026-08-16 (pod box-8676fb5f57-mffl6, uid 48e1a938…, Node v20.20.2, 9-svc topology, secgrep=0) — POC stable
+- LEARN: ACCEPTED @ box.signageos.io/ & /login/: 17 static ACAO under evil.test (evil.test NOT reflected), 0 access-control-allow-credentials, / secgrep=4 (HSTS/xfo/xcto
+- LEARN: REJECTED @ api.signageos.io/v1/organization/{uid}/security-token CORS exfil: curl -sI -H "Origin: evil.test" → acapcount=0, zero ACAO on 403 response — not CORS
+- LEARN: REJECTED @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO — no passive bypass (NO_DELTA, 30+ cycles).
+- LEARN: REJECTED @ videowall-designer leaked clientId/secret on PROD: staging-only fixture, X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — credentia
