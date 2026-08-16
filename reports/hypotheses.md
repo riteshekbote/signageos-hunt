@@ -3701,3 +3701,28 @@
 - LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged)
 - LEARN: REJECTED MISCONFIG @ box.signageos.io WebSocket: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface
 - LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session
+
+## RANKED HYPOTHESES 2026-08-16 07:11:56 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-nemotron3.txt)
+- [86] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override (from reports/hypotheses-laguna.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id:unsafeD
+- NEXT(hypotheses-laguna.txt): PROBE: `curl -X POST -H "Origin: https://evil.test" -H "x-oauth-client_id: <probe-only>" https://api.signageos.io/v1/organization/<probe-only>/security-token` t
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized — evidence archive sha256 body 38737948dcd9... / headers b11ba5ba... (30+ cycles stable)
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle — mechanism intact, zero auth drift; AUTH_HE
+- LEARN: CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on pro
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass; cross-tenant chain rem
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml (desc
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged)
+- LEARN: REJECTED MISCONFIG @ box.signageos.io WebSocket: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session
+- LEARN: ACCEPTED @ box.signageos.io/status: POC finalized & stable — HTTP 200 JSON leaks pod hostname (box-8676fb5f57-4bjk4), 64-hex process.uid (ce638f62…), Node v20.2
+- LEARN: ACCEPTED @ box.signageos.io/ & /login/: 17 static ACAO confirmed this cycle incl `http://box.signageos.io` plaintext + `*.zdunpkgdomains.com` wildcard + `api.si
+- LEARN: ACCEPTED @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle ("Both x-oauth-client_id header and first part (b
+- LEARN: REJECTED @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes confirmed 403 JWT/X-Auth-gated (403105/403074/403076), zero ACAO under spoofed `https://evil.test
+- LEARN: REJECTED @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml (descriptive er
+- LEARN: REJECTED @ box.signageos.io probe set (/status/ /api /v1 /v2 /graphql /actuator /metrics /env /config.json /ready /livez /healthz /readyz /live /csp-report /web
+- LEARN: REJECTED @ box.signageos.io WebSocket: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface (unchanged).
+- LEARN: REJECTED @ box.signageos.io CORS credential-theft: 17 static ACAO, 0 `access-control-allow-credentials` → no credential-theft path; MISCONFIG-only (unchanged 30
+- LEARN: REJECTED @ box.signageos.io /ready: HTTP 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged).
+- LEARN: CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: staging-only fixture, X-Auth `<orgA-id:secret>` on prod → 403076 WRONG_ACCOUNT_SECRET "Accou
+- LEARN: CONFIRMED @ box vs api /status header differential: box /status secgrep=0 (no HSTS/xfo/xcto/CSP — only x-powered-by: Express + CloudFront); api /status secgrep=
