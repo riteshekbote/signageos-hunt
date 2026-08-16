@@ -1,20 +1,23 @@
 [0m
 > build · nemotron-3-ultra-free
 [0m
-[0m$ [0mecho -n '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9' | sha256sum
-564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e  -
-[0m
-### Classification Table
+## Triage Results
 
-| Category | Hits |
-|----------|------|
-| **REAL_SECRET** | 0 |
-| **TEST_OR_EXAMPLE** | 1 — `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` (sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) |
-| **ENDPOINT_LEAK** | 0 |
-| **INTERESTING** | 0 |
+### Hit Classification
+
+| Category | File | Line | SHA256 | Verdict |
+|----------|------|------|--------|---------|
+| **TEST_OR_EXAMPLE** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js` | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | **REPORT_CANDIDATE: no** |
+
+### Analysis
+
+This hit is a **KNOWN DUPLICATE** already fully triaged in the knowledge base:
+
+1. **Secret identified**: Hardcoded client secret in `videowall-designer/sos/videoTiming.js:19` targeting internal staging host `http://api.kiera.office.signageos.io` over HTTP
+2. **Production test performed**: The credential pair (clientId `fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47` + this secret) was tested against **production** `api.signageos.io` via X-Auth header
+3. **Result**: `403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION_TO_AUTHENTICATE` — "Account not found" — the account **does not exist on production**
+4. **Conclusion**: Staging-only test fixture, credential reuse **disproven** (CONFIRMED DEAD per 2026-08-14/15/16 entries)
 
 ### Verdict
 
-| Candidate | REPORT_CANDIDATE | Reason |
-|-----------|------------------|--------|
-| videowall-designer videoTiming.js secret | **no** | Known duplicate — staging-only test fixture (targets `http://api.kiera.office.signageos.io`). Tested against prod `api.signageos.io` via X-Auth → `403076 WRONG_ACCOUNT_SECRET "Account not found"`. Credential reuse disproven. Already triaged 2026-08-07/2026-08-14 as CONFIRMED DEAD.
+**REPORT_CANDIDATE: no** — This is a known, already-triaged staging fixture that poses no production risk. The program scope only covers `box.signageos.io` and `api.signageos.io`; this secret targets an out-of-scope staging host and was verified non-functional on production.
