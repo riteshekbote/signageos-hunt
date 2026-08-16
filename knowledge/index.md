@@ -975,3 +975,5 @@
 - 2026-08-16 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: `<orgA-id:secret>` (sha256 564c293b…) tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only fixture, credential reuse disproven (carried forward).
 - 2026-08-16 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass (NO_DELTA, 30+ cycles).
 - 2026-08-16 REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged).
+- 2026-08-16 REJECTED @ box.signageos.io /ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged 30+ cycles).
+- 2026-08-16 REJECTED @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket): all → 302 login catch-all or trivial 200 "OK" (2 bytes) — no unauthenticated surface beyond /status (NO_DELTA).
