@@ -6266,3 +6266,4 @@ testability: PASSIVE
 [FINAL]
 [PARKED] None — all 3 hypotheses exceed confidence 40, fall outside REJECTED list, and have concrete verify_steps.
 [NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) → obtain account owning ≥1 org with API provisioning access → acquire account JWT + X-Auth `<org-id:unsafeDecryptedToken>` + x-oauth-client_id + x-oauth-client_secret via `sos accounts`/`sos orgs` → execute baseline POST `https://api.signageos.io/v1/organization/<orgA-id>/security-token` (expect 200 + securityToken JSON) → repeat with foreign orgB uid in path path (expect 200 + token body for orgB = CONFIRMED cross-tenant mint). This is the ONLY AUTH_HELPED item blocking CRITICAL confirmation.
+## 2026-08-16 17:51:54 UTC [box] (model laguna)
