@@ -5482,3 +5482,4 @@ evidence_needed: n/a — accepted finding; no credential-theft path without cred
 verify_steps: curl -s -D - -H "Origin: https://evil.test" https://box.signageos.io/login/ → ACAO unchanged (17 static), credentials grep = 0.
 impact: expands postMessage/origin trust boundary for SPA surfaces; LOW
 testability: PASSIVE
+## 2026-08-16 05:15:20 UTC [box] (model bigpickle)
