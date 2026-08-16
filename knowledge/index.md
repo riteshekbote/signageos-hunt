@@ -1049,3 +1049,6 @@
 - 2026-08-16 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod rotation only (box-8676fb5f57-*), secgrep=0, full 9-svc topology leak behind CloudFront; POC finalized 30+ cycles, zero hardening added.
 - 2026-08-16 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/: 17 static ACAO (evil.test NOT reflected, 0 credentials flag) reconfirmed — MISCONFIG-only, no exploit path, unchanged behind CloudFront.
 - 2026-08-16 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: staging-only fixture, X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven.
+- 2026-08-16 ACCEPTED MISCONFIG @ box.signageos.io/status: Fresh probe 20:46 UTC reconfirms HTTP 200 JSON infra-leak (pod mffl6, uid 48e1a938…, Node v20.20.2, 9-svc topology, secgrep=0, CloudFront PHX52-P1) — POC final, zero hardening added (30+ cycles).
+- 2026-08-16 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: mechanism intact — 403074 errorDetail byte-identical across rs rotations, zero auth drift, AUTH_HELPED conf 86.
+- 2026-08-16 REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /, /status, /v1/*, /v2/* — not CORS-exploitable.

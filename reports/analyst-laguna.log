@@ -54300,3 +54300,1384 @@ testability: PASSIVE
 ## STEP 7 — RISK SCORE
 [RISK] box.signageos.io: 60 — Unauthenticated /status JSON infra-leak (secgrep=0 behind CloudFront, POC finalized 30+ cycles) + 17-entry static CORS whitelist (http://plaintext + *.zdunpkgdomains.com, MISCONFIG-only, 0 creds flag); all other surfaces behind Auth0 login catch-all or trivial 200 "OK"; entry points hardened (HSTS/xfo/xcto/CSP/secgrep=4).
 [RISK] api.signageos.io: 86 — CRITICAL cross-tenant security-token mint IDOR mechanism confirmed (403074 gating byte-identical, zero auth drift, org from X-Auth header first-part, path uid client-supplied, AUTH_HELPED conf 86); /status hardened (secgrep=3) but still leaks hostname/uid/Node; all 60+ routes JWT/X-Auth-gated pre-auth, zero ACAO; descriptive-error auth internals leak (excluded class, mechanism evidence only).
+===== ANALYST laguna 2026-08-16 20:47:03 UTC =====
+[0m
+> build · laguna-s-2.1-free
+[0m
+[0m$ [0mls -la /home/runner/work/signageos-hunt/signageos-hunt/
+total 728
+drwxr-xr-x 11 runner runner   4096 Aug 16 20:45 .
+drwxr-xr-x  3 runner runner   4096 Aug 16 20:45 ..
+drwxr-xr-x  7 runner runner   4096 Aug 16 20:45 .git
+drwxr-xr-x  3 runner runner   4096 Aug 16 20:45 .github
+-rw-r--r--  1 runner runner    944 Aug 16 20:45 README.md
+-rw-r--r--  1 runner runner     39 Aug 16 20:45 analyst-out.txt
+-rw-r--r--  1 runner runner 255003 Aug 16 20:45 analyst-prompt.txt
+-rw-r--r--  1 runner runner 251014 Aug 16 20:45 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Aug 16 20:45 inventory
+drwxr-xr-x  2 runner runner   4096 Aug 16 20:45 knowledge
+drwxr-xr-x  2 runner runner  28672 Aug 16 20:45 leads
+-rw-r--r--  1 runner runner 117379 Aug 16 20:45 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Aug 16 20:45 reports
+drwxr-xr-x  3 runner runner   4096 Aug 16 20:45 reposcan-raw
+-rw-r--r--  1 runner runner   3086 Aug 16 20:45 scope.yml
+drwxr-xr-x  2 runner runner   4096 Aug 16 20:45 scripts
+-rw-r--r--  1 runner runner     33 Aug 16 20:45 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Aug 16 20:45 state_laguna.json
+-rw-r--r--  1 runner runner     33 Aug 16 20:45 state_ling3.json
+-rw-r--r--  1 runner runner     33 Aug 16 20:45 state_longcat.json
+-rw-r--r--  1 runner runner     33 Aug 16 20:45 state_nemotron3.json
+drwxr-xr-x  2 runner runner  16384 Aug 16 20:45 triage
+[0m
+[0m$ [0mcat /home/runner/work/signageos-hunt/signageos-hunt/.opencode/state.md 2>/dev/null || ls /home/runner/work/signageos-hunt/signageos-hunt/.opencode/ 2>/dev/null || echo "no .opencode dir"
+no .opencode dir
+[0m
+I'll start by exploring the repository structure to understand my environment, then follow the analysis steps.
+[0m$ [0mcat /home/runner/work/signageos-hunt/signageos-hunt/state_nemotron3.json 2>/dev/null; echo "---"; cat /home/runner/work/signageos-hunt/signageos-hunt/state_bigpickle.json 2>/dev/null; echo "---"; cat /home/runner/work/signageos-hunt/signageos-hunt/state_laguna.json 2>/dev/null
+{"phase": "POC", "target": "api"}---
+{"phase": "POC", "target": "box"}---
+{"phase": "POC", "target": "box"}
+[0m
+[0m$ [0mls -la /home/runner/work/signageos-hunt/signageos-hunt/reports/ /home/runner/work/signageos-hunt/signageos-hunt/leads/ /home/runner/work/signageos-hunt/signageos-hunt/inventory/
+/home/runner/work/signageos-hunt/signageos-hunt/inventory/:
+total 80
+drwxr-xr-x  2 runner runner  4096 Aug 16 20:45 .
+drwxr-xr-x 11 runner runner  4096 Aug 16 20:45 ..
+-rw-r--r--  1 runner runner 69928 Aug 16 20:45 signageos.md
+
+/home/runner/work/signageos-hunt/signageos-hunt/leads/:
+total 5180
+drwxr-xr-x  2 runner runner   28672 Aug 16 20:45 .
+drwxr-xr-x 11 runner runner    4096 Aug 16 20:45 ..
+-rw-r--r--  1 runner runner  697111 Aug 16 20:45 lead-bigpickle.md
+-rw-r--r--  1 runner runner 1129585 Aug 16 20:45 lead-laguna.md
+-rw-r--r--  1 runner runner   12693 Aug 16 20:45 lead-ling3.md
+-rw-r--r--  1 runner runner   76415 Aug 16 20:45 lead-longcat.md
+-rw-r--r--  1 runner runner 1419778 Aug 16 20:45 lead-nemotron3.md
+-rw-r--r--  1 runner runner    1412 Aug 16 20:45 reposcan-2026-08-07-18-57.md
+-rw-r--r--  1 runner runner    1523 Aug 16 20:45 reposcan-2026-08-07-19-27.md
+-rw-r--r--  1 runner runner    1889 Aug 16 20:45 reposcan-2026-08-07-19-37.md
+-rw-r--r--  1 runner runner    1180 Aug 16 20:45 reposcan-2026-08-07-20-04.md
+-rw-r--r--  1 runner runner    1125 Aug 16 20:45 reposcan-2026-08-07-20-16.md
+-rw-r--r--  1 runner runner    1229 Aug 16 20:45 reposcan-2026-08-07-21-07.md
+-rw-r--r--  1 runner runner    1623 Aug 16 20:45 reposcan-2026-08-07-21-35.md
+-rw-r--r--  1 runner runner    1368 Aug 16 20:45 reposcan-2026-08-07-22-03.md
+-rw-r--r--  1 runner runner    1472 Aug 16 20:45 reposcan-2026-08-07-22-08.md
+-rw-r--r--  1 runner runner    1595 Aug 16 20:45 reposcan-2026-08-07-22-52.md
+-rw-r--r--  1 runner runner    1601 Aug 16 20:45 reposcan-2026-08-07-23-01.md
+-rw-r--r--  1 runner runner    1151 Aug 16 20:45 reposcan-2026-08-07-23-29.md
+-rw-r--r--  1 runner runner    1501 Aug 16 20:45 reposcan-2026-08-07-23-55.md
+-rw-r--r--  1 runner runner    1256 Aug 16 20:45 reposcan-2026-08-08-00-43.md
+-rw-r--r--  1 runner runner    1236 Aug 16 20:45 reposcan-2026-08-08-00-51.md
+-rw-r--r--  1 runner runner    1533 Aug 16 20:45 reposcan-2026-08-08-02-39.md
+-rw-r--r--  1 runner runner    1793 Aug 16 20:45 reposcan-2026-08-08-02-51.md
+-rw-r--r--  1 runner runner    1439 Aug 16 20:45 reposcan-2026-08-08-03-57.md
+-rw-r--r--  1 runner runner    1219 Aug 16 20:45 reposcan-2026-08-08-04-02.md
+-rw-r--r--  1 runner runner    1439 Aug 16 20:45 reposcan-2026-08-08-04-48.md
+-rw-r--r--  1 runner runner    1368 Aug 16 20:45 reposcan-2026-08-08-05-13.md
+-rw-r--r--  1 runner runner    1255 Aug 16 20:45 reposcan-2026-08-08-05-32.md
+-rw-r--r--  1 runner runner    1209 Aug 16 20:45 reposcan-2026-08-08-06-03.md
+-rw-r--r--  1 runner runner    1200 Aug 16 20:45 reposcan-2026-08-08-06-09.md
+-rw-r--r--  1 runner runner    1178 Aug 16 20:45 reposcan-2026-08-08-07-04.md
+-rw-r--r--  1 runner runner    1129 Aug 16 20:45 reposcan-2026-08-08-07-11.md
+-rw-r--r--  1 runner runner    1624 Aug 16 20:45 reposcan-2026-08-08-07-27.md
+-rw-r--r--  1 runner runner    1538 Aug 16 20:45 reposcan-2026-08-08-07-59.md
+-rw-r--r--  1 runner runner    1098 Aug 16 20:45 reposcan-2026-08-08-08-06.md
+-rw-r--r--  1 runner runner    1263 Aug 16 20:45 reposcan-2026-08-08-08-32.md
+-rw-r--r--  1 runner runner    1419 Aug 16 20:45 reposcan-2026-08-08-09-08.md
+-rw-r--r--  1 runner runner    1308 Aug 16 20:45 reposcan-2026-08-08-09-14.md
+-rw-r--r--  1 runner runner    2580 Aug 16 20:45 reposcan-2026-08-08-09-56.md
+-rw-r--r--  1 runner runner    1313 Aug 16 20:45 reposcan-2026-08-08-10-01.md
+-rw-r--r--  1 runner runner    1219 Aug 16 20:45 reposcan-2026-08-08-10-29.md
+-rw-r--r--  1 runner runner    1110 Aug 16 20:45 reposcan-2026-08-08-10-35.md
+-rw-r--r--  1 runner runner    1397 Aug 16 20:45 reposcan-2026-08-08-10-59.md
+-rw-r--r--  1 runner runner    1055 Aug 16 20:45 reposcan-2026-08-08-11-19.md
+-rw-r--r--  1 runner runner    1104 Aug 16 20:45 reposcan-2026-08-08-11-23.md
+-rw-r--r--  1 runner runner    1339 Aug 16 20:45 reposcan-2026-08-08-11-48.md
+-rw-r--r--  1 runner runner    1570 Aug 16 20:45 reposcan-2026-08-08-11-52.md
+-rw-r--r--  1 runner runner    1367 Aug 16 20:45 reposcan-2026-08-08-12-05.md
+-rw-r--r--  1 runner runner    1471 Aug 16 20:45 reposcan-2026-08-08-12-22.md
+-rw-r--r--  1 runner runner    1600 Aug 16 20:45 reposcan-2026-08-08-13-09.md
+-rw-r--r--  1 runner runner    1869 Aug 16 20:45 reposcan-2026-08-08-13-25.md
+-rw-r--r--  1 runner runner    1625 Aug 16 20:45 reposcan-2026-08-08-13-55.md
+-rw-r--r--  1 runner runner    1478 Aug 16 20:45 reposcan-2026-08-08-14-04.md
+-rw-r--r--  1 runner runner    1390 Aug 16 20:45 reposcan-2026-08-08-14-26.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-08-14-56.md
+-rw-r--r--  1 runner runner     596 Aug 16 20:45 reposcan-2026-08-08-14-58.md
+-rw-r--r--  1 runner runner    1248 Aug 16 20:45 reposcan-2026-08-08-15-20.md
+-rw-r--r--  1 runner runner    1354 Aug 16 20:45 reposcan-2026-08-08-15-50.md
+-rw-r--r--  1 runner runner    1289 Aug 16 20:45 reposcan-2026-08-08-15-54.md
+-rw-r--r--  1 runner runner    1011 Aug 16 20:45 reposcan-2026-08-08-16-55.md
+-rw-r--r--  1 runner runner    1233 Aug 16 20:45 reposcan-2026-08-08-17-05.md
+-rw-r--r--  1 runner runner    1252 Aug 16 20:45 reposcan-2026-08-08-17-38.md
+-rw-r--r--  1 runner runner    2887 Aug 16 20:45 reposcan-2026-08-08-17-44.md
+-rw-r--r--  1 runner runner    1285 Aug 16 20:45 reposcan-2026-08-08-18-15.md
+-rw-r--r--  1 runner runner    1452 Aug 16 20:45 reposcan-2026-08-08-19-04.md
+-rw-r--r--  1 runner runner    1936 Aug 16 20:45 reposcan-2026-08-08-19-43.md
+-rw-r--r--  1 runner runner    1559 Aug 16 20:45 reposcan-2026-08-08-19-46.md
+-rw-r--r--  1 runner runner    1653 Aug 16 20:45 reposcan-2026-08-08-20-11.md
+-rw-r--r--  1 runner runner    1252 Aug 16 20:45 reposcan-2026-08-08-20-39.md
+-rw-r--r--  1 runner runner    1101 Aug 16 20:45 reposcan-2026-08-08-20-46.md
+-rw-r--r--  1 runner runner    1152 Aug 16 20:45 reposcan-2026-08-08-21-13.md
+-rw-r--r--  1 runner runner    1351 Aug 16 20:45 reposcan-2026-08-08-21-17.md
+-rw-r--r--  1 runner runner    1026 Aug 16 20:45 reposcan-2026-08-08-21-50.md
+-rw-r--r--  1 runner runner    1142 Aug 16 20:45 reposcan-2026-08-08-21-53.md
+-rw-r--r--  1 runner runner    1356 Aug 16 20:45 reposcan-2026-08-08-22-18.md
+-rw-r--r--  1 runner runner    1547 Aug 16 20:45 reposcan-2026-08-08-22-39.md
+-rw-r--r--  1 runner runner    1322 Aug 16 20:45 reposcan-2026-08-08-22-56.md
+-rw-r--r--  1 runner runner    1648 Aug 16 20:45 reposcan-2026-08-08-23-12.md
+-rw-r--r--  1 runner runner    1354 Aug 16 20:45 reposcan-2026-08-08-23-24.md
+-rw-r--r--  1 runner runner    1312 Aug 16 20:45 reposcan-2026-08-08-23-49.md
+-rw-r--r--  1 runner runner    1213 Aug 16 20:45 reposcan-2026-08-08-23-54.md
+-rw-r--r--  1 runner runner    1095 Aug 16 20:45 reposcan-2026-08-09-01-08.md
+-rw-r--r--  1 runner runner    1085 Aug 16 20:45 reposcan-2026-08-09-02-19.md
+-rw-r--r--  1 runner runner    1612 Aug 16 20:45 reposcan-2026-08-09-03-09.md
+-rw-r--r--  1 runner runner    1127 Aug 16 20:45 reposcan-2026-08-09-04-01.md
+-rw-r--r--  1 runner runner    1328 Aug 16 20:45 reposcan-2026-08-09-04-37.md
+-rw-r--r--  1 runner runner    1400 Aug 16 20:45 reposcan-2026-08-09-05-22.md
+-rw-r--r--  1 runner runner    1295 Aug 16 20:45 reposcan-2026-08-09-05-36.md
+-rw-r--r--  1 runner runner    1528 Aug 16 20:45 reposcan-2026-08-09-06-11.md
+-rw-r--r--  1 runner runner    1241 Aug 16 20:45 reposcan-2026-08-09-06-28.md
+-rw-r--r--  1 runner runner    1176 Aug 16 20:45 reposcan-2026-08-09-07-19.md
+-rw-r--r--  1 runner runner    1395 Aug 16 20:45 reposcan-2026-08-09-07-36.md
+-rw-r--r--  1 runner runner    1500 Aug 16 20:45 reposcan-2026-08-09-08-10.md
+-rw-r--r--  1 runner runner    1465 Aug 16 20:45 reposcan-2026-08-09-08-23.md
+-rw-r--r--  1 runner runner    1295 Aug 16 20:45 reposcan-2026-08-09-09-06.md
+-rw-r--r--  1 runner runner    1110 Aug 16 20:45 reposcan-2026-08-09-09-14.md
+-rw-r--r--  1 runner runner    1172 Aug 16 20:45 reposcan-2026-08-09-10-00.md
+-rw-r--r--  1 runner runner    1691 Aug 16 20:45 reposcan-2026-08-09-10-44.md
+-rw-r--r--  1 runner runner    1369 Aug 16 20:45 reposcan-2026-08-09-10-48.md
+-rw-r--r--  1 runner runner    1833 Aug 16 20:45 reposcan-2026-08-09-11-16.md
+-rw-r--r--  1 runner runner    1156 Aug 16 20:45 reposcan-2026-08-09-11-37.md
+-rw-r--r--  1 runner runner    1662 Aug 16 20:45 reposcan-2026-08-09-11-51.md
+-rw-r--r--  1 runner runner    1554 Aug 16 20:45 reposcan-2026-08-09-12-17.md
+-rw-r--r--  1 runner runner    1491 Aug 16 20:45 reposcan-2026-08-09-12-22.md
+-rw-r--r--  1 runner runner    1384 Aug 16 20:45 reposcan-2026-08-09-13-34.md
+-rw-r--r--  1 runner runner    1182 Aug 16 20:45 reposcan-2026-08-09-14-13.md
+-rw-r--r--  1 runner runner    1599 Aug 16 20:45 reposcan-2026-08-09-14-21.md
+-rw-r--r--  1 runner runner    2341 Aug 16 20:45 reposcan-2026-08-09-14-56.md
+-rw-r--r--  1 runner runner    1111 Aug 16 20:45 reposcan-2026-08-09-15-04.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-09-15-31.md
+-rw-r--r--  1 runner runner    1335 Aug 16 20:45 reposcan-2026-08-09-15-49.md
+-rw-r--r--  1 runner runner    1454 Aug 16 20:45 reposcan-2026-08-09-16-05.md
+-rw-r--r--  1 runner runner    1578 Aug 16 20:45 reposcan-2026-08-09-16-45.md
+-rw-r--r--  1 runner runner    1665 Aug 16 20:45 reposcan-2026-08-09-16-54.md
+-rw-r--r--  1 runner runner    1235 Aug 16 20:45 reposcan-2026-08-09-17-18.md
+-rw-r--r--  1 runner runner    1710 Aug 16 20:45 reposcan-2026-08-09-17-23.md
+-rw-r--r--  1 runner runner     726 Aug 16 20:45 reposcan-2026-08-09-17-57.md
+-rw-r--r--  1 runner runner    1561 Aug 16 20:45 reposcan-2026-08-09-18-01.md
+-rw-r--r--  1 runner runner    1491 Aug 16 20:45 reposcan-2026-08-09-18-39.md
+-rw-r--r--  1 runner runner    1432 Aug 16 20:45 reposcan-2026-08-09-19-05.md
+-rw-r--r--  1 runner runner    1325 Aug 16 20:45 reposcan-2026-08-09-19-23.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-09-19-51.md
+-rw-r--r--  1 runner runner    1566 Aug 16 20:45 reposcan-2026-08-09-19-57.md
+-rw-r--r--  1 runner runner    1575 Aug 16 20:45 reposcan-2026-08-09-20-33.md
+-rw-r--r--  1 runner runner    1518 Aug 16 20:45 reposcan-2026-08-09-20-43.md
+-rw-r--r--  1 runner runner    1225 Aug 16 20:45 reposcan-2026-08-09-21-10.md
+-rw-r--r--  1 runner runner    1962 Aug 16 20:45 reposcan-2026-08-09-21-17.md
+-rw-r--r--  1 runner runner    1199 Aug 16 20:45 reposcan-2026-08-09-21-51.md
+-rw-r--r--  1 runner runner    1264 Aug 16 20:45 reposcan-2026-08-09-22-00.md
+-rw-r--r--  1 runner runner    1465 Aug 16 20:45 reposcan-2026-08-09-22-16.md
+-rw-r--r--  1 runner runner    1139 Aug 16 20:45 reposcan-2026-08-09-22-45.md
+-rw-r--r--  1 runner runner    2477 Aug 16 20:45 reposcan-2026-08-09-22-56.md
+-rw-r--r--  1 runner runner    1369 Aug 16 20:45 reposcan-2026-08-09-23-35.md
+-rw-r--r--  1 runner runner    1548 Aug 16 20:45 reposcan-2026-08-09-23-39.md
+-rw-r--r--  1 runner runner    1262 Aug 16 20:45 reposcan-2026-08-10-00-05.md
+-rw-r--r--  1 runner runner    1281 Aug 16 20:45 reposcan-2026-08-10-00-37.md
+-rw-r--r--  1 runner runner    1204 Aug 16 20:45 reposcan-2026-08-10-02-33.md
+-rw-r--r--  1 runner runner     961 Aug 16 20:45 reposcan-2026-08-10-03-02.md
+-rw-r--r--  1 runner runner    1664 Aug 16 20:45 reposcan-2026-08-10-04-21.md
+-rw-r--r--  1 runner runner    1297 Aug 16 20:45 reposcan-2026-08-10-04-57.md
+-rw-r--r--  1 runner runner    1057 Aug 16 20:45 reposcan-2026-08-10-05-54.md
+-rw-r--r--  1 runner runner    1088 Aug 16 20:45 reposcan-2026-08-10-06-19.md
+-rw-r--r--  1 runner runner    1193 Aug 16 20:45 reposcan-2026-08-10-07-13.md
+-rw-r--r--  1 runner runner    1418 Aug 16 20:45 reposcan-2026-08-10-08-16.md
+-rw-r--r--  1 runner runner    1356 Aug 16 20:45 reposcan-2026-08-10-08-58.md
+-rw-r--r--  1 runner runner     943 Aug 16 20:45 reposcan-2026-08-10-09-53.md
+-rw-r--r--  1 runner runner    1268 Aug 16 20:45 reposcan-2026-08-10-10-13.md
+-rw-r--r--  1 runner runner    1167 Aug 16 20:45 reposcan-2026-08-10-11-15.md
+-rw-r--r--  1 runner runner    1923 Aug 16 20:45 reposcan-2026-08-10-11-35.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-10-12-04.md
+-rw-r--r--  1 runner runner    1799 Aug 16 20:45 reposcan-2026-08-10-12-20.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-10-13-48.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-10-13-52.md
+-rw-r--r--  1 runner runner    1541 Aug 16 20:45 reposcan-2026-08-10-14-48.md
+-rw-r--r--  1 runner runner    1739 Aug 16 20:45 reposcan-2026-08-10-15-08.md
+-rw-r--r--  1 runner runner    1495 Aug 16 20:45 reposcan-2026-08-10-15-48.md
+-rw-r--r--  1 runner runner    1233 Aug 16 20:45 reposcan-2026-08-10-16-15.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-10-16-40.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-10-17-13.md
+-rw-r--r--  1 runner runner     395 Aug 16 20:45 reposcan-2026-08-10-17-44.md
+-rw-r--r--  1 runner runner    1288 Aug 16 20:45 reposcan-2026-08-10-18-10.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-10-18-35.md
+-rw-r--r--  1 runner runner    1237 Aug 16 20:45 reposcan-2026-08-10-19-21.md
+-rw-r--r--  1 runner runner    1201 Aug 16 20:45 reposcan-2026-08-10-19-41.md
+-rw-r--r--  1 runner runner    1281 Aug 16 20:45 reposcan-2026-08-10-20-11.md
+-rw-r--r--  1 runner runner    1532 Aug 16 20:45 reposcan-2026-08-10-20-25.md
+-rw-r--r--  1 runner runner    1225 Aug 16 20:45 reposcan-2026-08-10-21-06.md
+-rw-r--r--  1 runner runner    1176 Aug 16 20:45 reposcan-2026-08-10-21-17.md
+-rw-r--r--  1 runner runner    1240 Aug 16 20:45 reposcan-2026-08-10-22-02.md
+-rw-r--r--  1 runner runner    1588 Aug 16 20:45 reposcan-2026-08-10-22-07.md
+-rw-r--r--  1 runner runner    1417 Aug 16 20:45 reposcan-2026-08-10-23-00.md
+-rw-r--r--  1 runner runner    1508 Aug 16 20:45 reposcan-2026-08-10-23-28.md
+-rw-r--r--  1 runner runner    1332 Aug 16 20:45 reposcan-2026-08-10-23-48.md
+-rw-r--r--  1 runner runner    1359 Aug 16 20:45 reposcan-2026-08-11-00-06.md
+-rw-r--r--  1 runner runner     559 Aug 16 20:45 reposcan-2026-08-11-02-18.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-11-02-24.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-11-04-33.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-11-05-51.md
+-rw-r--r--  1 runner runner    1460 Aug 16 20:45 reposcan-2026-08-11-06-13.md
+-rw-r--r--  1 runner runner    1406 Aug 16 20:45 reposcan-2026-08-11-06-32.md
+-rw-r--r--  1 runner runner    1689 Aug 16 20:45 reposcan-2026-08-11-07-41.md
+-rw-r--r--  1 runner runner    1233 Aug 16 20:45 reposcan-2026-08-11-07-58.md
+-rw-r--r--  1 runner runner    1308 Aug 16 20:45 reposcan-2026-08-11-08-41.md
+-rw-r--r--  1 runner runner    1236 Aug 16 20:45 reposcan-2026-08-11-09-11.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-11-09-51.md
+-rw-r--r--  1 runner runner    2272 Aug 16 20:45 reposcan-2026-08-11-10-15.md
+-rw-r--r--  1 runner runner    1368 Aug 16 20:45 reposcan-2026-08-11-10-45.md
+-rw-r--r--  1 runner runner    1434 Aug 16 20:45 reposcan-2026-08-11-11-10.md
+-rw-r--r--  1 runner runner    1093 Aug 16 20:45 reposcan-2026-08-11-11-38.md
+-rw-r--r--  1 runner runner    1418 Aug 16 20:45 reposcan-2026-08-11-12-04.md
+-rw-r--r--  1 runner runner    1272 Aug 16 20:45 reposcan-2026-08-11-12-30.md
+-rw-r--r--  1 runner runner    1055 Aug 16 20:45 reposcan-2026-08-11-13-40.md
+-rw-r--r--  1 runner runner    1436 Aug 16 20:45 reposcan-2026-08-11-14-13.md
+-rw-r--r--  1 runner runner    1718 Aug 16 20:45 reposcan-2026-08-11-14-47.md
+-rw-r--r--  1 runner runner    1704 Aug 16 20:45 reposcan-2026-08-11-15-07.md
+-rw-r--r--  1 runner runner    1267 Aug 16 20:45 reposcan-2026-08-11-16-08.md
+-rw-r--r--  1 runner runner    1300 Aug 16 20:45 reposcan-2026-08-11-16-14.md
+-rw-r--r--  1 runner runner    1140 Aug 16 20:45 reposcan-2026-08-11-17-16.md
+-rw-r--r--  1 runner runner    1251 Aug 16 20:45 reposcan-2026-08-11-17-20.md
+-rw-r--r--  1 runner runner    1684 Aug 16 20:45 reposcan-2026-08-11-18-13.md
+-rw-r--r--  1 runner runner    1322 Aug 16 20:45 reposcan-2026-08-11-18-18.md
+-rw-r--r--  1 runner runner    1232 Aug 16 20:45 reposcan-2026-08-11-19-24.md
+-rw-r--r--  1 runner runner    1464 Aug 16 20:45 reposcan-2026-08-11-19-29.md
+-rw-r--r--  1 runner runner    1663 Aug 16 20:45 reposcan-2026-08-11-20-13.md
+-rw-r--r--  1 runner runner    1082 Aug 16 20:45 reposcan-2026-08-11-20-21.md
+-rw-r--r--  1 runner runner    1340 Aug 16 20:45 reposcan-2026-08-11-21-08.md
+-rw-r--r--  1 runner runner    1817 Aug 16 20:45 reposcan-2026-08-11-21-26.md
+-rw-r--r--  1 runner runner    1475 Aug 16 20:45 reposcan-2026-08-11-22-07.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-11-22-21.md
+-rw-r--r--  1 runner runner    1688 Aug 16 20:45 reposcan-2026-08-11-23-01.md
+-rw-r--r--  1 runner runner    1325 Aug 16 20:45 reposcan-2026-08-11-23-22.md
+-rw-r--r--  1 runner runner    1494 Aug 16 20:45 reposcan-2026-08-11-23-52.md
+-rw-r--r--  1 runner runner    1407 Aug 16 20:45 reposcan-2026-08-12-00-10.md
+-rw-r--r--  1 runner runner    1353 Aug 16 20:45 reposcan-2026-08-12-00-54.md
+-rw-r--r--  1 runner runner    1242 Aug 16 20:45 reposcan-2026-08-12-02-48.md
+-rw-r--r--  1 runner runner    1284 Aug 16 20:45 reposcan-2026-08-12-03-19.md
+-rw-r--r--  1 runner runner    1379 Aug 16 20:45 reposcan-2026-08-12-04-55.md
+-rw-r--r--  1 runner runner    1585 Aug 16 20:45 reposcan-2026-08-12-05-13.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-12-06-22.md
+-rw-r--r--  1 runner runner    1342 Aug 16 20:45 reposcan-2026-08-12-06-49.md
+-rw-r--r--  1 runner runner    1296 Aug 16 20:45 reposcan-2026-08-12-08-02.md
+-rw-r--r--  1 runner runner    1227 Aug 16 20:45 reposcan-2026-08-12-08-11.md
+-rw-r--r--  1 runner runner    1890 Aug 16 20:45 reposcan-2026-08-12-09-31.md
+-rw-r--r--  1 runner runner    1212 Aug 16 20:45 reposcan-2026-08-12-09-35.md
+-rw-r--r--  1 runner runner    1277 Aug 16 20:45 reposcan-2026-08-12-10-47.md
+-rw-r--r--  1 runner runner    1376 Aug 16 20:45 reposcan-2026-08-12-10-59.md
+-rw-r--r--  1 runner runner    1397 Aug 16 20:45 reposcan-2026-08-12-11-32.md
+-rw-r--r--  1 runner runner    1415 Aug 16 20:45 reposcan-2026-08-12-11-36.md
+-rw-r--r--  1 runner runner    1138 Aug 16 20:45 reposcan-2026-08-12-12-36.md
+-rw-r--r--  1 runner runner    1383 Aug 16 20:45 reposcan-2026-08-12-12-39.md
+-rw-r--r--  1 runner runner    1330 Aug 16 20:45 reposcan-2026-08-12-14-16.md
+-rw-r--r--  1 runner runner    1268 Aug 16 20:45 reposcan-2026-08-12-15-19.md
+-rw-r--r--  1 runner runner    1462 Aug 16 20:45 reposcan-2026-08-12-16-22.md
+-rw-r--r--  1 runner runner    1254 Aug 16 20:45 reposcan-2026-08-12-16-35.md
+-rw-r--r--  1 runner runner    1851 Aug 16 20:45 reposcan-2026-08-12-17-31.md
+-rw-r--r--  1 runner runner    1536 Aug 16 20:45 reposcan-2026-08-12-17-37.md
+-rw-r--r--  1 runner runner    1178 Aug 16 20:45 reposcan-2026-08-12-18-20.md
+-rw-r--r--  1 runner runner    1297 Aug 16 20:45 reposcan-2026-08-12-18-40.md
+-rw-r--r--  1 runner runner    1267 Aug 16 20:45 reposcan-2026-08-12-19-52.md
+-rw-r--r--  1 runner runner    1324 Aug 16 20:45 reposcan-2026-08-12-20-15.md
+-rw-r--r--  1 runner runner    1373 Aug 16 20:45 reposcan-2026-08-12-20-55.md
+-rw-r--r--  1 runner runner    1323 Aug 16 20:45 reposcan-2026-08-12-21-06.md
+-rw-r--r--  1 runner runner    1441 Aug 16 20:45 reposcan-2026-08-12-21-55.md
+-rw-r--r--  1 runner runner    1440 Aug 16 20:45 reposcan-2026-08-12-22-04.md
+-rw-r--r--  1 runner runner    1314 Aug 16 20:45 reposcan-2026-08-12-22-52.md
+-rw-r--r--  1 runner runner    1089 Aug 16 20:45 reposcan-2026-08-12-22-57.md
+-rw-r--r--  1 runner runner    1217 Aug 16 20:45 reposcan-2026-08-12-23-47.md
+-rw-r--r--  1 runner runner    1027 Aug 16 20:45 reposcan-2026-08-12-23-55.md
+-rw-r--r--  1 runner runner    1180 Aug 16 20:45 reposcan-2026-08-13-00-46.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-13-02-46.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-13-03-40.md
+-rw-r--r--  1 runner runner    1274 Aug 16 20:45 reposcan-2026-08-13-04-33.md
+-rw-r--r--  1 runner runner    2457 Aug 16 20:45 reposcan-2026-08-13-05-18.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-13-06-18.md
+-rw-r--r--  1 runner runner     487 Aug 16 20:45 reposcan-2026-08-13-06-59.md
+-rw-r--r--  1 runner runner    1246 Aug 16 20:45 reposcan-2026-08-13-08-08.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-13-08-39.md
+-rw-r--r--  1 runner runner    1376 Aug 16 20:45 reposcan-2026-08-13-09-23.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-13-09-51.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-13-10-55.md
+-rw-r--r--  1 runner runner    1840 Aug 16 20:45 reposcan-2026-08-13-11-44.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-13-11-59.md
+-rw-r--r--  1 runner runner     593 Aug 16 20:45 reposcan-2026-08-13-12-40.md
+-rw-r--r--  1 runner runner    1284 Aug 16 20:45 reposcan-2026-08-13-14-14.md
+-rw-r--r--  1 runner runner     423 Aug 16 20:45 reposcan-2026-08-13-15-19.md
+-rw-r--r--  1 runner runner    1520 Aug 16 20:45 reposcan-2026-08-13-15-26.md
+-rw-r--r--  1 runner runner    1518 Aug 16 20:45 reposcan-2026-08-13-16-25.md
+-rw-r--r--  1 runner runner    2101 Aug 16 20:45 reposcan-2026-08-13-16-31.md
+-rw-r--r--  1 runner runner    1063 Aug 16 20:45 reposcan-2026-08-13-17-22.md
+-rw-r--r--  1 runner runner    1334 Aug 16 20:45 reposcan-2026-08-13-17-39.md
+-rw-r--r--  1 runner runner    1551 Aug 16 20:45 reposcan-2026-08-13-18-30.md
+-rw-r--r--  1 runner runner    1224 Aug 16 20:45 reposcan-2026-08-13-18-49.md
+-rw-r--r--  1 runner runner     423 Aug 16 20:45 reposcan-2026-08-13-19-39.md
+-rw-r--r--  1 runner runner    1160 Aug 16 20:45 reposcan-2026-08-13-19-47.md
+-rw-r--r--  1 runner runner    1305 Aug 16 20:45 reposcan-2026-08-13-20-09.md
+-rw-r--r--  1 runner runner    1309 Aug 16 20:45 reposcan-2026-08-13-20-54.md
+-rw-r--r--  1 runner runner    1147 Aug 16 20:45 reposcan-2026-08-13-21-07.md
+-rw-r--r--  1 runner runner    1350 Aug 16 20:45 reposcan-2026-08-13-21-55.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-13-22-00.md
+-rw-r--r--  1 runner runner    1236 Aug 16 20:45 reposcan-2026-08-13-22-58.md
+-rw-r--r--  1 runner runner    1195 Aug 16 20:45 reposcan-2026-08-13-23-41.md
+-rw-r--r--  1 runner runner    1543 Aug 16 20:45 reposcan-2026-08-13-23-52.md
+-rw-r--r--  1 runner runner    1046 Aug 16 20:45 reposcan-2026-08-14-00-46.md
+-rw-r--r--  1 runner runner    1084 Aug 16 20:45 reposcan-2026-08-14-02-32.md
+-rw-r--r--  1 runner runner    1249 Aug 16 20:45 reposcan-2026-08-14-03-18.md
+-rw-r--r--  1 runner runner    1464 Aug 16 20:45 reposcan-2026-08-14-04-31.md
+-rw-r--r--  1 runner runner    1182 Aug 16 20:45 reposcan-2026-08-14-05-16.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-14-06-06.md
+-rw-r--r--  1 runner runner    1171 Aug 16 20:45 reposcan-2026-08-14-06-46.md
+-rw-r--r--  1 runner runner    1162 Aug 16 20:45 reposcan-2026-08-14-07-53.md
+-rw-r--r--  1 runner runner    3562 Aug 16 20:45 reposcan-2026-08-14-08-07.md
+-rw-r--r--  1 runner runner    1204 Aug 16 20:45 reposcan-2026-08-14-09-15.md
+-rw-r--r--  1 runner runner    1699 Aug 16 20:45 reposcan-2026-08-14-09-22.md
+-rw-r--r--  1 runner runner    1523 Aug 16 20:45 reposcan-2026-08-14-10-31.md
+-rw-r--r--  1 runner runner    1194 Aug 16 20:45 reposcan-2026-08-14-10-32.md
+-rw-r--r--  1 runner runner    1292 Aug 16 20:45 reposcan-2026-08-14-11-23.md
+-rw-r--r--  1 runner runner    1411 Aug 16 20:45 reposcan-2026-08-14-11-25.md
+-rw-r--r--  1 runner runner    1089 Aug 16 20:45 reposcan-2026-08-14-12-11.md
+-rw-r--r--  1 runner runner    1436 Aug 16 20:45 reposcan-2026-08-14-12-15.md
+-rw-r--r--  1 runner runner    1243 Aug 16 20:45 reposcan-2026-08-14-13-47.md
+-rw-r--r--  1 runner runner    1487 Aug 16 20:45 reposcan-2026-08-14-13-49.md
+-rw-r--r--  1 runner runner    1322 Aug 16 20:45 reposcan-2026-08-14-14-46.md
+-rw-r--r--  1 runner runner    1785 Aug 16 20:45 reposcan-2026-08-14-15-00.md
+-rw-r--r--  1 runner runner    1397 Aug 16 20:45 reposcan-2026-08-14-15-37.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-14-16-02.md
+-rw-r--r--  1 runner runner    1517 Aug 16 20:45 reposcan-2026-08-14-16-31.md
+-rw-r--r--  1 runner runner    1704 Aug 16 20:45 reposcan-2026-08-14-17-14.md
+-rw-r--r--  1 runner runner    1196 Aug 16 20:45 reposcan-2026-08-14-17-34.md
+-rw-r--r--  1 runner runner    1622 Aug 16 20:45 reposcan-2026-08-14-18-11.md
+-rw-r--r--  1 runner runner    1304 Aug 16 20:45 reposcan-2026-08-14-18-33.md
+-rw-r--r--  1 runner runner    1450 Aug 16 20:45 reposcan-2026-08-14-19-17.md
+-rw-r--r--  1 runner runner    1150 Aug 16 20:45 reposcan-2026-08-14-19-37.md
+-rw-r--r--  1 runner runner    1492 Aug 16 20:45 reposcan-2026-08-14-20-06.md
+-rw-r--r--  1 runner runner    1336 Aug 16 20:45 reposcan-2026-08-14-20-10.md
+-rw-r--r--  1 runner runner    1537 Aug 16 20:45 reposcan-2026-08-14-20-47.md
+-rw-r--r--  1 runner runner    1372 Aug 16 20:45 reposcan-2026-08-14-20-48.md
+-rw-r--r--  1 runner runner    1612 Aug 16 20:45 reposcan-2026-08-14-21-12.md
+-rw-r--r--  1 runner runner     990 Aug 16 20:45 reposcan-2026-08-14-21-33.md
+-rw-r--r--  1 runner runner     626 Aug 16 20:45 reposcan-2026-08-14-21-49.md
+-rw-r--r--  1 runner runner    1476 Aug 16 20:45 reposcan-2026-08-14-22-01.md
+-rw-r--r--  1 runner runner    1315 Aug 16 20:45 reposcan-2026-08-14-22-04.md
+-rw-r--r--  1 runner runner    1626 Aug 16 20:45 reposcan-2026-08-14-22-37.md
+-rw-r--r--  1 runner runner    1475 Aug 16 20:45 reposcan-2026-08-14-22-43.md
+-rw-r--r--  1 runner runner    1482 Aug 16 20:45 reposcan-2026-08-14-23-00.md
+-rw-r--r--  1 runner runner     966 Aug 16 20:45 reposcan-2026-08-14-23-04.md
+-rw-r--r--  1 runner runner     456 Aug 16 20:45 reposcan-2026-08-14-23-31.md
+-rw-r--r--  1 runner runner    1319 Aug 16 20:45 reposcan-2026-08-14-23-41.md
+-rw-r--r--  1 runner runner    1133 Aug 16 20:45 reposcan-2026-08-14-23-56.md
+-rw-r--r--  1 runner runner    1024 Aug 16 20:45 reposcan-2026-08-15-00-02.md
+-rw-r--r--  1 runner runner    1114 Aug 16 20:45 reposcan-2026-08-15-00-56.md
+-rw-r--r--  1 runner runner    1392 Aug 16 20:45 reposcan-2026-08-15-01-52.md
+-rw-r--r--  1 runner runner    1170 Aug 16 20:45 reposcan-2026-08-15-02-15.md
+-rw-r--r--  1 runner runner    1461 Aug 16 20:45 reposcan-2026-08-15-02-59.md
+-rw-r--r--  1 runner runner    1411 Aug 16 20:45 reposcan-2026-08-15-03-11.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-15-03-51.md
+-rw-r--r--  1 runner runner    1311 Aug 16 20:45 reposcan-2026-08-15-03-57.md
+-rw-r--r--  1 runner runner    1368 Aug 16 20:45 reposcan-2026-08-15-04-31.md
+-rw-r--r--  1 runner runner    1266 Aug 16 20:45 reposcan-2026-08-15-04-40.md
+-rw-r--r--  1 runner runner    1286 Aug 16 20:45 reposcan-2026-08-15-05-02.md
+-rw-r--r--  1 runner runner    1781 Aug 16 20:45 reposcan-2026-08-15-05-07.md
+-rw-r--r--  1 runner runner    1585 Aug 16 20:45 reposcan-2026-08-15-05-38.md
+-rw-r--r--  1 runner runner    1158 Aug 16 20:45 reposcan-2026-08-15-05-44.md
+-rw-r--r--  1 runner runner    1170 Aug 16 20:45 reposcan-2026-08-15-06-00.md
+-rw-r--r--  1 runner runner    1347 Aug 16 20:45 reposcan-2026-08-15-06-14.md
+-rw-r--r--  1 runner runner    1201 Aug 16 20:45 reposcan-2026-08-15-06-53.md
+-rw-r--r--  1 runner runner    1295 Aug 16 20:45 reposcan-2026-08-15-07-02.md
+-rw-r--r--  1 runner runner    1320 Aug 16 20:45 reposcan-2026-08-15-07-29.md
+-rw-r--r--  1 runner runner    1774 Aug 16 20:45 reposcan-2026-08-15-07-46.md
+-rw-r--r--  1 runner runner    1413 Aug 16 20:45 reposcan-2026-08-15-07-56.md
+-rw-r--r--  1 runner runner    1479 Aug 16 20:45 reposcan-2026-08-15-08-25.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-15-08-44.md
+-rw-r--r--  1 runner runner    1685 Aug 16 20:45 reposcan-2026-08-15-09-02.md
+-rw-r--r--  1 runner runner    1340 Aug 16 20:45 reposcan-2026-08-15-09-05.md
+-rw-r--r--  1 runner runner    1405 Aug 16 20:45 reposcan-2026-08-15-09-20.md
+-rw-r--r--  1 runner runner    1490 Aug 16 20:45 reposcan-2026-08-15-09-44.md
+-rw-r--r--  1 runner runner    1436 Aug 16 20:45 reposcan-2026-08-15-09-49.md
+-rw-r--r--  1 runner runner    1165 Aug 16 20:45 reposcan-2026-08-15-10-02.md
+-rw-r--r--  1 runner runner    1171 Aug 16 20:45 reposcan-2026-08-15-10-07.md
+-rw-r--r--  1 runner runner    1351 Aug 16 20:45 reposcan-2026-08-15-10-37.md
+-rw-r--r--  1 runner runner    1388 Aug 16 20:45 reposcan-2026-08-15-10-42.md
+-rw-r--r--  1 runner runner    1407 Aug 16 20:45 reposcan-2026-08-15-10-58.md
+-rw-r--r--  1 runner runner    1135 Aug 16 20:45 reposcan-2026-08-15-11-02.md
+-rw-r--r--  1 runner runner    1364 Aug 16 20:45 reposcan-2026-08-15-11-30.md
+-rw-r--r--  1 runner runner    1770 Aug 16 20:45 reposcan-2026-08-15-11-37.md
+-rw-r--r--  1 runner runner    1267 Aug 16 20:45 reposcan-2026-08-15-11-50.md
+-rw-r--r--  1 runner runner    1297 Aug 16 20:45 reposcan-2026-08-15-12-00.md
+-rw-r--r--  1 runner runner    1501 Aug 16 20:45 reposcan-2026-08-15-12-05.md
+-rw-r--r--  1 runner runner    1138 Aug 16 20:45 reposcan-2026-08-15-12-55.md
+-rw-r--r--  1 runner runner    1158 Aug 16 20:45 reposcan-2026-08-15-12-58.md
+-rw-r--r--  1 runner runner    1660 Aug 16 20:45 reposcan-2026-08-15-13-39.md
+-rw-r--r--  1 runner runner    1405 Aug 16 20:45 reposcan-2026-08-15-13-59.md
+-rw-r--r--  1 runner runner    1426 Aug 16 20:45 reposcan-2026-08-15-14-01.md
+-rw-r--r--  1 runner runner    1528 Aug 16 20:45 reposcan-2026-08-15-14-36.md
+-rw-r--r--  1 runner runner    1513 Aug 16 20:45 reposcan-2026-08-15-14-42.md
+-rw-r--r--  1 runner runner    1147 Aug 16 20:45 reposcan-2026-08-15-14-54.md
+-rw-r--r--  1 runner runner    1272 Aug 16 20:45 reposcan-2026-08-15-15-01.md
+-rw-r--r--  1 runner runner    1260 Aug 16 20:45 reposcan-2026-08-15-15-17.md
+-rw-r--r--  1 runner runner    1182 Aug 16 20:45 reposcan-2026-08-15-15-40.md
+-rw-r--r--  1 runner runner    1159 Aug 16 20:45 reposcan-2026-08-15-15-46.md
+-rw-r--r--  1 runner runner    1593 Aug 16 20:45 reposcan-2026-08-15-16-01.md
+-rw-r--r--  1 runner runner    1325 Aug 16 20:45 reposcan-2026-08-15-16-08.md
+-rw-r--r--  1 runner runner    1309 Aug 16 20:45 reposcan-2026-08-15-16-37.md
+-rw-r--r--  1 runner runner    1768 Aug 16 20:45 reposcan-2026-08-15-17-00.md
+-rw-r--r--  1 runner runner    1171 Aug 16 20:45 reposcan-2026-08-15-17-02.md
+-rw-r--r--  1 runner runner    1233 Aug 16 20:45 reposcan-2026-08-15-17-34.md
+-rw-r--r--  1 runner runner    1444 Aug 16 20:45 reposcan-2026-08-15-17-39.md
+-rw-r--r--  1 runner runner    1771 Aug 16 20:45 reposcan-2026-08-15-17-50.md
+-rw-r--r--  1 runner runner    1243 Aug 16 20:45 reposcan-2026-08-15-18-00.md
+-rw-r--r--  1 runner runner    1296 Aug 16 20:45 reposcan-2026-08-15-18-05.md
+-rw-r--r--  1 runner runner    1519 Aug 16 20:45 reposcan-2026-08-15-18-44.md
+-rw-r--r--  1 runner runner    1446 Aug 16 20:45 reposcan-2026-08-15-18-45.md
+-rw-r--r--  1 runner runner    1333 Aug 16 20:45 reposcan-2026-08-15-19-10.md
+-rw-r--r--  1 runner runner    1472 Aug 16 20:45 reposcan-2026-08-15-19-36.md
+-rw-r--r--  1 runner runner    1366 Aug 16 20:45 reposcan-2026-08-15-19-38.md
+-rw-r--r--  1 runner runner     948 Aug 16 20:45 reposcan-2026-08-15-19-59.md
+-rw-r--r--  1 runner runner    1224 Aug 16 20:45 reposcan-2026-08-15-20-18.md
+-rw-r--r--  1 runner runner    1385 Aug 16 20:45 reposcan-2026-08-15-20-35.md
+-rw-r--r--  1 runner runner    1127 Aug 16 20:45 reposcan-2026-08-15-20-47.md
+-rw-r--r--  1 runner runner    1234 Aug 16 20:45 reposcan-2026-08-15-21-01.md
+-rw-r--r--  1 runner runner    1273 Aug 16 20:45 reposcan-2026-08-15-21-05.md
+-rw-r--r--  1 runner runner    1149 Aug 16 20:45 reposcan-2026-08-15-21-36.md
+-rw-r--r--  1 runner runner    1584 Aug 16 20:45 reposcan-2026-08-15-21-38.md
+-rw-r--r--  1 runner runner    1152 Aug 16 20:45 reposcan-2026-08-15-21-55.md
+-rw-r--r--  1 runner runner    1461 Aug 16 20:45 reposcan-2026-08-15-21-59.md
+-rw-r--r--  1 runner runner    1193 Aug 16 20:45 reposcan-2026-08-15-22-19.md
+-rw-r--r--  1 runner runner    2655 Aug 16 20:45 reposcan-2026-08-15-22-33.md
+-rw-r--r--  1 runner runner    1137 Aug 16 20:45 reposcan-2026-08-15-22-44.md
+-rw-r--r--  1 runner runner    1148 Aug 16 20:45 reposcan-2026-08-15-23-00.md
+-rw-r--r--  1 runner runner    1101 Aug 16 20:45 reposcan-2026-08-15-23-03.md
+-rw-r--r--  1 runner runner    1346 Aug 16 20:45 reposcan-2026-08-15-23-31.md
+-rw-r--r--  1 runner runner    1230 Aug 16 20:45 reposcan-2026-08-15-23-53.md
+-rw-r--r--  1 runner runner    1359 Aug 16 20:45 reposcan-2026-08-16-00-38.md
+-rw-r--r--  1 runner runner    1353 Aug 16 20:45 reposcan-2026-08-16-01-50.md
+-rw-r--r--  1 runner runner    1134 Aug 16 20:45 reposcan-2026-08-16-02-13.md
+-rw-r--r--  1 runner runner    1628 Aug 16 20:45 reposcan-2026-08-16-03-09.md
+-rw-r--r--  1 runner runner    1327 Aug 16 20:45 reposcan-2026-08-16-03-18.md
+-rw-r--r--  1 runner runner    1406 Aug 16 20:45 reposcan-2026-08-16-04-02.md
+-rw-r--r--  1 runner runner    1575 Aug 16 20:45 reposcan-2026-08-16-04-05.md
+-rw-r--r--  1 runner runner    1421 Aug 16 20:45 reposcan-2026-08-16-04-52.md
+-rw-r--r--  1 runner runner    1354 Aug 16 20:45 reposcan-2026-08-16-05-20.md
+-rw-r--r--  1 runner runner    1320 Aug 16 20:45 reposcan-2026-08-16-05-35.md
+-rw-r--r--  1 runner runner    1594 Aug 16 20:45 reposcan-2026-08-16-05-50.md
+-rw-r--r--  1 runner runner    1481 Aug 16 20:45 reposcan-2026-08-16-06-04.md
+-rw-r--r--  1 runner runner    1533 Aug 16 20:45 reposcan-2026-08-16-06-18.md
+-rw-r--r--  1 runner runner    1403 Aug 16 20:45 reposcan-2026-08-16-07-02.md
+-rw-r--r--  1 runner runner    1234 Aug 16 20:45 reposcan-2026-08-16-07-12.md
+-rw-r--r--  1 runner runner    1234 Aug 16 20:45 reposcan-2026-08-16-07-45.md
+-rw-r--r--  1 runner runner    1425 Aug 16 20:45 reposcan-2026-08-16-07-47.md
+-rw-r--r--  1 runner runner    1322 Aug 16 20:45 reposcan-2026-08-16-08-05.md
+-rw-r--r--  1 runner runner    1312 Aug 16 20:45 reposcan-2026-08-16-08-39.md
+-rw-r--r--  1 runner runner    1239 Aug 16 20:45 reposcan-2026-08-16-08-45.md
+-rw-r--r--  1 runner runner    1692 Aug 16 20:45 reposcan-2026-08-16-09-08.md
+-rw-r--r--  1 runner runner    1210 Aug 16 20:45 reposcan-2026-08-16-09-15.md
+-rw-r--r--  1 runner runner    1082 Aug 16 20:45 reposcan-2026-08-16-09-45.md
+-rw-r--r--  1 runner runner    1409 Aug 16 20:45 reposcan-2026-08-16-09-47.md
+-rw-r--r--  1 runner runner    1319 Aug 16 20:45 reposcan-2026-08-16-10-07.md
+-rw-r--r--  1 runner runner    1530 Aug 16 20:45 reposcan-2026-08-16-10-37.md
+-rw-r--r--  1 runner runner    1134 Aug 16 20:45 reposcan-2026-08-16-10-43.md
+-rw-r--r--  1 runner runner    1306 Aug 16 20:45 reposcan-2026-08-16-11-03.md
+-rw-r--r--  1 runner runner     487 Aug 16 20:45 reposcan-2026-08-16-11-33.md
+-rw-r--r--  1 runner runner    1385 Aug 16 20:45 reposcan-2026-08-16-11-37.md
+-rw-r--r--  1 runner runner    1187 Aug 16 20:45 reposcan-2026-08-16-11-50.md
+-rw-r--r--  1 runner runner    1377 Aug 16 20:45 reposcan-2026-08-16-12-02.md
+-rw-r--r--  1 runner runner    1270 Aug 16 20:45 reposcan-2026-08-16-12-06.md
+-rw-r--r--  1 runner runner    1048 Aug 16 20:45 reposcan-2026-08-16-12-57.md
+-rw-r--r--  1 runner runner    1350 Aug 16 20:45 reposcan-2026-08-16-13-00.md
+-rw-r--r--  1 runner runner    1137 Aug 16 20:45 reposcan-2026-08-16-13-39.md
+-rw-r--r--  1 runner runner    1115 Aug 16 20:45 reposcan-2026-08-16-14-03.md
+-rw-r--r--  1 runner runner    1328 Aug 16 20:45 reposcan-2026-08-16-14-36.md
+-rw-r--r--  1 runner runner    1176 Aug 16 20:45 reposcan-2026-08-16-14-43.md
+-rw-r--r--  1 runner runner    1589 Aug 16 20:45 reposcan-2026-08-16-14-58.md
+-rw-r--r--  1 runner runner    1482 Aug 16 20:45 reposcan-2026-08-16-15-04.md
+-rw-r--r--  1 runner runner    1245 Aug 16 20:45 reposcan-2026-08-16-15-29.md
+-rw-r--r--  1 runner runner    1028 Aug 16 20:45 reposcan-2026-08-16-15-40.md
+-rw-r--r--  1 runner runner    1373 Aug 16 20:45 reposcan-2026-08-16-15-51.md
+-rw-r--r--  1 runner runner    1214 Aug 16 20:45 reposcan-2026-08-16-16-01.md
+-rw-r--r--  1 runner runner    1471 Aug 16 20:45 reposcan-2026-08-16-16-11.md
+-rw-r--r--  1 runner runner    1156 Aug 16 20:45 reposcan-2026-08-16-16-38.md
+-rw-r--r--  1 runner runner    1274 Aug 16 20:45 reposcan-2026-08-16-16-44.md
+-rw-r--r--  1 runner runner    1356 Aug 16 20:45 reposcan-2026-08-16-17-03.md
+-rw-r--r--  1 runner runner    1074 Aug 16 20:45 reposcan-2026-08-16-17-06.md
+-rw-r--r--  1 runner runner    1439 Aug 16 20:45 reposcan-2026-08-16-17-34.md
+-rw-r--r--  1 runner runner    1281 Aug 16 20:45 reposcan-2026-08-16-17-36.md
+-rw-r--r--  1 runner runner    1110 Aug 16 20:45 reposcan-2026-08-16-17-53.md
+-rw-r--r--  1 runner runner    1501 Aug 16 20:45 reposcan-2026-08-16-17-59.md
+-rw-r--r--  1 runner runner    1272 Aug 16 20:45 reposcan-2026-08-16-18-19.md
+-rw-r--r--  1 runner runner    1160 Aug 16 20:45 reposcan-2026-08-16-18-42.md
+-rw-r--r--  1 runner runner    1228 Aug 16 20:45 reposcan-2026-08-16-18-54.md
+-rw-r--r--  1 runner runner    1223 Aug 16 20:45 reposcan-2026-08-16-19-08.md
+-rw-r--r--  1 runner runner    1291 Aug 16 20:45 reposcan-2026-08-16-19-17.md
+-rw-r--r--  1 runner runner    1454 Aug 16 20:45 reposcan-2026-08-16-19-37.md
+-rw-r--r--  1 runner runner    1000 Aug 16 20:45 reposcan-2026-08-16-19-41.md
+-rw-r--r--  1 runner runner    1346 Aug 16 20:45 reposcan-2026-08-16-20-00.md
+-rw-r--r--  1 runner runner    1327 Aug 16 20:45 reposcan-2026-08-16-20-26.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-16-20-34.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-latest.md
+
+/home/runner/work/signageos-hunt/signageos-hunt/reports/:
+total 11760
+drwxr-xr-x  2 runner runner    4096 Aug 16 20:45 .
+drwxr-xr-x 11 runner runner    4096 Aug 16 20:45 ..
+-rw-r--r--  1 runner runner 3124020 Aug 16 20:45 analyst-bigpickle.log
+-rw-r--r--  1 runner runner 5367447 Aug 16 20:45 analyst-laguna.log
+-rw-r--r--  1 runner runner   58104 Aug 16 20:45 analyst-ling3.log
+-rw-r--r--  1 runner runner  330690 Aug 16 20:45 analyst-longcat.log
+-rw-r--r--  1 runner runner 2589511 Aug 16 20:45 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    4573 Aug 16 20:45 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner   11232 Aug 16 20:45 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      47 Aug 16 20:45 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      49 Aug 16 20:45 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner    6710 Aug 16 20:45 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  633457 Aug 16 20:45 hypotheses.md
+-rw-r--r--  1 runner runner   77501 Aug 16 20:45 valid-bugs.md
+[0m
+[0m$ [0mcat /home/runner/work/signageos-hunt/signageos-hunt/analyst-out.txt
+[0m
+> build · laguna-s-2.1-free
+[0m
+[0m$ [0mls -la /home/runner/work/signageos-hunt/signageos-hunt/
+total 728
+drwxr-xr-x 11 runner runner   4096 Aug 16 20:45 .
+drwxr-xr-x  3 runner runner   4096 Aug 16 20:45 ..
+drwxr-xr-x  7 runner runner   4096 Aug 16 20:45 .git
+drwxr-xr-x  3 runner runner   4096 Aug 16 20:45 .github
+-rw-r--r--  1 runner runner    944 Aug 16 20:45 README.md
+-rw-r--r--  1 runner runner     39 Aug 16 20:45 analyst-out.txt
+-rw-r--r--  1 runner runner 255003 Aug 16 20:45 analyst-prompt.txt
+-rw-r--r--  1 runner runner 251014 Aug 16 20:45 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Aug 16 20:45 inventory
+drwxr-xr-x  2 runner runner   4096 Aug 16 20:45 knowledge
+drwxr-xr-x  2 runner runner  28672 Aug 16 20:45 leads
+-rw-r--r--  1 runner runner 117379 Aug 16 20:45 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Aug 16 20:45 reports
+drwxr-xr-x  3 runner runner   4096 Aug 16 20:45 reposcan-raw
+-rw-r--r--  1 runner runner   3086 Aug 16 20:45 scope.yml
+drwxr-xr-x  2 runner runner   4096 Aug 16 20:45 scripts
+-rw-r--r--  1 runner runner     33 Aug 16 20:45 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Aug 16 20:45 state_laguna.json
+-rw-r--r--  1 runner runner     33 Aug 16 20:45 state_ling3.json
+-rw-r--r--  1 runner runner     33 Aug 16 20:45 state_longcat.json
+-rw-r--r--  1 runner runner     33 Aug 16 20:45 state_nemotron3.json
+drwxr-xr-x  2 runner runner  16384 Aug 16 20:45 triage
+[0m
+[0m$ [0mcat /home/runner/work/signageos-hunt/signageos-hunt/.opencode/state.md 2>/dev/null || ls /home/runner/work/signageos-hunt/signageos-hunt/.opencode/ 2>/dev/null || echo "no .opencode dir"
+no .opencode dir
+[0m
+I'll start by exploring the repository structure to understand my environment, then follow the analysis steps.
+[0m$ [0mcat /home/runner/work/signageos-hunt/signageos-hunt/state_nemotron3.json 2>/dev/null; echo "---"; cat /home/runner/work/signageos-hunt/signageos-hunt/state_bigpickle.json 2>/dev/null; echo "---"; cat /home/runner/work/signageos-hunt/signageos-hunt/state_laguna.json 2>/dev/null
+{"phase": "POC", "target": "api"}---
+{"phase": "POC", "target": "box"}---
+{"phase": "POC", "target": "box"}
+[0m
+[0m$ [0mls -la /home/runner/work/signageos-hunt/signageos-hunt/reports/ /home/runner/work/signageos-hunt/signageos-hunt/leads/ /home/runner/work/signageos-hunt/signageos-hunt/inventory/
+/home/runner/work/signageos-hunt/signageos-hunt/inventory/:
+total 80
+drwxr-xr-x  2 runner runner  4096 Aug 16 20:45 .
+drwxr-xr-x 11 runner runner  4096 Aug 16 20:45 ..
+-rw-r--r--  1 runner runner 69928 Aug 16 20:45 signageos.md
+
+/home/runner/work/signageos-hunt/signageos-hunt/leads/:
+total 5180
+drwxr-xr-x  2 runner runner   28672 Aug 16 20:45 .
+drwxr-xr-x 11 runner runner    4096 Aug 16 20:45 ..
+-rw-r--r--  1 runner runner  697111 Aug 16 20:45 lead-bigpickle.md
+-rw-r--r--  1 runner runner 1129585 Aug 16 20:45 lead-laguna.md
+-rw-r--r--  1 runner runner   12693 Aug 16 20:45 lead-ling3.md
+-rw-r--r--  1 runner runner   76415 Aug 16 20:45 lead-longcat.md
+-rw-r--r--  1 runner runner 1419778 Aug 16 20:45 lead-nemotron3.md
+-rw-r--r--  1 runner runner    1412 Aug 16 20:45 reposcan-2026-08-07-18-57.md
+-rw-r--r--  1 runner runner    1523 Aug 16 20:45 reposcan-2026-08-07-19-27.md
+-rw-r--r--  1 runner runner    1889 Aug 16 20:45 reposcan-2026-08-07-19-37.md
+-rw-r--r--  1 runner runner    1180 Aug 16 20:45 reposcan-2026-08-07-20-04.md
+-rw-r--r--  1 runner runner    1125 Aug 16 20:45 reposcan-2026-08-07-20-16.md
+-rw-r--r--  1 runner runner    1229 Aug 16 20:45 reposcan-2026-08-07-21-07.md
+-rw-r--r--  1 runner runner    1623 Aug 16 20:45 reposcan-2026-08-07-21-35.md
+-rw-r--r--  1 runner runner    1368 Aug 16 20:45 reposcan-2026-08-07-22-03.md
+-rw-r--r--  1 runner runner    1472 Aug 16 20:45 reposcan-2026-08-07-22-08.md
+-rw-r--r--  1 runner runner    1595 Aug 16 20:45 reposcan-2026-08-07-22-52.md
+-rw-r--r--  1 runner runner    1601 Aug 16 20:45 reposcan-2026-08-07-23-01.md
+-rw-r--r--  1 runner runner    1151 Aug 16 20:45 reposcan-2026-08-07-23-29.md
+-rw-r--r--  1 runner runner    1501 Aug 16 20:45 reposcan-2026-08-07-23-55.md
+-rw-r--r--  1 runner runner    1256 Aug 16 20:45 reposcan-2026-08-08-00-43.md
+-rw-r--r--  1 runner runner    1236 Aug 16 20:45 reposcan-2026-08-08-00-51.md
+-rw-r--r--  1 runner runner    1533 Aug 16 20:45 reposcan-2026-08-08-02-39.md
+-rw-r--r--  1 runner runner    1793 Aug 16 20:45 reposcan-2026-08-08-02-51.md
+-rw-r--r--  1 runner runner    1439 Aug 16 20:45 reposcan-2026-08-08-03-57.md
+-rw-r--r--  1 runner runner    1219 Aug 16 20:45 reposcan-2026-08-08-04-02.md
+-rw-r--r--  1 runner runner    1439 Aug 16 20:45 reposcan-2026-08-08-04-48.md
+-rw-r--r--  1 runner runner    1368 Aug 16 20:45 reposcan-2026-08-08-05-13.md
+-rw-r--r--  1 runner runner    1255 Aug 16 20:45 reposcan-2026-08-08-05-32.md
+-rw-r--r--  1 runner runner    1209 Aug 16 20:45 reposcan-2026-08-08-06-03.md
+-rw-r--r--  1 runner runner    1200 Aug 16 20:45 reposcan-2026-08-08-06-09.md
+-rw-r--r--  1 runner runner    1178 Aug 16 20:45 reposcan-2026-08-08-07-04.md
+-rw-r--r--  1 runner runner    1129 Aug 16 20:45 reposcan-2026-08-08-07-11.md
+-rw-r--r--  1 runner runner    1624 Aug 16 20:45 reposcan-2026-08-08-07-27.md
+-rw-r--r--  1 runner runner    1538 Aug 16 20:45 reposcan-2026-08-08-07-59.md
+-rw-r--r--  1 runner runner    1098 Aug 16 20:45 reposcan-2026-08-08-08-06.md
+-rw-r--r--  1 runner runner    1263 Aug 16 20:45 reposcan-2026-08-08-08-32.md
+-rw-r--r--  1 runner runner    1419 Aug 16 20:45 reposcan-2026-08-08-09-08.md
+-rw-r--r--  1 runner runner    1308 Aug 16 20:45 reposcan-2026-08-08-09-14.md
+-rw-r--r--  1 runner runner    2580 Aug 16 20:45 reposcan-2026-08-08-09-56.md
+-rw-r--r--  1 runner runner    1313 Aug 16 20:45 reposcan-2026-08-08-10-01.md
+-rw-r--r--  1 runner runner    1219 Aug 16 20:45 reposcan-2026-08-08-10-29.md
+-rw-r--r--  1 runner runner    1110 Aug 16 20:45 reposcan-2026-08-08-10-35.md
+-rw-r--r--  1 runner runner    1397 Aug 16 20:45 reposcan-2026-08-08-10-59.md
+-rw-r--r--  1 runner runner    1055 Aug 16 20:45 reposcan-2026-08-08-11-19.md
+-rw-r--r--  1 runner runner    1104 Aug 16 20:45 reposcan-2026-08-08-11-23.md
+-rw-r--r--  1 runner runner    1339 Aug 16 20:45 reposcan-2026-08-08-11-48.md
+-rw-r--r--  1 runner runner    1570 Aug 16 20:45 reposcan-2026-08-08-11-52.md
+-rw-r--r--  1 runner runner    1367 Aug 16 20:45 reposcan-2026-08-08-12-05.md
+-rw-r--r--  1 runner runner    1471 Aug 16 20:45 reposcan-2026-08-08-12-22.md
+-rw-r--r--  1 runner runner    1600 Aug 16 20:45 reposcan-2026-08-08-13-09.md
+-rw-r--r--  1 runner runner    1869 Aug 16 20:45 reposcan-2026-08-08-13-25.md
+-rw-r--r--  1 runner runner    1625 Aug 16 20:45 reposcan-2026-08-08-13-55.md
+-rw-r--r--  1 runner runner    1478 Aug 16 20:45 reposcan-2026-08-08-14-04.md
+-rw-r--r--  1 runner runner    1390 Aug 16 20:45 reposcan-2026-08-08-14-26.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-08-14-56.md
+-rw-r--r--  1 runner runner     596 Aug 16 20:45 reposcan-2026-08-08-14-58.md
+-rw-r--r--  1 runner runner    1248 Aug 16 20:45 reposcan-2026-08-08-15-20.md
+-rw-r--r--  1 runner runner    1354 Aug 16 20:45 reposcan-2026-08-08-15-50.md
+-rw-r--r--  1 runner runner    1289 Aug 16 20:45 reposcan-2026-08-08-15-54.md
+-rw-r--r--  1 runner runner    1011 Aug 16 20:45 reposcan-2026-08-08-16-55.md
+-rw-r--r--  1 runner runner    1233 Aug 16 20:45 reposcan-2026-08-08-17-05.md
+-rw-r--r--  1 runner runner    1252 Aug 16 20:45 reposcan-2026-08-08-17-38.md
+-rw-r--r--  1 runner runner    2887 Aug 16 20:45 reposcan-2026-08-08-17-44.md
+-rw-r--r--  1 runner runner    1285 Aug 16 20:45 reposcan-2026-08-08-18-15.md
+-rw-r--r--  1 runner runner    1452 Aug 16 20:45 reposcan-2026-08-08-19-04.md
+-rw-r--r--  1 runner runner    1936 Aug 16 20:45 reposcan-2026-08-08-19-43.md
+-rw-r--r--  1 runner runner    1559 Aug 16 20:45 reposcan-2026-08-08-19-46.md
+-rw-r--r--  1 runner runner    1653 Aug 16 20:45 reposcan-2026-08-08-20-11.md
+-rw-r--r--  1 runner runner    1252 Aug 16 20:45 reposcan-2026-08-08-20-39.md
+-rw-r--r--  1 runner runner    1101 Aug 16 20:45 reposcan-2026-08-08-20-46.md
+-rw-r--r--  1 runner runner    1152 Aug 16 20:45 reposcan-2026-08-08-21-13.md
+-rw-r--r--  1 runner runner    1351 Aug 16 20:45 reposcan-2026-08-08-21-17.md
+-rw-r--r--  1 runner runner    1026 Aug 16 20:45 reposcan-2026-08-08-21-50.md
+-rw-r--r--  1 runner runner    1142 Aug 16 20:45 reposcan-2026-08-08-21-53.md
+-rw-r--r--  1 runner runner    1356 Aug 16 20:45 reposcan-2026-08-08-22-18.md
+-rw-r--r--  1 runner runner    1547 Aug 16 20:45 reposcan-2026-08-08-22-39.md
+-rw-r--r--  1 runner runner    1322 Aug 16 20:45 reposcan-2026-08-08-22-56.md
+-rw-r--r--  1 runner runner    1648 Aug 16 20:45 reposcan-2026-08-08-23-12.md
+-rw-r--r--  1 runner runner    1354 Aug 16 20:45 reposcan-2026-08-08-23-24.md
+-rw-r--r--  1 runner runner    1312 Aug 16 20:45 reposcan-2026-08-08-23-49.md
+-rw-r--r--  1 runner runner    1213 Aug 16 20:45 reposcan-2026-08-08-23-54.md
+-rw-r--r--  1 runner runner    1095 Aug 16 20:45 reposcan-2026-08-09-01-08.md
+-rw-r--r--  1 runner runner    1085 Aug 16 20:45 reposcan-2026-08-09-02-19.md
+-rw-r--r--  1 runner runner    1612 Aug 16 20:45 reposcan-2026-08-09-03-09.md
+-rw-r--r--  1 runner runner    1127 Aug 16 20:45 reposcan-2026-08-09-04-01.md
+-rw-r--r--  1 runner runner    1328 Aug 16 20:45 reposcan-2026-08-09-04-37.md
+-rw-r--r--  1 runner runner    1400 Aug 16 20:45 reposcan-2026-08-09-05-22.md
+-rw-r--r--  1 runner runner    1295 Aug 16 20:45 reposcan-2026-08-09-05-36.md
+-rw-r--r--  1 runner runner    1528 Aug 16 20:45 reposcan-2026-08-09-06-11.md
+-rw-r--r--  1 runner runner    1241 Aug 16 20:45 reposcan-2026-08-09-06-28.md
+-rw-r--r--  1 runner runner    1176 Aug 16 20:45 reposcan-2026-08-09-07-19.md
+-rw-r--r--  1 runner runner    1395 Aug 16 20:45 reposcan-2026-08-09-07-36.md
+-rw-r--r--  1 runner runner    1500 Aug 16 20:45 reposcan-2026-08-09-08-10.md
+-rw-r--r--  1 runner runner    1465 Aug 16 20:45 reposcan-2026-08-09-08-23.md
+-rw-r--r--  1 runner runner    1295 Aug 16 20:45 reposcan-2026-08-09-09-06.md
+-rw-r--r--  1 runner runner    1110 Aug 16 20:45 reposcan-2026-08-09-09-14.md
+-rw-r--r--  1 runner runner    1172 Aug 16 20:45 reposcan-2026-08-09-10-00.md
+-rw-r--r--  1 runner runner    1691 Aug 16 20:45 reposcan-2026-08-09-10-44.md
+-rw-r--r--  1 runner runner    1369 Aug 16 20:45 reposcan-2026-08-09-10-48.md
+-rw-r--r--  1 runner runner    1833 Aug 16 20:45 reposcan-2026-08-09-11-16.md
+-rw-r--r--  1 runner runner    1156 Aug 16 20:45 reposcan-2026-08-09-11-37.md
+-rw-r--r--  1 runner runner    1662 Aug 16 20:45 reposcan-2026-08-09-11-51.md
+-rw-r--r--  1 runner runner    1554 Aug 16 20:45 reposcan-2026-08-09-12-17.md
+-rw-r--r--  1 runner runner    1491 Aug 16 20:45 reposcan-2026-08-09-12-22.md
+-rw-r--r--  1 runner runner    1384 Aug 16 20:45 reposcan-2026-08-09-13-34.md
+-rw-r--r--  1 runner runner    1182 Aug 16 20:45 reposcan-2026-08-09-14-13.md
+-rw-r--r--  1 runner runner    1599 Aug 16 20:45 reposcan-2026-08-09-14-21.md
+-rw-r--r--  1 runner runner    2341 Aug 16 20:45 reposcan-2026-08-09-14-56.md
+-rw-r--r--  1 runner runner    1111 Aug 16 20:45 reposcan-2026-08-09-15-04.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-09-15-31.md
+-rw-r--r--  1 runner runner    1335 Aug 16 20:45 reposcan-2026-08-09-15-49.md
+-rw-r--r--  1 runner runner    1454 Aug 16 20:45 reposcan-2026-08-09-16-05.md
+-rw-r--r--  1 runner runner    1578 Aug 16 20:45 reposcan-2026-08-09-16-45.md
+-rw-r--r--  1 runner runner    1665 Aug 16 20:45 reposcan-2026-08-09-16-54.md
+-rw-r--r--  1 runner runner    1235 Aug 16 20:45 reposcan-2026-08-09-17-18.md
+-rw-r--r--  1 runner runner    1710 Aug 16 20:45 reposcan-2026-08-09-17-23.md
+-rw-r--r--  1 runner runner     726 Aug 16 20:45 reposcan-2026-08-09-17-57.md
+-rw-r--r--  1 runner runner    1561 Aug 16 20:45 reposcan-2026-08-09-18-01.md
+-rw-r--r--  1 runner runner    1491 Aug 16 20:45 reposcan-2026-08-09-18-39.md
+-rw-r--r--  1 runner runner    1432 Aug 16 20:45 reposcan-2026-08-09-19-05.md
+-rw-r--r--  1 runner runner    1325 Aug 16 20:45 reposcan-2026-08-09-19-23.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-09-19-51.md
+-rw-r--r--  1 runner runner    1566 Aug 16 20:45 reposcan-2026-08-09-19-57.md
+-rw-r--r--  1 runner runner    1575 Aug 16 20:45 reposcan-2026-08-09-20-33.md
+-rw-r--r--  1 runner runner    1518 Aug 16 20:45 reposcan-2026-08-09-20-43.md
+-rw-r--r--  1 runner runner    1225 Aug 16 20:45 reposcan-2026-08-09-21-10.md
+-rw-r--r--  1 runner runner    1962 Aug 16 20:45 reposcan-2026-08-09-21-17.md
+-rw-r--r--  1 runner runner    1199 Aug 16 20:45 reposcan-2026-08-09-21-51.md
+-rw-r--r--  1 runner runner    1264 Aug 16 20:45 reposcan-2026-08-09-22-00.md
+-rw-r--r--  1 runner runner    1465 Aug 16 20:45 reposcan-2026-08-09-22-16.md
+-rw-r--r--  1 runner runner    1139 Aug 16 20:45 reposcan-2026-08-09-22-45.md
+-rw-r--r--  1 runner runner    2477 Aug 16 20:45 reposcan-2026-08-09-22-56.md
+-rw-r--r--  1 runner runner    1369 Aug 16 20:45 reposcan-2026-08-09-23-35.md
+-rw-r--r--  1 runner runner    1548 Aug 16 20:45 reposcan-2026-08-09-23-39.md
+-rw-r--r--  1 runner runner    1262 Aug 16 20:45 reposcan-2026-08-10-00-05.md
+-rw-r--r--  1 runner runner    1281 Aug 16 20:45 reposcan-2026-08-10-00-37.md
+-rw-r--r--  1 runner runner    1204 Aug 16 20:45 reposcan-2026-08-10-02-33.md
+-rw-r--r--  1 runner runner     961 Aug 16 20:45 reposcan-2026-08-10-03-02.md
+-rw-r--r--  1 runner runner    1664 Aug 16 20:45 reposcan-2026-08-10-04-21.md
+-rw-r--r--  1 runner runner    1297 Aug 16 20:45 reposcan-2026-08-10-04-57.md
+-rw-r--r--  1 runner runner    1057 Aug 16 20:45 reposcan-2026-08-10-05-54.md
+-rw-r--r--  1 runner runner    1088 Aug 16 20:45 reposcan-2026-08-10-06-19.md
+-rw-r--r--  1 runner runner    1193 Aug 16 20:45 reposcan-2026-08-10-07-13.md
+-rw-r--r--  1 runner runner    1418 Aug 16 20:45 reposcan-2026-08-10-08-16.md
+-rw-r--r--  1 runner runner    1356 Aug 16 20:45 reposcan-2026-08-10-08-58.md
+-rw-r--r--  1 runner runner     943 Aug 16 20:45 reposcan-2026-08-10-09-53.md
+-rw-r--r--  1 runner runner    1268 Aug 16 20:45 reposcan-2026-08-10-10-13.md
+-rw-r--r--  1 runner runner    1167 Aug 16 20:45 reposcan-2026-08-10-11-15.md
+-rw-r--r--  1 runner runner    1923 Aug 16 20:45 reposcan-2026-08-10-11-35.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-10-12-04.md
+-rw-r--r--  1 runner runner    1799 Aug 16 20:45 reposcan-2026-08-10-12-20.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-10-13-48.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-10-13-52.md
+-rw-r--r--  1 runner runner    1541 Aug 16 20:45 reposcan-2026-08-10-14-48.md
+-rw-r--r--  1 runner runner    1739 Aug 16 20:45 reposcan-2026-08-10-15-08.md
+-rw-r--r--  1 runner runner    1495 Aug 16 20:45 reposcan-2026-08-10-15-48.md
+-rw-r--r--  1 runner runner    1233 Aug 16 20:45 reposcan-2026-08-10-16-15.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-10-16-40.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-10-17-13.md
+-rw-r--r--  1 runner runner     395 Aug 16 20:45 reposcan-2026-08-10-17-44.md
+-rw-r--r--  1 runner runner    1288 Aug 16 20:45 reposcan-2026-08-10-18-10.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-10-18-35.md
+-rw-r--r--  1 runner runner    1237 Aug 16 20:45 reposcan-2026-08-10-19-21.md
+-rw-r--r--  1 runner runner    1201 Aug 16 20:45 reposcan-2026-08-10-19-41.md
+-rw-r--r--  1 runner runner    1281 Aug 16 20:45 reposcan-2026-08-10-20-11.md
+-rw-r--r--  1 runner runner    1532 Aug 16 20:45 reposcan-2026-08-10-20-25.md
+-rw-r--r--  1 runner runner    1225 Aug 16 20:45 reposcan-2026-08-10-21-06.md
+-rw-r--r--  1 runner runner    1176 Aug 16 20:45 reposcan-2026-08-10-21-17.md
+-rw-r--r--  1 runner runner    1240 Aug 16 20:45 reposcan-2026-08-10-22-02.md
+-rw-r--r--  1 runner runner    1588 Aug 16 20:45 reposcan-2026-08-10-22-07.md
+-rw-r--r--  1 runner runner    1417 Aug 16 20:45 reposcan-2026-08-10-23-00.md
+-rw-r--r--  1 runner runner    1508 Aug 16 20:45 reposcan-2026-08-10-23-28.md
+-rw-r--r--  1 runner runner    1332 Aug 16 20:45 reposcan-2026-08-10-23-48.md
+-rw-r--r--  1 runner runner    1359 Aug 16 20:45 reposcan-2026-08-11-00-06.md
+-rw-r--r--  1 runner runner     559 Aug 16 20:45 reposcan-2026-08-11-02-18.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-11-02-24.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-11-04-33.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-11-05-51.md
+-rw-r--r--  1 runner runner    1460 Aug 16 20:45 reposcan-2026-08-11-06-13.md
+-rw-r--r--  1 runner runner    1406 Aug 16 20:45 reposcan-2026-08-11-06-32.md
+-rw-r--r--  1 runner runner    1689 Aug 16 20:45 reposcan-2026-08-11-07-41.md
+-rw-r--r--  1 runner runner    1233 Aug 16 20:45 reposcan-2026-08-11-07-58.md
+-rw-r--r--  1 runner runner    1308 Aug 16 20:45 reposcan-2026-08-11-08-41.md
+-rw-r--r--  1 runner runner    1236 Aug 16 20:45 reposcan-2026-08-11-09-11.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-11-09-51.md
+-rw-r--r--  1 runner runner    2272 Aug 16 20:45 reposcan-2026-08-11-10-15.md
+-rw-r--r--  1 runner runner    1368 Aug 16 20:45 reposcan-2026-08-11-10-45.md
+-rw-r--r--  1 runner runner    1434 Aug 16 20:45 reposcan-2026-08-11-11-10.md
+-rw-r--r--  1 runner runner    1093 Aug 16 20:45 reposcan-2026-08-11-11-38.md
+-rw-r--r--  1 runner runner    1418 Aug 16 20:45 reposcan-2026-08-11-12-04.md
+-rw-r--r--  1 runner runner    1272 Aug 16 20:45 reposcan-2026-08-11-12-30.md
+-rw-r--r--  1 runner runner    1055 Aug 16 20:45 reposcan-2026-08-11-13-40.md
+-rw-r--r--  1 runner runner    1436 Aug 16 20:45 reposcan-2026-08-11-14-13.md
+-rw-r--r--  1 runner runner    1718 Aug 16 20:45 reposcan-2026-08-11-14-47.md
+-rw-r--r--  1 runner runner    1704 Aug 16 20:45 reposcan-2026-08-11-15-07.md
+-rw-r--r--  1 runner runner    1267 Aug 16 20:45 reposcan-2026-08-11-16-08.md
+-rw-r--r--  1 runner runner    1300 Aug 16 20:45 reposcan-2026-08-11-16-14.md
+-rw-r--r--  1 runner runner    1140 Aug 16 20:45 reposcan-2026-08-11-17-16.md
+-rw-r--r--  1 runner runner    1251 Aug 16 20:45 reposcan-2026-08-11-17-20.md
+-rw-r--r--  1 runner runner    1684 Aug 16 20:45 reposcan-2026-08-11-18-13.md
+-rw-r--r--  1 runner runner    1322 Aug 16 20:45 reposcan-2026-08-11-18-18.md
+-rw-r--r--  1 runner runner    1232 Aug 16 20:45 reposcan-2026-08-11-19-24.md
+-rw-r--r--  1 runner runner    1464 Aug 16 20:45 reposcan-2026-08-11-19-29.md
+-rw-r--r--  1 runner runner    1663 Aug 16 20:45 reposcan-2026-08-11-20-13.md
+-rw-r--r--  1 runner runner    1082 Aug 16 20:45 reposcan-2026-08-11-20-21.md
+-rw-r--r--  1 runner runner    1340 Aug 16 20:45 reposcan-2026-08-11-21-08.md
+-rw-r--r--  1 runner runner    1817 Aug 16 20:45 reposcan-2026-08-11-21-26.md
+-rw-r--r--  1 runner runner    1475 Aug 16 20:45 reposcan-2026-08-11-22-07.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-11-22-21.md
+-rw-r--r--  1 runner runner    1688 Aug 16 20:45 reposcan-2026-08-11-23-01.md
+-rw-r--r--  1 runner runner    1325 Aug 16 20:45 reposcan-2026-08-11-23-22.md
+-rw-r--r--  1 runner runner    1494 Aug 16 20:45 reposcan-2026-08-11-23-52.md
+-rw-r--r--  1 runner runner    1407 Aug 16 20:45 reposcan-2026-08-12-00-10.md
+-rw-r--r--  1 runner runner    1353 Aug 16 20:45 reposcan-2026-08-12-00-54.md
+-rw-r--r--  1 runner runner    1242 Aug 16 20:45 reposcan-2026-08-12-02-48.md
+-rw-r--r--  1 runner runner    1284 Aug 16 20:45 reposcan-2026-08-12-03-19.md
+-rw-r--r--  1 runner runner    1379 Aug 16 20:45 reposcan-2026-08-12-04-55.md
+-rw-r--r--  1 runner runner    1585 Aug 16 20:45 reposcan-2026-08-12-05-13.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-12-06-22.md
+-rw-r--r--  1 runner runner    1342 Aug 16 20:45 reposcan-2026-08-12-06-49.md
+-rw-r--r--  1 runner runner    1296 Aug 16 20:45 reposcan-2026-08-12-08-02.md
+-rw-r--r--  1 runner runner    1227 Aug 16 20:45 reposcan-2026-08-12-08-11.md
+-rw-r--r--  1 runner runner    1890 Aug 16 20:45 reposcan-2026-08-12-09-31.md
+-rw-r--r--  1 runner runner    1212 Aug 16 20:45 reposcan-2026-08-12-09-35.md
+-rw-r--r--  1 runner runner    1277 Aug 16 20:45 reposcan-2026-08-12-10-47.md
+-rw-r--r--  1 runner runner    1376 Aug 16 20:45 reposcan-2026-08-12-10-59.md
+-rw-r--r--  1 runner runner    1397 Aug 16 20:45 reposcan-2026-08-12-11-32.md
+-rw-r--r--  1 runner runner    1415 Aug 16 20:45 reposcan-2026-08-12-11-36.md
+-rw-r--r--  1 runner runner    1138 Aug 16 20:45 reposcan-2026-08-12-12-36.md
+-rw-r--r--  1 runner runner    1383 Aug 16 20:45 reposcan-2026-08-12-12-39.md
+-rw-r--r--  1 runner runner    1330 Aug 16 20:45 reposcan-2026-08-12-14-16.md
+-rw-r--r--  1 runner runner    1268 Aug 16 20:45 reposcan-2026-08-12-15-19.md
+-rw-r--r--  1 runner runner    1462 Aug 16 20:45 reposcan-2026-08-12-16-22.md
+-rw-r--r--  1 runner runner    1254 Aug 16 20:45 reposcan-2026-08-12-16-35.md
+-rw-r--r--  1 runner runner    1851 Aug 16 20:45 reposcan-2026-08-12-17-31.md
+-rw-r--r--  1 runner runner    1536 Aug 16 20:45 reposcan-2026-08-12-17-37.md
+-rw-r--r--  1 runner runner    1178 Aug 16 20:45 reposcan-2026-08-12-18-20.md
+-rw-r--r--  1 runner runner    1297 Aug 16 20:45 reposcan-2026-08-12-18-40.md
+-rw-r--r--  1 runner runner    1267 Aug 16 20:45 reposcan-2026-08-12-19-52.md
+-rw-r--r--  1 runner runner    1324 Aug 16 20:45 reposcan-2026-08-12-20-15.md
+-rw-r--r--  1 runner runner    1373 Aug 16 20:45 reposcan-2026-08-12-20-55.md
+-rw-r--r--  1 runner runner    1323 Aug 16 20:45 reposcan-2026-08-12-21-06.md
+-rw-r--r--  1 runner runner    1441 Aug 16 20:45 reposcan-2026-08-12-21-55.md
+-rw-r--r--  1 runner runner    1440 Aug 16 20:45 reposcan-2026-08-12-22-04.md
+-rw-r--r--  1 runner runner    1314 Aug 16 20:45 reposcan-2026-08-12-22-52.md
+-rw-r--r--  1 runner runner    1089 Aug 16 20:45 reposcan-2026-08-12-22-57.md
+-rw-r--r--  1 runner runner    1217 Aug 16 20:45 reposcan-2026-08-12-23-47.md
+-rw-r--r--  1 runner runner    1027 Aug 16 20:45 reposcan-2026-08-12-23-55.md
+-rw-r--r--  1 runner runner    1180 Aug 16 20:45 reposcan-2026-08-13-00-46.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-13-02-46.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-13-03-40.md
+-rw-r--r--  1 runner runner    1274 Aug 16 20:45 reposcan-2026-08-13-04-33.md
+-rw-r--r--  1 runner runner    2457 Aug 16 20:45 reposcan-2026-08-13-05-18.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-13-06-18.md
+-rw-r--r--  1 runner runner     487 Aug 16 20:45 reposcan-2026-08-13-06-59.md
+-rw-r--r--  1 runner runner    1246 Aug 16 20:45 reposcan-2026-08-13-08-08.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-13-08-39.md
+-rw-r--r--  1 runner runner    1376 Aug 16 20:45 reposcan-2026-08-13-09-23.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-13-09-51.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-13-10-55.md
+-rw-r--r--  1 runner runner    1840 Aug 16 20:45 reposcan-2026-08-13-11-44.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-13-11-59.md
+-rw-r--r--  1 runner runner     593 Aug 16 20:45 reposcan-2026-08-13-12-40.md
+-rw-r--r--  1 runner runner    1284 Aug 16 20:45 reposcan-2026-08-13-14-14.md
+-rw-r--r--  1 runner runner     423 Aug 16 20:45 reposcan-2026-08-13-15-19.md
+-rw-r--r--  1 runner runner    1520 Aug 16 20:45 reposcan-2026-08-13-15-26.md
+-rw-r--r--  1 runner runner    1518 Aug 16 20:45 reposcan-2026-08-13-16-25.md
+-rw-r--r--  1 runner runner    2101 Aug 16 20:45 reposcan-2026-08-13-16-31.md
+-rw-r--r--  1 runner runner    1063 Aug 16 20:45 reposcan-2026-08-13-17-22.md
+-rw-r--r--  1 runner runner    1334 Aug 16 20:45 reposcan-2026-08-13-17-39.md
+-rw-r--r--  1 runner runner    1551 Aug 16 20:45 reposcan-2026-08-13-18-30.md
+-rw-r--r--  1 runner runner    1224 Aug 16 20:45 reposcan-2026-08-13-18-49.md
+-rw-r--r--  1 runner runner     423 Aug 16 20:45 reposcan-2026-08-13-19-39.md
+-rw-r--r--  1 runner runner    1160 Aug 16 20:45 reposcan-2026-08-13-19-47.md
+-rw-r--r--  1 runner runner    1305 Aug 16 20:45 reposcan-2026-08-13-20-09.md
+-rw-r--r--  1 runner runner    1309 Aug 16 20:45 reposcan-2026-08-13-20-54.md
+-rw-r--r--  1 runner runner    1147 Aug 16 20:45 reposcan-2026-08-13-21-07.md
+-rw-r--r--  1 runner runner    1350 Aug 16 20:45 reposcan-2026-08-13-21-55.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-13-22-00.md
+-rw-r--r--  1 runner runner    1236 Aug 16 20:45 reposcan-2026-08-13-22-58.md
+-rw-r--r--  1 runner runner    1195 Aug 16 20:45 reposcan-2026-08-13-23-41.md
+-rw-r--r--  1 runner runner    1543 Aug 16 20:45 reposcan-2026-08-13-23-52.md
+-rw-r--r--  1 runner runner    1046 Aug 16 20:45 reposcan-2026-08-14-00-46.md
+-rw-r--r--  1 runner runner    1084 Aug 16 20:45 reposcan-2026-08-14-02-32.md
+-rw-r--r--  1 runner runner    1249 Aug 16 20:45 reposcan-2026-08-14-03-18.md
+-rw-r--r--  1 runner runner    1464 Aug 16 20:45 reposcan-2026-08-14-04-31.md
+-rw-r--r--  1 runner runner    1182 Aug 16 20:45 reposcan-2026-08-14-05-16.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-14-06-06.md
+-rw-r--r--  1 runner runner    1171 Aug 16 20:45 reposcan-2026-08-14-06-46.md
+-rw-r--r--  1 runner runner    1162 Aug 16 20:45 reposcan-2026-08-14-07-53.md
+-rw-r--r--  1 runner runner    3562 Aug 16 20:45 reposcan-2026-08-14-08-07.md
+-rw-r--r--  1 runner runner    1204 Aug 16 20:45 reposcan-2026-08-14-09-15.md
+-rw-r--r--  1 runner runner    1699 Aug 16 20:45 reposcan-2026-08-14-09-22.md
+-rw-r--r--  1 runner runner    1523 Aug 16 20:45 reposcan-2026-08-14-10-31.md
+-rw-r--r--  1 runner runner    1194 Aug 16 20:45 reposcan-2026-08-14-10-32.md
+-rw-r--r--  1 runner runner    1292 Aug 16 20:45 reposcan-2026-08-14-11-23.md
+-rw-r--r--  1 runner runner    1411 Aug 16 20:45 reposcan-2026-08-14-11-25.md
+-rw-r--r--  1 runner runner    1089 Aug 16 20:45 reposcan-2026-08-14-12-11.md
+-rw-r--r--  1 runner runner    1436 Aug 16 20:45 reposcan-2026-08-14-12-15.md
+-rw-r--r--  1 runner runner    1243 Aug 16 20:45 reposcan-2026-08-14-13-47.md
+-rw-r--r--  1 runner runner    1487 Aug 16 20:45 reposcan-2026-08-14-13-49.md
+-rw-r--r--  1 runner runner    1322 Aug 16 20:45 reposcan-2026-08-14-14-46.md
+-rw-r--r--  1 runner runner    1785 Aug 16 20:45 reposcan-2026-08-14-15-00.md
+-rw-r--r--  1 runner runner    1397 Aug 16 20:45 reposcan-2026-08-14-15-37.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-14-16-02.md
+-rw-r--r--  1 runner runner    1517 Aug 16 20:45 reposcan-2026-08-14-16-31.md
+-rw-r--r--  1 runner runner    1704 Aug 16 20:45 reposcan-2026-08-14-17-14.md
+-rw-r--r--  1 runner runner    1196 Aug 16 20:45 reposcan-2026-08-14-17-34.md
+-rw-r--r--  1 runner runner    1622 Aug 16 20:45 reposcan-2026-08-14-18-11.md
+-rw-r--r--  1 runner runner    1304 Aug 16 20:45 reposcan-2026-08-14-18-33.md
+-rw-r--r--  1 runner runner    1450 Aug 16 20:45 reposcan-2026-08-14-19-17.md
+-rw-r--r--  1 runner runner    1150 Aug 16 20:45 reposcan-2026-08-14-19-37.md
+-rw-r--r--  1 runner runner    1492 Aug 16 20:45 reposcan-2026-08-14-20-06.md
+-rw-r--r--  1 runner runner    1336 Aug 16 20:45 reposcan-2026-08-14-20-10.md
+-rw-r--r--  1 runner runner    1537 Aug 16 20:45 reposcan-2026-08-14-20-47.md
+-rw-r--r--  1 runner runner    1372 Aug 16 20:45 reposcan-2026-08-14-20-48.md
+-rw-r--r--  1 runner runner    1612 Aug 16 20:45 reposcan-2026-08-14-21-12.md
+-rw-r--r--  1 runner runner     990 Aug 16 20:45 reposcan-2026-08-14-21-33.md
+-rw-r--r--  1 runner runner     626 Aug 16 20:45 reposcan-2026-08-14-21-49.md
+-rw-r--r--  1 runner runner    1476 Aug 16 20:45 reposcan-2026-08-14-22-01.md
+-rw-r--r--  1 runner runner    1315 Aug 16 20:45 reposcan-2026-08-14-22-04.md
+-rw-r--r--  1 runner runner    1626 Aug 16 20:45 reposcan-2026-08-14-22-37.md
+-rw-r--r--  1 runner runner    1475 Aug 16 20:45 reposcan-2026-08-14-22-43.md
+-rw-r--r--  1 runner runner    1482 Aug 16 20:45 reposcan-2026-08-14-23-00.md
+-rw-r--r--  1 runner runner     966 Aug 16 20:45 reposcan-2026-08-14-23-04.md
+-rw-r--r--  1 runner runner     456 Aug 16 20:45 reposcan-2026-08-14-23-31.md
+-rw-r--r--  1 runner runner    1319 Aug 16 20:45 reposcan-2026-08-14-23-41.md
+-rw-r--r--  1 runner runner    1133 Aug 16 20:45 reposcan-2026-08-14-23-56.md
+-rw-r--r--  1 runner runner    1024 Aug 16 20:45 reposcan-2026-08-15-00-02.md
+-rw-r--r--  1 runner runner    1114 Aug 16 20:45 reposcan-2026-08-15-00-56.md
+-rw-r--r--  1 runner runner    1392 Aug 16 20:45 reposcan-2026-08-15-01-52.md
+-rw-r--r--  1 runner runner    1170 Aug 16 20:45 reposcan-2026-08-15-02-15.md
+-rw-r--r--  1 runner runner    1461 Aug 16 20:45 reposcan-2026-08-15-02-59.md
+-rw-r--r--  1 runner runner    1411 Aug 16 20:45 reposcan-2026-08-15-03-11.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-15-03-51.md
+-rw-r--r--  1 runner runner    1311 Aug 16 20:45 reposcan-2026-08-15-03-57.md
+-rw-r--r--  1 runner runner    1368 Aug 16 20:45 reposcan-2026-08-15-04-31.md
+-rw-r--r--  1 runner runner    1266 Aug 16 20:45 reposcan-2026-08-15-04-40.md
+-rw-r--r--  1 runner runner    1286 Aug 16 20:45 reposcan-2026-08-15-05-02.md
+-rw-r--r--  1 runner runner    1781 Aug 16 20:45 reposcan-2026-08-15-05-07.md
+-rw-r--r--  1 runner runner    1585 Aug 16 20:45 reposcan-2026-08-15-05-38.md
+-rw-r--r--  1 runner runner    1158 Aug 16 20:45 reposcan-2026-08-15-05-44.md
+-rw-r--r--  1 runner runner    1170 Aug 16 20:45 reposcan-2026-08-15-06-00.md
+-rw-r--r--  1 runner runner    1347 Aug 16 20:45 reposcan-2026-08-15-06-14.md
+-rw-r--r--  1 runner runner    1201 Aug 16 20:45 reposcan-2026-08-15-06-53.md
+-rw-r--r--  1 runner runner    1295 Aug 16 20:45 reposcan-2026-08-15-07-02.md
+-rw-r--r--  1 runner runner    1320 Aug 16 20:45 reposcan-2026-08-15-07-29.md
+-rw-r--r--  1 runner runner    1774 Aug 16 20:45 reposcan-2026-08-15-07-46.md
+-rw-r--r--  1 runner runner    1413 Aug 16 20:45 reposcan-2026-08-15-07-56.md
+-rw-r--r--  1 runner runner    1479 Aug 16 20:45 reposcan-2026-08-15-08-25.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-15-08-44.md
+-rw-r--r--  1 runner runner    1685 Aug 16 20:45 reposcan-2026-08-15-09-02.md
+-rw-r--r--  1 runner runner    1340 Aug 16 20:45 reposcan-2026-08-15-09-05.md
+-rw-r--r--  1 runner runner    1405 Aug 16 20:45 reposcan-2026-08-15-09-20.md
+-rw-r--r--  1 runner runner    1490 Aug 16 20:45 reposcan-2026-08-15-09-44.md
+-rw-r--r--  1 runner runner    1436 Aug 16 20:45 reposcan-2026-08-15-09-49.md
+-rw-r--r--  1 runner runner    1165 Aug 16 20:45 reposcan-2026-08-15-10-02.md
+-rw-r--r--  1 runner runner    1171 Aug 16 20:45 reposcan-2026-08-15-10-07.md
+-rw-r--r--  1 runner runner    1351 Aug 16 20:45 reposcan-2026-08-15-10-37.md
+-rw-r--r--  1 runner runner    1388 Aug 16 20:45 reposcan-2026-08-15-10-42.md
+-rw-r--r--  1 runner runner    1407 Aug 16 20:45 reposcan-2026-08-15-10-58.md
+-rw-r--r--  1 runner runner    1135 Aug 16 20:45 reposcan-2026-08-15-11-02.md
+-rw-r--r--  1 runner runner    1364 Aug 16 20:45 reposcan-2026-08-15-11-30.md
+-rw-r--r--  1 runner runner    1770 Aug 16 20:45 reposcan-2026-08-15-11-37.md
+-rw-r--r--  1 runner runner    1267 Aug 16 20:45 reposcan-2026-08-15-11-50.md
+-rw-r--r--  1 runner runner    1297 Aug 16 20:45 reposcan-2026-08-15-12-00.md
+-rw-r--r--  1 runner runner    1501 Aug 16 20:45 reposcan-2026-08-15-12-05.md
+-rw-r--r--  1 runner runner    1138 Aug 16 20:45 reposcan-2026-08-15-12-55.md
+-rw-r--r--  1 runner runner    1158 Aug 16 20:45 reposcan-2026-08-15-12-58.md
+-rw-r--r--  1 runner runner    1660 Aug 16 20:45 reposcan-2026-08-15-13-39.md
+-rw-r--r--  1 runner runner    1405 Aug 16 20:45 reposcan-2026-08-15-13-59.md
+-rw-r--r--  1 runner runner    1426 Aug 16 20:45 reposcan-2026-08-15-14-01.md
+-rw-r--r--  1 runner runner    1528 Aug 16 20:45 reposcan-2026-08-15-14-36.md
+-rw-r--r--  1 runner runner    1513 Aug 16 20:45 reposcan-2026-08-15-14-42.md
+-rw-r--r--  1 runner runner    1147 Aug 16 20:45 reposcan-2026-08-15-14-54.md
+-rw-r--r--  1 runner runner    1272 Aug 16 20:45 reposcan-2026-08-15-15-01.md
+-rw-r--r--  1 runner runner    1260 Aug 16 20:45 reposcan-2026-08-15-15-17.md
+-rw-r--r--  1 runner runner    1182 Aug 16 20:45 reposcan-2026-08-15-15-40.md
+-rw-r--r--  1 runner runner    1159 Aug 16 20:45 reposcan-2026-08-15-15-46.md
+-rw-r--r--  1 runner runner    1593 Aug 16 20:45 reposcan-2026-08-15-16-01.md
+-rw-r--r--  1 runner runner    1325 Aug 16 20:45 reposcan-2026-08-15-16-08.md
+-rw-r--r--  1 runner runner    1309 Aug 16 20:45 reposcan-2026-08-15-16-37.md
+-rw-r--r--  1 runner runner    1768 Aug 16 20:45 reposcan-2026-08-15-17-00.md
+-rw-r--r--  1 runner runner    1171 Aug 16 20:45 reposcan-2026-08-15-17-02.md
+-rw-r--r--  1 runner runner    1233 Aug 16 20:45 reposcan-2026-08-15-17-34.md
+-rw-r--r--  1 runner runner    1444 Aug 16 20:45 reposcan-2026-08-15-17-39.md
+-rw-r--r--  1 runner runner    1771 Aug 16 20:45 reposcan-2026-08-15-17-50.md
+-rw-r--r--  1 runner runner    1243 Aug 16 20:45 reposcan-2026-08-15-18-00.md
+-rw-r--r--  1 runner runner    1296 Aug 16 20:45 reposcan-2026-08-15-18-05.md
+-rw-r--r--  1 runner runner    1519 Aug 16 20:45 reposcan-2026-08-15-18-44.md
+-rw-r--r--  1 runner runner    1446 Aug 16 20:45 reposcan-2026-08-15-18-45.md
+-rw-r--r--  1 runner runner    1333 Aug 16 20:45 reposcan-2026-08-15-19-10.md
+-rw-r--r--  1 runner runner    1472 Aug 16 20:45 reposcan-2026-08-15-19-36.md
+-rw-r--r--  1 runner runner    1366 Aug 16 20:45 reposcan-2026-08-15-19-38.md
+-rw-r--r--  1 runner runner     948 Aug 16 20:45 reposcan-2026-08-15-19-59.md
+-rw-r--r--  1 runner runner    1224 Aug 16 20:45 reposcan-2026-08-15-20-18.md
+-rw-r--r--  1 runner runner    1385 Aug 16 20:45 reposcan-2026-08-15-20-35.md
+-rw-r--r--  1 runner runner    1127 Aug 16 20:45 reposcan-2026-08-15-20-47.md
+-rw-r--r--  1 runner runner    1234 Aug 16 20:45 reposcan-2026-08-15-21-01.md
+-rw-r--r--  1 runner runner    1273 Aug 16 20:45 reposcan-2026-08-15-21-05.md
+-rw-r--r--  1 runner runner    1149 Aug 16 20:45 reposcan-2026-08-15-21-36.md
+-rw-r--r--  1 runner runner    1584 Aug 16 20:45 reposcan-2026-08-15-21-38.md
+-rw-r--r--  1 runner runner    1152 Aug 16 20:45 reposcan-2026-08-15-21-55.md
+-rw-r--r--  1 runner runner    1461 Aug 16 20:45 reposcan-2026-08-15-21-59.md
+-rw-r--r--  1 runner runner    1193 Aug 16 20:45 reposcan-2026-08-15-22-19.md
+-rw-r--r--  1 runner runner    2655 Aug 16 20:45 reposcan-2026-08-15-22-33.md
+-rw-r--r--  1 runner runner    1137 Aug 16 20:45 reposcan-2026-08-15-22-44.md
+-rw-r--r--  1 runner runner    1148 Aug 16 20:45 reposcan-2026-08-15-23-00.md
+-rw-r--r--  1 runner runner    1101 Aug 16 20:45 reposcan-2026-08-15-23-03.md
+-rw-r--r--  1 runner runner    1346 Aug 16 20:45 reposcan-2026-08-15-23-31.md
+-rw-r--r--  1 runner runner    1230 Aug 16 20:45 reposcan-2026-08-15-23-53.md
+-rw-r--r--  1 runner runner    1359 Aug 16 20:45 reposcan-2026-08-16-00-38.md
+-rw-r--r--  1 runner runner    1353 Aug 16 20:45 reposcan-2026-08-16-01-50.md
+-rw-r--r--  1 runner runner    1134 Aug 16 20:45 reposcan-2026-08-16-02-13.md
+-rw-r--r--  1 runner runner    1628 Aug 16 20:45 reposcan-2026-08-16-03-09.md
+-rw-r--r--  1 runner runner    1327 Aug 16 20:45 reposcan-2026-08-16-03-18.md
+-rw-r--r--  1 runner runner    1406 Aug 16 20:45 reposcan-2026-08-16-04-02.md
+-rw-r--r--  1 runner runner    1575 Aug 16 20:45 reposcan-2026-08-16-04-05.md
+-rw-r--r--  1 runner runner    1421 Aug 16 20:45 reposcan-2026-08-16-04-52.md
+-rw-r--r--  1 runner runner    1354 Aug 16 20:45 reposcan-2026-08-16-05-20.md
+-rw-r--r--  1 runner runner    1320 Aug 16 20:45 reposcan-2026-08-16-05-35.md
+-rw-r--r--  1 runner runner    1594 Aug 16 20:45 reposcan-2026-08-16-05-50.md
+-rw-r--r--  1 runner runner    1481 Aug 16 20:45 reposcan-2026-08-16-06-04.md
+-rw-r--r--  1 runner runner    1533 Aug 16 20:45 reposcan-2026-08-16-06-18.md
+-rw-r--r--  1 runner runner    1403 Aug 16 20:45 reposcan-2026-08-16-07-02.md
+-rw-r--r--  1 runner runner    1234 Aug 16 20:45 reposcan-2026-08-16-07-12.md
+-rw-r--r--  1 runner runner    1234 Aug 16 20:45 reposcan-2026-08-16-07-45.md
+-rw-r--r--  1 runner runner    1425 Aug 16 20:45 reposcan-2026-08-16-07-47.md
+-rw-r--r--  1 runner runner    1322 Aug 16 20:45 reposcan-2026-08-16-08-05.md
+-rw-r--r--  1 runner runner    1312 Aug 16 20:45 reposcan-2026-08-16-08-39.md
+-rw-r--r--  1 runner runner    1239 Aug 16 20:45 reposcan-2026-08-16-08-45.md
+-rw-r--r--  1 runner runner    1692 Aug 16 20:45 reposcan-2026-08-16-09-08.md
+-rw-r--r--  1 runner runner    1210 Aug 16 20:45 reposcan-2026-08-16-09-15.md
+-rw-r--r--  1 runner runner    1082 Aug 16 20:45 reposcan-2026-08-16-09-45.md
+-rw-r--r--  1 runner runner    1409 Aug 16 20:45 reposcan-2026-08-16-09-47.md
+-rw-r--r--  1 runner runner    1319 Aug 16 20:45 reposcan-2026-08-16-10-07.md
+-rw-r--r--  1 runner runner    1530 Aug 16 20:45 reposcan-2026-08-16-10-37.md
+-rw-r--r--  1 runner runner    1134 Aug 16 20:45 reposcan-2026-08-16-10-43.md
+-rw-r--r--  1 runner runner    1306 Aug 16 20:45 reposcan-2026-08-16-11-03.md
+-rw-r--r--  1 runner runner     487 Aug 16 20:45 reposcan-2026-08-16-11-33.md
+-rw-r--r--  1 runner runner    1385 Aug 16 20:45 reposcan-2026-08-16-11-37.md
+-rw-r--r--  1 runner runner    1187 Aug 16 20:45 reposcan-2026-08-16-11-50.md
+-rw-r--r--  1 runner runner    1377 Aug 16 20:45 reposcan-2026-08-16-12-02.md
+-rw-r--r--  1 runner runner    1270 Aug 16 20:45 reposcan-2026-08-16-12-06.md
+-rw-r--r--  1 runner runner    1048 Aug 16 20:45 reposcan-2026-08-16-12-57.md
+-rw-r--r--  1 runner runner    1350 Aug 16 20:45 reposcan-2026-08-16-13-00.md
+-rw-r--r--  1 runner runner    1137 Aug 16 20:45 reposcan-2026-08-16-13-39.md
+-rw-r--r--  1 runner runner    1115 Aug 16 20:45 reposcan-2026-08-16-14-03.md
+-rw-r--r--  1 runner runner    1328 Aug 16 20:45 reposcan-2026-08-16-14-36.md
+-rw-r--r--  1 runner runner    1176 Aug 16 20:45 reposcan-2026-08-16-14-43.md
+-rw-r--r--  1 runner runner    1589 Aug 16 20:45 reposcan-2026-08-16-14-58.md
+-rw-r--r--  1 runner runner    1482 Aug 16 20:45 reposcan-2026-08-16-15-04.md
+-rw-r--r--  1 runner runner    1245 Aug 16 20:45 reposcan-2026-08-16-15-29.md
+-rw-r--r--  1 runner runner    1028 Aug 16 20:45 reposcan-2026-08-16-15-40.md
+-rw-r--r--  1 runner runner    1373 Aug 16 20:45 reposcan-2026-08-16-15-51.md
+-rw-r--r--  1 runner runner    1214 Aug 16 20:45 reposcan-2026-08-16-16-01.md
+-rw-r--r--  1 runner runner    1471 Aug 16 20:45 reposcan-2026-08-16-16-11.md
+-rw-r--r--  1 runner runner    1156 Aug 16 20:45 reposcan-2026-08-16-16-38.md
+-rw-r--r--  1 runner runner    1274 Aug 16 20:45 reposcan-2026-08-16-16-44.md
+-rw-r--r--  1 runner runner    1356 Aug 16 20:45 reposcan-2026-08-16-17-03.md
+-rw-r--r--  1 runner runner    1074 Aug 16 20:45 reposcan-2026-08-16-17-06.md
+-rw-r--r--  1 runner runner    1439 Aug 16 20:45 reposcan-2026-08-16-17-34.md
+-rw-r--r--  1 runner runner    1281 Aug 16 20:45 reposcan-2026-08-16-17-36.md
+-rw-r--r--  1 runner runner    1110 Aug 16 20:45 reposcan-2026-08-16-17-53.md
+-rw-r--r--  1 runner runner    1501 Aug 16 20:45 reposcan-2026-08-16-17-59.md
+-rw-r--r--  1 runner runner    1272 Aug 16 20:45 reposcan-2026-08-16-18-19.md
+-rw-r--r--  1 runner runner    1160 Aug 16 20:45 reposcan-2026-08-16-18-42.md
+-rw-r--r--  1 runner runner    1228 Aug 16 20:45 reposcan-2026-08-16-18-54.md
+-rw-r--r--  1 runner runner    1223 Aug 16 20:45 reposcan-2026-08-16-19-08.md
+-rw-r--r--  1 runner runner    1291 Aug 16 20:45 reposcan-2026-08-16-19-17.md
+-rw-r--r--  1 runner runner    1454 Aug 16 20:45 reposcan-2026-08-16-19-37.md
+-rw-r--r--  1 runner runner    1000 Aug 16 20:45 reposcan-2026-08-16-19-41.md
+-rw-r--r--  1 runner runner    1346 Aug 16 20:45 reposcan-2026-08-16-20-00.md
+-rw-r--r--  1 runner runner    1327 Aug 16 20:45 reposcan-2026-08-16-20-26.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-2026-08-16-20-34.md
+-rw-r--r--  1 runner runner     317 Aug 16 20:45 reposcan-latest.md
+
+/home/runner/work/signageos-hunt/signageos-hunt/reports/:
+total 11760
+drwxr-xr-x  2 runner runner    4096 Aug 16 20:45 .
+drwxr-xr-x 11 runner runner    4096 Aug 16 20:45 ..
+-rw-r--r--  1 runner runner 3124020 Aug 16 20:45 analyst-bigpickle.log
+-rw-r--r--  1 runner runner 5367447 Aug 16 20:45 analyst-laguna.log
+-rw-r--r--  1 runner runner   58104 Aug 16 20:45 analyst-ling3.log
+-rw-r--r--  1 runner runner  330690 Aug 16 20:45 analyst-longcat.log
+-rw-r--r--  1 runner runner 2589511 Aug 16 20:45 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    4573 Aug 16 20:45 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner   11232 Aug 16 20:45 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      47 Aug 16 20:45 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      49 Aug 16 20:45 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner    6710 Aug 16 20:45 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  633457 Aug 16 20:45 hypotheses.md
+-rw-r--r--  1 runner runner   77501 Aug 16 20:45 valid-bugs.md
+[0m
+[0m
+[0m$ [0mcat /home/runner/work/signageos-hunt/signageos-hunt/reports/hypotheses-nemotron3.txt 2>/dev/null | tail -80
+## 2026-08-16 20:23:45 UTC [api] (model nemotron3)
+[PRIO] box.signageos.io/status, 9.10, attack=10, business=8, tech=8, gate=10, cloud=9, fresh=10
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token, 7.70, attack=9, business=9, tech=8, gate=2, cloud=8, fresh=9
+[PRIO] box.signageos.io/ + /login/, 6.90, attack=7, business=5, tech=6, gate=10, cloud=6, fresh=9
+[HYP] Unauthenticated K8s topology and process identity leak via /status
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 100
+reasoning: Unauthenticated GET returns JSON with pod hostname (box-8676fb5f57-*), 64-hex process UID, Node v20.20.2, 9-service topology (amqp0/redis0-3/mongoDB0-3), per-service responseTime, cpuUsage, memoryUsage. Headers ONLY x-powered-by: Express + CloudFront — zero hardening headers (no HSTS/xfo/xcto/CSP). Differential vs /+/login/ (secgrep=4) and api /status (secgrep=3) confirmed live across 30+ cycles.
+evidence_needed: Already proven — evidence archive sha256 body 38737948dcd9... / headers b11ba5ba... (30+ cycles stable)
+verify_steps: GET https://box.signageos.io/status → 200 application/json with infra leak; grep -cE 'strict-transport|x-frame|x-content|content-security' headers → 0
+impact: Internal K8s topology, pod identity, process UID, service mesh exposed to unauthenticated internet; aids reconnaissance and chaining; MEDIUM
+testability: PASSIVE
+[HYP] Cross-tenant security-token minting via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: Endpoint returns 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE confirming X-Auth/x-oauth-client_id gated (NOT JWT). Org identity derived from header first-part before `:`. Path `{uid}` is client-supplied and distinct from auth-derived org. Server-side membership check on path UID is sole barrier. Reconfirmed across rs rotations 6cc9959bb4 → 77955558bc with zero auth drift (errorDetail byte-identical).
+evidence_needed: Valid account X-Auth + foreign org UID → HTTP 200 on POST /v1/organization/<foreign-org-uid>/security-token returning securityToken
+verify_steps: AUTH_HELPED: curl -X POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token (baseline 200 with own org); repeat with foreign org UID → 200 + securityToken = cross-tenant; escalate: curl -H "X-Auth: <leakedSecurityToken>" https://api.signageos.io/v1/device → foreign org device list
+impact: Any tenant's org token → full device/content/timing/firmware control of foreign org; CRITICAL
+testability: AUTH_HELPED
+[HYP] Overly broad CORS origin trust boundary on SPA entry points
+class: MISCONFIG
+asset: box.signageos.io/ + /login/
+confidence: 100
+reasoning: 17 static ACAO values including http://box.signageos.io plaintext variant, https://*.zdusercontent.com wildcard, and sibling api.signageos.io. No access-control-allow-credentials under any Origin (grep=0). Evil.test NOT reflected (static whitelist). CSP on /login/ spans 59+ distinct origins with triplicated Auth0 oauth/token entries. Hardening middleware (7 rotating x-*-nonce-hash headers, HSTS/xfo/xcto/CSP) present on SPA routes only; absent on /status.
+evidence_needed: Already proven — reconfirmed across 30+ cycles behind CloudFront
+verify_steps: GET https://box.signageos.io/ -H "Origin: https://evil.test" → ACAO unchanged (static whitelist); grep access-control-allow-credentials → 0; GET /status -H "Origin: https://evil.test" → no ACAO header
+impact: Broad postMessage/origin trust boundary expands attack surface for future chain; no direct credential-theft path without credentials flag; LOW-MEDIUM
+testability: PASSIVE
+[PARKED] None — all three hypotheses meet confidence ≥ 40, class not on REJECTED list, and have concrete verify_steps
+[FINAL] 1) Unauthenticated K8s topology and process identity leak via /status (confidence 100) 2) Cross-tenant security-token minting via X-Auth org-UID path override (confidence 86) 3) Overly broad CORS origin trust boundary on SPA entry points (confidence 100)
+[NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id:unsafeDecryptedToken>`; then execute AUTH_HELPED verify_steps for the CRITICAL cross-tenant security-token IDOR: POST https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token with X-Auth header from orgA
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized — evidence archive sha256 body 38737948dcd9... / headers b11ba5ba... (30+ cycles stable)
+[LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle — mechanism intact, zero auth drift; AUTH_HELPED, conf 86
+[LEARN] CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — staging-only fixture, credential reuse disproven
+[LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass; cross-tenant chain remains AUTH_HELPED only
+[LEARN] REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml (descriptive error messages)
+[LEARN] REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged)
+[LEARN] REJECTED MISCONFIG @ box.signageos.io WebSocket: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface
+[LEARN] REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session
+[RISK] box.signageos.io: 58 reason: Persistent unauthenticated /status info-leak (K8s topology, pod identity, process UID, cpu/memory) with zero hardening headers behind CloudFront; nonce-hash middleware only on SPA routes; CORS whitelist scoped to / + /login/ (17 origins, http:// variant, *.zdusercontent.com wildcard) but no credentials flag; all other surfaces behind Auth0 login catch-all
+[RISK] api.signageos.io: 62 reason: Dual-auth API (JWT Bearer + X-Auth `id:unsafeDecryptedToken`) with org UID in path client-supplied; cross-tenant IDOR chain on /v1/organization/{uid}/security-token and /v1/organization/{uid} confirmed at mechanism level (403074 gating) but AUTH_HELPED only; descriptive errors leak auth internals (excluded class); /status hardened but still leaks hostname/uid/Node/topology; zero CORS surface
+[0m
+[0m$ [0mcat /home/runner/work/signageos-hunt/signageos-hunt/reports/hypotheses-bigpickle.txt 2>/dev/null | tail -80
+## 2026-08-16 20:23:00 UTC [box] (model bigpickle)
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token, 79, attack 9, business 10, tech 8, gate 2, cloud 5, fresh 10
+[PRIO] box.signageos.io/status, 58, attack 5, business 4, tech 3, gate 10, cloud 5, fresh 10
+[PRIO] box.signageos.io / + /login/ CORS, 48, attack 4, business 3, tech 3, gate 10, cloud 3, fresh 10
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: 403074 errorDetail byte-identical this cycle confirms org identity bound to X-Auth first-part while path {uid} client-supplied; zero ACAO under evil.test; zero auth drift across rs rotations.
+evidence_needed: valid orgA X-Auth + foreign orgB {uid} → non-403074/403076 response proves cross-tenant mint.
+verify_steps: AUTH_HELPED: `sos login`; GET `-H "X-Auth: <orgA-id>:<token>" /v1/organization/<own-uid>/security-token` → 200 baseline; repeat with foreign `{uid}` → non-40307x = cross-tenant mint; escalate minted token on GET `/v1/device`.
+impact: mint security tokens for arbitrary tenant → foreign device/content/firmware control; CRITICAL
+testability: AUTH_HELPED
+[HYP] Unauthenticated K8s topology and process identity leak via /status
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Fresh probe confirms HTTP 200 JSON leaks hostname `box-8676fb5f57-xd6mc`, 64-hex process.uid, Node v20.20.2, cpuUsage/memoryUsage, 9-service topology; secgrep=0. Shape unchanged 30+ cycles.
+evidence_needed: n/a — accepted finding, POC final.
+verify_steps: `curl -s https://box.signageos.io/status` → 200 JSON infra-leak; `curl -s -D - https://box.signageos.io/status | grep -cE 'strict-transport|x-frame|x-content|content-security'` = 0.
+impact: infra/topology/process identity disclosure; enables targeted K8s/pod attacks; LOW-MEDIUM
+testability: PASSIVE
+[HYP] Broad static ACAO whitelist on box SPA entry points
+class: MISCONFIG
+asset: box.signageos.io / + /login/
+confidence: 92
+reasoning: 17 static ACAO (incl http://plaintext + *.zdusercontent.com wildcard + api sibling + path-bearing recaptcha); 0 credentials flag; evil.test NOT reflected (static whitelist).
+evidence_needed: n/a — accepted finding; no credential-theft path without credentials flag.
+verify_steps: `curl -s -D - -H "Origin: https://evil.test" https://box.signageos.io/login/` → 17 static ACAO, credentials grep = 0.
+impact: expands postMessage/origin trust boundary for SPA surfaces; LOW
+testability: PASSIVE
+[FINAL]
+[NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id>:<unsafeDecryptedToken>`. Then test: `curl -s -H "X-Auth: <orgA-id>:<token>" "https://api.signageos.io/v1/organization/<foreign-orgB-uid>/security-token"` — response other than 403074/403076 proves CRITICAL cross-tenant token mint.
+[LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle — mechanism intact, zero auth drift across rs rotation (77955558bc); AUTH_HELPED conf 86.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod rotation only (box-8676fb5f57-*), secgrep=0, full 9-svc topology leak behind CloudFront; POC finalized 30+ cycles, zero hardening added.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/ + /login/: 17 static ACAO (evil.test NOT reflected, 0 credentials flag) reconfirmed — MISCONFIG-only, no exploit path, unchanged behind CloudFront.
+[LEARN] REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on /, /status, /v1/*, /v2/* under any Origin — not CORS-exploitable.
+[LEARN] REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check, no data leaked.
+[LEARN] CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: staging-only fixture, X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven.
+[RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid leak (secgrep=0, hardened siblings only) plus broad static CORS whitelist with http:// variant; no auth bypass, no credential-theft path, no new endpoints across 30+ NO_DELTA cycles
+[RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism fully confirmed (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold on all 60+ routes, CORS non-exploitable, descriptive-error class excluded by scope
+[0m
+[0m$ [0mhead -200 /home/runner/work/signageos-hunt/signageos-hunt/ctx.txt
+=== KNOWLEDGE BASE ===
+# Knowledge Base (seed)
+
+## Program rules (from scope.yml)
+- Eligible targets (ONLY): box.signageos.io, api.signageos.io
+- Long exclusion list (all NOT eligible): DoS (network + account lockout), descriptive errors/headers, public file/dir disclosure, outdated libs, OPTIONS/TRACE, CSRF on logout, CSRF on anonymous forms, cookie flags on non-sensitive data, self-XSS, scanner reports without POC, physical access, social engineering, username enumeration, brute-force/lockout policies, SSL/TLS best practices + SSL attacks, clickjacking without demonstrated exploit, mail config, known-vulnerable lib without signageOS-specific exploit, password/account-recovery policies, autocomplete, public login panels, email verification gaps (registration/invite/password restore), session control on email/password change
+- Reportable focus: real logic flaws (IDOR/authz/business logic/SSRF-type) with a concrete POC on the two eligible hosts
+- Passive-first: GET/HEAD only, <=1 rps, no account creation, no data modification
+- Secrets in commits: sha256 only, never raw
+
+## Baseline surface (2026-08-07 passive recon)
+- box.signageos.io: HTTP 302 (redirect - determine where; likely dashboard/player box admin)
+- api.signageos.io: HTTP 200 on /
+- signageos.io: 301 to www
+- GitHub org signageos (59 public repos): first-party code incl. sdk (TS), cli (TS), applet-sandbox, platform (C++), videowall-designer (TS), server-bootstrap (Shell), kubernetes-ingress (Go), minio, plus many forks (DefinitelyTyped, HTML5test, zip.js, libcec, raspidmx, node-amqp10, WebGLSamples, webpack-dev-server, aports, charts)
+
+## Rejected / parked (explicit program exclusions - never report)
+- username enumeration on login/forgot-password, rate-limit/lockout policy, cookie flags non-sensitive, OPTIONS/TRACE, banner/stack-trace, robots.txt, outdated versions, SSL/TLS, clickjacking w/o exploit, CSRF on logout/anonymous forms, email verification gaps, session control on email/password change, autocomplete, public login panels, account recovery policies
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation not testable passively without tenant config access
+- 2026-08-07 REJECTED IDOR @ api.signageos.io: No public API endpoints discoverable via passive probing (all common paths 404)
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state parameter — class AUTH excluded as "CSRF on forms that are available to anonymous users" per scope.yml
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary (carried forward from 2026-08-07)
+- 2026-08-07 REJECTED IDOR @ api.signageos.io via undiscovered versioned endpoints: no public endpoints discoverable via passive probing (all common paths 404) — carried forward from 2026-08-07
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state parameter — class AUTH excluded as "CSRF on forms that are available to anonymous users" per scope.yml
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary (carried forward from 2026-08-07)
+- 2026-08-07 REJECTED IDOR @ api.signageos.io via undiscovered versioned endpoints: no public endpoints discoverable via passive probing (all common paths 404) — carried forward from 2026-08-07
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed NEW. Unauthenticated JSON health endpoint leaks K8s pod hostname, process UID, Node version, and backend service topology (redis0-3, mongoDB0-3, amqp0). Not on the rejected list (not banner/stack-trace, not file/dir disclosure, not outdated-version-only).
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed NEW. 18× static `access-control-allow-origin` headers (incl `http://` HTTP variant + `https://*.zdusercontent.com` wildcard) on `/` and `/login/`. No `Access-Control-Allow-Credentials` observed. Not on the rejected list.
+- 2026-08-07 REJECTED IDOR @ api.signageos.io: Real `/v1/*` endpoints confirmed via client bundle (bundle.js) — 40+ paths mapped. BUT all return 403 with `WRONG_JWT_TOKEN`/`403105` without a JWT. No unauthenticated data access found → IDOR not testable passively. The earlier seed rejection ("all common paths 404") was based on probing wrong paths (`/api/v1`, `/v1`) that don't exist; the real paths DO exist but are JWT-gated.
+- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io: 403 error body leaks descriptive auth detail (`"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105`, `errorName WRONG_JWT_TOKEN`) — falls under "descriptive error messages" (excluded per scope.yml).
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation — still not testable passively without tenant config access (carried forward).
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state — excluded per "CSRF on anonymous-accessible forms" (carried forward).
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → mtnct), process UID, Node v20.20.2, and service topology (amqp0, redis0-3, mongoDB0-3). Not on rejected list.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin `https://evil.test`. Includes `http://` variant + `https://*.zdusercontent.com` wildcard + sibling `api.signageos.io`. No `Access-Control-Allow-Credentials` on any box path. api.signageos.io has NO ACAO on any path (including /status, /v1/*, /v2/*).
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Confirmed live. /login/ CSP broadened vs / (triplicated Auth0 oauth/token, additional recaptcha frame-src). 40+ connect-src/frame-src origins spanning Auth0, Sony/BroadSign/MoodMedia device APIs, S3 buckets, AWS API Gateway, and api.signageos.io.
+- 2026-08-07 REJECTED MISCONFIG @ box.signageos.io /ready: Returns 200 `OK` (2 bytes) — trivial health check, no data leaked. Not reportable.
+- 2026-08-07 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All 60+ endpoints return 403 JWT-gated (WRONG_JWT_TOKEN/403105). No pre-auth bypass. Dual auth confirmed: JWT Bearer (main API) + X-Auth API-key format (`id:unsafeDecryptedToken`) for bulk provisioning.
+- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io CORS: 403/404 carry `vary: Origin` + `access-control-expose-headers: *` but NO ACAO under any Origin — not CORS-exploitable.
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation — not testable passively without tenant config access (carried forward).
+- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105` — falls under descriptive error messages (excluded).
+- 2026-08-07 ACCEPTED SECRET_LEAK @ github.com/signageos/videowall-designer: Hardcoded clientId/secret (SHA256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) in `sos/videoTiming.js` targeting internal staging `http://api.kiera.office.signageos.io` over HTTP — credential reuse risk; not directly reportable (out-of-scope host) but informs prod org-boundary testing.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin `https://evil.test`. Includes `http://` variant + `https://*.zdusercontent.com` wildcard + sibling `api.signageos.io`. No `Access-Control-Allow-Credentials` on any box path. api.signageos.io has NO ACAO on any path.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname, process UID, Node v20.20.2, and service topology.
+- 2026-08-07 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All endpoints return 403 JWT-gated without pre-auth bypass. Requires AUTH_HELPED verification.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname, process UID, Node v20.20.2, and service topology.
+- 2026-08-07 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All endpoints return 403 JWT-gated without pre-auth bypass. Requires AUTH_HELPED verification.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → st6zq), process UID, Node v24.19.0, and service topology (amqp0, redis0-3, mongoDB0-2). Not on rejected list.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → bk4vh), process UID, Node v20.20.2, and service topology (amqp0, redis0-3, mongoDB0-3). Not on rejected list.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. HTTP 200 JSON leaks pod hostname (box-7c8c876945-gkzcp), process UID (b341def86253cd23a7db1382d94c091a590c400c1b4d8d9602), Node v20.20.2, service topology (amqp0, redis0-3, mongoDB0-3). Unchanged.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin https://evil.test. No Access-Control-Allow-Credentials. Includes http:// variant + https://*.zdusercontent.com wildcard + api.signageos.io sibling. Unchanged.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed live. /login/ CSP triplicates Auth0 oauth/token entries, 33 distinct origin patterns across connect-src/frame-src directives (device APIs, S3, AWS API Gateway, siblings). Unchanged.
+- 2026-08-07 REJECTED MISCONFIG @ box.signageos.io /ready: Reconfirmed. Returns 200 "OK" (2 bytes), trivial health check, no data leaked. Not reportable.
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: All Auth0 OAuth2 flow parameters hidden in minified bundle.js (v2.192.0); redirect_uri validation, OAuth2 state binding — not testable passively without Auth0 tenant access or authenticated session. Carried forward.
+- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io CORS: Confirmed — 403/404 responses carry vary: Origin + access-control-expose-headers: * but NO ACAO under any Origin. Not CORS-exploitable. Carried forward.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. HTTP 200 JSON leaks pod hostname (box-7c8c876945-52dpt), process UID, Node v20.20.2, service topology (amqp0, redis0-3, mongoDB0-3). Unchanged.
+- 2026-08-07 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. HTTP 200 JSON leaks pod hostname (api-6f69db97d5-97fjw), process UID, Node v24.19.0, service topology (amqp0, redis0-3, mongoDB0-3). Unchanged.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed live. /login/ CSP triplicates Auth0 oauth/token entries, 33+ distinct origin patterns across connect-src/frame-src directives. Unchanged.
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 flow parameters hidden in minified bundle.js (v2.192.0); redirect_uri validation, OAuth2 state binding — not testable passively without Auth0 tenant access or authenticated session.
+- 2026-08-08 NO_NEW_PROOF — This cycle is passive analysis only; no AUTH_HELPED tests executed. All previously ACCEPTED/REJECTED classes from 2026-08-07 23:54 reconfirmed via delta (status endpoints, CORS, CSP, /ready, api CORS, api descriptive errors, box Auth0 OAuth2). v2/device now 403 (was 404) supports AUTH hypothesis but not proven.
+- 2026-08-08 NO_NEW_PROOF — This cycle is passive analysis only; no AUTH_HELPED tests executed. All previously ACCEPTED/REJECTED classes from 2026-08-07 23:54 reconfirmed via delta (status endpoints, CORS, CSP, /ready, api CORS, api descriptive errors, box Auth0 OAuth2). v2/device now 403 (was 404) supports AUTH hypothesis but not proven.
+- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105` — falls under descriptive error messages (excluded per scope.yml).
+- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v2/device: Returns 403 JWT-gated (previously 404) — now JWT-gated, not a pre-auth bypass.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Node v20.20.2, hostname box-7c8c876945-52dpt, succeededServices (amqp0, redis0-3, mongoDB0-3).
+- 2026-08-08 REJECTED MISCONFIG @ box.signageos.io/cors: No `access-control-allow-credentials` observed on any box path despite 18 static ACAO values.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle. Node v20.20.2, pod box-7c8c876945-gkzcp, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live this cycle. Node v24.19.0, pod api-6f69db97d5-st6zq, same topology. Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed — 17 static ACAO (incl http:// variant + https://*.zdusercontent.com), no credentials header, unchanged under any Origin. Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed — /login/ CSP 40+ connect-src/frame-src origins, triplicated Auth0 oauth/token. Unchanged.
+- 2026-08-08 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — all routes 403 JWT/X-Auth-gated, no pre-auth bypass surface. Unchanged.
+- 2026-08-08 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 flow params still not testable passively. Carried forward.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. Node v20.20.2, pod box-7c8c876945-9v4gf, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. Node v24.19.0, pod api-6f69db97d5-9kg9l, succeededServices (amqp0, redis0-3, mongoDB0-2). Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed — 17 static ACAO (incl https://*.zdusercontent.com wildcard), no credentials header, unchanged under spoofed Origin. Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. Node v20.20.2, pod box-7c8c876945-52dpt, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. Node v24.19.0, pod api-6f69db97d5-dw2j2, same topology. Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live this cycle. Node v24.19.0, pod api-6f69db97d5-dw2j2, same topology. Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed — /login/ CSP 40+ connect-src/frame-src origins (mapbox, events.mapbox, sentry, Auth0 oauth/token), triplicated Auth0 entries. Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live (pod xmdhm, Node v20.20.2, full topology). Unchanged in data shape; new headers absent (no HSTS/xfo/xcto).
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: Reconfirmed — 18 ACAO incl. http:// + *.zdusercontent.com, NO `access-control-allow-credentials` under any Origin → not directly credential-theft exploitable (carried forward).
+- 2026-08-08 REJECTED MISCONFIG @ box.signageos.io/ready: Returns 200 "OK" (2 bytes) trivial health check, no data leaked (carried forward).
+- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak `WRONG_JWT_TOKEN`/`NO_ORGANIZATION_TO_AUTHENTICATE`/`WRONG_ACCOUNT_SECRET` + errorCode 403075/403076/403105 — class descriptive-error excluded per scope.yml (carried forward).
+- 2026-08-08 CONFIRMED MECHANISM @ api.signageos.io/v1/organization/{uid}: Dual-auth precisely enumerated — X-Auth format `id:unsafeDecryptedToken`; org identity derived from header first-part (before `:`); `/organization/{uid}`→403075, `/organization/{uid}/security-token`→403076, `/v1/device`→403105 (JWT-only). Org {uid} in path is client-supplied and distinct from auth-derived org — narrows IDOR verification to X-Auth org-crossing.
+- 2026-08-08 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 flow params not passively testable without tenant/authenticated session (carried forward).
+- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `WRONG_JWT_TOKEN`/`NO_ORGANIZATION_TO_AUTHENTICATE`/`WRONG_ACCOUNT_SECRET` + errorCode 403075/403076/403105 — class descriptive-error excluded per scope.yml (carried forward)
+- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v2/device: Returns 403 JWT-gated (previously 404) — now JWT-gated, not a pre-auth bypass (carried forward)
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. Node v20.20.2, pod box-7c8c876945-xmdhm, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. Node v24.19.0, pod api-6f69db97d5-jnncr, same topology. Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed — 18 static ACAO (incl http:// variant + https://*.zdusercontent.com), no credentials header, unchanged under spoofed Origin. Unchanged.
+- 2026-08-08 REJECTED MISCONFIG @ box.signageos.io/csp-report: GET → 302 login redirect; not an exposed endpoint, report-uri/trusted-types are hardening additions, nothing reportable.
+- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/status: No ACAO/vary headers on status path under any origin — CORS not exploitable (carried forward).
+- 2026-08-08 ACCEPTED MISCONFIG @ box/api /status: Reconfirmed live, data shape unchanged (box Node v20.20.2 / api v24.19.0, full amqp/redis/mongo topology) — carried forward.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this probe cycle — pod 52dpt, Node v20.20.2, full topology. Still missing HSTS/xfo/xcto (differential from api.status which has them).
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: Reconfirmed — 18 ACAO incl. http:// + *.zdusercontent.com, NO credentials flag, unchanged under spoofed Origin. CSP /login/ has 33+ connect-src origins.
+- 2026-08-08 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — /v2/device → 403 (not 404), /v1/organization/test → 403. All endpoints JWT/X-Auth-gated, no pre-auth bypass. v2 migration advancing but remains AUTH-gated.
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live — pod 22g8d, Node v24.19.0, full topology. Now carries proper security headers (HSTS, xfo, xcto) — hardened relative to box.status.
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Now carries proper security headers (HSTS, x-frame-options: DENY, x-content-type-options: nosniff) — hardening relative to box.status which lacks them
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. Node v20.20.2, pod box-7c8c876945-r5fm9, succeededServices (amqp0, redis0-3, mongoDB0-3). Still missing HSTS/xfo/xcto.
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. Node v24.19.0, pod api-6f69db97d5-9kg9l, same topology. Now hardened with security headers.
+- 2026-08-08 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — all routes 403 JWT/X-Auth-gated, no pre-auth bypass surface. v2 migration advancing (/v2/device now 403).
+- 2026-08-08 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 state/redirect_uri binding — not passively testable, no unauthenticated authn surf remaining on box; all entry requires tenant/authenticated session. Carried forward.
+- 2026-08-08 REJECTED MISCONFIG @ box.signageos.io/*/status: Confirmed `/status` lacks ALL security headers (HSTS/xfo/xcto/CSP absent) — only `x-powered-by: Express` — differential vs `/` and `/login/` which are now hardened. NOT on rejected list; remains ACCEPTED.
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: Reconfirmed 403 bodies leak `WRONG_JWT_TOKEN`/`NO_ORGANIZATION_TO_AUTHENTICATE`/`WRONG_ACCOUNT_SECRET` + 403075/403076/403105 — class descriptive-error excluded per scope.yml. Carried forward.
+- 2026-08-08 CONFIRMED MECHANISM @ api.signageos.io/v1/organization/{uid}: Dual-auth precisely enumerated — X-Auth `id:unsafeDecryptedToken` format; org derived from header first-part; {uid} in path is client-supplied and distinct from auth-derived org — narrows IDOR verification to X-Auth org-crossing (AUTH_HELPED).
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. Node v20.20.2, pod box-7c8c876945-rzvgp, succeededServices (amqp0, redis0-3, mongoDB0-3). Still missing HSTS/xfo/xcto.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — Node v20.20.2, hostname box-7c8c876945-52dpt, 46-hex process.uid=fae10..., full topology (amqp0, redis0-3, mongoDB0-3), per-service responseTime. Headers: ONLY x-powered-by: Express. grep -cE 'strict-transport|x-frame|x-content|content-security' = 0. Differential vs api.status (now carries HSTS+xfo+xcto).
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS: 17 static ACAO confirmed under spoofed Origin https://evil.test (evil.test NOT added — static whitelist). Includes http://box.signageos.io plaintext + https://*.zdusercontent.com wildcard + api.signageos.io sibling. No access-control-allow-credentials on any box path.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CSP: 42 distinct origins across connect-src/frame-src confirmed (triplicated Auth0 oauth/token, Sony/BroadSign/MoodMedia device APIs, 5× S3 buckets, API Gateway, api.signageos.io, *.zdusercontent.com, recaptcha).
+- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/status: api /status now carries proper security headers (HSTS, x-frame-options: DENY, x-content-type-options: nosniff) — hardened relative to box /status which lacks them. Info leak (hostname, process.uid, topology) still ACCEPTED.
+- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: Reconfirmed — 403 body leaks `WRONG_JWT_TOKEN`/`Account not found`/`errorCode 403105` — excluded per scope.yml (descriptive errors).
+- 2026-08-08 REJECTED MISCONFIG @ box.signageos.io /ready: Returns 200 "OK" (2 bytes), trivial health check, no data leaked.
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live — Node v24.19.0, hostname api-6f69db97d5-st6zq, full topology. Now hardened with security headers.
+- 2026-08-08 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 state/redirect_uri binding — still not passively testable without tenant/authenticated session.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Unauthenticated GET leaks pod hostname, process UID, Node v20.20.2, full service topology (amqp0, redis0-3, mongoDB0-3); headers ONLY x-powered-by: Express — zero hardening headers
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Now hardened with HSTS (max-age=31536000), x-frame-options: DENY, x-content-type-options: nosniff — differential vs box.status
+- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 403075/403076/403105 — class descriptive-error excluded per scope.yml
+- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v2/device: Returns 403 JWT-gated (was 404) — now JWT-gated, not a pre-auth bypass
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle — pod rotated to `box-7c8c876945-gkzcp`, Node v20.20.2, process.uid stable `b341def86252...`, full amqp/redis/mongo topology, headers still only `x-powered-by: Express` (no HSTS/xfo/xcto). Data shape unchanged; carried forward.
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed — pod `api-6f69db97d5-9kg9l`, Node v24.19.0, security headers (HSTS/xfo/xcto) present. Hardening differential vs box persists.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: Reconfirmed — 17 static ACAO incl. `http://` variant + `https://*.zdusercontent.com`, no credentials flag; CSP connect-src ~40+ origins with triplicated Auth0 oauth/token. Unchanged.
+- 2026-08-08 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — /v2/device and /v1/organization/test both 403 JWT-gated with hardened headers; no pre-auth bypass surface. Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live (2026-08-08 10:30). hostname=box-7c8c876945-52dpt, uid=fae10c..., version=v20.20.2, full topology + responseTime; security-header grep = 0 (no HSTS/xfo/xcto/CSP). `/`+`/login/` hardened — confirmed differential.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/login/ & / CORS+CSP: Reconfirmed live. 17 static ACAO incl. http://plaintext variant + https://*.zdusercontent.com wildcard + api.signageos.io sibling; NO credentials flag; evil.test NOT reflected (static whitelist). CSP 59 distinct origins, Auth0 oauth/token triplicated on /login/.
+- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v1/organization/test descriptive errors: Reconfirmed — 403 body still leaks `WRONG_JWT_TOKEN`/`Account not found`/403105 — excluded class per scope.yml.
+- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v2/device: Reconfirmed 403 JWT-gated (since 2026-08-08 02:38) — not a pre-auth bypass.
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live — pod api-6f69db97d5-9kg9l, Node v24.19.0, full topology; now hardened with HSTS+xfo+xcto (differential vs box /status which lacks them).
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status — still alive: pod `box-7c8c876945-r5fm9`, Node v20.20.2, security-header grep = 0.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod box-7c8c876945-gkzcp, Node v20.20.2, process UID b341def86252cd23a7db1382d94c091a590c400c1b4d8d9602, full amqp0/redis0-3/mongoDB0-3 topology; headers ONLY x-powered-by: Express (zero hardening headers)
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live — pod api-6f69db97d5-22g8d, Node v24.19.0, full topology; now hardened with HSTS (max-age=31536000), x-frame-options: DENY, x-content-type-options: nosniff
+- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v2/device: Returns 403 JWT-gated (was 404) — not a pre-auth bypass
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live (2026-08-08 14:22). Pod `box-7c8c876945-gkzcp`, Node v20.20.2, process.uid `b341def86252cd23a7db1382d94c091a590c400c1b4d8d9602`, full topology (amqp0, redis0-3, mongoDB0-3). Headers: ONLY `x-powered-by: Express` — security-header grep = 0 (no HSTS/xfo/xcto/CSP). `/`+`/login/` hardened (HSTS present on `/`). Differential confirmed.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/login/ & / CORS+CSP: Reconfirmed. 17 static ACAO incl. `http://` plaintext + `https://*.zdusercontent.com` wildcard + `api.signageos.io` sibling; evil.test NOT reflected; NO `access-control-allow-credentials`; CSP 59 distinct origins with triplicated Auth0 oauth/token.
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. Pod `api-6f69db97d5-ff5td`, Node v24.19.0, full topology. Hardened with HSTS+xfo+xcto (differential vs box).
+- 2026-08-08 REJECTED IDOR @ box.signageos.io: No unauthenticated authn surface on box beyond `/status` info-leak and CSP/CORS — no pre-auth bypass found.
+- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `WRONG_JWT_TOKEN`/`Account not found`/403105 — excluded per scope.yml.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Unauthenticated GET leaks pod hostname + 64-hex process.uid + Node v20.20.2 + full amqp/redis/mongo topology + per-service responseTime; headers ONLY `x-powered-by: Express` (0 of HSTS/xfo/xcto/CSP) — differential vs `/` which carries HSTS confirmed
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/login/ & / CORS+CSP: 17 static ACAO incl. `http://` plaintext variant + `https://*.zdusercontent.com` wildcard + `api.signageos.io` sibling; evil.test NOT reflected (static whitelist); NO `access-control-allow-credentials`; CSP 59 distinct origins with triplicated Auth0 oauth/token on `/login/`
+- 2026-08-08 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session (carried forward, off-phase)
+- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `WRONG_JWT_TOKEN`/`Account not found`/403105 — excluded per scope.yml (carried forward)
+- 2026-08-08 PARKED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: confidence 78 valid but target=box this cycle; AUTH_HELPED (requires `sos login` + valid X-Auth) — off-phase, not passively verifiable (carried forward)
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Unauthenticated GET leaks pod hostname + 64-hex process.uid + Node v20.20.2 + full amqp/redis/mongo topology + per-service responseTime; headers ONLY x-powered-by: Express — zero hardening headers
+- 2026-08-08 REJECTED class @ lead: LEAD 5  Cross-tenant IDOR             — AUTH_HELPED, needs JWT + 2nd tenant
+- 2026-08-08 REJECTED class @ lead: LEAD 9   v2 authz drift               — PASSIVE confirms all gated/404
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/login/ & / CORS+CSP: 17 static ACAO incl. http:// plaintext variant + https://*.zdusercontent.com wildcard + api.signageos.io sibling; evil.test NOT reflected (static whitelist); NO access-control-allow-credentials; CSP 59 distinct origins with triplicated Auth0 oauth/token on /login/
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Pod rotated to box-7c8c876945-chbwh (Node v20.20.2), still ONLY x-powered-by: Express with zero security headers — RECONFIRMED LIVE (no HSTS/xfo/xcto/CSP differential vs /)
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Pod rotated to api-6f69db97d5-wpppp (Node v24.19.0), security headers present — RECONFIRMED LIVE (hardened differential vs box persists)
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/login/ & /: 17 static ACAO reconfirmed incl http:// plaintext + *.zdusercontent.com wildcard + api.signageos.io sibling; evil.test NOT reflected; NO access-control-allow-credentials; CSP 59 origins + triplicated Auth0 oauth/token — RECONFIRMED LIVE
+- 2026-08-08 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — /v2/device → 403, /v1/organization/test → 403; all JWT/X-Auth-gated, no pre-auth bypass — PARKED (AUTH_HELPED, off-phase for box target)
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io/status: Unauthenticated GET leaks pod hostname + 64-hex process.uid + Node v20.20.2 + full amqp/redis/mongo topology + per-service responseTime; headers ONLY x-powered-by: Express — zero hardening headers
+- 2026-08-09 ACCEPTED MISCONFIG @ api.signageos.io/status: Now hardened with HSTS (max-age=31536000), x-frame-options: DENY, x-content-type-options: nosniff — differential vs box.status
+- 2026-08-09 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + errorCode 403075/403076/403105 — class descriptive-error excluded per scope.yml
+- 2026-08-09 REJECTED MISCONFIG @ api.signageos.io/v2/device: Returns 403 JWT-gated (was 404) — now JWT-gated, not a pre-auth bypass
+- 2026-08-09 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — all routes 403 JWT/X-Auth-gated, no pre-auth bypass surface. v2 migration advancing (/v2/device now 403).
+- 2026-08-09 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 state/redirect_uri binding — not passively testable, no unauthenticated authn surf remaining on box; all entry requires tenant/authenticated session.
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io/login/ & / CORS+CSP: 17 static ACAO incl. http:// plaintext variant + https://*.zdusercontent.com wildcard + api.signageos.io sibling; evil.test NOT reflected (static whitelist); NO access-control-allow-credentials; CSP 59 distinct origins with triplicated Auth0 oauth/token on /login/
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-7c8c876945-2g8bw` (K8s rolling rotation), Node v20.20.2, process UID `5d1934974f1fa15a...`, 9 succeededServices, per-service responseTime; headers ONLY x-powered-by: Express (security-header grep = 0)
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io/login/ & / CORS+CSP: Reconfirmed — 17 static ACAO incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + `api.signageos.io` sibling; evil.test NOT reflected (static whitelist); NO access-control-allow-credentials (grep = 0); CSP 59+ origins with triplicated Auth0 oauth/token
+- 2026-08-09 REJECTED MISCONFIG @ box.signageos.io/ready: Returns 200 "OK" (2 bytes), trivial health check, no data leaked
+- 2026-08-09 REJECTED MISCONFIG @ box.signageos.io/csp-report: GET → 302 login redirect; not an exposed endpoint, nothing reportable
+- 2026-08-09 REJECTED IDS @ api.signageos.io/v1/*+v2/*: All 60+ endpoints 403 JWT/X-Auth-gated, no pre-auth bypass — v2/device → 403 (was 404)
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed NEW. Unauthenticated JSON health endpoint leaks K8s pod hostname, process UID, Node version, and backend service topology (redis0-3, mongoDB0-3, amqp0). Not on the rejected list (not banner/stack-trace, not file/dir disclosure, not outdated-version-only).
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed NEW. 18× static `access-control-allow-origin` headers (incl `http://` HTTP variant + `https://*.zdusercontent.com` wildcard) on `/` and `/login/`. No `Access-Control-Allow-Credentials` observed. Not on the rejected list.
+- 2026-08-09 REJECTED IDOR @ api.signageos.io: Real `/v1/*` endpoints confirmed via client bundle (bundle.js) — 40+ paths mapped. BUT all return 403 with `WRONG_JWT_TOKEN`/`403105` without a JWT. No unauthenticated data access found → IDOR not testable passively. The earlier seed rejection ("all common paths 404") was based on probing wrong paths (`/api/v1`, `/v1`) that don't exist; the real paths DO exist but are JWT-gated.
+- 2026-08-09 REJECTED MISCONFIG @ api.signageos.io: 403 error body leaks descriptive auth detail (`"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105`, `errorName WRONG_JWT_TOKEN`) — falls under "descriptive error messages" (excluded per scope.yml).
+- 2026-08-09 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation — still not testable passively without tenant config access (carried forward).
+- 2026-08-09 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state — excluded per "CSRF on anonymous-accessible forms" (carried forward).
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → mtnct), process UID, Node v20.20.2, and service topology (amqp0, redis0-3, mongoDB0-3). Not on rejected list.
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin `https://evil.test`. Includes `http://` variant + `https://*.zdusercontent.com` wildcard + sibling `api.signageos.io`. No `Access-Control-Allow-Credentials` on any box path. api.signageos.io has NO ACAO on any path (including /status, /v1/*, /v2/*).
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io CSP: Confirmed live. /login/ CSP broadened vs / (triplicated Auth0 oauth/token, additional recaptcha frame-src). 40+ connect-src/frame-src origins spanning Auth0, Sony/BroadSign/MoodMedia device APIs, S3 buckets, AWS API Gateway, and api.signageos.io.
+- 2026-08-09 REJECTED MISCONFIG @ box.signageos.io /ready: Returns 200 `OK` (2 bytes) — trivial health check, no data leaked. Not reportable.
+- 2026-08-09 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All 60+ endpoints return 403 JWT-gated (WRONG_JWT_TOKEN/403105). No pre-auth bypass. Dual auth confirmed: JWT Bearer (main API) + X-Auth API-key format (`id:unsafeDecryptedToken`) for bulk provisioning.
+- 2026-08-09 REJECTED MISCONFIG @ api.signageos.io CORS: 403/404 carry `vary: Origin` + `access-control-expose-headers: *` but NO ACAO under any Origin — not CORS-exploitable.
+- 2026-08-09 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation — not testable passively without tenant config access (carried forward).
+- 2026-08-09 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state — excluded per "CSRF on anonymous-accessible forms" (carried forward).
+- 2026-08-09 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105` — falls under descriptive error messages (excluded).
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live (pods jfmtn/gkzcp, Node v20.20.2, full topology, 40-hex uid); zero security headers persists (grep=0) — differential vs hardened api /status persists.
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: Reconfirmed — 17 static ACAO incl http:// + *.zdusercontent.com, no credentials flag, evil.test not reflected; CSP connect-src triplicated Auth0 + mapbox/sentry/S3.
+- 2026-08-09 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto) — hardening differential vs box persists.
+- 2026-08-09 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: class stable (WRONG_JWT_TOKEN/NO_ORGANIZATION_TO_AUTHENTICATE/WRONG_ACCOUNT_SECRET + 403075/403076/403105) — excluded per scope.yml.
+- 2026-08-09 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All routes still JWT/X-Auth-gated pre-auth; no passive bypass. Cross-tenant org/security-token chain remains AUTH_HELPED (requires valid token + 2nd org).
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. Node v20.20.2, pod box-7c8c876945-52dpt, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
+- 2026-08-09 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. Node v24.19.0, pod api-6f69db97d5-dw2j2, same topology. Unchanged.
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed — 17 static ACAO (incl http:// variant + https://*.zdusercontent.com), no credentials header, unchanged under any Origin.
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed — /login/ CSP 40+ connect-src/frame-src origins, triplicated Auth0 oauth/token. Unchanged.
+- 2026-08-09 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — all routes 403 JWT/X-Auth-gated, no pre-auth bypass surface. Unchanged.
+- 2026-08-09 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 flow params still not testable passively. Carried forward.
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle. Node v20.20.2, pod box-7c8c876945-gkzcp, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
+- 2026-08-09 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live this cycle. Node v24.19.0, pod api-6f69db97d5-dw2j2, same topology. Unchanged.
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed — 17 static ACAO (incl http:// variant + https://*.zdusercontent.com), no credentials header, unchanged under any Origin. Unchanged.
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed — /login/ CSP 40+ connect-src/frame-src origins (mapbox, events.mapbox, sentry, Auth0 oauth/token), triplicated Auth0 entries. Unchanged.
+- 2026-08-09 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — all routes 403 JWT/X-Auth-gated, no pre-auth bypass surface. Unchanged.
+- 2026-08-09 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 flow params still not testable passively. Carried forward.
+- 2026-08-09 REJECTED MISCONFIG @ box.signageos.io/csp-report: GET → 302 login redirect; not an exposed endpoint, report-uri/trusted-types are hardening additions, nothing reportable.
+- 2026-08-09 REJECTED MISCONFIG @ api.signageos.io/status: No ACAO/vary headers on status path under any origin — CORS not exploitable (carried forward).
+- 2026-08-09 ACCEPTED MISCONFIG @ box/api /status: Reconfirmed live, data shape unchanged (box Node v20.20.2 / api v24.19.0, full amqp/redis/mongo topology) — carried forward.
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle — pod rotated to `box-7c8c876945-gkzcp`, Node v20.20.2, process.uid stable `b341def86252...`, full amqp/redis/mongo topology, headers still only `x-powered-by: Express` (no HSTS/xfo/xcto). Data shape unchanged; carried forward.
+- 2026-08-09 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed — pod `api-6f69db97d5-9kg9l`, Node v24.19.0, security headers (HSTS/xfo/xcto) present. Hardening differential vs box persists.
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: Reconfirmed — 17 static ACAO incl. `http://` variant + `https://*.zdusercontent.com`, no credentials flag; CSP connect-src ~40+ origins with triplicated Auth0 oauth/token. Unchanged.
+- 2026-08-09 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — /v2/device and /v1/organization/test both 403 JWT-gated with hardened headers; no pre-auth bypass surface. Unchanged.
+- 2026-08-09 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live (2026-08-08 14:22). Pod `box-7c8c876945-gkzcp`, Node v20.20.2, process.uid `b341def86252cd23a7db1382d94c091a590c400c1b4d8d9602`, full topology (amqp0, redis0-3, mongoDB0-3). Headers: ONLY `x-powered-by: Express` — security-header grep = 0 (no HSTS/xfo/xcto/CSP). `/`+`/login/` hardened (HSTS present on `/`). Differential confirmed.
+[0m
+[0m→ [0mRead scope.yml
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcurl -s -D /tmp/box_status_headers.txt -o /tmp/box_status_body.json https://box.signageos.io/status; echo "=== HTTP STATUS ==="; head -1 /tmp/box_status_headers.txt; echo "=== BODY (pretty) ==="; cat /tmp/box_status_body.json | python3 -m json.tool 2>/dev/null || cat /tmp/box_status_body.json | head -c 2000; echo; echo "=== BODY SHA256 ==="; sha256sum /tmp/box_status_body.json; echo "=== HEADER GREP (sec headers) ==="; grep -ciE 'strict-transport|x-frame|x-content|content-security' /tmp/box_status_headers.txt || echo 0 failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+Let me read the scope and run fresh passive probes to verify current state.
