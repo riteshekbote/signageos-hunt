@@ -6145,3 +6145,4 @@ testability: PASSIVE
 [LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (secgrep=3) reconfirmed — differential vs box /status (secgrep=0) persists.
 [RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid leak (secgrep=0, hardened siblings only) plus broad static CORS whitelist with http:// variant; no auth bypass, no credential-theft path, no new endpoints across 30+ NO_DELTA cycles | api.signageos.io: 40 — cross-tenant security-token IDOR mechanism fully confirmed (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold on all 60+ routes, CORS non-exploitable, descriptive-error class excluded by scope.
 ## 2026-08-16 17:51:23 UTC [box] (model bigpickle)
+## 2026-08-16 18:17:01 UTC [box] (model bigpickle)
