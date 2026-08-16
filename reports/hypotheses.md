@@ -4314,3 +4314,30 @@
 - LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical confirms org-identity/header split ("first part before 
 - LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (HSTS/xfo/xcto/no-store, secgrep=3), zero ACAO under any Origin, behind CloudFront; info-leak persists (h
 - LEARN: CONFIRMED DIFFERENTIAL @ box vs api /status: box /status secgrep=0 (x-powered-by only); api /status secgrep=3 (HSTS/xfo/xcto) — differential persists, confirms 
+
+## RANKED HYPOTHESES 2026-08-16 20:25:25 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-nemotron3.txt)
+- [100] box.signageos.io/status: Unauthenticated /status JSON infrastructure leak on box (from reports/hypotheses-laguna.txt)
+- [86] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override (from reports/hypotheses-bigpickle.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id:unsafeD
+- NEXT(hypotheses-laguna.txt): PROBE: `curl -s https://box.signageos.io/status | python3 -m json.tool` → confirm HTTP 200 JSON retains hostname/uid/Node/CPU+mem/topology leak with secgrep=0; 
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id>:<unsaf
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized — evidence archive sha256 body 38737948dcd9... / headers b11ba5ba... (30+ cycles stable)
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle — mechanism intact, zero auth drift; AUTH_HE
+- LEARN: CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on pro
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass; cross-tenant chain rem
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml (desc
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged)
+- LEARN: REJECTED MISCONFIG @ box.signageos.io WebSocket: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Live probe (20:03 UTC) confirms HTTP 200 JSON leak — hostname `box-8676fb5f57-xd6mc` (new uid `6deaf70c…`), Node v
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/ & /login/: Live probe confirms 17 static ACAO (evil.test NOT reflected), 0 access-control-allow-credentials, includes htt
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: Live probe confirms 403 403074 errorDetail byte-identical ("Both x-oauth-client_id header
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (HSTS/xfo/xcto/no-store, secgrep=3), zero ACAO under any Origin, behind CloudFront — info-leak persists (
+- LEARN: CONFIRMED DEAD @ github.com/signageos/videowall-designer: clientId/secret (sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) tested as 
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle — mechanism intact, zero auth drift across r
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod rotation only (box-8676fb5f57-*), secgrep=0, full 9-svc topology leak behind CloudFront; PO
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/ + /login/: 17 static ACAO (evil.test NOT reflected, 0 credentials flag) reconfirmed — MISCONFIG-only, no exploit path, un
+- LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on /, /status, /v1/*, /v2/* under any Origin — not CORS-exploitable.
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check, no data leaked.
+- LEARN: CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: staging-only fixture, X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse dispro
