@@ -5873,3 +5873,4 @@ testability: PASSIVE
 [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: reconfirmed live — pod box-8676fb5f57-mffl6, Node v20.20.2, 9-svc topology, secgrep=0; POC stable 30+ cycles, zero hardening added.
 [RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid leak (secgrep=0) plus broad static CORS whitelist with http:// variant; no auth bypass, no credential-theft path, no new endpoints across 30+ cycles | api.signageos.io: 40 — cross-tenant security-token IDOR mechanism fully confirmed (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold on all 60+ routes, CORS non-exploitable, descriptive-error class excluded by scope.
 ## 2026-08-16 13:36:45 UTC [box] (model bigpickle)
+## 2026-08-16 13:59:05 UTC [box] (model bigpickle)
