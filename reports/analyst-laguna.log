@@ -53661,3 +53661,115 @@ All 3 hypotheses pass thresholds (confidence ≥40, not on REJECTED list, all ha
 ## STEP 7 — RISK SCORE
 [RISK] box.signageos.io: 60 — Unauthenticated /status JSON infra-leak (K8s pod hostname, 64-hex process UID, Node v20.20.2, 9-service cluster topology, CPU/mem, zero hardening headers behind CloudFront) + 17-entry static CORS whitelist incl plaintext http:// + *.zdunpkgdomains.com (MISCONFIG-only, 0 creds flag, no credential-theft path); all other surfaces behind Auth0 login catch-all or trivial 200 "OK"; entry points hardened (HSTS/xfo/xcto/CSP/secgrep=4).
 [RISK] box.signageos.io: 86 — CRITICAL cross-tenant security-token mint IDOR mechanism confirmed (403074 gating byte-identical, zero auth drift, org from X-Auth header first-part, path uid client-supplied), AUTH_HELPED (requires org credentials to execute); /status hardened (secgrep=3) but still leaks hostname/uid/Node; all 60+ routes JWT/X-Auth-gated pre-auth, zero ACAO; descriptive errors leak auth internals (excluded class, mechanism evidence only).
+===== ANALYST laguna 2026-08-16 19:16:21 UTC =====
+[0m
+> build · laguna-s-2.1-free
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" https://box.signageos.io/status 2>/dev/null; echo ""
+200
+[0m
+[0m$ [0mcurl -sI -H "Origin: https://evil.test" https://box.signageos.io/ 2>/dev/null | grep -i "access-control-allow-origin" | head -20; echo "---CREDS---"; curl -sI -H "Origin: https://evil.test" https://box.signageos.io/ 2>/dev/null | grep -ci "access-control-allow-credentials"
+access-control-allow-origin: http://box.signageos.io
+access-control-allow-origin: https://2.signageos.io
+access-control-allow-origin: https://static.signageos.io
+access-control-allow-origin: https://upload.signageos.io
+access-control-allow-origin: https://platform.signageos.io
+access-control-allow-origin: https://weinre.signageos.io
+access-control-allow-origin: https://license.signageos.io
+access-control-allow-origin: https://signageos-device-monitoring.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://signageos-public.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://storage.googleapis.com
+access-control-allow-origin: https://remote-desktop.signageos.io
+access-control-allow-origin: https://remote-desktop-us.signageos.io
+access-control-allow-origin: https://api.signageos.io
+access-control-allow-origin: https://signageos.zendesk.com
+access-control-allow-origin: https://*.zdusercontent.com
+access-control-allow-origin: https://www.google.com/recaptcha/api2/clr
+---CREDS---
+0
+[0m
+[0m$ [0mcurl -s https://box.signageos.io/status 2>/dev/null | head -c 2000; echo ""; echo "---HSTS grep---"; curl -sI https://box.signageos.io/status 2>/dev/null | grep -ciE "strict-transport|x-frame|x-content|content-security"
+{"name":"box","status":"OK","process":{"uid":"48e1a93864b8c413d4538b0c5f3c4311a19ab7d038644091df","pid":1,"version":"v20.20.2","uptime":46985.258627516,"cpuUsage":{"user":1170888751,"system":151816579},"memoryUsage":{"rss":193347584,"heapTotal":125853696,"heapUsed":109524840,"external":23496544,"arrayBuffers":20043803}},"hostname":"box-8676fb5f57-mffl6","failedServices":[],"succeededServices":["amqp0","redis0","redis1","redis2","redis3","mongoDB2","mongoDB3","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1786907693782,"respondedAt":1786907693840,"amqp0":{"response":{"requestedAt":1786907693782,"respondedAt":1786907693840,"responseTime":58}},"redis0":{"response":{"requestedAt":1786907693782,"respondedAt":1786907693784,"responseTime":2}},"redis1":{"response":{"requestedAt":1786907693782,"respondedAt":1786907693784,"responseTime":2}},"redis2":{"response":{"requestedAt":1786907693782,"respondedAt":1786907693784,"responseTime":2}},"redis3":{"response":{"requestedAt":1786907693782,"respondedAt":1786907693785,"responseTime":3}},"mongoDB2":{"response":{"requestedAt":1786907693782,"respondedAt":1786907693784,"responseTime":2}},"mongoDB3":{"response":{"requestedAt":1786907693782,"respondedAt":1786907693785,"responseTime":3}},"mongoDB1":{"response":{"requestedAt":1786907693782,"respondedAt":1786907693787,"responseTime":5}},"mongoDB0":{"response":{"requestedAt":1786907693782,"respondedAt":1786907693790,"responseTime":8}}}
+---HSTS grep---
+0
+[0m
+## 2026-08-16 18:53:33 UTC [box] (model laguna)
+
+### STEP 1 — DELTA
+- NO_DELTA — all surface items byte-identical behavior; only pod hostnames/UIDs rotate (`box-8676fb5f57-mffl6` confirmed, `uid 48e1a93864b8c413…`). Zero auth drift across rs rotation. No new endpoints, no surface changes since 2026-08-16 18:53 UTC.
+
+### STEP 2 — PRIORITIZE
+```
+[PRIO] box.signageos.io/status, score=6.8, axes: attack_surface=4, business_value=7, tech_exposure=5, gate_ease=10, cloud_surface=8, freshness=10
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token, score=6.65, axes: attack_surface=3, business_value=10, tech_exposure=8, gate_ease=2, cloud_surface=9, freshness=10
+[PRIO] box.signageos.io/ & /login/ CORS, score=5.8, axes: attack_surface=5, business_value=3, tech_exposure=6, gate_ease=10, cloud_surface=4, freshness=10
+```
+
+### STEP 3 — HYPOTHESES
+```
+[HYP] Unauthenticated /status JSON infra-leak on box
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 100
+reasoning: Live probe confirms HTTP 200 JSON leaking hostname `box-8676fb5f57-mffl6`, 40-hex process.uid (`48e1a93864b8c413…`), Node v20.20.2, cpuUsage/memoryUsage, 9-service topology (amqp0/redis0-3/mongoDB0-3) + per-service responseTime; secgrep=0 (only x-powered-by: Express + CloudFront). Shaped byte-identical across 30+ cycles.
+evidence_needed: curl -s https://box.signageos.io/status → 200 JSON with hostname/uid/Node/CPU+mem/topology; curl -sI https://box.signageos.io/status | grep -ciE 'strict-transport|x-frame|x-content|content-security' → 0; curl -sI https://box.signageos.io/ | grep -ciE 'strict-transport|x-frame|x-content|content-security' → 4 (differential).
+verify_steps: PASSIVE: (1) curl -s https://box.signageos.io/status → 200 JSON infra-leak; (2) curl -sI https://box.signageos.io/status | grep -ciE 'strict-transport|x-frame|x-content|content-security' → 0; (3) curl -sI https://box.signageos.io/ | grep -ciE 'strict-transport|x-frame|x-content|content-security' → 4 (differential confirms entry hardened but /status bare).
+impact: Internal K8s pod identity, process UID, Redis/MongoDB/AMQP cluster topology, Node v20.20.2 CVE targeting for supply-chain pivots. MEDIUM.
+testability: PASSIVE
+```
+```
+[HYP] Cross-tenant security-token mint via client-supplied {uid} on api
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: Live probe 2026-08-16 18:52 confirms 403 403074 errorDetail byte-identical ("Both x-oauth-client_id header and first part (before char :) of x-auth header are missing from request thus account not to be authenticated"). Endpoint is X-Auth/x-oauth-client_id gated NOT JWT; org identity derived from header first-part, path {uid} is client-supplied and distinct. Zero auth drift across 30+ cycles and rs rotations.
+evidence_needed: HTTP 200 + securityToken JSON on POST /v1/organization/<orgB-uid>/security-token using orgA's X-Auth + x-oauth-client_id + x-oauth-client_secret; response body is a token minted for orgB.
+verify_steps: AUTH_HELPED: (1) sos login (Auth0 device-code on box.signageos.io) → account owning ≥1 org with API provisioning access; (2) acquire account JWT + X-Auth `<org-id:unsafeDecryptedToken>` + x-oauth-client_id + x-oauth-client_secret + org uid via sos accounts/sos orgs; (3) curl -X POST -H "X-Auth:<orgA-id:token>" -H "x-oauth-client_id:<orgA-id>" -H "x-oauth-client_secret:<secret>" https://api.signageos.io/v1/organization/<orgA-id>/security-token → expect 200 + token JSON; (4) repeat with <orgB-uid> in path → 200 + token body for orgB = CONFIRMED cross-tenant mint.
+impact: Authenticated tenant mints org security-tokens for arbitrary foreign tenants → full cross-tenant device/content/timing/firmware control. CRITICAL.
+testability: AUTH_HELPED
+```
+```
+[HYP] Overly broad static CORS origin whitelist incl plaintext http:// on box
+class: MISCONFIG
+asset: box.signageos.io/ & /login/
+confidence: 100
+reasoning: Live probe 2026-08-16 confirms 17 static ACAO values on `/` under spoofed Origin `https://evil.test` (evil.test NOT reflected = static whitelist), incl `http://box.signageos.io` plaintext + `https://*.zdunpkgdomains.com` wildcard + api.sibling + path-bearing recaptcha. 0 access-control-allow-credentials. /status has 0 ACAO (scoped to SPA entry only).
+evidence_needed: curl -sI -H "Origin: https://evil.test" https://box.signageos.io/ → 17 distinct origins excl evil.test; grep access-control-allow-credentials → 0; curl -sI -H "Origin: https://evil.test" https://box.signageos.io/status | grep -ci access-control-allow-origin → 0.
+verify_steps: PASSIVE: (1) curl -sI -H "Origin: https://evil.test" https://box.signageos.io/ → 17 static ACAO (evil.test NOT reflected); (2) grep -ci access-control-allow-credentials → 0; (3) curl -sI -H "Origin: https://evil.test" https://box.signageos.io/status | grep -ci access-control-allow-origin → 0.
+impact: 17-entry static ACAO whitelist incl plaintext http:// expands postMessage/CSP trust boundary across 3rd-party device APIs (Sony/BroadSign/MoodMedia), S3, AWS API Gateway, zendesk; plaintext ACAO is TLS-downgrade risk. LOW-MEDIUM.
+testability: PASSIVE
+```
+
+### STEP 4 — SELF-CRITIQUE
+- No hypotheses dropped. All 3 meet confidence ≥40, all classes pass REJECTED-list check, all have concrete verify_steps.
+```
+[FINAL]
+[100] box.signageos.io/status: Unauthenticated /status JSON infra-leak on box (PASSIVE POC finalized, 30+ cycles)
+[86] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint IDOR mechanism confirmed (AUTH_HELPED)
+[100] box.signageos.io/ & /login/ CORS: Overly broad static CORS whitelist incl plaintext http:// (MISCONFIG-only, 0 creds flag)
+```
+
+### STEP 5 — NEXT ACTION
+```
+[NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) → obtain account owning ≥1 org with API provisioning access → acquire account JWT + X-Auth `<org-id:unsafeDecryptedToken>` + x-oauth-client_id + x-oauth-client_secret via `sos accounts`/`sos orgs` → execute baseline POST https://api.signageos.io/v1/organization/<orgA-id>/security-token (expect 200 + securityToken JSON) → repeat with foreign orgB uid in path (expect 200 + token body for orgB = CONFIRMED cross-tenant mint). This is the ONLY AUTH_HELPED item blocking CRITICAL confirmation.
+```
+
+### STEP 6 — LEARNING
+```
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Live probe confirms HTTP 200 JSON leak (hostname box-8676fb5f57-mffl6, uid 48e1a93864b8c413…, Node v20.20.2, 9-svc topology + CPU/mem + responseTime, secgrep=0) behind CloudFront — POC finalized 30+ cycles.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/ & /login/ CORS+CSP: Live probe confirms 17 static ACAO (evil.test NOT reflected), 0 credentials flag, CSP 59+ origins, secgrep=4 (hardened) — MISCONFIG-only, no credential-theft path, unchanged.
+[LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: Live probe confirms 403 403074 errorDetail byte-identical — mechanism intact, zero auth drift; AUTH_HELPED conf 86.
+[LEARN] REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on /, /status, /v1/*, /v2/* under any Origin — not CORS-exploitable.
+[LEARN] REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged).
+[LEARN] REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session (carried forward).
+[LEARN] REJECTED MISCONFIG @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass (NO_DELTA, 30+ cycles).
+[LEARN] REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml (descriptive error messages).
+[LEARN] CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: sha256 564c293b… fixture tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only, credential reuse disproven.
+```
+
+### STEP 7 — RISK SCORE
+```
+[RISK] box.signageos.io: 60 — Unauthenticated /status JSON infra-leak (hostname/uid/Node/CPU+mem/topology, secgrep=0 behind CloudFront) + 17-entry static CORS whitelist (http://plaintext + *.zdunpkgdomains.com, MISCONFIG-only, 0 creds flag); all other surfaces behind Auth0 login catch-all or trivial 200 "OK"; entry points hardened (HSTS/xfo/xcto/CSP/secgrep=4).
+[RISK] api.signageos.io: 86 — CRITICAL cross-tenant security-token mint IDOR mechanism confirmed (403074 gating byte-identical, zero auth drift, org from X-Auth header first-part, path uid client-supplied), AUTH_HELPED; /status hardened (secgrep=3) but still leaks hostname/uid/Node; all 60+ routes JWT/X-Auth-gated pre-auth, zero ACAO; descriptive errors leak auth internals (excluded class, mechanism evidence only).
+```

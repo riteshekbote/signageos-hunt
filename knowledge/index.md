@@ -1010,3 +1010,11 @@
 - 2026-08-16 REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on /, /status, /v1/*, /v2/* under any Origin (fresh probe) — not CORS-exploitable.
 - 2026-08-16 REJECTED MISCONFIG @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass; cross-tenant chain remains AUTH_HELPED only (NO_DELTA, 30+ cycles).
 - 2026-08-16 CONFIRMED DEAD @ Videowall-designer leaked clientId/secret on PROD: sha256 564c293b… fixture tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only, credential reuse disproven (30+ cycles).
+- 2026-08-16 ACCEPTED MISCONFIG @ box.signageos.io/status: Live probe confirms HTTP 200 JSON leak (hostname box-8676fb5f57-mffl6, uid 48e1a93864b8c413…, Node v20.20.2, 9-svc topology + CPU/mem + responseTime, secgrep=0) behind CloudFront — POC finalized 30+ cycles.
+- 2026-08-16 ACCEPTED MISCONFIG @ box.signageos.io/ & /login/ CORS+CSP: Live probe confirms 17 static ACAO (evil.test NOT reflected), 0 credentials flag, CSP 59+ origins, secgrep=4 (hardened) — MISCONFIG-only, no credential-theft path, unchanged.
+- 2026-08-16 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: Live probe confirms 403 403074 errorDetail byte-identical — mechanism intact, zero auth drift; AUTH_HELPED conf 86.
+- 2026-08-16 REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on /, /status, /v1/*, /v2/* under any Origin — not CORS-exploitable.
+- 2026-08-16 REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged).
+- 2026-08-16 REJECTED MISCONFIG @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass (NO_DELTA, 30+ cycles).
+- 2026-08-16 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml (descriptive error messages).
+- 2026-08-16 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: sha256 564c293b… fixture tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only, credential reuse disproven.
