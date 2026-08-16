@@ -1,19 +1,16 @@
 [0m
 > build · nemotron-3-ultra-free
 [0m
-Based on the knowledge base, this hit has already been fully triaged. The hardcoded secret in `signageos/videowall-designer/sos/videoTiming.js:19` (SHA256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) is a **staging-only test fixture** that was tested against production and confirmed dead (returns `403076 WRONG_ACCOUNT_SECRET "Account not found"`).
+[0m$ [0mecho -n "9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9" | sha256sum
+564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e  -
+[0m
+| Category | File | Line | SHA256 | Classification |
+|----------|------|------|--------|----------------|
+| REAL_SECRET | reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 19 | 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e | Hardcoded client secret targeting staging `http://api.kiera.office.signageos.io` (HTTP) |
 
-### Classification Table
-
-| Category | Files |
-|----------|-------|
-| **REAL_SECRET** | — |
-| **TEST_OR_EXAMPLE** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` (SHA256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) — staging fixture for `http://api.kiera.office.signageos.io` |
-| **ENDPOINT_LEAK** | — |
-| **INTERESTING** | — |
-
-### Verdict
-
-| Candidate | REPORT_CANDIDATE |
-|-----------|------------------|
-| videowall-designer videoTiming.js hardcoded secret | **no** — CONFIRMED DEAD (staging-only fixture, credential reuse disproven on prod via X-Auth test → 403076) |
+**Verdict:**
+- **REPORT_CANDIDATE: no** — This is a known, previously triaged secret leak (first documented 2026-08-07). The credential:
+  1. Targets an internal staging host (`api.kiera.office.signageos.io`) — **out of program scope** (only `box.signageos.io` and `api.signageos.io` are eligible)
+  2. Has been **tested against production** and confirmed **DEAD** (2026-08-14+: X-Auth with this clientId/secret returns `403076 WRONG_ACCOUNT_SECRET "Account not found"` — staging-only test fixture)
+  3. Credential reuse on prod **disproven** across multiple reconfirmations
+  4. Already tracked in knowledge base as `ACCEPTED SECRET_LEAK` (informational only, not reportable via program)
