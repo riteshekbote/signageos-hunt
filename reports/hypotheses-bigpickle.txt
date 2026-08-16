@@ -1,4 +1,4 @@
-## 2026-08-16 16:10:17 UTC [box] (model bigpickle)
+## 2026-08-16 16:41:53 UTC [box] (model bigpickle)
 [PRIO] box.signageos.io/status, score=67, attack=7 business=4 tech=3 gate=10 cloud=4 fresh=10
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token, score=65, attack=9 business=9 tech=7 gate=2 cloud=3 fresh=10
 [PRIO] box.signageos.io/ + /login/ CORS+CSP, score=58, attack=5 business=3 tech=5 gate=10 cloud=3 fresh=10
@@ -6,8 +6,8 @@
 class: MISCONFIG
 asset: box.signageos.io/status
 confidence: 96
-reasoning: HTTP 200 JSON leaks hostname, 40-hex process.uid, Node v20.20.2, 9-svc topology (amqp0/redis0-3/mongoDB0-3), cpuUsage/memoryUsage; secgrep=0 (x-powered-by: Express + CloudFront only); POC finalized 30+ cycles across pod rotations.
-evidence_needed: n/a — accepted finding, POC final (body sha `38737948…`, headers `b11ba5ba…`).
+reasoning: HTTP 200 JSON leaks hostname, 64-hex process.uid, Node v20.20.2, 9-svc topology, cpuUsage/memoryUsage; secgrep=0 (x-powered-by: Express + CloudFront only); POC finalized 30+ cycles across pod rotations.
+evidence_needed: n/a — accepted finding, POC final (body sha256 38737948…, headers b11ba5ba…).
 verify_steps: `curl -s https://box.signageos.io/status` → 200 JSON infra-leak; `grep -cE 'strict-transport|x-frame|x-content|content-security'` = 0.
 impact: infra/topology/process identity disclosure of box fleet; enables targeted K8s/pod attacks; LOW-MEDIUM
 testability: PASSIVE
@@ -24,7 +24,7 @@ testability: AUTH_HELPED
 class: MISCONFIG
 asset: box.signageos.io / + /login/
 confidence: 92
-reasoning: 17 static ACAO (incl http://plaintext + *.zdutterstock.com wildcard + api sibling) under Origin evil.test; evil.test NOT reflected (static whitelist); grep(access-control-allow-credentials)=0; hardened entry (secgrep=4) vs /status (secgrep=0).
+reasoning: 17 static ACAO (incl http://plaintext + *.zdusercontent.com wildcard + api sibling) under Origin evil.test; evil.test NOT reflected (static whitelist); grep(access-control-allow-credentials)=0; hardened entry (secgrep=4) vs /status (secgrep=0).
 evidence_needed: n/a — accepted finding; no credential-theft path without credentials flag.
 verify_steps: `curl -s -D - -H "Origin: https://evil.test" https://box.signageos.io/login/` → 17 static ACAO, credentials grep = 0.
 impact: expands postMessage/origin trust boundary for SPA surfaces; LOW
