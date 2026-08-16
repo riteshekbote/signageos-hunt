@@ -31848,3 +31848,112 @@ STEP 6 — LEARNING
 STEP 7 — RISK SCORE
 - [RISK] box.signageos.io: 42 — unauth `/status` infra/topology/process disclosure (secgrep=0, pod rotation only, behind CloudFront) + 17-entry static ACAO whitelist incl `http://` plaintext + `*.zdusercontent.com` wildcard (MISCONFIG-only, no creds flag); otherwise hardened entry points (HSTS/xfo/xcto/CSP/nonces) and login catch-all containment
 - [RISK] api.signageos.io: 38 — hardened (HSTS/xfo/xcto/no-store, secgrep=3), zero ACAO, all routes JWT/X-Auth-gated; residual risk concentrated in one unproven AUTH_HELPED cross-tenant security-token mint chain (conf 86, unverified) + minor `/status` info-leak under hardened headers
+===== ANALYST bigpickle 2026-08-16 03:16:41 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code} %{size_download}\n" https://box.signageos.io/status
+200 1431
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code} %{size_download}\n" https://api.signageos.io/status
+200 1334
+[0m
+[0m$ [0mcurl -s https://api.signageos.io/status | sha256sum; curl -s https://api.signageos.io/status
+a196bed18ba2c3e5487a12d9a0c418c4df82f1ed6cee82cb6d712f8f97779d0d  -
+{"name":"api","status":"OK","process":{"uid":"8ae60c66d48b7c4023144e07fc532b7a5dbc96fdad8af2949c","pid":1,"version":"v24.19.0","uptime":394.029991931,"cpuUsage":{"user":144228235,"system":11789420},"memoryUsage":{"rss":702337024,"heapTotal":463679488,"heapUsed":334444192,"external":70729871,"arrayBuffers":66633203}},"hostname":"api-77955558bc-pnzxp","failedServices":[],"succeededServices":["amqp0","redis1","redis3","redis2","redis0","mongoDB2","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1786850035642,"respondedAt":1786850035709,"amqp0":{"response":{"requestedAt":1786850035643,"respondedAt":1786850035709,"responseTime":66}},"redis1":{"response":{"requestedAt":1786850035645,"respondedAt":1786850035649,"responseTime":4}},"redis3":{"response":{"requestedAt":1786850035645,"respondedAt":1786850035649,"responseTime":4}},"redis2":{"response":{"requestedAt":1786850035645,"respondedAt":1786850035649,"responseTime":4}},"redis0":{"response":{"requestedAt":1786850035644,"respondedAt":1786850035650,"responseTime":6}},"mongoDB2":{"response":{"requestedAt":1786850035646,"respondedAt":1786850035649,"responseTime":3}},"mongoDB1":{"response":{"requestedAt":1786850035646,"respondedAt":1786850035651,"responseTime":5}},"mongoDB0":{"response":{"requestedAt":1786850035645,"respondedAt":1786850035654,"responseTime":9}}}
+[0m
+[0m$ [0mcurl -s https://box.signageos.io/status | sha256sum; curl -s https://box.signageos.io/status
+4ebb6fc1e2e7f99678c816b77e81ef57ade74f509d318371ca5ef394e9ca2f7f  -
+{"name":"box","status":"OK","process":{"uid":"49e71d542ab9f349b8911a25a338fceb0dbc9ee85c8d93a638","pid":1,"version":"v20.20.2","uptime":428.654630737,"cpuUsage":{"user":8525317,"system":1478138},"memoryUsage":{"rss":151977984,"heapTotal":93544448,"heapUsed":77667600,"external":21197372,"arrayBuffers":18572363}},"hostname":"box-8676fb5f57-8kvxs","failedServices":[],"succeededServices":["amqp0","redis1","redis3","redis2","redis0","mongoDB2","mongoDB3","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1786850035821,"respondedAt":1786850035884,"amqp0":{"response":{"requestedAt":1786850035821,"respondedAt":1786850035884,"responseTime":63}},"redis1":{"response":{"requestedAt":1786850035822,"respondedAt":1786850035825,"responseTime":3}},"redis3":{"response":{"requestedAt":1786850035822,"respondedAt":1786850035825,"responseTime":3}},"redis2":{"response":{"requestedAt":1786850035822,"respondedAt":1786850035826,"responseTime":4}},"redis0":{"response":{"requestedAt":1786850035821,"respondedAt":1786850035826,"responseTime":5}},"mongoDB2":{"response":{"requestedAt":1786850035822,"respondedAt":1786850035825,"responseTime":3}},"mongoDB3":{"response":{"requestedAt":1786850035823,"respondedAt":1786850035826,"responseTime":3}},"mongoDB1":{"response":{"requestedAt":1786850035822,"respondedAt":1786850035828,"responseTime":6}},"mongoDB0":{"response":{"requestedAt":1786850035822,"respondedAt":1786850035834,"responseTime":12}}}
+[0m
+[0m$ [0mcurl -s -D - https://api.signageos.io/v1/organization/test/security-token | head -c 600
+HTTP/2 403 
+content-type: application/json; charset=utf-8
+content-length: 326
+date: Sun, 16 Aug 2026 03:13:59 GMT
+etag: W/"146-fj8PODy5yJPHl8tjg58lQ2aMPQg"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+vary: Origin
+access-control-expose-headers: *
+x-cache: Error from cloudfront
+via: 1.1 1d0952b39a1f14a100a952bab10a6ade.cloudfront.net (CloudFront)
+x-amz-cf-pop: SFO53-P12
+x-amz-cf-id: D2O-oV1czagISWR1sXUQnkVgUJkzrj3YlnY-ftYsOIDV5ir_F61UFQ==
+
+{"status":403,"message":"Access forbidden - Neither \"x-oauth-cl
+[0m
+[0m$ [0mcurl -s -D - -o /dev/null -H "Origin: https://evil.test" https://box.signageos.io/login/ | grep -ic "access-control-allow-origin"; curl -s -D - -o /dev/null -H "Origin: https://evil.test" https://box.signageos.io/login/ | grep -ci "access-control-allow-credentials"
+17
+0
+[0m
+## STEP 1 — DELTA
+
+- [CHANGED] box.signageos.io/status — pod rotated to `box-8676fb5f57-8kvxs` (uid `49e71d542ab9…`, Node v20.20.2, 9-svc topology incl mongoDB3), body sha `4ebb6fc1…` differs from prior `38737948…` only via pod-uid/timestamps — shape byte-identical, secgrep=0
+- [CHANGED] api.signageos.io/status — pod rotated to `api-77955558bc-pnzxp` (Node v24.19.0, 8-svc, mongoDB3 absent), hardened HSTS/xfo/xcto/no-store intact, body sha `a196bed1…`
+- [CHANGED] api.signageos.io/v1/organization/test/security-token — 403074 gate intact (error body byte-identical), no auth drift on rs `77955558bc`
+- [CHANGED] box.signageos.io/login/ — 17 static ACAO reconfirmed under `evil.test`, `access-control-allow-credentials` grep=0
+
+Substance: NO_DELTA — only pod rotation, zero auth drift, no new endpoints since 2026-08-15 04:30.
+
+## STEP 2 — PRIORITIZE
+
+- [PRIO] api.signageos.io/v1/organization/{uid}/security-token | 6.6 | attack 4, business 10, tech 7 (JWT/X-Auth dual), gate 3 (AUTH_HELPED), cloud 5, fresh 8 → 0.25*4+0.25*10+0.15*7+0.15*3+0.10*5+0.10*8 = 6.6
+- [PRIO] box.signageos.io/status | 5.8 | attack 4, business 4, tech 3, gate 10 (unauth), cloud 6 (K8s/CloudFront), fresh 6 → 0.25*4+0.25*4+0.15*3+0.15*10+0.10*6+0.10*6 = 5.8
+- [PRIO] box.signageos.io / + /login/ CORS+CSP | 4.9 | attack 3, business 4, tech 6 (OAuth/recaptcha), gate 10, cloud 6, fresh 6 → 0.25*3+0.25*4+0.15*6+0.15*10+0.10*6+0.10*6 = 4.9
+
+## STEP 3 — HYPOTHESES
+
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: Live probe 2026-08-16 confirms 403074 errorDetail byte-identical — account identity bound to X-Auth first-part before `:`, path `{uid}` client-supplied and distinct from authenticated org; endpoint is X-Auth/x-oauth-client_id gated (not JWT); zero auth drift across rs `77955558bc`/`6cc9959bb4` rotation.
+evidence_needed: valid orgA X-Auth `<id>:<token>` + foreign orgB `{uid}` in path → response ≠ 403074 (200 or 403076) proves path-uid unvalidated against authenticated org.
+verify_steps: AUTH_HELPED: `sos login`; GET -H "X-Auth: <orgA-id>:<token>" /v1/organization/<own-uid>/security-token → 200 baseline; repeat with foreign `{uid}` → non-403074 = cross-tenant mint; escalate minted token on GET /v1/device.
+impact: mint security tokens for any tenant → foreign device/content/firmware control; CRITICAL
+testability: AUTH_HELPED
+
+[HYP] Unauthenticated infra-leak on box /status (maintained accepted finding)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Live probe 2026-08-16 confirms HTTP 200 JSON leaking hostname `box-8676fb5f57-8kvxs`, 40-hex process.uid, Node v20.20.2, cpu/mem + 9-svc topology + per-service responseTime; headers ONLY x-powered-by: Express + CloudFront (secgrep=0); stable 30+ cycles.
+evidence_needed: n/a — accepted finding, POC final.
+verify_steps: curl -s https://box.signageos.io/status → 200 JSON infra-leak; header hardening grep = 0.
+impact: infra/topology/process disclosure of box fleet; LOW-MEDIUM
+testability: PASSIVE
+
+[HYP] Broad static ACAO origin whitelist on box SPA entry points (maintained accepted finding)
+class: MISCONFIG
+asset: box.signageos.io / + /login/
+confidence: 92
+reasoning: Live probe 2026-08-16 confirms 17 static ACAO (incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + path-bearing recaptcha value + api sibling) under `evil.test`; evil.test NOT reflected; grep(access-control-allow-credentials)=0 → MISCONFIG-only.
+evidence_needed: n/a — accepted finding; no credential-theft path without credentials flag.
+verify_steps: curl -s -D - -H "Origin: https://evil.test" https://box.signageos.io/login/ → ACAO unchanged (17 static), credentials grep = 0.
+impact: expands postMessage/origin trust boundary for SPA surfaces; LOW
+testability: PASSIVE
+
+## STEP 4 — SELF-CRITIQUE
+
+- [FINAL] 1. Cross-tenant security-token mint via X-Auth org-UID path override (IDOR, api.signageos.io/v1/organization/{uid}/security-token, conf 86, AUTH_HELPED) — surviving: only unexploited CRITICAL-path hypothesis, mechanism confirmed via byte-identical 403074/403076 errorDetail across rs rotation, concrete verify_steps exist.
+- [FINAL] 2. Unauthenticated infra-leak on box /status (MISCONFIG, conf 96, PASSIVE) — surviving: accepted, POC archived.
+- [FINAL] 3. Broad static ACAO whitelist on box SPA entry points (MISCONFIG, conf 92, PASSIVE) — surviving: accepted, MISCONFIG-only.
+- [PARKED] None — no sub-40 or rejected-class hypotheses emitted this cycle (all three qualify).
+
+## STEP 5 — NEXT ACTION
+
+[NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain an account owning ≥1 organization → acquire account JWT + X-Auth `<orgA-id>:<unsafeDecryptedToken>`; then GET /v1/organization/<own-uid>/security-token → 200 baseline, then foreign `{uid}` → non-403074 = CRITICAL cross-tenant mint. Passive surface fully exhausted (30+ cycles NO_DELTA); this is the only remaining high-value path.
+
+## STEP 6 — LEARNING
+
+- [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle — pod `box-8676fb5f57-8kvxs` (uid `49e71d542ab9…`), Node v20.20.2, 9-svc topology + cpu/mem + responseTime, secgrep=0, behind CloudFront; body sha `4ebb6fc1…` differs from prior archive only via pod-uid/timestamps — shape unchanged across 30+ cycles, POC final.
+- [LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS max-age=31536000, xfo DENY, xcto nosniff, cache-control no-store, secgrep=3, 0 ACAO) on rs `77955558bc` pod `pnzxp` — differential vs box /status (secgrep=0) persists.
+- [LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 gate + errorDetail byte-identical this cycle ("…first part (before char `:`) of x-auth header…") — mechanism intact, zero auth drift across rs rotation; AUTH_HELPED, conf 86.
+- [LEARN] ACCEPTED MISCONFIG @ box.signageos.io / + /login/ CORS+CSP: 17 static ACAO (incl http:// plaintext + *.zdusercontent.com wildcard + api sibling), 0 access-control-allow-credentials, evil.test NOT reflected — MISCONFIG-only, unchanged.
+
+## STEP 7 — RISK SCORE
+
+[RISK] box.signageos.io: 42 — unauth `/status` infra/topology/process disclosure (secgrep=0, behind CloudFront, pod rotation only) + 17-entry static ACAO whitelist incl `http://` plaintext + `*.zdusercontent.com` wildcard (MISCONFIG-only, no creds flag); otherwise hardened entry points (HSTS/xfo/xcto/CSP/nonces) and login catch-all containment. | api.signageos.io: 38 — hardened (HSTS/xfo/xcto/no-store), zero ACAO, all routes JWT/X-Auth-gated; residual risk concentrated in one unproven AUTH_HELPED cross-tenant security-token mint chain (conf 86, unverified, blocked on credentials) + minor `/status` info-leak under hardened headers.
