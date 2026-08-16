@@ -5602,3 +5602,4 @@ testability: PASSIVE
 [NEXT] HUMAN: Provide a valid org-scoped X-Auth credential via `sos login` (Auth0 device-code on box.signageos.io) to test cross-tenant mint at `GET /v1/organization/{uid}/security-token` with own vs foreign `{uid}` — the only remaining CRITICAL-impact lead, blocked on auth since 2026-08-08.
 [RISK] box.signageos.io: 45 | unauthenticated /status infra-leak with zero hardening headers (POC-proven), broad static CORS/CSP trust boundary; entry points otherwise hardened (secgrep=4) behind CloudFront.
 [RISK] api.signageos.io: 50 | fully auth-gated, well-hardened (secgrep=3), but dual-auth X-Auth org-identity model carries a plausible CRITICAL cross-tenant mint that remains unproven (AUTH_HELPED); endpoint map 404-hardened elsewhere.
+## 2026-08-16 08:43:34 UTC [box] (model bigpickle)

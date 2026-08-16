@@ -901,3 +901,8 @@
 - 2026-08-16 ACCEPTED @ box.signageos.io/ & /login/: 17 static ACAO under evil.test (evil.test NOT reflected), 0 access-control-allow-credentials, / secgrep=4 (HSTS/xfo/xcto/CSP) vs /status secgrep=0 — hardening differential confirmed unchanged.
 - 2026-08-16 REJECTED @ api.signageos.io/v1/organization/{uid}/security-token CORS exfil: curl -sI -H "Origin: evil.test" → acapcount=0, zero ACAO on 403 response — not CORS-exploitable, pure AUTH_HELPED IDOR.
 - 2026-08-16 REJECTED @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO — no passive bypass (NO_DELTA, 30+ cycles).
+- 2026-08-16 REJECTED @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass across 30+ cycles.
+- 2026-08-16 REJECTED @ box.signageos.io/ready: HTTP 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged).
+- 2026-08-16 REJECTED @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /ready /csp-report /websocket): all → 302 login catch-all or trivial 200 "OK" (2 bytes) — no unauthenticated surface beyond /status.
+- 2026-08-16 accepted @ box.signageos.io/status: Zero auth drift across rs rotation box-8676fb5f57-* — still secgrep=0 with full topology/CPU+mem leak behind CloudFront (30+ cycles stable).
+- 2026-08-16 accepted @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical ("first part before char `:` of x-auth header" vs client-supplied path {uid}) confirms mechanism intact, zero auth drift on rs 77955558bc (conf 86).
