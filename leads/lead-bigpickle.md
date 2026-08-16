@@ -5483,3 +5483,31 @@ verify_steps: curl -s -D - -H "Origin: https://evil.test" https://box.signageos.
 impact: expands postMessage/origin trust boundary for SPA surfaces; LOW
 testability: PASSIVE
 ## 2026-08-16 05:15:20 UTC [box] (model bigpickle)
+## 2026-08-16 05:48:18 UTC [box] (model bigpickle)
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: Live probe 2026-08-16 reconfirms 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` with errorDetail byte-identical ("first part (before char `:`) of x-auth header…") on rs `77955558bc` — account identity bound to X-Auth first-part, path `{uid}` client-supplied and distinct from authenticated org; endpoint is X-Auth/x-oauth-client_id gated, not JWT; zero auth drift across rs rotations.
+evidence_needed: valid orgA X-Auth `<id>:<token>` + foreign orgB `{uid}` in path → response ≠ 403074 (200 baseline vs 403076/200 on foreign) proves path-uid unvalidated against authenticated org.
+verify_steps: AUTH_HELPED: `sos login`; GET -H "X-Auth: <orgA-id>:<token>" /v1/organization/<own-uid>/security-token → 200 baseline; repeat with foreign `{uid}` → non-403074 = cross-tenant mint; escalate minted token on GET /v1/device.
+impact: mint security tokens for any tenant → foreign device/content/firmware control; CRITICAL
+testability: AUTH_HELPED
+[HYP] Unauthenticated infra/topology leak on box /status (maintained accepted finding)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Fresh probe confirms HTTP 200 JSON leaking hostname `box-8676fb5f57-xd6mc`, 64-hex process.uid `6deaf70c…`, Node v20.20.2, cpu/mem + 9-svc topology (amqp0/redis0-3/mongoDB0-3) + per-service responseTime; headers ONLY `x-powered-by: Express` + CloudFront (secgrep=0); stable 30+ cycles.
+evidence_needed: n/a — accepted finding, POC final & archived.
+verify_steps: curl -s https://box.signageos.io/status → 200 JSON infra-leak; hardening grep = 0.
+impact: infra/topology/process disclosure of box fleet; LOW-MEDIUM
+testability: PASSIVE
+[HYP] Broad static ACAO whitelist on box SPA entry points (maintained accepted finding)
+class: MISCONFIG
+asset: box.signageos.io / + /login/
+confidence: 92
+reasoning: Fresh probe confirms 17 static ACAO (incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + path-bearing recaptcha + api sibling) under `Origin: https://evil.test`; evil.test NOT reflected; grep(access-control-allow-credentials)=0; hardened (HSTS 63072000 preload / xfo DENY / xcto / CSP).
+evidence_needed: n/a — accepted finding; no credential-theft path without credentials flag.
+verify_steps: curl -s -D - -H "Origin: https://evil.test" https://box.signageos.io/login/ → 17 static ACAO, credentials grep = 0.
+impact: expands postMessage/origin trust boundary for SPA surfaces; LOW
+testability: PASSIVE
