@@ -5720,3 +5720,31 @@ evidence_needed: n/a — accepted finding; no credential-theft path without cred
 verify_steps: `curl -s -D - -H "Origin: https://evil.test" https://box.signageos.io/login/` → 17 static ACAO, credentials grep = 0.
 impact: expands postMessage/origin trust boundary for SPA surfaces; LOW
 testability: PASSIVE
+## 2026-08-16 10:56:42 UTC [box] (model bigpickle)
+[HYP] Unauthenticated infra/topology leak on box /status (maintained accepted finding)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Live probe 2026-08-16 confirms HTTP 200 JSON leaking hostname (box-8676fb5f57-mffl6), 64-hex process.uid, Node v20.20.2, cpu/mem, 9-svc topology; secgrep=0 (x-powered-by + CloudFront only); stable 30+ cycles, POC final & archived.
+evidence_needed: n/a — accepted finding, POC final & archived (body sha256 38737948…/headers b11ba5ba…).
+verify_steps: curl -s https://box.signageos.io/status → 200 JSON infra-leak; hardening grep = 0.
+impact: infra/topology/process identity disclosure of box fleet; LOW-MEDIUM
+testability: PASSIVE
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override (carried forward)
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: Live probe 2026-08-16 confirms 403074 errorDetail byte-identical ("…first part (before char :) of x-auth header…" vs client-supplied path {uid}); X-Auth/x-oauth-client_id gated, NOT JWT; zero auth drift across rs 77955558bc.
+evidence_needed: valid orgA X-Auth `<id>:<token>` + foreign orgB `{uid}` in path → non-403074 (200 or 403076) proves path-uid unvalidated against authenticated org.
+verify_steps: AUTH_HELPED: sos login; GET -H "X-Auth: <orgA-id>:<token>" /v1/organization/<own-uid>/security-token → 200 baseline; repeat foreign {uid} → non-403074 = cross-tenant mint; escalate minted token on GET /v1/device.
+impact: mint security tokens for any tenant → foreign device/content/firmware control; CRITICAL
+testability: AUTH_HELPED
+[HYP] Broad static ACAO whitelist on box SPA entry points (maintained accepted finding)
+class: MISCONFIG
+asset: box.signageos.io / + /login/
+confidence: 92
+reasoning: Live probe 2026-08-16 confirms 17 static ACAO (incl http:// plaintext + *.zdunpkgdomains.com wildcard + path-bearing recaptcha + api sibling) under Origin evil.test; evil.test NOT reflected; grep(access-control-allow-credentials)=0; entry hardened (HSTS 63072000 preload / xfo / xcto / CSP ~60 origins).
+evidence_needed: n/a — accepted finding; no credential-theft path without credentials flag.
+verify_steps: curl -s -D - -H "Origin: https://evil.test" https://box.signageos.io/login/ → 17 static ACAO, credentials grep = 0.
+impact: expands postMessage/origin trust boundary for SPA surfaces; LOW
+testability: PASSIVE
