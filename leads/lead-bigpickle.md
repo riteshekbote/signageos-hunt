@@ -6146,3 +6146,31 @@ testability: PASSIVE
 [RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid leak (secgrep=0, hardened siblings only) plus broad static CORS whitelist with http:// variant; no auth bypass, no credential-theft path, no new endpoints across 30+ NO_DELTA cycles | api.signageos.io: 40 — cross-tenant security-token IDOR mechanism fully confirmed (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold on all 60+ routes, CORS non-exploitable, descriptive-error class excluded by scope.
 ## 2026-08-16 17:51:23 UTC [box] (model bigpickle)
 ## 2026-08-16 18:17:01 UTC [box] (model bigpickle)
+## 2026-08-16 18:51:23 UTC [box] (model bigpickle)
+[HYP] Unauthenticated K8s topology and process identity leak via /status
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: Fresh probe confirms HTTP 200 JSON leaks hostname `box-8676fb5f57-xd6mc`, 64-hex process.uid, Node v20.20.2, cpuUsage/memoryUsage, 9-service topology (amqp0/redis0-3/mongoDB0-3) + per-service responseTime; secgrep=0 (only x-powered-by: Express + CloudFront); shape unchanged across 30+ cycles of pod rotation.
+evidence_needed: n/a — accepted finding, POC final, evidence archive stable.
+verify_steps: `curl -s https://box.signageos.io/status` → 200 JSON infra-leak; `curl -s -D - https://box.signageos.io/status | grep -cE 'strict-transport|x-frame|x-content|content-security'` = 0.
+impact: infra/topology/process identity disclosure of box fleet; enables targeted K8s/pod attacks; LOW-MEDIUM
+testability: PASSIVE
+[HYP] Cross-tenant security-token mint via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: Fresh probe confirms 403 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE with byte-identical errorDetail ("Both x-oauth-client_id header and first part (before char :) of x-auth header are missing from request thus account not to be authenticated") — org identity bound to X-Auth first-part, path {uid} client-supplied; zero ACAO under evil.test; zero auth drift across rs rotations.
+evidence_needed: valid orgA X-Auth `<id>:<token>` + foreign orgB `{uid}` in path → non-403074/403076 response proves cross-tenant mint.
+verify_steps: AUTH_HELPED: `sos login`; GET `-H "X-Auth: <orgA-id>:<token>" /v1/organization/<own-uid>/security-token` → 200 baseline; repeat with foreign `{uid}` → non-40307x = cross-tenant mint; escalate minted token on GET `/v1/device`.
+impact: mint security tokens for arbitrary tenant → foreign device/content/firmware control; CRITICAL
+testability: AUTH_HELPED
+[HYP] Broad static ACAO whitelist on box SPA entry points
+class: MISCONFIG
+asset: box.signageos.io / + /login/
+confidence: 92
+reasoning: Fresh probe confirms 17 static ACAO (incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + api sibling + path-bearing recaptcha `.../recaptcha/api2/clr`) under Origin `https://evil.test`; evil.test NOT reflected (static whitelist); grep(access-control-allow-credentials)=0; entry hardened (HSTS max-age=63072000 preload/xfo DENY/xcto nosniff/CSP 60+ origins) vs /status (secgrep=0).
+evidence_needed: n/a — accepted finding; no credential-theft path without credentials flag.
+verify_steps: `curl -s -D - -H "Origin: https://evil.test" https://box.signageos.io/login/` → 17 static ACAO, credentials grep = 0.
+impact: expands postMessage/origin trust boundary for SPA surfaces; LOW
+testability: PASSIVE
