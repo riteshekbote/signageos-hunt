@@ -1052,3 +1052,5 @@
 - 2026-08-16 ACCEPTED MISCONFIG @ box.signageos.io/status: Fresh probe 20:46 UTC reconfirms HTTP 200 JSON infra-leak (pod mffl6, uid 48e1a938…, Node v20.20.2, 9-svc topology, secgrep=0, CloudFront PHX52-P1) — POC final, zero hardening added (30+ cycles).
 - 2026-08-16 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: mechanism intact — 403074 errorDetail byte-identical across rs rotations, zero auth drift, AUTH_HELPED conf 86.
 - 2026-08-16 REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /, /status, /v1/*, /v2/* — not CORS-exploitable.
+- 2026-08-16 ACCEPTED MISCONFIG @ box.signageos.io/status: Live probe 20:47 UTC reconfirms HTTP 200 JSON infra-leak (pod mffl6, uid 48e1a938…, Node v20.20.2, 9-svc topology, secgrep=0, CloudFront) — POC final, zero hardening added (30+ cycles).
+- 2026-08-16 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ CORS: 17 static ACAO, 0 access-control-allow-credentials under evil.test (grep=0) — MISCONFIG-only, no credential-theft path.
