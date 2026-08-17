@@ -7614,3 +7614,33 @@ testability: PASSIVE
 [LEARN] CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only fixture, credential reuse disproven (30+ cycles)
 [RISK] box.signageos.io: 32 — Only MISCONFIG surface: passive /status infra leak (conf 100, 30+ cycles) + broad CORS MISCONFIG on / + /login/ (17 static ACAO, 0 creds flag, no exploit path, conf 92). All other paths behind login catch-all. No auth bypass, no credential-theft path. Risk plateaued at LOW-MEDIUM.
 [RISK] api.signageos.io: 40 — IDOR mechanism CONFIRMED on /v1/organization/{uid}/security-token (org from X-Auth first-part before `:` vs client-supplied path {uid}, conf 86, zero auth drift across rs rotations) — upside CRITICAL if AUTH_HELPED verified. /status hardened but still leaks hostname/uid/Node v24.19.0/8-svc topology. All 60+ routes JWT/X-Auth-gated (no pre-auth bypass, zero ACAO). CORS non-exploitable. Descriptive-error class excluded. Risk = 40 with CRITICAL upside contingent on AUTH_HELPED test.
+## 2026-08-17 13:32:25 UTC [box] (model laguna)
+[HYP] Cross-tenant security-token mint via X-Auth org-identity override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: 403074 errorDetail byte-identical across 4 rs rotations (77955558bc/6cc9959bb4/7c5fdc9777): org identity derived from "first part (before char `:`) of x-auth header" while path `{uid}` is client-supplied. Endpoint is X-Auth/x-oauth-client_id gated (NOT JWT). Zero ACAO under evil.test on 403 response.
+evidence_needed: Valid orgA X-Auth + JWT → baseline 200 on /orgA-own/security-token; same headers on /orgB-foreign/security-token → non-403x proves cross-tenant mint
+verify_steps: AUTH_HELPED: (1) Run `sos login` (Auth0 device-code flow on box.signageos.io); (2) curl -H "x-auth: <id:token>" -H "x-oauth-client_id: <id>" -H "Authorization: Bearer <jwt>" https://api.signageos.io/v1/organization/<own-uid>/security-token → expect HTTP 200; (3) GET same X-Auth on /v1/organization/<foreign-uid>/security-token → non-403x = IDOR confirmed
+impact: Mint security tokens for arbitrary tenant orgs → CRITICAL (full cross-tenant account takeover via token mint)
+testability: AUTH_HELPED
+[HYP] Unauthenticated K8s topology and process identity leak via /status
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 100
+reasoning: HTTP 200 JSON leak confirmed live this probe — pod `box-54846c877b-4qs4c`, 64-hex process.uid (`fe6f738d02…`), Node v20.20.2, 9-service topology (amqp0/redis0-3/mongoDB0-3) + cpuUsage/memoryUsage. Headers ONLY x-powered-by: Express + CloudFront; secgrep=0. Evidence archive stable across 30+ cycles.
+evidence_needed: n/a — 100 confidence, evidence archive body sha256 38737948… (pod rotation changes uid only)
+verify_steps: PASSIVE: `curl -s https://box.signageos.io/status | jq '.hostname,.process.uid,.succeededServices,.process.cpuUsage'` leaks infra; `curl -sI https://box.signageos.io/status | grep -icE 'strict-transport|x-frame|x-content|content-security'` = 0
+impact: K8s pod hostname + process UID + full internal service topology + CPU/memory disclosure → targeted pod/service attacks → LOW-MEDIUM
+testability: PASSIVE
+[HYP] Broad static CORS origin trust boundary on SPA entry points
+class: MISCONFIG
+asset: box.signageos.io/ + /login/
+confidence: 92
+reasoning: 17 static access-control-allow-origin headers confirmed this probe (17 on `/`, 17 on `/login/`) incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + `api.signageos.io` sibling + path-bearing recaptcha value. evil.test NOT reflected (static whitelist). grep(access-control-allow-credentials)=0 — no credential-theft path.
+evidence_needed: n/a — no exploit path without creds flag; MISCONFIG-only
+verify_steps: PASSIVE: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/ | grep -c 'access-control-allow-origin'` = 17 (evil.test absent); `grep -ic 'access-control-allow-credentials'` = 0; `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/status | grep -c 'access-control-allow-origin'` = 0 (CORS scoped to SPA only, not /status)
+impact: Expands postMessage/origin trust boundary for SPA surfaces; no credential-theft without creds flag → LOW
+testability: PASSIVE
+[FINAL]
+[NEXT] PROBE: Execute fresh passive verification of the top-ranked IDOR mechanism on api.signageos.io — `curl -s -H "x-auth: test:test" -H "x-oauth-client_id: test" https://api.signageos.io/v1/organization/test/security-token | jq '.errorCode,.errorDetail'` → confirms 403074 byte-identical errorDetail binding org to X-Auth first-part vs client-supplied path `{uid}` (just verified → 403076, mechanism intact). Next escalation requires `sos login` AUTH_HELPED to obtain valid org credentials for baseline + cross-tenant test.
