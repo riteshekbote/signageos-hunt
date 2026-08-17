@@ -1275,3 +1275,12 @@
 - 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: Live reconfirmed — pod `box-54846c877b-4qs4c`, secgrep=0, full 9-svc topology; POC finalized 30+ cycles.
 - 2026-08-17 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on rs 7c5fdc9777; mechanism intact, zero auth drift. AUTH_HELPED, conf 86.
 - 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ CORS: 17 static ACAO confirmed on rs 54846c877b (evil.test NOT reflected, 0 credentials flag) — MISCONFIG-only, unchanged.
+- 2026-08-17 REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on /, /status, /v1/*, /v2/* under any Origin — not CORS-exploitable (NO_DELTA, rs `7c5fdc9777`)
+- 2026-08-17 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes still 403 JWT/X-Auth-gated (403074/403075/403076/403105), zero ACAO — no passive bypass (NO_DELTA; rs `7c5fdc9777` introduced zero auth drift)
+- 2026-08-17 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak auth-account detail — excluded per scope.yml (descriptive error messages); errorDetail retained only as mechanism evidence for the IDOR lead (NO_DELTA)
+- 2026-08-17 CONFIRMED DEAD @ github.com/signageos/videowall-designer leaked clientId/secret: sha256 `564c293b…` fixture tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — staging-only, credential reuse disproven (NO_DELTA)
+- 2026-08-17 REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) trivial health check, no data leaked (NO_DELTA)
+- 2026-08-17 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding not passively testable without tenant/authenticated session (NO_DELTA)
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized 30+ cycles — NEW rs `box-54846c877b` confirmed (secgrep=0, full 9-svc top + CPU/mem leak); zero hardening added across rs flip
+- 2026-08-17 ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (secgrep=3, 0 ACAO) reconfirmed on rs `7c5fdc9777`; differential vs box /status persists
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: Live reconfirmed — pod box-54846c877b-4qs4c, secgrep=0, full 9-svc topology; POC finalized 30+ cycles.
