@@ -38482,3 +38482,198 @@ access-control-allow-origin: https://www.google.com/recaptcha/api2/clr
     "errorDetail": "Both x-oauth-client_id header and first part (before char :) of x-auth header are missing from request thus account not to be authenticated"
 }
 [0m
+===== ANALYST bigpickle 2026-08-17 18:05:35 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mecho "=== STEP 1: DELTA check ===" && date -u +%Y-%m-%dT%H:%M:%SZ
+=== STEP 1: DELTA check ===
+2026-08-17T18:03:30Z
+[0m
+[0m$ [0m# Probe box for any new unauthenticated endpoints not previously tested
+for path in /api/status /api/health /api/ready /internal/status /internal/health /admin /admin/status /debug/status /node/status /server/status /app/status /service/status /cluster/status /kubernetes/status /k8s/status /pods /nodes /deployments /services /namespaces /version /info /env /config /configuration /settings /manifest /sitemap.xml /feed /rss /_debug /debug/vars /debug/pprof /debug/requests /debug/flags /debug/events; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://box.signageos.io${path}" 2>/dev/null)
+  if [ "$code" != "302" ] && [ "$code" != "000" ]; then
+    echo "box ${path} → ${code}"
+  fi
+done
+echo "---box done---"
+---box done---
+[0m
+[0m$ [0m# Check box /status current state + api /status for any changes
+echo "=== box /status ===" 
+curl -s https://box.signageos.io/status 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'hostname={d.get(\"hostname\",\"?\")} uid={d.get(\"process\",{}).get(\"uid\",\"?\")[:20]}... node={d.get(\"nodeVersion\",\"?\")} svcs={len(d.get(\"succeededServices\",{}))} mongo3={\"mongoDB3\" in d.get(\"succeededServices\",{})}')" 2>/dev/null || echo "parse failed"
+echo "=== api /status ==="
+curl -s https://api.signageos.io/status 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'hostname={d.get(\"hostname\",\"?\")} uid={d.get(\"process\",{}).get(\"uid\",\"?\")[:20]}... node={d.get(\"nodeVersion\",\"?\")} svcs={len(d.get(\"succeededServices\",{}))} mongo3={\"mongoDB3\" in d.get(\"succeededServices\",{})}')" 2>/dev/null || echo "parse failed"
+=== box /status ===
+hostname=box-54846c877b-tskfg uid=f288189da58da469100f... node=? svcs=9 mongo3=True
+=== api /status ===
+hostname=api-7c5fdc9777-ppt66 uid=7a09546d6ce44c089bcf... node=? svcs=8 mongo3=False
+[0m
+[0m$ [0m# Probe api for any new unauthenticated endpoints
+for path in /api/status /api/health /api/ready /internal/status /internal/health /admin /admin/status /debug/status /node/status /server/status /app/status /service/status /cluster/status /version /info /env /config /configuration /settings /manifest /sitemap.xml /feed /rss /graphql /graphiql /playground /_debug /debug/vars /debug/pprof /healthcheck /health-check /ping /ready /readyz /live /livez /alive /alivez /check /check/health /check/ready /metrics /prometheus /actuator /actuator/health /actuator/info /actuator/env /actuator/configprops /actuator/mappings /swagger-ui.html /swagger-ui/ /api-docs /v1/docs /v2/docs; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://api.signageos.io${path}" 2>/dev/null)
+  if [ "$code" != "404" ] && [ "$code" != "000" ]; then
+    echo "api ${path} → ${code}"
+  fi
+done
+echo "---api done---"
+api /ready → 200
+---api done---
+[0m
+[0m$ [0m# api /ready is NEW - check what it returns
+echo "=== api /ready headers ==="
+curl -sI https://api.signageos.io/ready 2>/dev/null
+echo ""
+echo "=== api /ready body ==="
+curl -s https://api.signageos.io/ready 2>/dev/null
+echo ""
+echo "=== api /ready under Origin ==="
+curl -sI -H "Origin: https://evil.test" https://api.signageos.io/ready 2>/dev/null | grep -iE 'access-control|vary|strict-transport|x-frame|x-content|content-security|x-powered'
+=== api /ready headers ===
+HTTP/2 200 
+content-type: text/plain; charset=utf-8
+content-length: 2
+date: Mon, 17 Aug 2026 18:03:54 GMT
+etag: W/"2-nOO9QiTIwXgNtWtBJezz8kv3SLc"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+via: 1.1 ea3bfccd683c652cb849f6ec1b5606a4.cloudfront.net (CloudFront)
+x-amz-cf-pop: IAD89-P1
+x-amz-cf-id: aP-fqJIyLXB9p-4WFRHqI-m2yF_GXf1yGq0_O6-GuuDpo6VHnU2buA==
+
+
+=== api /ready body ===
+OK
+=== api /ready under Origin ===
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+[0m
+[0m$ [0m# Check full box /status and api /status header dumps
+echo "=== box /status headers ==="
+curl -sI https://box.signageos.io/status 2>/dev/null | grep -iE 'access-control|vary|strict-transport|x-frame|x-content|content-security|x-powered|x-cache|via|x-amz|content-type|server|cache-control'
+echo ""
+echo "=== api /status headers ==="
+curl -sI https://api.signageos.io/status 2>/dev/null | grep -iE 'access-control|vary|strict-transport|x-frame|x-content|content-security|x-powered|x-cache|via|x-amz|content-type|server|cache-control'
+=== box /status headers ===
+content-type: application/json; charset=utf-8
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 43c5eacfec80b6882109ae0d62894a64.cloudfront.net (CloudFront)
+x-amz-cf-pop: IAD55-P8
+x-amz-cf-id: 3JB_1QLMs9ThAw_1eB9zNvZLl2E94XCZACrlSlafJ4R9Okn90tDNsw==
+
+=== api /status headers ===
+content-type: application/json; charset=utf-8
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+via: 1.1 d591fee4e3f29cf0e3380368d25b4a40.cloudfront.net (CloudFront)
+x-amz-cf-pop: IAD89-P1
+x-amz-cf-id: Ppb9vhNmox9NyLOVvO1fOgkZVBB_6NpTfAYPyLLEGFqVSnKQxaodXw==
+[0m
+[0m$ [0m# Check api /status CORS under Origin to confirm zero ACAO
+echo "=== api /status CORS ==="
+curl -sI -H "Origin: https://evil.test" https://api.signageos.io/status 2>/dev/null | grep -i 'access-control'
+echo "(end)"
+
+# Check box /status CORS - confirm zero ACAO on /status
+echo "=== box /status CORS ==="
+curl -sI -H "Origin: https://evil.test" https://box.signageos.io/status 2>/dev/null | grep -i 'access-control'
+echo "(end)"
+
+# Reconfirm box /login/ CORS
+echo "=== box /login/ CORS ==="
+curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/ 2>/dev/null | grep -ci 'access-control-allow-origin'
+echo "ACAO count"
+
+# Full api /ready body check (trivial 2 bytes)
+echo "=== api /ready ==="
+curl -s https://api.signageos.io/ready 2>/dev/null | wc -c
+echo "bytes"
+=== api /status CORS ===
+(end)
+=== box /status CORS ===
+(end)
+=== box /login/ CORS ===
+17
+ACAO count
+=== api /ready ===
+2
+bytes
+[0m
+## 2026-08-17 18:04:00 UTC [box] (model bigpickle)
+
+**STEP 1 — DELTA**
+
+NO_DELTA — all previously mapped surface items confirmed unchanged on new replica sets `box-54846c877b` / `api-7c5fdc9777`. Pod rotation only. `api.signageos.io/ready` confirmed 200 "OK" (2 bytes, hardened headers) — same trivial health check pattern as box `/ready`, not reportable.
+
+**STEP 2 — PRIORITIZE**
+
+[PRIO] box.signageos.io/status, 96, attack 5, business 4, tech 3, gate 10, cloud 5, fresh 4
+[PRIO] box.signageos.io CORS+CSP, 92, attack 3, business 3, tech 2, gate 10, cloud 5, fresh 3
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token, 86, attack 5, business 5, tech 5, gate 3, cloud 4, fresh 4
+
+**STEP 3 — HYPOTHESES**
+
+[HYP] Unauthenticated K8s topology and process identity leak via /status
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: HTTP 200 JSON returns pod hostname (box-54846c877b-tskfg), 64-hex process.uid, Node v20.20.2, 9-service topology (amqp0/redis0-3/mongoDB0-3) + cpuUsage/memoryUsage. Headers ONLY x-powered-by: Express (secgrep=0). Confirmed across 30+ cycles with zero hardening added.
+evidence_needed: None — POC finalized 30+ cycles
+verify_steps: `curl -s https://box.signageos.io/status` → 200 JSON leak; `curl -sI https://box.signageos.io/status | grep -ciE 'strict-transport|x-frame|x-content|content-security'` → 0
+impact: K8s pod identity/UID/service-topology disclosure enables targeted lateral movement; LOW-MEDIUM
+testability: PASSIVE
+
+[HYP] Broad static ACAO whitelist expands SPA origin trust boundary
+class: MISCONFIG
+asset: box.signageos.io / + /login/
+confidence: 92
+reasoning: 17 static ACAO values reconfirmed on rs 54846c877b (evil.test NOT reflected, 0 access-control-allow-credentials). Includes http:// plaintext variant, *.zdusercontent.com wildcard, api.signageos.io sibling. Entry points hardened (secgrep=4) vs /status bare (secgrep=0).
+evidence_needed: None — accepted finding, no credential-theft path without access-control-allow-credentials
+verify_steps: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/` → 17 ACAO, grep credentials = 0
+impact: Broadens postMessage/origin trust boundary; LOW severity (no creds flag)
+testability: PASSIVE
+
+[HYP] Cross-tenant security-token mint via X-Auth header split
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: 403074 errorDetail byte-identical on rs 7c5fdc9777. X-Auth gated (NOT JWT). Org identity from X-Auth header first-part while path {uid} is client-supplied — mechanism confirmed across rs rotation with zero auth drift.
+evidence_needed: Valid account with ≥1 org + second org UID to prove cross-tenant mint
+verify_steps: AUTH_HELPED: `curl -s -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token`
+impact: Cross-tenant security token mint; HIGH severity if proven
+testability: AUTH_HELPED
+
+**STEP 4 — SELF-CRITIQUE**
+
+All three hypotheses survive: confidence ≥ 40, none on REJECTED list, all have concrete verify_steps. No hypotheses parked.
+
+[FINAL] 1) box.signageos.io/status: MISCONFIG, 96, PASSIVE — POC finalized 30+ cycles
+[FINAL] 2) box.signageos.io/ + /login/ CORS+CSP: MISCONFIG, 92, PASSIVE — no credential-theft path
+[FINAL] 3) api.signageos.io/v1/organization/{uid}/security-token: IDOR, 86, AUTH_HELPED — mechanism confirmed, credential-gated
+
+**STEP 5 — NEXT ACTION**
+
+[NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain valid account owning ≥1 org → acquire JWT + X-Auth `<orgA-id>:<secret>` pair → then test: `curl -s -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` — this is the only way to progress the high-severity IDOR lead (conf 86, AUTH_HELPED). Without credentials, the passive surface is fully explored.
+
+**STEP 6 — LEARNING**
+
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod `box-54846c877b-tskfg`, secgrep=0, 9-svc topology (mongoDB3 present), POC finalized 30+ cycles.
+[LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (HSTS/xfo/xcto/no-store, secgrep=3), 0 ACAO under any Origin; pod `api-7c5fdc9777-ppt66`, 8-svc (mongoDB3 absent). Differential vs box persists.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/ + /login/: 17 static ACAO reconfirmed (evil.test NOT reflected, 0 credentials flag) — MISCONFIG-only, unchanged.
+[LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on rs 7c5fdc9777 — mechanism intact, zero auth drift; AUTH_HELPED conf 86.
+[LEARN] REJECTED MISCONFIG @ api.signageos.io/ready: Returns 200 "OK" (2 bytes) with hardened headers (HSTS/xfo/xcto) — trivial health check, no data leaked. Same pattern as box /ready.
+[LEARN] REJECTED MISCONFIG @ box.signageos.io/status CORS: Zero ACAO under spoofed Origin — CORS strictly scoped to SPA entry points only, not exploitable.
+
+**STEP 7 — RISK SCORE**
+
+[RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid leak (secgrep=0) plus broad static CORS whitelist with http:// plaintext variant; no auth bypass, no credential-theft path, new rs 54846c877b with zero hardening changes across 30+ cycles
+[RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism confirmed on new rs 7c5fdc9777 (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold on all 60+ routes, CORS non-exploitable, descriptive-error class excluded
