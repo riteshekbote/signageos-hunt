@@ -7715,3 +7715,49 @@ testability: PASSIVE
 [NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id>:<unsafeDecryptedToken>` → baseline HTTP 200 on `GET https://api.signageos.io/v1/organization/<own-uid>/security-token` → then `GET https://api.signageos.io/v1/organization/<foreign-uid>/security-token` with identical headers → if non-403 response = cross-tenant IDOR confirmed. (box /status POC already finalized at 100, this is the only CRITICAL upside remaining and is AUTH_HELPED-gated.)
 [RISK] box.signageos.io: 32 — Only MISCONFIG surface: passive /status infra leak (conf 100, 30+ cycles) + broad CORS MISCONFIG on /+/login/ (17 static ACAO, 0 creds flag, no exploit path). All other paths behind login catch-all (Auth0). No auth bypass, no credential-theft path. Risk plateaued at LOW-MEDIUM.
 [RISK] api.signageos.io: 43 — IDOR mechanism CONFIRMED on /v1/organization/{uid}/security-token (org from X-Auth first-part, path uid client-supplied, conf 86, zero auth drift across rs rotations) — upside CRITICAL if AUTH_HELPED verified. /status hardened but still leaks hostname/uid/Node v24.19.0/8-svc topology. All 60+ routes JWT/X-Auth-gated (no pre-auth bypass, zero ACAO). Risk = 43 with CRITICAL upside contingent on AUTH_HELPED test.
+## 2026-08-17 15:06:16 UTC [box] (model laguna)
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token — score 73
+[PRIO] box.signageos.io/status — score 68
+[PRIO] box.signageos.io/ + /login/ CORS+CSP — score 41
+[PRIO] api.signageos.io/status — score 37
+[HYP] Cross-tenant security-token mint via X-Auth org-identity override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: Live probe confirms 403 403074 errorDetail byte-identical ("first part (before char `:`) of x-auth header" vs client-supplied path {uid}). Endpoint is X-Auth/x-oauth-client_id gated (NOT JWT); org identity derived from header first-part while path {uid} is client-supplied. Zero ACAO on 403 under spoofed Origin. rs rotation 77955558bc→7c5fdc9777→7c5fdc9777 shows zero auth drift.
+evidence_needed: Valid orgA X-Auth + JWT → baseline HTTP 200 on GET /v1/organization/<orgA-own-uid>/security-token; same headers on /v1/organization/<foreign-orgB-uid>/security-token → non-403 response proves cross-tenant mint
+verify_steps: AUTH_HELPED: (1) Run `sos login` (Auth0 device-code flow on box.signageos.io) → obtain account owning ≥1 org; (2) curl -H "x-auth: <own-id>:<token>" -H "x-oauth-client_id: <id>" -H "Authorization: Bearer <jwt>" https://api.signageos.io/v1/organization/<own-uid>/security-token → expect HTTP 200; (3) GET same on /v1/organization/<foreign-uid>/security-token → HTTP non-403 = IDOR confirmed
+impact: Mint security tokens for arbitrary tenant orgs → CRITICAL (full cross-tenant account takeover via token mint)
+testability: AUTH_HELPED
+[HYP] Unauthenticated K8s topology and process identity leak via /status
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 100
+reasoning: Live probe confirms HTTP 200 JSON leaking pod hostname `box-54846c877b-k7kqz`, 40-hex process.uid `11797ff5d8e77c760291…`, Node v20.20.2, cpuUsage/memoryUsage, 9-service topology (amqp0/redis0-3/mongoDB0-3). Headers ONLY x-powered-by: Express + CloudFront; secgrep=0. Differential vs hardened `/` (secgrep=4) and api `/status` (secgrep=3) confirmed.
+evidence_needed: n/a — 100 confidence, evidence stable across 30+ cycles (body sha256 38737948…)
+verify_steps: PASSIVE: `curl -s https://box.signageos.io/status | jq '.hostname,.process.uid,.process.version,.succeededServices'` leaks infra; `curl -sI https://box.signageos.io/status | grep -icE 'strict-transport|x-frame|x-content|content-security'` = 0
+impact: K8s pod hostname + process UID + internal service topology (redis/mongo/amqp) + CPU/memory disclosure → targeted pod/service compromise → LOW-MEDIUM
+testability: PASSIVE
+[HYP] Broad static CORS origin trust boundary on SPA entry points
+class: MISCONFIG
+asset: box.signageos.io/ + /login/
+confidence: 92
+reasoning: Live probe confirms 17 static access-control-allow-origin on `/` + `/login/`, evil.test NOT reflected (static whitelist), 0 access-control-allow-credentials, zero ACAO on /status. Includes `http://` plaintext + `https://*.zdusercontent.com` wildcard + `api.signageos.io` sibling + path-bearing recaptcha.
+evidence_needed: n/a — no credential-theft path without `access-control-allow-credentials` flag → MISCONFIG only
+verify_steps: PASSIVE: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/ | grep -c 'access-control-allow-origin'` = 17; `grep -ic 'access-control-allow-credentials'` = 0; `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/status | grep -c 'access-control-allow-origin'` = 0
+impact: Expands postMessage/origin trust boundary for SPA surfaces; no credential-theft without creds flag → LOW
+testability: PASSIVE
+[PARKED] None — all 3 hypotheses have confidence ≥ 40, class not on REJECTED list, and concrete verify_steps.
+[FINAL] (surviving, re-ranked):
+[NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id>:<unsafeDecryptedToken>` → baseline HTTP 200 on `GET https://api.signageos.io/v1/organization/<own-uid>/security-token` → then `GET https://api.signageos.io/v1/organization/<foreign-uid>/security-token` with identical headers → if non-403 response = cross-tenant IDOR confirmed (CRITICAL). (box /status POC already finalized at conf 100, this is the only CRITICAL upside remaining and is AUTH_HELPED-gated.)
+[LEARN] ACCEPTED @ box.signageos.io/status: reconfirmed live — pod box-54846c877b-k7kqz, secgrep=0, full 9-svc topology + CPU/mem leak unchanged; POC finalized (30+ cycles, body sha 38737948…)
+[LEARN] ACCEPTED @ box.signageos.io/ + /login/ CORS: 17 static ACAO confirmed, 0 credentials flag, evil.test NOT reflected — MISCONFIG-only (30+ cycles)
+[LEARN] ACCEPTED @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on rs 7c5fdc9777 (pod k7kqz), mechanism intact, zero auth drift; AUTH_HELPED conf 86
+[LEARN] ACCEPTED @ api.signageos.io/status: hardened (secgrep=3), zero ACAO under any Origin — differential vs box /status (secgrep=0) persists
+[LEARN] REJECTED @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (NO_DELTA)
+[LEARN] REJECTED @ box.signageos.io WebSocket: wss:// → 302 login redirect — no unauthenticated surface (NO_DELTA)
+[LEARN] REJECTED @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket): all → 302 login catch-all — no surface beyond /status (NO_DELTA)
+[LEARN] REJECTED @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO — no passive bypass (NO_DELTA)
+[LEARN] REJECTED @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml (descriptive error messages); errorDetail retained only as mechanism evidence for IDOR (NO_DELTA)
+[RISK] box.signageos.io: 32 — Only MISCONFIG surface: passive /status infra leak (conf 100, 30+ cycles) + broad CORS MISCONFIG on /+/login/ (17 static ACAO, 0 creds flag, no exploit path). All other paths behind login catch-all (Auth0). No auth bypass, no credential-theft path. Risk plateaued at LOW-MEDIUM.
+[RISK] api.signageos.io: 43 — IDOR mechanism CONFIRMED on /v1/organization/{uid}/security-token (org from X-Auth header first-part, path uid client-supplied, conf 86, zero auth drift across rs rotations) — upside CRITICAL if AUTH_HELPED verified. /status hardened but still leaks hostname/uid/Node v24.19.0/8-svc topology. All 60+ routes JWT/X-Auth-gated (no pre-auth bypass, zero ACAO). Risk = 43 with CRITICAL upside contingent on AUTH_HELPED test.

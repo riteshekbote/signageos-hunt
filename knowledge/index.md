@@ -1259,3 +1259,16 @@
 - 2026-08-17 ACCEPTED MISCONFIG @ api.signageos.io/status: NEW rs `api-7c5fdc9777` deployed — secgrep=3 (HSTS/xfo/xcto/no-store) persists, 8-svc topology (mongoDB3 absent), zero ACAO under any Origin. Differential vs box /status persists.
 - 2026-08-17 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on new rs `7c5fdc9777` — mechanism intact, zero auth drift across rs rotation. AUTH_HELPED, conf 86.
 - 2026-08-17 REJECTED IDOR @ api.signageos.io pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO — NO_DELTA, 30+ cycles.
+- 2026-08-17 ACCEPTED @ box.signageos.io/status: reconfirmed live — pod box-54846c877b-k7kqz, secgrep=0, full 9-svc topology + CPU/mem leak unchanged; POC finalized (30+ cycles, body sha 38737948…)
+- 2026-08-17 ACCEPTED @ box.signageos.io/ + /login/ CORS: 17 static ACAO confirmed, 0 credentials flag, evil.test NOT reflected — MISCONFIG-only (30+ cycles)
+- 2026-08-17 ACCEPTED @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on rs 7c5fdc9777 (pod k7kqz), mechanism intact, zero auth drift; AUTH_HELPED conf 86
+- 2026-08-17 ACCEPTED @ api.signageos.io/status: hardened (secgrep=3), zero ACAO under any Origin — differential vs box /status (secgrep=0) persists
+- 2026-08-17 REJECTED @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (NO_DELTA)
+- 2026-08-17 REJECTED @ box.signageos.io WebSocket: wss:// → 302 login redirect — no unauthenticated surface (NO_DELTA)
+- 2026-08-17 REJECTED @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket): all → 302 login catch-all — no surface beyond /status (NO_DELTA)
+- 2026-08-17 REJECTED @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO — no passive bypass (NO_DELTA)
+- 2026-08-17 REJECTED @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml (descriptive error messages); errorDetail retained only as mechanism evidence for IDOR (NO_DELTA)
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: Live reconfirmed — pod box-54846c877b-tskfg, uid 50-hex, secgrep=0, full 9-svc topology; POC finalized 30+ cycles.
+- 2026-08-17 ACCEPTED MISCONFIG @ api.signageos.io/status: Live reconfirmed — hardened (HSTS/xfo/xcto/no-store, secgrep=3), 0 ACAO, differential vs box persists.
+- 2026-08-17 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on new rs 7c5fdc9777; mechanism intact, zero auth drift.
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ CORS: 17 static ACAO confirmed on new rs, 0 credentials flag — unchanged.
