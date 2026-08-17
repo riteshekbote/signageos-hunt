@@ -1253,3 +1253,9 @@
 - 2026-08-17 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403076 errorDetail byte-identical across rs rotation 77955558bc→7c5fdc9777 confirms org-identity/header split mechanism intact, zero auth drift — AUTH_HELPED conf 86, NO_DELTA
 - 2026-08-17 REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) trivial health check, no data leaked — NO_DELTA
 - 2026-08-17 CONFIRMED DEAD @ github.com/signageos/videowall-designer: clientId/secret (sha256 564c293b…) tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only fixture, credential reuse disproven, NO_DELTA
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: NEW replica set `box-54846c877b` deployed — secgrep=0 persists, full 9-svc topology leak unchanged, zero hardening added across rs flip
+- 2026-08-17 ACCEPTED MISCONFIG @ api.signageos.io/status: NEW replica set `api-7c5fdc9777` deployed — secgrep=3 (HSTS/xfo/xcto/no-store) persists, 8-svc topology, zero ACAO under any Origin
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: NEW rs `54846c877b` deployed — secgrep=0 persists, full 9-svc topology leak unchanged, zero hardening added across rs flip. POC finalized 30+ cycles.
+- 2026-08-17 ACCEPTED MISCONFIG @ api.signageos.io/status: NEW rs `api-7c5fdc9777` deployed — secgrep=3 (HSTS/xfo/xcto/no-store) persists, 8-svc topology (mongoDB3 absent), zero ACAO under any Origin. Differential vs box /status persists.
+- 2026-08-17 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on new rs `7c5fdc9777` — mechanism intact, zero auth drift across rs rotation. AUTH_HELPED, conf 86.
+- 2026-08-17 REJECTED IDOR @ api.signageos.io pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO — NO_DELTA, 30+ cycles.

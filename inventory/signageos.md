@@ -1001,3 +1001,7 @@
 - NEW NO_DELTA — inventory shows only pod rotations (box-8676fb5f57-*, api-77955558bc-*) with zero auth drift, no new endpoints, no surface changes since 2026-08-15 04:30
 
 ## 2026-08-17 14:07:17 UTC
+
+## 2026-08-17 14:42:55 UTC
+- NEW box.signageos.io: NEW replica set `box-54846c877b` deployed (was `box-8676fb5f57`) — /status secgrep=0 persists, full 9-svc topology leak unchanged, zero hardening added across rs flip
+- NEW api.signageos.io: NEW replica set `api-7c5fdc9777` deployed (was `api-77955558bc`) — /status secgrep=3 (HSTS/xfo/xcto/no-store) persists, 8-svc topology (mongoDB3 absent), zero ACAO under any Origin
