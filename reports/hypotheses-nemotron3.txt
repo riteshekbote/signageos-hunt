@@ -1,4 +1,4 @@
-## 2026-08-17 22:20:45 UTC [api] (model nemotron3)
+## 2026-08-17 22:47:00 UTC [api] (model nemotron3)
 [NEW] box.signageos.io: NEW replica set `box-54846c877b` deployed (was `box-8676fb5f57`) — /status secgrep=0 persists, full 9-svc topology leak unchanged (now includes mongoDB3), zero hardening added across rs flip
 [NEW] api.signageos.io: NEW replica set `api-7c5fdc9777` deployed (was `api-77955558bc`) — /status secgrep=3 (HSTS/xfo/xcto/no-store) persists, 8-svc topology (mongoDB3 absent), zero ACAO under any Origin
 [CHANGED] box.signageos.io/status: Now includes mongoDB3 in succeededServices (9 services vs prior 8 on old rs) — topology leak expanded
@@ -33,7 +33,8 @@ evidence_needed: Already proven — live reprobe confirms hardened headers + JSO
 verify_steps: GET https://api.signageos.io/status → 200 application/json with infra leak; grep -cE 'strict-transport|x-frame|x-content' headers → 3; curl -sI -H "Origin: https://evil.test" https://api.signageos.io/status → 0 ACAO
 impact: Internal K8s topology, pod identity, process UID exposed despite header hardening; aids reconnaissance; LOW-MEDIUM
 testability: PASSIVE
-[FINAL] 1) Unauthenticated K8s topology and process identity leak via /status (confidence 100) 2) Cross-tenant security-token minting via X-Auth org-UID path override (confidence 86) 3) Hardened /status still leaks hostname/uid/Node/topology under security headers (confidence 95)
+[PARKED] Cross-tenant security-token minting via X-Auth org-UID path override: confidence 86 but class IDOR on api requires AUTH_HELPED (valid tenant credentials) — not passively verifiable in current phase; carried forward as highest-priority AUTH_HELPED lead
+[FINAL] 1) Unauthenticated K8s topology and process identity leak via /status (confidence 100) 2) Hardened /status still leaks hostname/uid/Node/topology under security headers (confidence 95) 3) Cross-tenant security-token minting via X-Auth org-UID path override (confidence 86)
 [NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id:unsafeDecryptedToken>`; then execute AUTH_HELPED verify_steps for the CRITICAL cross-tenant security-token IDOR: POST https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token with X-Auth header from orgA
 [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: NEW replica set `box-54846c877b` confirmed — secgrep=0 persists, 9-svc topology leak (mongoDB3 now present), zero hardening added across rs flip
 [LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: NEW replica set `api-7c5fdc9777` confirmed — secgrep=3 (HSTS/xfo/xcto/no-store) persists, 8-svc topology (mongoDB3 absent), zero ACAO
