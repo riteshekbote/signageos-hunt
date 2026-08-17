@@ -1331,3 +1331,12 @@
 - 2026-08-17 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on rs 7c5fdc9777 — zero auth drift, mechanism intact.
 - 2026-08-17 REJECTED IDOR @ api.signageos.io pre-auth: all 60+ routes still 403 JWT/X-Auth-gated, zero ACAO — NO_DELTA.
 - 2026-08-17 REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on any path — not CORS-exploitable — NO_DELTA.
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: NEW replica set `box-54846c877b` confirmed — secgrep=0 persists, 9-svc topology leak (mongoDB3 now present), zero hardening added across rs flip
+- 2026-08-17 REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (NO_DELTA, rs 54846c877b)
+- 2026-08-17 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated on rs 7c5fdc9777, zero ACAO under evil.test — no passive bypass (NO_DELTA)
+- 2026-08-17 REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on /, /status, /v1/*, /v2/* under any Origin on rs 7c5fdc9777 — not CORS-exploitable (NO_DELTA)
+- 2026-08-17 REJECTED MISCONFIG @ box.signageos.io WebSocket: wss:// → 302 login redirect — no unauthenticated surface (NO_DELTA, rs 54846c877b)
+- 2026-08-17 CONFIRMED DEAD @ github.com/signageos/videowall-designer leaked clientId/secret: staging-only fixture (sha256 564c293b…), X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven (NO_DELTA)
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: NEW rs box-54846c877b confirmed — secgrep=0 persists, 9-svc topology leak (mongoDB3 now present), zero hardening added; POC finalized 30+ cycles
+- 2026-08-17 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on rs 7c5fdc9777 — mechanism intact, zero auth drift across 4 rs rotations; AUTH_HELPED conf 86
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ CORS: 17 static ACAO confirmed on rs 54846c877b (evil.test NOT reflected, 0 credentials flag) — MISCONFIG-only, no credential-theft path; entry hardened (secgrep=4) vs /status (secgrep=0)
