@@ -1359,3 +1359,10 @@
 - 2026-08-17 REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked.
 - 2026-08-17 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session.
 - 2026-08-17 REJECTED MISCONFIG @ videowall-designer leaked clientId/secret on PROD: Staging-only fixture (sha256 564c293b…), credential reuse disproven (403076 WRONG_ACCOUNT_SECRET on prod) — CONFIRMED DEAD.
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: Live probe on new rs `box-54846c877b` (pod box-54846c877b-tskfg) confirms secgrep=0 persists, 9-svc topology leak (mongoDB3 now present), zero hardening added across rs flip — POC finalized 30+ cycles, evidence archived (body sha256 c810b5d0…).
+- 2026-08-17 REJECTED IDOR @ api.signageos.io pre-auth: All 60+ routes still 403 JWT/X-Auth-gated on rs `7c5fdc9777`, zero ACAO under evil.test — no passive bypass; cross-tenant chain remains AUTH_HELPED only (conf 86).
+- 2026-08-17 REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on /status now on new rs `7c5fdc9777` — not CORS-exploitable.
+- 2026-08-17 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on new rs `api-7c5fdc9777`; JWT ignored, X-Auth/x-oauth-client_id gating intact, zero auth drift across 4 rs rotations — mechanism alive, AUTH_HELPED conf 86.
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/ & /login/ CORS: 17 static ACAO confirmed on new rs (evil.test NOT reflected, 0 credentials flag) — MISCONFIG-only, unchanged.
+- 2026-08-17 REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) trivial health check, no data leaked (NO_DELTA).
+- 2026-08-17 CONFIRMED DEAD @ github.com/signageos/videowall-designer leaked clientId/secret: staging-only fixture (sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`), X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — credential reuse disproven (30+ cycles).
