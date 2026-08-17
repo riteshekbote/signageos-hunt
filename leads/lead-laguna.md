@@ -7909,3 +7909,4 @@ testability: PASSIVE
 [RISK] box.signageos.io: 32 | Unauthenticated /status infra+process-uid+topology leak (secgrep=0, 30+ cycles) + broad static CORS whitelist incl `http://` plaintext + wildcard (0 creds flag → MISCONFIG-only, no exploit path). Auth0 login gate holds; no pre-auth bypass surfaced. Risk plateaued at LOW-MEDIUM.
 [RISK] api.signageos.io: 40 | Cross-tenant security-token IDOR mechanism confirmed on rs `7c5fdc9777` (org from X-Auth first-part before `:` vs client-supplied path `{uid}`, conf 86, zero auth drift across 4 rs rotations) — upside CRITICAL if AUTH_HELPED verified. All 60+ routes JWT/X-Auth-gated (no pre-auth bypass, zero ACAO). /status hardened but still leaks hostname/uid/Node v24.19.0/8-svc topology. Descriptive-error class excluded per scope.yml. Risk = 40 with CRITICAL upside contingent on authenticated test.
 ## 2026-08-17 16:37:38 UTC [box] (model laguna)
+## 2026-08-17 17:02:15 UTC [box] (model laguna)
