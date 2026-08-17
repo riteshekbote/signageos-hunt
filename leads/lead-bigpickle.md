@@ -7145,3 +7145,4 @@ testability: AUTH_HELPED
 [LEARN] CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only fixture, credential reuse disproven.
 [RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid leak (secgrep=0) plus broad static CORS whitelist with http:// variant; no auth bypass, no credential-theft path, no new endpoints across 30+ NO_DELTA cycles
 [RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism fully confirmed (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold on all 60+ routes, CORS non-exploitable, descriptive-error class excluded by scope
+## 2026-08-17 11:32:04 UTC [box] (model bigpickle)

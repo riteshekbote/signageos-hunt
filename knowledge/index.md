@@ -1220,3 +1220,8 @@
 - 2026-08-17 REJECTED IDOR @ api.signageos.io pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass (NO_DELTA, 30+ cycles).
 - 2026-08-17 REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /, /status, /v1/*, /v2/* under any Origin — not CORS-exploitable (NO_DELTA).
 - 2026-08-17 CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only fixture, credential reuse disproven.
+- 2026-08-17 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml (descriptive error messages); errorDetail used only as mechanism evidence for IDOR (NO_DELTA).
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: Fresh probe confirms HTTP 200 JSON infra-leak, pod rotation only (box-8676fb5f57-*), secgrep=0 — POC finalized (30+ cycles, conf 100).
+- 2026-08-17 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical across rs rotations — mechanism intact, zero auth drift; AUTH_HELPED, conf 86.
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ CORS: 17 static ACAO confirmed, 0 credentials flag, evil.test NOT reflected (static whitelist) — MISCONFIG-only, no exploit path.
+- 2026-08-17 ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (HSTS/xfo/xcto/no-store, secgrep=3), zero ACAO — info-leak persists but header posture hardened vs box /status; differential confirmed.

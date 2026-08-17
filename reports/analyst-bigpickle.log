@@ -37288,3 +37288,77 @@ testability: AUTH_HELPED
 [LEARN] CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only fixture, credential reuse disproven.
 [RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid leak (secgrep=0) plus broad static CORS whitelist with http:// variant; no auth bypass, no credential-theft path, no new endpoints across 30+ NO_DELTA cycles
 [RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism fully confirmed (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold on all 60+ routes, CORS non-exploitable, descriptive-error class excluded by scope
+===== ANALYST bigpickle 2026-08-17 11:33:23 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m# [0mTodos
+[•] Delta analysis — check inventory for new/changed surface
+[ ] Live probe box.signageos.io/status — confirm current pod + secgrep
+[ ] Live probe api.signageos.io status — confirm hardened differential
+[ ] Live probe api.signageos.io/v1/organization/{uid}/security-token — confirm mechanism
+[ ] Emit structured cycle output
+[0m
+[0m$ [0mcurl -s -o /tmp/box-status.json -w "%{http_code}" https://box.signageos.io/status 2>/dev/null && echo "" && curl -sI https://box.signageos.io/status 2>/dev/null | head -20
+200
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1443
+date: Mon, 17 Aug 2026 11:31:56 GMT
+etag: W/"5a3-B3ovFSFsNzwwjIAUNXMIKdmWiR8"
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 c95a705fdf4e3077f715bd100df04b8a.cloudfront.net (CloudFront)
+x-amz-cf-pop: IAD55-P8
+x-amz-cf-id: t7qAsJF-HlHUBzK-XdUPAiKNIVR0MOhaMQQb2wGdgkrh3S44DdgkBg==
+[0m
+[0m$ [0mcurl -s -o /tmp/api-status.json -w "%{http_code}" https://api.signageos.io/status 2>/dev/null && echo "" && curl -sI https://api.signageos.io/status 2>/dev/null | head -20
+200
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1330
+date: Mon, 17 Aug 2026 11:31:57 GMT
+etag: W/"532-YVcw3/ISD4lMzhJtc6WCkhjt+ho"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+via: 1.1 a7a1b4c19abc42d237405ce4c4069f10.cloudfront.net (CloudFront)
+x-amz-cf-pop: IAD89-P1
+x-amz-cf-id: MnadcQQ8wb-a_4SCVxvqNz78OblnK6GC1ZNGwUnDERL_Tb8anvoUiQ==
+[0m
+[0m$ [0mcurl -s -o /tmp/api-sectoken.json -w "%{http_code}" -H "Origin: https://evil.test" https://api.signageos.io/v1/organization/test/security-token 2>/dev/null && echo "" && curl -sI -H "Origin: https://evil.test" https://api.signageos.io/v1/organization/test/security-token 2>/dev/null | head -20
+403
+HTTP/2 403 
+content-type: application/json; charset=utf-8
+content-length: 326
+date: Mon, 17 Aug 2026 11:31:58 GMT
+etag: W/"146-fj8PODy5yJPHl8tjg58lQ2aMPQg"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Error from cloudfront
+via: 1.1 4a050b98a443ca2d3af477f9b4dc39ae.cloudfront.net (CloudFront)
+x-amz-cf-pop: IAD89-P1
+x-amz-cf-id: TE-ZLqy5nfzyWUEyM1twoTXeEmydo4n4qFJR8GOFwZt1LYR8LraHHA==
+[0m
+[0m$ [0mcurl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/ 2>/dev/null | grep -ciE "access-control-allow-origin" && echo "---" && curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/ 2>/dev/null | grep -ciE "access-control-allow-credentials"
+17
+---
+0
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcat /tmp/box-status.json | python3 -m json.tool 2>/dev/null | head -50 failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcat /tmp/api-status.json | python3 -m json.tool 2>/dev/null | head -50 failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcat /tmp/api-sectoken.json | python3 -m json.tool 2>/dev/null failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[0m
+[0m$ [0mcurl -sI https://box.signageos.io/status 2>/dev/null | grep -ciE "strict-transport|x-frame|x-content|content-security"
+0
+[0m
