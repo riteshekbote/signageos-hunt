@@ -1140,3 +1140,9 @@
 - 2026-08-17 REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /, /status, /v1/*, /v2/* — not CORS-exploitable.
 - 2026-08-17 REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check, no data leaked.
 - 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed 03:11 UTC — pod box-8676fb5f57-xd6mc, secgrep=0, full 9-svc topology leak; POC final, zero hardening added (30+ cycles).
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: Live probe confirms HTTP 200 JSON infra-leak (pod box-8676fb5f57-*), secgrep=0, full 9-svc topology — POC finalized 30+ cycles, NO_DELTA.
+- 2026-08-17 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: Live probe confirms 403076 errorDetail byte-identical ("first part (before char `:`) of x-auth header" vs client-supplied path {uid}) — mechanism intact, zero auth drift; AUTH_HELPED conf 86, NO_DELTA.
+- 2026-08-17 REJECTED MISCONFIG @ box.signageos.io CORS credential-theft: 17 static ACAO, 0 `access-control-allow-credentials` → no credential-theft path; MISCONFIG-only (unchanged).
+- 2026-08-17 REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /, /status, /v1/*, /v2/* — not CORS-exploitable (unchanged).
+- 2026-08-17 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml (descriptive error messages); errorDetail retained only as mechanism evidence for IDOR.
+- 2026-08-17 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: staging-only fixture, X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven.
