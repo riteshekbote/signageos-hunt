@@ -5011,3 +5011,38 @@
 - LEARN: REJECTED IDOR @ api.signageos.io pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO — NO_DELTA
 - LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO — not CORS-exploitable — NO_DELTA
 - LEARN: CONFIRMED DEAD @ videowall-designer leaked clientId/secret: staging-only fixture, credential reuse disproven
+
+## RANKED HYPOTHESES 2026-08-17 12:51:20 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-nemotron3.txt)
+- [86] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via X-Auth org-UID path override (from reports/hypotheses-laguna.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id:unsafeD
+- NEXT(hypotheses-laguna.txt): HUMAN: Phase=POC, target=box. box /status POC finalized (30+ cycles, conf 100). Remaining escalation to CRITICAL requires AUTH_HELPED execution of api.security-
+- NEXT(hypotheses-bigpickle.txt): PROBE: `curl -s https://api.signageos.io/v1/organization/test/security-token | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('errorCode'), d.
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized — evidence archive sha256 body 38737948dcd9... / headers b11ba5ba... (30+ cycles stable)
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle — mechanism intact, zero auth drift; AUTH_HE
+- LEARN: CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on pro
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass; cross-tenant chain rem
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml (desc
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (unchanged)
+- LEARN: REJECTED MISCONFIG @ box.signageos.io WebSocket: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized — evidence archive sha256 body 38737948… / headers b11ba5ba… (30+ cycles stable); secgrep=0 confirme
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this cycle — mechanism intact, zero auth drift across 4
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ CORS: 16 static ACAO confirmed (evil.test NOT reflected), 0 credentials flag, hardened entry (secgrep=4) — MISC
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (HSTS/xfo/xcto/no-store, secgrep=3, 0 ACAO) — differential vs box /status persists
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check, no data leaked (NO_DELTA, 30+ cycles)
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session (NO_DELTA)
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass (NO_DELTA, 30+ cycles)
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml (descriptiv
+- LEARN: REJECTED MISCONFIG @ box.signageos.io WebSocket: wss://box.signageos.io/ → 302 login redirect — no unauthenticated WebSocket surface (NO_DELTA)
+- LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on /, /status, /v1/*, /v2/* under any Origin — not CORS-exploitable (NO_DELTA)
+- LEARN: CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Acco
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: NEW replica set `box-54846c877b` (was `8676fb5f57`) deployed — secgrep=0 persists, full 9-svc topology leak unchan
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: NEW replica set `api-7c5fdc9777` (was `77955558bc`) deployed — secgrep=3 (HSTS/xfo/xcto/no-store) persists, 8-svc 
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on new rs `7c5fdc9777` — mechanism intact, zero auth dr
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ CORS: 17 static ACAO confirmed on new rs (evil.test NOT reflected, 0 credentials flag) — MISCONFIG-only, unchan
+- LEARN: REJECTED IDOR @ api.signageos.io pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO — NO_DELTA.
+- LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /, /status, /v1/*, /v2/* — not CORS-exploitable — NO_DELTA.
+- LEARN: CONFIRMED DEAD @ videowall-designer leaked clientId/secret: staging-only fixture, credential reuse disproven — NO_DELTA.
+- LEARN: REJECTED MISCONFIG @ box.signageos.io /ready: 200 "OK" (2 bytes), trivial health check — NO_DELTA.
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable — NO_DELTA.
