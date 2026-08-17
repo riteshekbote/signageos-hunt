@@ -1316,3 +1316,18 @@
 - 2026-08-17 CONFIRMED DEAD @ github.com/signageos/videowall-designer leaked clientId/secret: staging-only fixture (sha256 `564c293b…`), X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven (30+ cycles, NO_DELTA).
 - 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: NEW replica set `box-54846c877b` confirmed — secgrep=0 persists, 9-svc topology leak (mongoDB3 now present), zero hardening
 - 2026-08-17 ACCEPTED MISCONFIG @ api.signageos.io/status: NEW replica set `api-7c5fdc9777` confirmed — secgrep=3 (HSTS/xfo/xcto/no-store) persists, 8-svc topology (mongoDB3 absent), zero ACAO
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: NEW rs `box-54846c877b` confirmed — secgrep=0 persists, 9-svc topology leak (now incl mongoDB3), zero hardening added across rs flip (was `box-8676fb5f57`)
+- 2026-08-17 ACCEPTED MISCONFIG @ api.signageos.io/status: NEW rs `api-7c5fdc9777` confirmed — secgrep=3 (HSTS/xfo/xto/no-store) persists, zero ACAO under evil.test, 8-svc topology (mongoDB3 absent)
+- 2026-08-17 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on new rs `api-7c5fdc9777` — mechanism intact, zero auth drift across 4 rs rotations (6cc9959bb4→77955558bc→7c5fdc9777), AUTH_HELPED conf 86
+- 2026-08-17 REJECTED MISCONFIG @ box.signageos.io/ready: Still 200 "OK" (2 bytes) trivial health check — NO_DELTA on new rs
+- 2026-08-17 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/session — NO_DELTA on new rs
+- 2026-08-17 REJECTED MISCONFIG @ box.signageos.io WebSocket: wss:// → 302 login redirect — no unauth surface — NO_DELTA on new rs
+- 2026-08-17 REJECTED IDOR @ api.signageos.io pre-auth: All 60+ routes 403 JWT/X-Auth-gated on new rs 7c5fdc9777, zero ACAO under evil.test — no passive bypass — NO_DELTA
+- 2026-08-17 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies still leak account/error detail — excluded per scope.yml — NO_DELTA
+- 2026-08-17 REJECTED MISCONFIG @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /csp-report): all → 302 login catch-all — NO_DELTA
+- 2026-08-17 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: staging-only fixture (sha256 `564c293b…`), X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven — NO_DELTA
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live on rs 54846c877b — pod rotation only, secgrep=0, full 9-svc topology + CPU/mem leak, zero hardening added.
+- 2026-08-17 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (secgrep=3) on rs 7c5fdc9777 — differential vs box /status persists.
+- 2026-08-17 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on rs 7c5fdc9777 — zero auth drift, mechanism intact.
+- 2026-08-17 REJECTED IDOR @ api.signageos.io pre-auth: all 60+ routes still 403 JWT/X-Auth-gated, zero ACAO — NO_DELTA.
+- 2026-08-17 REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on any path — not CORS-exploitable — NO_DELTA.
