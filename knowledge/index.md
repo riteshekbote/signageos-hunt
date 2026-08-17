@@ -1247,3 +1247,9 @@
 - 2026-08-17 CONFIRMED DEAD @ videowall-designer leaked clientId/secret: staging-only fixture, credential reuse disproven — NO_DELTA.
 - 2026-08-17 REJECTED MISCONFIG @ box.signageos.io /ready: 200 "OK" (2 bytes), trivial health check — NO_DELTA.
 - 2026-08-17 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable — NO_DELTA.
+- 2026-08-17 REJECTED MISCONFIG @ box.signageos.io/status CORS: zero ACAO under spoofed Origin — confirmed this cycle, CORS strictly scoped to SPA entry points only, not exploitable as CORS attack vector
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: fresh probe confirms HTTP 200 JSON leak (pod box-54846c877b-tskfg, uid f288189d…, 9-svc topology, cpu/mem, secgrep=0 behind CloudFront) — POC finalized 30+ cycles, NO_DELTA
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/+login/ CORS+CSP: fresh probe confirms 17 static ACAO (evil.test NOT reflected, 0 credentials flag), CSP hardened (secgrep=4) — MISCONFIG-only, NO_DELTA
+- 2026-08-17 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403076 errorDetail byte-identical across rs rotation 77955558bc→7c5fdc9777 confirms org-identity/header split mechanism intact, zero auth drift — AUTH_HELPED conf 86, NO_DELTA
+- 2026-08-17 REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) trivial health check, no data leaked — NO_DELTA
+- 2026-08-17 CONFIRMED DEAD @ github.com/signageos/videowall-designer: clientId/secret (sha256 564c293b…) tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only fixture, credential reuse disproven, NO_DELTA
