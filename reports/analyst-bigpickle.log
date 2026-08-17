@@ -39931,3 +39931,24 @@ All 3 hypotheses survive. Confidence ≥40, classes not on REJECTED list, verify
 ### STEP 7 — RISK SCORE
 [RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid leak (secgrep=0) plus broad static CORS whitelist with http:// plaintext variant; no auth bypass, no credential-theft path, new rs 54846c877b with zero hardening changes across 30+ cycles
 [RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism confirmed on rs 7c5fdc9777 (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold, CORS non-exploitable, descriptive-error class excluded
+===== ANALYST bigpickle 2026-08-17 21:53:59 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s -o /tmp/box-status.json -w '%{http_code}' https://box.signageos.io/status && echo "" && curl -sI -H "Origin: https://evil.test" https://box.signageos.io/ 2>/dev/null | grep -ci 'access-control-allow-origin' && echo "ACAO_count_on_root" && curl -sI -H "Origin: https://evil.test" https://box.signageos.io/status 2>/dev/null | grep -ci 'access-control-allow-origin' && echo "ACAO_count_on_status"
+200
+17
+ACAO_count_on_root
+0
+[0m
+[0m$ [0mcurl -s -o /tmp/api-status.json -w '%{http_code}' https://api.signageos.io/status && echo "" && curl -s https://api.signageos.io/v1/organization/test/security-token 2>/dev/null | head -c 500
+200
+{"status":403,"message":"Access forbidden - Neither \"x-oauth-client_id\" nor \"x-auth\" header set.","errorCode":403074,"errorName":"MISSING_ACCOUNT_ID_TO_AUTHENTICATE","errorDetail":"Both x-oauth-client_id header and first part (before char :) of x-auth header are missing from request thus account not to be authenticated"}
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcat /tmp/box-status.json | python3 -m json.tool 2>/dev/null | head -40 failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[0m
+[0m$ [0mcurl -sI https://box.signageos.io/status 2>/dev/null | grep -ciE 'strict-transport|x-frame|x-content|content-security' && echo "box_status_secgrep" && curl -sI https://api.signageos.io/status 2>/dev/null | grep -ciE 'strict-transport|x-frame|x-content|content-security' && echo "api_status_secgrep"
+0
+[0m
