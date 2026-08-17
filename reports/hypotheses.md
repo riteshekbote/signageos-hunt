@@ -5487,3 +5487,28 @@
 - LEARN: CONFIRMED DEAD @ videowall-designer leaked clientId/secret: staging-only fixture, credential reuse disproven — NO_DELTA
 - LEARN: REJECTED MISCONFIG @ box.signageos.io /ready: 200 "OK" (2 bytes), trivial health check — NO_DELTA
 - LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable — NO_DELTA
+
+## RANKED HYPOTHESES 2026-08-17 22:20:55 UTC
+- [100] box.signageos.io/status: box.signageos.io/status: Unauthenticated K8s topology and process identity leak (from reports/hypotheses-laguna.txt)
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-nemotron3.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id:unsafeD
+- NEXT(hypotheses-laguna.txt): PROBE: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/ --max-time 15 | grep -cE 'access-control-allow-origin'` → expect 17 (confirms /l
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: NEW replica set `box-54846c877b` confirmed — secgrep=0 persists, 9-svc topology leak (mongoDB3 now present), zero 
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: NEW replica set `api-7c5fdc9777` confirmed — secgrep=3 (HSTS/xfo/xcto/no-store) persists, 8-svc topology (mongoDB3
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on new rs `7c5fdc9777` — mechanism intact, zero auth dr
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/status CORS: Zero ACAO under spoofed Origin — CORS strictly scoped to SPA entry points only, not exploitable as CORS attac
+- LEARN: REJECTED IDOR @ api.signageos.io pre-auth: all 60+ routes 403 JWT/X-Auth-gated on new rs `7c5fdc9777`, zero ACAO under evil.test — no passive bypass
+- LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /, /status, /v1/*, /v2/* — not CORS-exploitable — NO_DELTA
+- LEARN: CONFIRMED DEAD @ videowall-designer leaked clientId/secret: staging-only fixture, credential reuse disproven — NO_DELTA
+- LEARN: REJECTED MISCONFIG @ box.signageos.io /ready: 200 "OK" (2 bytes), trivial health check — NO_DELTA
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable — NO_DELTA
+- LEARN: REJECTED MISCONFIG @ box.signageos.io WebSocket: wss://box.signageos.io/ upgrade → 302 login redirect — no unauthenticated WebSocket surface (NO_DELTA, rs 54846
+- LEARN: REJECTED MISCONFIG @ box.signageos.io /ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (NO_DELTA)
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session; no unauthenticate
+- LEARN: REJECTED IDOR @ api.signageos.io pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass (NO_DELTA, rs 7c5fdc9777)
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail + errorDetail text — excluded per sc
+- LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on /, /status, /v1/*, /v2/* under any Origin on rs 7c5fdc9777 — not CORS-exploitable (NO_DELTA)
+- LEARN: CONFIRMED DEAD @ github.com/signageos/videowall-designer leaked clientId/secret: staging-only fixture (sha256 `564c293b…`), X-Auth on prod → 403076 WRONG_ACCOUN
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Live reconfirmed on rs 54846c877b — pod box-54846c877b-89r2d, secgrep=0, 9-svc topology leak (mongoDB3 present), c
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Live reconfirmed on rs 7c5fdc9777 — pod api-7c5fdc9777-nbkc4, hardened (HSTS/xfo/xcto/no-store secgrep=3), zero AC
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: Fresh probe confirms JWT is IGNORED at this endpoint — `Authorization: Bearer test` → 403
