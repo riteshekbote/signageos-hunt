@@ -1,1 +1,13 @@
-## 2026-08-17 09:51:36 UTC [box] (model bigpickle)
+## 2026-08-17 10:22:46 UTC [box] (model bigpickle)
+[PRIO] box.signageos.io/status, 96, attack 5, business 4, tech 3, gate 10, cloud 5, fresh 3
+[PRIO] box.signageos.io CORS, 92, attack 3, business 3, tech 2, gate 10, cloud 5, fresh 3
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token, 86, attack 5, business 5, tech 5, gate 3, cloud 4, fresh 3
+[NEXT] PROBE: `curl -s https://box.signageos.io/status | sha256sum` — monitoring cycle confirming latest pod rotation and secgrep=0; POC already finalized, no new surface expected.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Still leaking pod hostname, 64-hex process.uid, Node v20.20.2, 9-service topology with secgrep=1 (x-powered-by only). Pod dlxnp confirmed stable across cycles. POC stable 30+ cycles.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ CORS: 17 static ACAO reconfirmed incl http://plaintext + *.zdunpkgdomains.com wildcard + api sibling + path-bearing recaptcha; 0 credentials flag; evil.test NOT reflected (static whitelist); MISCONFIG-only, no exploit path, NO_DELTA.
+[LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical across rs rotation 77955558bc; zero auth drift; AUTH_HELPED conf 86, NO_DELTA.
+[LEARN] REJECTED IDOR @ api.signageos.io v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass; cross-tenant chain remains AUTH_HELPED only (conf 86, NO_DELTA).
+[LEARN] REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on /, /status, /v1/*, /v2/* under any Origin — not CORS-exploitable (NO_DELTA, 30+ cycles).
+[LEARN] CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only fixture, credential reuse disproven (30+ cycles).
+[RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid leak (secgrep=1, hardened siblings only) plus broad static CORS whitelist with http:// variant; no auth bypass, no credential-theft path, no new endpoints across 30+ NO_DELTA cycles
+[RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism fully confirmed (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold on all 60+ routes, CORS non-exploitable, descriptive-error class excluded by scope
