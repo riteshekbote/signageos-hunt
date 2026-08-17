@@ -1272,3 +1272,6 @@
 - 2026-08-17 ACCEPTED MISCONFIG @ api.signageos.io/status: Live reconfirmed — hardened (HSTS/xfo/xcto/no-store, secgrep=3), 0 ACAO, differential vs box persists.
 - 2026-08-17 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on new rs 7c5fdc9777; mechanism intact, zero auth drift.
 - 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ CORS: 17 static ACAO confirmed on new rs, 0 credentials flag — unchanged.
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: Live reconfirmed — pod `box-54846c877b-4qs4c`, secgrep=0, full 9-svc topology; POC finalized 30+ cycles.
+- 2026-08-17 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on rs 7c5fdc9777; mechanism intact, zero auth drift. AUTH_HELPED, conf 86.
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ CORS: 17 static ACAO confirmed on rs 54846c877b (evil.test NOT reflected, 0 credentials flag) — MISCONFIG-only, unchanged.
