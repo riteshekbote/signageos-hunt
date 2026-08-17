@@ -7201,3 +7201,4 @@ testability: PASSIVE
 [LEARN] CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: staging-only fixture, X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven.
 [RISK] box.signageos.io: **32** — Unauthenticated `/status` infra/topology/process-uid leak (secgrep=0, hardened siblings only) plus broad CORS MISCONFIG (no creds flag, evil.test not reflected, no exploit path). POC finalized; no auth bypass, no credential-theft path across 30+ NO_DELTA cycles.
 [RISK] api.signageos.io: **40** — Cross-tenant security-token IDOR mechanism confirmed (org from X-Auth first-part vs client-supplied path `{uid}`, conf 86, zero auth drift across rs rotations) but AUTH_HELPED-gated; `/status` hardened but still leaks infra; JWT/X-Auth gates hold on all 60+ routes, CORS non-exploitable (zero ACAO), descriptive-error class excluded.
+## 2026-08-17 05:48:06 UTC [box] (model laguna)
