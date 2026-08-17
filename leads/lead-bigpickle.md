@@ -6920,3 +6920,43 @@ testability: PASSIVE
 [LEARN] CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: staging-only fixture, X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven (30+ cycles).
 [RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid leak (secgrep=0, hardened siblings only) plus broad static CORS whitelist with http:// variant; no auth bypass, no credential-theft path, no new endpoints across 30+ NO_DELTA cycles
 [RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism fully confirmed (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold on all 60+ routes, CORS non-exploitable, descriptive-error class excluded by scope
+## 2026-08-17 06:05:13 UTC [box] (model bigpickle)
+[PRIO] box.signageos.io/status, 55, attack 5, business 4, tech 3, gate 10, cloud 5, fresh 3
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token, 50, attack 5, business 5, tech 5, gate 3, cloud 4, fresh 3
+[PRIO] api.signageos.io/status, 45, attack 3, business 3, tech 2, gate 10, cloud 5, fresh 3
+[HYP] Unauthenticated K8s topology and process identity leak via /status
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: HTTP 200 JSON returns pod hostname, 64-hex process.uid, Node v20.20.2, 9-service topology with only x-powered-by: Express (secgrep=0). Confirmed across 30+ cycles with zero hardening.
+evidence_needed: None — POC finalized and archived
+verify_steps: `curl -s https://box.signageos.io/status` → 200 JSON leak; secgrep=0
+impact: K8s pod identity/UID disclosure enables targeted attacks; LOW-MEDIUM
+testability: PASSIVE
+[HYP] Cross-tenant security-token mint via X-Auth header split
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: 403074 errorDetail byte-identically confirms org identity derived from X-Auth header first-part (before `:`) while path `{uid}` is client-supplied. X-Auth gated (NOT JWT). Mechanism confirmed across rs rotation with zero auth drift.
+evidence_needed: Valid account with ≥1 organization + second org UID to prove cross-tenant mint
+verify_steps: AUTH_HELPED: `curl -s -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` → 200 if IDOR confirmed
+impact: Cross-tenant security token mint; HIGH severity if proven exploitable
+testability: AUTH_HELPED
+[HYP] Broad static ACAO whitelist expands SPA origin trust boundary
+class: MISCONFIG
+asset: box.signageos.io / + /login/
+confidence: 92
+reasoning: 17 static ACAO values confirmed (http:// variant, *.zdusercontent.com wildcard, api.signageos.io sibling). No access-control-allow-credentials. evil.test NOT reflected.
+evidence_needed: None — accepted finding, no credential-theft path
+verify_steps: `curl -s -D - -H "Origin: https://evil.test" https://box.signageos.io/login/` → 17 ACAO, credentials grep=0
+impact: Broadens postMessage/origin trust boundary; LOW
+testability: PASSIVE
+[FINAL] 1) box.signageos.io/status: MISCONFIG, 96, PASSIVE — POC finalized
+[FINAL] 2) api.signageos.io/v1/organization/{uid}/security-token: IDOR, 86, AUTH_HELPED — mechanism confirmed, credential-gated
+[FINAL] 3) box.signageos.io CORS: MISCONFIG, 92, PASSIVE — no credential-theft path
+[NEXT] PROBE: `curl -s https://box.signageos.io/status` → verify latest pod rotation + confirm secgrep=0 (monitoring cycle)
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Still leaking pod hostname, 64-hex process.uid, Node v20.20.2, 9-service topology with secgrep=0
+[LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 mechanism intact, zero auth drift; AUTH_HELPED conf 86
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io CORS: 17 static ACAO, 0 credentials flag — MISCONFIG-only, no credential-theft path
+[LEARN] REJECTED IDOR @ api.signageos.io pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO
+[LEARN] REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on any path — not CORS-exploitable
