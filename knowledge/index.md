@@ -1139,3 +1139,4 @@
 - 2026-08-17 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical this probe ("first part (before char `:`) of x-auth header" vs client-supplied path {uid}); mechanism intact, zero auth drift on rs 77955558bc; AUTH_HELPED conf 86.
 - 2026-08-17 REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /, /status, /v1/*, /v2/* — not CORS-exploitable.
 - 2026-08-17 REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) — trivial health check, no data leaked.
+- 2026-08-17 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed 03:11 UTC — pod box-8676fb5f57-xd6mc, secgrep=0, full 9-svc topology leak; POC final, zero hardening added (30+ cycles).
