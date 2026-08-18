@@ -1116,3 +1116,9 @@
 - NEW api.signageos.io: Replica set rotated to `api-7c5fdc9777` (from `api-77955558bc`) — /status still secgrep=3 (HSTS/xfo/xcto/no-store), 8-svc topology (mongoDB3 absent), zero ACAO
 - CHANGED box.signageos.io/status: Now includes mongoDB3 in succeededServices (9 services vs prior 8) — topology leak expanded
 - CHANGED api.signageos.io/status: mongoDB3 absent (8 services) — topology leak contracted vs box
+
+## 2026-08-18 02:37:33 UTC
+- NEW box.signageos.io: Replica set rotated to `box-54846c877b` (from `box-8676fb5f57`) — /status still secgrep=0, 9-svc topology leak (now includes mongoDB3), zero hardening
+- NEW api.signageos.io: Replica set rotated to `api-7c5fdc9777` (from `api-77955558bc`) — /status still secgrep=3 (HSTS/xfo/xcto/no-store), 8-svc topology (mongoDB3 absent), zero ACAO
+- CHANGED box.signageos.io/status: Now includes mongoDB3 in succeededServices (9 services vs prior 8) — topology leak expanded
+- CHANGED api.signageos.io/status: mongoDB3 absent (8 services) — topology leak contracted vs box
