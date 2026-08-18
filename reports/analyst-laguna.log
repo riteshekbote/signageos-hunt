@@ -67961,3 +67961,36 @@ All three survive:
 
 [RISK] box.signageos.io: 58 — Persistent unauthenticated /status infra-leak (K8s pod identity, process UID, Node v20.20.2, 9-svc topology incl mongoDB3, CPU/mem/responseTime, secgrep=0) behind CloudFront; CORS whitelist scoped to SPA entry points (/ + /login/) — 17 static origins incl http:// plaintext + *.zdusercontent.com wildcard, 0 credentials flag → MISCONFIG-only; all other surfaces behind Auth0 login catch-all (302); Auth0 OAuth2 redirect_uri/state not passively testable without tenant access; rs box-54846c877b rotation confirms zero hardening drift across 30+ cycles; mongoDB3 now in topology confirming expanded leak surface.
 [RISK] api.signageos.io: 65 — Dual-auth API (JWT Bearer + X-Auth `id:unsafeDecryptedToken`) with org UID client-supplied in path (rs api-7c5fdc9777); cross-tenant IDOR chain on /v1/organization/{uid}/security-token confirmed at mechanism level (JWT ignored, org from X-Auth first-part before `:`, path `{uid}` client-supplied, zero auth drift 6 rs rotations) but AUTH_HELPED only; /status hardened (secgrp=3, 0 ACAO) but still leaks hostname/uid/Node v24.19.0/8-svc topology; 60+ routes JWT/X-Auth-gated with no passive bypass; behind CloudFront.
+===== ANALYST laguna 2026-08-18 15:52:20 UTC =====
+[0m
+> build · laguna-s-2.1-free
+[0m
+[0m$ [0mcurl -sI -H "Origin: https://evil.test" "https://box.signageos.io/status" 2>&1 | grep -iE 'HTTP/|strict-transport|x-frame|x-content|content-security|access-control|via|x-cache|x-amz-cf-pop|x-powered' | head -30
+HTTP/2 200 
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 ddba66e53ff633c34296b8e866a481e2.cloudfront.net (CloudFront)
+x-amz-cf-pop: IAD55-P8
+[0m
+[0m$ [0mcurl -s "https://box.signageos.io/status" 2>&1 | head -c 2000
+{"name":"box","status":"OK","process":{"uid":"cb157b30d4d6aebf3448c47dff9e32cecfae0a3cf4d8a6bdda","pid":1,"version":"v20.20.2","uptime":4630.938129634,"cpuUsage":{"user":436805578,"system":52031706},"memoryUsage":{"rss":276418560,"heapTotal":195571712,"heapUsed":167680208,"external":28064076,"arrayBuffers":24547847}},"hostname":"box-c877d9cc8-lpf26","failedServices":[],"succeededServices":["amqp0","redis2","redis0","redis1","redis3","mongoDB2","mongoDB3","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1787067848531,"respondedAt":1787067848598,"amqp0":{"response":{"requestedAt":1787067848532,"respondedAt":1787067848598,"responseTime":66}},"redis2":{"response":{"requestedAt":1787067848533,"respondedAt":1787067848535,"responseTime":2}},"redis0":{"response":{"requestedAt":1787067848533,"respondedAt":1787067848536,"responseTime":3}},"redis1":{"response":{"requestedAt":1787067848533,"respondedAt":1787067848536,"responseTime":3}},"redis3":{"response":{"requestedAt":1787067848533,"respondedAt":1787067848537,"responseTime":4}},"mongoDB2":{"response":{"requestedAt":1787067848534,"respondedAt":1787067848536,"responseTime":2}},"mongoDB3":{"response":{"requestedAt":1787067848534,"respondedAt":1787067848537,"responseTime":3}},"mongoDB1":{"response":{"requestedAt":1787067848533,"respondedAt":1787067848538,"responseTime":5}},"mongoDB0":{"response":{"requestedAt":1787067848533,"respondedAt":1787067848546,"responseTime":13}}}
+[0m
+[0m$ [0mcurl -s "https://api.signageos.io/status" 2>&1 | head -c 2000
+{"name":"api","status":"OK","process":{"uid":"df4fcd5d96bf1abba2fef9ba30e09ea04c9259a0c138d742af","pid":1,"version":"v24.19.0","uptime":106339.747083815,"cpuUsage":{"user":42947517147,"system":4024911969},"memoryUsage":{"rss":965873664,"heapTotal":521265152,"heapUsed":452959984,"external":100711521,"arrayBuffers":96545191}},"hostname":"api-7c5fdc9777-vn296","failedServices":[],"succeededServices":["amqp0","redis3","redis1","redis2","redis0","mongoDB2","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1787067852494,"respondedAt":1787067852819,"amqp0":{"response":{"requestedAt":1787067852495,"respondedAt":1787067852663,"responseTime":168}},"redis3":{"response":{"requestedAt":1787067852495,"respondedAt":1787067852500,"responseTime":5}},"redis1":{"response":{"requestedAt":1787067852495,"respondedAt":1787067852519,"responseTime":24}},"redis2":{"response":{"requestedAt":1787067852495,"respondedAt":1787067852525,"responseTime":30}},"redis0":{"response":{"requestedAt":1787067852495,"respondedAt":1787067852817,"responseTime":322}},"mongoDB2":{"response":{"requestedAt":1787067852495,"respondedAt":1787067852525,"responseTime":30}},"mongoDB1":{"response":{"requestedAt":1787067852495,"respondedAt":1787067852526,"responseTime":31}},"mongoDB0":{"response":{"requestedAt":1787067852495,"respondedAt":1787067852526,"responseTime":31}}}
+[0m
+[0m$ [0mcurl -sI -H "Origin: https://evil.test" "https://api.signageos.io/status" 2>&1 | grep -iE 'HTTP/|strict-transport|x-frame|x-content|content-security|access-control|via|x-cache' | head -20
+HTTP/2 200 
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+via: 1.1 9349b115ae66d16aae68deb9bb5eebc2.cloudfront.net (CloudFront)
+[0m
+I'll execute the analyst steps. Starting with STEP 1 — DELTA via fresh passive probes against both targets.
+[0m$ [0mcurl -sI "https://api.signageos.io/v1/organization/test/security-token" 2>&1 | grep -iE 'HTTP/|403|access-control' | head -20 && echo "---" && curl -s -o /dev/null -w "%{http_code}" "https://api.signageos.io/v1/organization/test/security-token"
+HTTP/2 403 
+access-control-expose-headers: *
+---
+403
+[0m
+[91m[1mError: [0mUpstream request failed: Endpoint is unavailable.
