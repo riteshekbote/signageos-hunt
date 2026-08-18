@@ -1319,3 +1319,5 @@
 - NEW api.signageos.io: Replica set `api-7c5fdc9777` stable — /status secgrep=3 (HSTS/xfo/xcto/no-store), 8-svc topology (mongoDB3 absent), zero ACAO
 - NEW api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced
 - NEW box.signageos.io/status CORS: Zero ACAO under spoofed Origin confirmed — CORS strictly scoped to SPA entry points only
+
+## 2026-08-18 20:55:18 UTC

@@ -1557,3 +1557,10 @@
 - 2026-08-18 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding not passively testable without tenant/session — NO_DELTA
 - 2026-08-18 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass — NO_DELTA
 - 2026-08-18 CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) is staging-only fixture targeting http://api.kiera.office.signageos.io; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET; credential reuse disproven — CONFIRMED DEAD
+- 2026-08-18 CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) is staging-only fixture targeting http://api.kiera.office.signageos.io; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven
+- 2026-08-18 REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked (NO_DELTA)
+- 2026-08-18 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session (30+ cycles, NO_DELTA)
+- 2026-08-18 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak auth account/error detail — excluded class per scope.yml; errorDetail retained only as mechanism evidence for IDOR (NO_DELTA)
+- 2026-08-18 REJECTED MISCONFIG @ box.signageos.io CORS credential-theft: 17 static ACAO on / + /login/, evil.test NOT reflected, 0 access-control-allow-credentials — not CORS-exploitable, MISCONFIG-only (NO_DELTA)
+- 2026-08-18 REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on /, /status, /v1/*, /v2/* under any Origin — not CORS-exploitable (NO_DELTA)
+- 2026-08-18 CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e) is staging-only fixture targeting http://api.kiera.office.signageos.io; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; credential reuse disproven (CONFIRMED DEAD, 30+ cycles)
