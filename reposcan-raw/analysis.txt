@@ -1,45 +1,24 @@
 [0m
 > build · nemotron-3-ultra-free
 [0m
-[0m$ [0mls -la
-total 964
-drwxr-xr-x 11 runner runner   4096 Aug 18 13:59 .
-drwxr-xr-x  3 runner runner   4096 Aug 18 13:59 ..
-drwxr-xr-x  7 runner runner   4096 Aug 18 13:59 .git
-drwxr-xr-x  3 runner runner   4096 Aug 18 13:59 .github
--rw-r--r--  1 runner runner    944 Aug 18 13:59 README.md
--rw-r--r--  1 runner runner    405 Aug 18 13:59 cands-signageos.txt
-drwxr-xr-x  2 runner runner   4096 Aug 18 13:59 inventory
-drwxr-xr-x  2 runner runner   4096 Aug 18 13:59 knowledge
-drwxr-xr-x  2 runner runner  32768 Aug 18 13:59 leads
--rw-r--r--  1 runner runner 166799 Aug 18 13:59 probe-results.md
-drwxr-xr-x  2 runner runner   4096 Aug 18 13:59 reports
--rw-r--r--  1 runner runner 366420 Aug 18 13:59 repos-signageos.json
-drwxr-xr-x  3 runner runner   4096 Aug 18 13:59 reposcan-raw
--rw-r--r--  1 runner runner 327433 Aug 18 13:59 scan-prompt.txt
--rw-r--r--  1 runner runner   3086 Aug 18 13:59 scope.yml
-drwxr-xr-x  2 runner runner   4096 Aug 18 13:59 scripts
--rw-r--r--  1 runner runner     33 Aug 18 13:59 state_bigpickle.json
--rw-r--r--  1 runner runner     33 Aug 18 13:59 state_laguna.json
--rw-r--r--  1 runner runner     33 Aug 18 13:59 state_ling3.json
--rw-r--r--  1 runner runner     33 Aug 18 13:59 state_longcat.json
--rw-r--r--  1 runner runner     33 Aug 18 13:59 state_nemotron3.json
-drwxr-xr-x  2 runner runner  20480 Aug 18 13:59 triage
-[0m
-[0m→ [0mRead reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
-[0m→ [0mRead scope.yml
-Based on the scan results and the knowledge base, here's the triage:
+Based on the knowledge base, this exact finding has been extensively triaged and confirmed as a **staging-only test fixture** with **credential reuse disproven on production**.
 
 ## Classification Table
 
-| Category | File | Line | SHA256 | Classification |
-|----------|------|------|--------|----------------|
-| **SECRET_LEAK** | `signageos/videowall-designer/sos/videoTiming.js` | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | **TEST_OR_EXAMPLE** — staging test fixture (`http://api.kiera.office.signageos.io`) |
+| Category | File | Line | SHA256 of Secret | Classification |
+|----------|------|------|------------------|----------------|
+| Hardcoded Secret | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js` | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | **TEST_OR_EXAMPLE** (staging-only fixture) |
 
 ## Verdict
 
-| Candidate | REPORT_CANDIDATE | Reason |
-|-----------|------------------|--------|
-| `videowall-designer` hardcoded clientId/secret | **no** | **CONFIRMED DEAD** — Tested as X-Auth on prod `api.signageos.io` → `403076 WRONG_ACCOUNT_SECRET "Account not found"`. Credentials target staging `http://api.kiera.office.signageos.io` (HTTP, internal office env). Credential reuse disproven across 30+ probe cycles. |
+**REPORT_CANDIDATE: no**
 
-**No reportable findings from this scan delta.** The only hit is a known staging-only test fixture already triaged and confirmed non-exploitable on production.
+**Reasoning:**
+- This secret (`9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9`) pairs with clientId `fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47` in the same file
+- Targets **staging endpoint** `http://api.kiera.office.signageos.io` (HTTP, non-prod)
+- Tested as X-Auth on **production** `api.signageos.io` → returns `403076 WRONG_ACCOUNT_SECRET "Account not found"`
+- **Credential reuse disproven** — account does not exist on prod (30+ cycle confirmation)
+- Classified as **CONFIRMED DEAD** in knowledge base (2026-08-07 through 2026-08-18)
+- Out-of-scope host for the bug bounty program (only `box.signageos.io` and `api.signageos.io` are eligible)
+
+This is a known, closed finding — do not re-report.
