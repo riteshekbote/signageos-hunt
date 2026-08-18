@@ -1431,3 +1431,4 @@
 - 2026-08-18 REJECTED MISCONFIG @ box.signageos.io /ready: 200 "OK" (2 bytes) — trivial health check, no data leaked.
 - 2026-08-18 CONFIRMED DEAD @ videowall-designer leaked clientId/secret: Staging-only fixture (sha256 564c293b…), X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven.
 - 2026-08-18 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session.
+- 2026-08-18 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (secgrep=4, 0 ACAO) on rs 7c5fdc9777 — differential vs box /status persists.
