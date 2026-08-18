@@ -1585,3 +1585,14 @@
 - 2026-08-18 REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on /, /status, /v1/*, /v2/* under any Origin — not CORS-exploitable, NO_DELTA on rs 7c5fdc9777
 - 2026-08-18 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass; cross-tenant chain remains AUTH_HELPED only — NO_DELTA
 - 2026-08-18 CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e) is staging-only fixture targeting http://api.kiera.office.signageos.io; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven (59+ cycles, NO_DELTA)
+- 2026-08-18 REJECTED box.signageos.io/ready: 200 "OK" (2 bytes) trivial health check, no data leaked — NO_DELTA
+- 2026-08-18 REJECTED box.signageos.io probe set (/healthz/livez/readyz/live/metrics/env/config.json/csp-report/websocket): all → 302 login catch-all — no unauthenticated surface beyond /status — NO_DELTA
+- 2026-08-18 REJECTED api.signageos.io CORS: zero ACAO on /, /status, /v1/*, /v2/* under any Origin — not CORS-exploitable — NO_DELTA on rs 7c5fdc9777
+- 2026-08-18 REJECTED api.signageos.io/v1/*+v2/* pre-auth IDOR: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO — no passive bypass; cross-tenant chain remains AUTH_HELPED only — NO_DELTA
+- 2026-08-18 REJECTED api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml; errorDetail retained only as mechanism evidence for IDOR — NO_DELTA
+- 2026-08-18 REJECTED box.signageos.io/login Auth0 OAuth2: redirect_uri/state binding not passively testable without tenant/authenticated session — NO_DELTA
+- 2026-08-18 REJECTED cors-exploit box.signageos.io / + /login/: 17 static ACAO, 0 access-control-allow-credentials → no credential-theft path, MISCONFIG-only — NO_DELTA
+- 2026-08-18 CONFIRMED DEAD github.com/signageos/videowall-designer: leaked clientId/secret (sha256 564c293b…) staging-only fixture, X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven (59+ cycles)
+- 2026-08-18 ACCEPTED box.signageos.io/status: secgrep=0 persists (x-powered-by only), 9-svc topology leak (mongoDB3 present), behind CloudFront — POC stable 59+ cycles
+- 2026-08-18 ACCEPTED api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical, JWT Bearer ignored, zero ACAO under evil.test — mechanism intact, zero auth drift across 7+ rs rotations
+- 2026-08-18 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live on rs c877d9cc8 — pod 7qv7h, secgrep=0, 9-svc topology, cpuUsage/memoryUsage, zero hardening. POC stable 59+ cycles.
