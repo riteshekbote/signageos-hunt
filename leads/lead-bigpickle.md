@@ -8746,3 +8746,28 @@ testability: AUTH_HELPED
 [LEARN] CONFIRMED DEAD @ videowall-designer leaked clientId/secret: staging-only fixture, credential reuse disproven — NO_DELTA.
 [RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid/cpu/mem leak (secgrep=0) plus broad static CORS whitelist with http:// plaintext variant; no auth bypass, no credential-theft path, rs c877d9cc8 with zero hardening across 30+ cycles
 [RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism confirmed on rs 7c5fdc9777 (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold, CORS non-exploitable, descriptive-error class excluded
+## 2026-08-18 18:17:49 UTC [box] (model bigpickle)
+[PRIO]
+[HYP]
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 97
+reasoning: Unauthenticated GET returns JSON with pod hostname (box-c877d9cc8-95qvp), 64-hex process.uid, Node v20.20.2, 9-service topology (amqp0/redis0-3/mongoDB0-3) + cpuUsage/memoryUsage/uptime. Only x-powered-by: Express + CloudFront headers — zero hardening (secgrep=0). Confirmed across 30+ cycles on rs c877d9cc8.
+evidence_needed: None — POC finalized, archived in workspace
+verify_steps: Already verified: curl -s https://box.signageos.io/status
+impact: Infrastructure reconnaissance — K8s pod identity, internal service map, process UID, memory/CPU fingerprint for targeted attacks; severity medium
+testability: PASSIVE
+[PARKED] box.signageos.io/status: confidence 97 but POC finalized 30+ cycles, no delta — already in FINAL list
+[PARKED] api.signageos.io/v1/organization/{uid}/security-token: confidence 86 but AUTH_HELPED — already in FINAL list
+[FINAL] 1) box.signageos.io/status: MISCONFIG, 97, PASSIVE — POC finalized 30+ cycles
+[FINAL] 2) api.signageos.io/v1/organization/{uid}/security-token: IDOR, 86, AUTH_HELPED — mechanism confirmed, credential-gated
+[FINAL] 3) box.signageos.io/ + /login/ CORS+CSP: MISCONFIG, 92, PASSIVE — no credential-theft path
+[NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire JWT + X-Auth pair → test cross-tenant access: `curl -s -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` — the only way to progress the high-severity IDOR lead (conf 86, AUTH_HELPED). Without credentials, the passive surface is fully explored.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live on rs c877d9cc8 — secgrep=0 persists, 9-svc topology (mongoDB3 present), cpuUsage/memoryUsage present, zero hardening added. POC stable 30+ cycles.
+[LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (secgrep=3, 0 ACAO) on rs 7c5fdc9777 — differential vs box /status persists.
+[LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical; mechanism intact across 6+ rs rotations. AUTH_HELPED conf 86.
+[LEARN] REJECTED IDOR @ api.signageos.io pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO — NO_DELTA.
+[LEARN] REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO — not CORS-exploitable — NO_DELTA.
+[LEARN] CONFIRMED DEAD @ videowall-designer leaked clientId/secret: staging-only fixture, credential reuse disproven — NO_DELTA.
+[RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid/cpu/mem leak (secgrep=0) plus broad static CORS whitelist with http:// plaintext variant; no auth bypass, no credential-theft path; rs c877d9cc8 with zero hardening across 30+ cycles
+[RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism confirmed on rs 7c5fdc9777 (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold, CORS non-exploitable, descriptive-error class excluded
