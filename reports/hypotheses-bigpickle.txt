@@ -1,4 +1,4 @@
-## 2026-08-18 07:37:20 UTC [box] (model bigpickle)
+## 2026-08-18 08:08:09 UTC [box] (model bigpickle)
 [PRIO] box.signageos.io/status: 96, attack 5, business 4, tech 3, gate 10, cloud 5, fresh 4
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token: 86, attack 5, business 5, tech 5, gate 3, cloud 4, fresh 4
 [PRIO] box.signageos.io/ + /login/ CORS+CSP: 92, attack 4, business 3, tech 2, gate 10, cloud 5, fresh 3
@@ -6,7 +6,7 @@
 class: MISCONFIG
 asset: box.signageos.io/status
 confidence: 96
-reasoning: HTTP 200 JSON returns pod hostname (box-54846c877b-tskfg), 50-hex process.uid, Node v20.20.2, 9-svc topology (amqp0/redis0-3/mongoDB0-3), cpuUsage/memoryUsage. Headers ONLY x-powered-by: Express (secgrep=0). CloudFront PHX50-P2. Zero hardening added across rs flip.
+reasoning: HTTP 200 JSON returns pod hostname (box-54846c877b-tskfg), 60-hex process.uid, Node v20.20.2, 9-svc topology (amqp0/redis0-3/mongoDB0-3), cpuUsage/memoryUsage, per-service responseTime. Headers ONLY x-powered-by: Express (secgrep=1). CloudFront SFO53-P6. Zero hardening added across rs flip.
 evidence_needed: None — POC finalized 30+ cycles
 verify_steps: `curl -s https://box.signageos.io/status` → 200 JSON leak; `curl -sI https://box.signageos.io/status | grep -ciE 'strict-transport|x-frame|x-content|content-security'` → 0
 impact: K8s pod identity/UID/service-topology disclosure enables targeted lateral movement; LOW-MEDIUM
@@ -33,11 +33,11 @@ testability: PASSIVE
 [FINAL] 2) api.signageos.io/v1/organization/{uid}/security-token: IDOR, 86, AUTH_HELPED — mechanism confirmed, credential-gated
 [FINAL] 3) box.signageos.io/ + /login/ CORS+CSP: MISCONFIG, 92, PASSIVE — no credential-theft path
 [NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain valid account owning ≥1 org → acquire JWT + X-Auth `<orgA-id>:<secret>` pair → then test: `curl -s -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` — this is the only way to progress the high-severity IDOR lead (conf 86, AUTH_HELPED). Without credentials, the passive surface is fully explored.
-[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live on rs 54846c877b — secgrep=0, full 9-svc topology + CPU/mem leak, zero hardening added across rs flip. POC stable 30+ cycles.
-[LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (secgrep=4, 0 ACAO) on rs 7c5fdc9777 — differential vs box /status persists.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live on rs 54846c877b — secgrep=1 (x-powered-by only), full 9-svc topology + CPU/mem leak, zero hardening added across rs flip. POC stable 30+ cycles.
+[LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (secgrep=3, 0 ACAO) on rs 7c5fdc9777 — differential vs box /status persists.
 [LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on rs 7c5fdc9777; JWT ignored (Bearer "test" returns 403074); mechanism intact, zero auth drift across 5 rs rotations. AUTH_HELPED conf 86.
 [LEARN] REJECTED IDOR @ api.signageos.io pre-auth: all 60+ routes still 403 JWT/X-Auth-gated, zero ACAO — NO_DELTA.
 [LEARN] REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on any path — not CORS-exploitable — NO_DELTA.
 [LEARN] CONFIRMED DEAD @ videowall-designer leaked clientId/secret: staging-only fixture, credential reuse disproven — NO_DELTA.
-[RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid leak (secgrep=0) plus broad static CORS whitelist with http:// plaintext variant; no auth bypass, no credential-theft path, rs 54846c877b with zero hardening changes across 30+ cycles
+[RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid leak (secgrep=1) plus broad static CORS whitelist with http:// plaintext variant; no auth bypass, no credential-theft path, rs 54846c877b with zero hardening changes across 30+ cycles
 [RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism confirmed on rs 7c5fdc9777 (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold, CORS non-exploitable, descriptive-error class excluded
