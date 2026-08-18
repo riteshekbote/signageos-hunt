@@ -43231,3 +43231,37 @@ All three hypotheses survive: confidence ≥ 40, classes not on REJECTED list, v
 [RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid/cpu/mem leak (secgrep=0) plus broad static CORS whitelist with http:// plaintext variant; no auth bypass, no credential-theft path; rs c877d9cc8 with zero hardening across 59+ cycles
 [RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism confirmed on rs 7c5fdc9777 (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold, CORS non-exploitable, descriptive-error class excluded
 ```
+===== ANALYST bigpickle 2026-08-18 22:04:42 UTC =====
+[0m
+> build · big-pickle
+[0m
+NO_DELTA
+
+All findings stable across 59+ cycles. The passive surface is fully mapped. Summary:
+
+**Confirmed alive:**
+- `box.signageos.io/status` — MISCONFIG 97, secgrep=0, 9-svc topology leak, POC archived
+- `api.signageos.io/v1/organization/{uid}/security-token` — IDOR 86, AUTH_HELPED, mechanism confirmed
+- `box.signageos.io/ + /login/` CORS+CSP — MISCONFIG 92, 17 static ACAO, no creds flag
+
+**Confirmed dead:**
+- videowall-designer clientId/secret (staging-only, credential reuse disproven)
+- All pre-auth IDOR on api.signageos.io (60+ routes 403 JWT/X-Auth-gated)
+- box.signageos.io /ready (200 "OK" trivial)
+- box.signageos.io WebSocket (/healthz /livez etc — all 302)
+- Auth0 OAuth2 state (not passively testable)
+- Descriptive error messages class (excluded per scope)
+- CORS exploit on box (0 credentials flag)
+- CORS on api (0 ACAO)
+
+**Status differential confirmed:** box /status secgrep=0, api /status secgrep=3 (HSTS/xfo/xcto). API team hardened /status; box team left it bare.
+
+**The passive surface is fully explored.** The only way to progress the high-severity IDOR lead (cross-tenant security-token disclosure, conf 86) is AUTH_HELPED:
+
+```
+sos login  # Auth0 device-code flow on box.signageos.io
+# → acquire JWT + X-Auth pair for orgA
+curl -s -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token
+```
+
+Without valid credentials, no new hypotheses can be generated. The program's passive attack surface on the two eligible hosts has been exhaustively probed across 59+ cycles with zero new findings.
