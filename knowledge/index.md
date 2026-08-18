@@ -1535,3 +1535,14 @@
 - 2026-08-18 REJECTED CORSSURF-exploit @ box.signageos.io /status & api /security-token: Zero ACAO under spoofed Origin on both 403 responses — not CORS-exploitable, pure AUTH_HELPED IDOR.
 - 2026-08-18 REJECTED pre-auth bypass @ api.signageos.io/v1/*+v2/*: All 60+ routes return 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass (NO_DELTA, 59+ cycles).
 - 2026-08-18 REJECTED descriptive errors @ api.signageos.io/v1/*: 403074/403075/403076/403105 bodies leak auth account detail — excluded class per scope.yml; errorDetail retained only as mechanism evidence for IDOR.
+- 2026-08-18 CONFIRMED ALIVE @ box.signageos.io/status: secgrep=0 persists on rs c877d9cc8 (59+ cycles), 9-svc topology incl mongoDB3 leak unchanged
+- 2026-08-18 CONFIRMED ALIVE @ api.signageos.io/status: secgrep=3 hardened (HSTS/xfo/xcto/no-store), zero ACAO under evil.test, 8-svc topology leak persists
+- 2026-08-18 CONFIRMED ALIVE @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical, JWT Bearer ignored, zero ACAO on 403, mechanism intact across 6+ rs rotations
+- 2026-08-18 REJECTED @ box.signageos.io/ready: 200 "OK" (2 bytes) trivial health check, no data leaked (NO_DELTA)
+- 2026-08-18 REJECTED @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket): all → 302 login catch-all — no unauthenticated surface beyond /status
+- 2026-08-18 REJECTED @ api.signageos.io/v1/*+v2/* pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass
+- 2026-08-18 REJECTED @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml (descriptive error messages)
+- 2026-08-18 REJECTED @ videowall-designer leaked clientId/secret on PROD: staging-only fixture, credential reuse disproven (CONFIRMED DEAD)
+- 2026-08-18 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live on rs c877d9cc8 — pod 2dkfw, secgrep=0, 9-svc topology (mongoDB3 present), cpuUsage/memoryUsage present, zero hardening. POC stable 59+ cycles.
+- 2026-08-18 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical; JWT Bearer ignored; mechanism intact across 6+ rs rotations. AUTH_HELPED conf 86.
+- 2026-08-18 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ CORS+CSP: 17 static ACAO, 0 credentials flag, evil.test NOT reflected — MISCONFIG-only.
