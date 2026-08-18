@@ -1275,3 +1275,9 @@
 - CHANGED box.signageos.io/status now fronted by CloudFront (x-cache/via/x-amz-cf-pop) — routing change only, body/header security posture unchanged (secgrep=0, leaks topology)
 - CHANGED box.signageos.io/ & /login/ served via CloudFront with full hardening headers (HSTS max-age=63072000; includeSubDomains; preload, xfo: DENY, xcto: nosniff, CSP) — differential vs /status confirmed
 - CHANGED api.signageos.io/status now also fronted by CloudFront — retains HSTS+xfo+xcto hardening
+
+## 2026-08-18 16:55:33 UTC
+- CHANGED box.signageos.io: Replica set rotated to `box-c877d9cc8` (from `box-54846c877b`), /status secgrep=0 persists, 9-svc topology leak (mongoDB3 present), zero hardening added
+- CHANGED api.signageos.io: Replica set `api-7c5fdc9777` stable, /status secgrep=3 (HSTS/xfo/xcto/no-store) persists, 8-svc topology (mongoDB3 absent), zero ACAO
+- CHANGED api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced
+- CHANGED box.signageos.io/status CORS: Zero ACAO under spoofed Origin confirmed — CORS strictly scoped to SPA entry points only
