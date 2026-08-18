@@ -9287,3 +9287,37 @@ testability: PASSIVE
 [LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (secgrp=3 HSTS/xfo/xcto/no-store) confirmed on new rs api-7c5fdc9777, 8-svc topology (mongoDB3 absent), zero ACAO under any Origin; differential vs box /status (secgrp=0) persists.
 [RISK] box.signageos.io: 58 reason: Persistent unauthenticated /status info-leak (K8s topology, pod identity, process UID, cpu/memory) with zero hardening headers behind CloudFront; nonce-hash middleware only on SPA routes; CORS whitelist scoped to / + /login/ (17 origins, http:// variant, *.zdusercontent.com wildcard) but no credentials flag; all other surfaces behind Auth0 login catch-all.
 [RISK] api.signageos.io: 62 reason: Dual-auth API (JWT Bearer + X-Auth `id:unsafeDecryptedToken`) with org UID in path client-supplied; cross-tenant IDOR chain on /v1/organization/{uid}/security-token confirmed at mechanism level (403074 gating, JWT ignored) but AUTH_HELPED only; descriptive errors leak auth internals (excluded class); /status hardened but still leaks hostname/uid/Node/topology; zero CORS surface.
+## 2026-08-18 09:27:55 UTC [box] (model laguna)
+[HYP] Unauthenticated infrastructure metadata leak via /status
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 100
+reasoning: Live probe confirms HTTP 200 JSON leaking hostname (box-54846c877b-5l9vx), 40-hex process.uid, Node v20.20.2, cpuUsage/memoryUsage, 9-service topology (amqp0/redis0-3/mongoDB0-3) + per-service responseTime. Headers: ONLY x-powered-by: Express + CloudFront. grep(sec)+HSTS+xfo+xcto+CSP) = 0 → zero hardening.
+evidence_needed: Body sha of JSON + secgrep=0; live probe just confirmed
+verify_steps: GET https://box.signageos.io/status → 200 application/json with hostname/uid/Node/topology/cpu/mem; grep -icE 'strict-transport|x-frame|x-content|content-security' response headers → 0; diff vs `/`+``/login/`` (secgrep=4) and api `/status` (secgrep=3)
+impact: Internal K8s pod identity, service topology, process UID, CPU/memory metrics exposed to any internet-unauthenticated caller; reconnaissance + exploit-chaining value; MEDIUM
+testability: PASSIVE
+[HYP] Cross-tenant security-token minting via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: Live probe confirms 403074 — endpoint is X-Auth/`x-oauth-client_id` gated (NOT JWT). Org identity derived from header first-part before `:`. Path `{uid}` is client-supplied and distinct from auth-derived org. Bearer "test" returns identical 403074 (JWT ignored). Mechanism intact across 5 rs rotations (6cc9959bb4→77955558bc→7c5fdc9777), zero auth drift, 0 ACAO under evil.test.
+evidence_needed: Valid account X-Auth `<orgA-id:token>` + foreign org UID → HTTP 200 + securityToken on POST
+verify_steps: AUTH_HELPED: `sos login` (Auth0 device-code on box.signageos.io) → obtain account JWT + X-Auth `<id:unsafeDecryptedToken>`; curl -X POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<own-org-uid>/security-token (baseline 200); repeat with <foreign-org-uid> → 200+securityToken confirms cross-tenant; escalate: curl -H "X-Auth: <orgA-id:leakedToken>" https://api.signageos.io/v1/device
+impact: Any tenant's org identity → mint security token for arbitrary org UID → full device/content/timing/firmware control of foreign org; CRITICAL
+testability: AUTH_HELPED
+[HYP] Hardened /status still leaks hostname/uid/Node/topology
+class: MISCONFIG
+asset: api.signageos.io/status
+confidence: 95
+reasoning: Live probe confirms hardened headers present (HSTS max-age=31536000, xfo: DENY, xcto: nosniff, cache-control: no-store, secgrep=3) behind CloudFront. JSON body still leaks hostname (api-7c5fdc9777-vn296), 40-hex process.uid, Node v24.19.0, 8-service topology, cpuUsage/memoryUsage. Zero ACAO under evil.test.
+evidence_needed: Live HEAD confirms 3 hardening headers + live GET confirms JSON body leak
+verify_steps: GET https://api.signageos.io/status → 200 application/json with hostname/uid/Node/topology; grep -icE 'strict-transport|x-frame|x-content' → 3; curl -sI -H "Origin: https://evil.test" → 0 ACAO
+impact: Internal K8s pod identity, process UID, service topology exposed despite header hardening; reconnaissance value; LOW-MEDIUM
+testability: PASSIVE
+[PARKED] Auth0 OAuth2 redirect_uri/state binding @ box.signageos.io/login — not passively testable without tenant/authenticated session; class AUTH excluded per scope.yml (CSRF on anonymous forms); confidence < 40.
+[PARKED] CORS credential-theft @ box.signageos.io / & /login/ — 17 static ACAO but grep(access-control-allow-credentials)=0 → no credential-theft path, MISCONFIG-only.
+[PARKED] Descriptive error messages @ api.signageos.io/v1/* — 403074/403075/403076/403105 leak auth internals — excluded per scope.yml (descriptive error messages); errorDetail retained only as mechanism evidence for IDOR.
+[PARKED] videowall-designer leaked clientId/secret on PROD — CONFIRMED DEAD (staging-only fixture, sha256 564c293b...), X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET, credential reuse disproven.
+[PARKED] box.signageos.io/ready & api.signageos.io/ready — HTTP 200 "OK" (2 bytes), trivial health checks, no data leaked — not reportable.
+[NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<orgA-id:unsafeDecryptedToken>` → execute AUTH_HELPED verify_steps for the CRITICAL cross-tenant IDOR: curl -X POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<own-org-uid>/security-token (baseline 200) then repeat with <foreign-org-uid> → 200+securityToken confirms cross-tenant mint; escalate with leaked token on /v1/device.
