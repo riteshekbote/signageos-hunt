@@ -65653,3 +65653,24 @@ All 3 hypotheses survive:
 
 - box.signageos.io: 82 — /status unauthenticated K8s pod identity + 64-hex process UID + 9-service topology + CPU/mem leak (secgrep=0, behind CloudFront, 30+ cycles stable); / + /login/ hardened (HSTS/xfo/xcto/CSP) but 17 static ACAO incl http://plaintext + *.zdunpkgdomains.com wildcard expands origin trust boundary (no creds flag → no direct credential-theft); Auth0 login gate holds; all non-/status surfaces behind 302 login catch-all; no pre-auth bypass found
 - api.signageos.io: 78 — /status hardened (HSTS/xfo/xcto/no-store) but still leaks hostname/uid/Node; all 60+ v1/v2 routes solidly JWT/X-Auth-gated with zero ACAO under any Origin (CORS non-exploitable); descriptive-error bodies excluded per scope.yml; residual CRITICAL exposure is code-verified AUTH_HELPED cross-tenant IDOR chain (security-token mint via X-Auth org-path override) requiring valid tenant credentials + second org — zero auth drift across 4 rs rotations confirmed
+===== ANALYST laguna 2026-08-18 05:27:27 UTC =====
+[0m
+> build · laguna-s-2.1-free
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcurl -sD /tmp/box_status_h.txt --max-time 20 https://box.signageos.io/status -o /tmp/box_status_b.txt 2>&1; echo "---HEADERS---"; cat /tmp/box_status_h.txt 2>/dev/null; echo "---BODY---"; cat /tmp/box_status_b.txt 2>/dev/null | python3 -m json.tool 2>/dev/null || cat /tmp/box_status_b.txt 2>/dev/null failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[0m
+[0m$ [0mecho "=== box / (secgrep + cors) ==="; curl -sI -H "Origin: https://evil.test" https://box.signageos.io/ 2>&1 | grep -ciE 'access-control-allow-origin|access-control-allow-credentials|strict-transport|x-frame|x-content|content-security|x-cache'; echo "=== api /status (secgrep + cors) ==="; curl -sI -H "Origin: https://evil.test" https://api.signageos.io/status 2>&1 | grep -ciE 'access-control-allow-origin|access-control-allow-credentials|strict-transport|x-frame|x-content'
+=== box / (secgrep + cors) ===
+22
+=== api /status (secgrep + cors) ===
+3
+[0m
+I'll analyze the current state and verify the live surface, then produce the structured output.
+[0m$ [0mecho "=== api security-token (JWT ignored check) ==="; curl -s -H "Authorization: Bearer test" -H "Origin: https://evil.test" https://api.signageos.io/v1/organization/someorg/security-token 2>&1 | head -c 2000; echo; echo "=== api org root ==="; curl -s -H "Origin: https://evil.test" https://api.signageos.io/v1/organization/test/security-token 2>&1 | head -c 1000
+=== api security-token (JWT ignored check) ===
+{"status":403,"message":"Access forbidden - Neither \"x-oauth-client_id\" nor \"x-auth\" header set.","errorCode":403074,"errorName":"MISSING_ACCOUNT_ID_TO_AUTHENTICATE","errorDetail":"Both x-oauth-client_id header and first part (before char :) of x-auth header are missing from request thus account not to be authenticated"}
+=== api org root ===
+{"status":403,"message":"Access forbidden - Neither \"x-oauth-client_id\" nor \"x-auth\" header set.","errorCode":403074,"errorName":"MISSING_ACCOUNT_ID_TO_AUTHENTICATE","errorDetail":"Both x-oauth-client_id header and first part (before char :) of x-auth header are missing from request thus account not to be authenticated"}
+[0m

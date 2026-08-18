@@ -1420,3 +1420,5 @@
 - 2026-08-18 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened on rs 7c5fdc9777 — secgrep=3 (HSTS/xfo/xcto/no-store), 8-svc topology (mongoDB3 absent), zero ACAO. Differential vs box /status persists.
 - 2026-08-18 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on rs 7c5fdc9777; Bearer "test" also returns 403074 (JWT ignored); mechanism intact, zero auth drift. AUTH_HELPED conf 86.
 - 2026-08-18 REJECTED IDOR @ api.signageos.io pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO — NO_DELTA.
+- 2026-08-18 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live on rs 54846c877b — secgrep=0, full 9-svc topology + CPU/mem leak, zero hardening added across rs flip. POC stable 30+ cycles.
+- 2026-08-18 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on rs 7c5fdc9777; JWT ignored (Bearer "test" returns 403074); mechanism intact, zero auth drift across 5 rs rotations. AUTH_HELPED conf 86.

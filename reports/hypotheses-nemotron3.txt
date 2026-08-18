@@ -1,8 +1,11 @@
-## 2026-08-18 04:54:27 UTC [api] (model nemotron3)
+## 2026-08-18 05:27:15 UTC [api] (model nemotron3)
 [NEW] box.signageos.io/status: mongoDB3 now present in succeededServices (9 services vs 8 on old rs box-8676fb5f57) — topology leak expanded
 [NEW] api.signageos.io/status: mongoDB3 absent (8 services vs box's 9) — topology leak contracted vs box
 [CHANGED] box.signageos.io: Replica set rotated to box-54846c877b (from box-8676fb5f57) — /status secgrep=0 persists, 9-svc topology leak unchanged, zero hardening added
 [CHANGED] api.signageos.io: Replica set rotated to api-7c5fdc9777 (from api-77955558bc) — /status secgrep=3 (HSTS/xfo/xcto/no-store) persists, 8-svc topology, zero ACAO
+[CHANGED] box.signageos.io/status now fronted by CloudFront (new `x-cache`/`via`/`x-amz-cf-pop` headers) — routing change only, body/header security posture unchanged (still zero hardening headers, leaks topology)
+[CHANGED] box.signageos.io/ & /login/ now served via CloudFront with full hardening headers (HSTS `max-age=63072000; includeSubDomains; preload`, `xfo: DENY`, `xcto: nosniff`, CSP) — differential vs `/status` confirmed
+[CHANGED] api.signageos.io/status now also fronted by CloudFront — retains HSTS+xfo+xcto hardening
 [PRIO] box.signageos.io/status, 9.10, attack=10, business=8, tech=8, gate=10, cloud=9, fresh=10
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token, 7.70, attack=9, business=9, tech=8, gate=2, cloud=8, fresh=9
 [PRIO] api.signageos.io/status, 7.05, attack=6, business=6, tech=7, gate=10, cloud=7, fresh=8
@@ -19,7 +22,7 @@ testability: PASSIVE
 class: IDOR
 asset: api.signageos.io/v1/organization/{uid}/security-token
 confidence: 86
-reasoning: Endpoint returns 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE confirming X-Auth/x-oauth-client_id gated (NOT JWT). Org identity derived from header first-part before `:`. Path `{uid}` is client-supplied and distinct from auth-derived org. Server-side membership check on path UID is sole barrier. Reconfirmed across rs rotations 6cc9959bb4 → 77955558bc → 7c5fdc9777 with zero auth drift (errorDetail byte-identical).
+reasoning: Endpoint returns 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE confirming X-Auth/x-oauth-client_id gated (NOT JWT). Org identity derived from header first-part before `:`. Path `{uid}` is client-supplied and distinct from auth-derived org. Server-side membership check on path UID is sole barrier. Reconfirmed across rs rotations 6cc9959bb4 → 77955558bc → 7c5fdc9777 with zero auth drift (errorDetail byte-identical). JWT Bearer token ignored (tested: `Authorization: Bearer test` → same 403074).
 evidence_needed: Valid account X-Auth + foreign org UID → HTTP 200 on POST /v1/organization/<foreign-org-uid>/security-token returning securityToken
 verify_steps: AUTH_HELPED: curl -X POST -H "X-Auth: <orgA-id:token>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token (baseline 200 with own org); repeat with foreign org UID → 200 + securityToken = cross-tenant; escalate: curl -H "X-Auth: <leakedSecurityToken>" https://api.signageos.io/v1/device → foreign org device list
 impact: Any tenant's org token → full device/content/timing/firmware control of foreign org; CRITICAL
