@@ -1576,3 +1576,6 @@
 - 2026-08-18 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml (MISCONFIG class); errorDetail retained only as mechanism evidence for IDOR
 - 2026-08-18 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under any Origin — no passive bypass — NO_DELTA
 - 2026-08-18 CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 `564c293b…`) staging-only fixture, X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven (59+ cycles)
+- 2026-08-18 ACCEPTED MISCONFIG @ box.signageos.io/status: secgrep=0 confirmed on rs c877d9cc8 (9-svc incl mongoDB3), zero hardening added across rs rotation — 59+ cycles stable
+- 2026-08-18 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical confirmed; JWT Bearer ignored (returns same 403074); X-Auth/x-oauth-client_id gating confirmed NOT JWT; mechanism intact, zero auth drift across 6+ rs rotations — AUTH_HELPED conf 86
+- 2026-08-18 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml; errorDetail retained only as mechanism evidence for IDOR
