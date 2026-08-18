@@ -6056,3 +6056,18 @@
 - LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session, NO_DELTA.
 - LEARN: REJECTED IDOR @ api.signageos.io pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass, cross-tenant chain remains AUTH_H
 - LEARN: REJECTED MISCONFIG @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket): all → 302 login catch-all — n
+
+## RANKED HYPOTHESES 2026-08-18 13:58:11 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-laguna.txt)
+- NEXT(hypotheses-laguna.txt): PROBE: Evidence archive for box /status POC finalized & re-archived at artifacts/box-status/ (body sha256 a9db19222d3769b4fbb38b538305a6f07ac70853f952a4bc18711f
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Re-probe (2026-08-18 19:5x) confirms rs c877d9cc8 pod box-c877d9cc8-95qvp, secgrep=0 (x-powered-by: Express + Clou
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Re-probe on rs api-7c5fdc9777 confirms hardened (HSTS/xfo/xto/no-store secgrp=3, 0 ACAO under evil.test), 8-svc to
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: Re-probe on rs api-7c5fdc9777 confirms 403076 errorDetail byte-identical ("first part (be
+- LEARN: REJECTED MISCONFIG @ box.signageos.io CORS credential-theft: 17 static ACAO on `/` + `/login/` under evil.test (evil.test NOT reflected), 0 access-control-allow
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: HTTP 200 "OK" (2 bytes) — trivial health check, no data leaked, NO_DELTA.
+- LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on /, /status, /v1/*, /v2/* under any Origin — not CORS-exploitable, NO_DELTA.
+- LEARN: REJECTED MISCONFIG @ box.signageos.io WebSocket: wss://box.signageos.io/ → 302 login redirect — no unauthenticated WebSocket surface, NO_DELTA.
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session, NO_DELTA.
+- LEARN: REJECTED IDOR @ api.signageos.io pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass; cross-tenant chain remains AUTH_H
+- LEARN: REJECTED MISCONFIG @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket /graphql /.well-known/openid-co
+- LEARN: CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: staging-only fixture (sha256 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774

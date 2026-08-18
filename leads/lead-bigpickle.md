@@ -8529,3 +8529,4 @@ evidence_needed: None — accepted finding, no credential-theft path without acc
 verify_steps: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/` → 17 ACAO, grep credentials = 0
 impact: Broadens postMessage/origin trust boundary; LOW severity (no creds flag)
 testability: PASSIVE
+## 2026-08-18 13:55:31 UTC [box] (model bigpickle)
