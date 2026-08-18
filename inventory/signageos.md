@@ -1259,3 +1259,5 @@
 - CHANGED box.signageos.io/status now fronted by CloudFront (new `x-cache`/`via`/`x-amz-cf-pop` headers) — routing change only, body/header security posture unchanged (still zero hardening headers, leaks topolo
 - CHANGED box.signageos.io/ & /login/ now served via CloudFront with full hardening headers (HSTS `max-age=63072000; includeSubDomains; preload`, `xfo: DENY`, `xcto: nosniff`, CSP) — differential vs `/status` c
 - CHANGED api.signageos.io/status now also fronted by CloudFront — retains HSTS+xfo+xcto hardening
+
+## 2026-08-18 15:08:37 UTC
