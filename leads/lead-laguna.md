@@ -9865,3 +9865,4 @@ reasoning: HTTP 200 JSON behind CloudFront with HSTS max-age=31536000 + x-frame-
 evidence_needed: HTTP 200 JSON with hostname/uid/Node/topology under hardened headers (grep -cE 'strict-transport|x-frame|x-content' → 3); curl -sI -H "Origin: https://evil.test" https://api.signageos.io/status | grep -c 'access-control-allow' → 0
 verify_steps: curl -s https://api.signageos.io/status → 200 JSON with infra leak; curl -sI https://api.signageos.io/status | grep -icE 'strict-transport|x-frame|x-content|content-security' → 3; curl -sI -H "Origin: https://evil.test" https://api.signageos.io/status | grep -c 'access-control-allow' → 0
 impact: Internal pod identity, process UID, Node version, service topology exposed
+## 2026-08-18 17:50:19 UTC [box] (model laguna)
