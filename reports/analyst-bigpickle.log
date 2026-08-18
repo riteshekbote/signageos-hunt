@@ -40257,3 +40257,86 @@ testability: PASSIVE
 [RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid leak (secgrep=0) plus broad static CORS whitelist with http:// plaintext variant; no auth bypass, no credential-theft path, new rs `54846c877b` with zero hardening changes across 30+ cycles
 [RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism confirmed on new rs `7c5fdc9777` (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold, CORS non-exploitable, descriptive-error class excluded
 ```
+===== ANALYST bigpickle 2026-08-18 01:25:26 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s https://box.signageos.io/status 2>/dev/null | head -c 2000
+{"name":"box","status":"OK","process":{"uid":"99df241b8196a20f5a0f573d7dcd0d946a3ee4c56028244ab7","pid":1,"version":"v20.20.2","uptime":6821.435017285,"cpuUsage":{"user":159078198,"system":23801609},"memoryUsage":{"rss":171778048,"heapTotal":107520000,"heapUsed":98362992,"external":23002980,"arrayBuffers":19550239}},"hostname":"box-54846c877b-gfp5w","failedServices":[],"succeededServices":["amqp0","redis3","redis2","redis0","redis1","mongoDB2","mongoDB3","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1787016219835,"respondedAt":1787016219897,"amqp0":{"response":{"requestedAt":1787016219835,"respondedAt":1787016219896,"responseTime":61}},"redis3":{"response":{"requestedAt":1787016219835,"respondedAt":1787016219837,"responseTime":2}},"redis2":{"response":{"requestedAt":1787016219835,"respondedAt":1787016219837,"responseTime":2}},"redis0":{"response":{"requestedAt":1787016219835,"respondedAt":1787016219838,"responseTime":3}},"redis1":{"response":{"requestedAt":1787016219835,"respondedAt":1787016219838,"responseTime":3}},"mongoDB2":{"response":{"requestedAt":1787016219836,"respondedAt":1787016219837,"responseTime":1}},"mongoDB3":{"response":{"requestedAt":1787016219836,"respondedAt":1787016219838,"responseTime":2}},"mongoDB1":{"response":{"requestedAt":1787016219836,"respondedAt":1787016219840,"responseTime":4}},"mongoDB0":{"response":{"requestedAt":1787016219835,"respondedAt":1787016219841,"responseTime":6}}}
+[0m
+[0m$ [0mcurl -sI https://box.signageos.io/status 2>/dev/null | grep -ciE 'strict-transport|x-frame|x-content|content-security|access-control-allow-origin'
+0
+[0m
+[0m$ [0mcurl -s https://api.signageos.io/status 2>/dev/null | head -c 2000
+{"name":"api","status":"OK","process":{"uid":"fff5199fe70dea0c84105c28618f280eda4394c289872a9c0f","pid":1,"version":"v24.19.0","uptime":1335.736741784,"cpuUsage":{"user":446316651,"system":33920065},"memoryUsage":{"rss":713162752,"heapTotal":417644544,"heapUsed":325006640,"external":84227857,"arrayBuffers":80131189}},"hostname":"api-7c5fdc9777-cd62f","failedServices":[],"succeededServices":["amqp0","redis3","redis0","redis1","redis2","mongoDB2","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1787016220752,"respondedAt":1787016220816,"amqp0":{"response":{"requestedAt":1787016220752,"respondedAt":1787016220816,"responseTime":64}},"redis3":{"response":{"requestedAt":1787016220754,"respondedAt":1787016220756,"responseTime":2}},"redis0":{"response":{"requestedAt":1787016220753,"respondedAt":1787016220757,"responseTime":4}},"redis1":{"response":{"requestedAt":1787016220754,"respondedAt":1787016220757,"responseTime":3}},"redis2":{"response":{"requestedAt":1787016220754,"respondedAt":1787016220757,"responseTime":3}},"mongoDB2":{"response":{"requestedAt":1787016220755,"respondedAt":1787016220757,"responseTime":2}},"mongoDB1":{"response":{"requestedAt":1787016220755,"respondedAt":1787016220759,"responseTime":4}},"mongoDB0":{"response":{"requestedAt":1787016220754,"respondedAt":1787016220766,"responseTime":12}}}
+[0m
+[0m$ [0mcurl -sI https://api.signageos.io/status 2>/dev/null | grep -ciE 'strict-transport|x-frame|x-content|content-security|access-control-allow-origin'
+3
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" https://box.signageos.io/ready
+200
+[0m
+[0m$ [0mcurl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/ 2>/dev/null | grep -i 'access-control-allow-origin' | wc -l
+17
+[0m
+**STEP 1 — DELTA**
+NO_DELTA. Pod rotation only on both replica sets. box `gfp5w` on rs `54846c877b`, api `cd62f` on rs `7c5fdc9777`. All data shapes, headers, and behavior identical to last cycle.
+
+**STEP 2 — PRIORITIZE**
+[PRIO] box.signageos.io/status, 96, attack 5, business 4, tech 3, gate 10, cloud 5, fresh 4
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token, 86, attack 5, business 5, tech 5, gate 3, cloud 4, fresh 4
+[PRIO] box.signageos.io/ + /login/ CORS+CSP, 92, attack 4, business 3, tech 2, gate 10, cloud 5, fresh 3
+
+**STEP 3 — HYPOTHESES**
+[HYP] Unauthenticated K8s topology and process identity leak via /status
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 96
+reasoning: HTTP 200 JSON returns pod hostname (box-54846c877b-gfp5w), 50-hex process.uid, Node v20.20.2, 9-svc topology (amqp0/redis0-3/mongoDB0-3) + cpuUsage/memoryUsage. Headers ONLY x-powered-by: Express (secgrep=0). Zero hardening added across rs flip from 8676fb5f57 to 54846c877b. 30+ cycles stable.
+evidence_needed: None — POC finalized 30+ cycles, evidence archive stable
+verify_steps: `curl -s https://box.signageos.io/status` → 200 JSON leak; `curl -sI https://box.signageos.io/status | grep -ciE 'strict-transport|x-frame|x-content|content-security'` → 0
+impact: K8s pod identity/UID/service-topology disclosure enables targeted lateral movement; LOW-MEDIUM
+testability: PASSIVE
+
+[HYP] Cross-tenant security-token mint via X-Auth header split
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: 403074 errorDetail byte-identical on rs 7c5fdc9777. X-Auth gated (NOT JWT — Bearer ignored). Org identity from X-Auth header first-part before ":" while path {uid} is client-supplied — mechanism confirmed across 5 rs rotations with zero auth drift.
+evidence_needed: Valid account with ≥1 org + second org UID to prove cross-tenant mint
+verify_steps: AUTH_HELPED: `curl -s -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token`
+impact: Cross-tenant security token mint; HIGH severity if proven
+testability: AUTH_HELPED
+
+[HYP] Broad static ACAO whitelist expands SPA origin trust boundary
+class: MISCONFIG
+asset: box.signageos.io/ + /login/
+confidence: 92
+reasoning: 17 static ACAO values confirmed on rs 54846c877b (evil.test NOT reflected, 0 access-control-allow-credentials). Includes http:// plaintext variant, *.zdusercontent.com wildcard, api.signageos.io sibling. Entry points hardened (secgrep=4) vs /status bare (secgrep=0).
+evidence_needed: None — accepted finding, no credential-theft path without access-control-allow-credentials
+verify_steps: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/` → 17 ACAO, grep credentials = 0
+impact: Broadens postMessage/origin trust boundary; LOW severity (no creds flag)
+testability: PASSIVE
+
+**STEP 4 — SELF-CRITIQUE**
+All three hypotheses survive: confidence ≥40, classes not on REJECTED list, concrete verify_steps present.
+[PARKED] None.
+
+[FINAL] 1) box.signageos.io/status: MISCONFIG, 96, PASSIVE — POC finalized 30+ cycles
+[FINAL] 2) api.signageos.io/v1/organization/{uid}/security-token: IDOR, 86, AUTH_HELPED — mechanism confirmed, credential-gated
+[FINAL] 3) box.signageos.io/ + /login/ CORS+CSP: MISCONFIG, 92, PASSIVE — no credential-theft path
+
+**STEP 5 — NEXT ACTION**
+[NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain valid account owning ≥1 org → acquire JWT + X-Auth `<orgA-id>:<secret>` pair → then test: `curl -s -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` — this is the only way to progress the high-severity IDOR lead (conf 86, AUTH_HELPED). Without credentials, the passive surface is fully explored.
+
+**STEP 6 — LEARNING**
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live on rs 54846c877b — pod gfp5w, secgrep=0, full 9-svc topology + CPU/mem leak, zero hardening added.
+[LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed hardened (secgrep=3, 0 ACAO) on rs 7c5fdc9777 — differential vs box /status persists.
+[LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on rs 7c5fdc9777; mechanism intact, zero auth drift. AUTH_HELPED conf 86.
+[LEARN] REJECTED IDOR @ api.signageos.io pre-auth: all 60+ routes still 403 JWT/X-Auth-gated, zero ACAO — NO_DELTA.
+[LEARN] REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on any path — not CORS-exploitable — NO_DELTA.
+[LEARN] CONFIRMED DEAD @ videowall-designer leaked clientId/secret: staging-only fixture, credential reuse disproven — NO_DELTA.
+
+**STEP 7 — RISK SCORE**
+[RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid leak (secgrep=0) plus broad static CORS whitelist with http:// plaintext variant; no auth bypass, no credential-theft path, new rs `54846c877b` with zero hardening changes across 30+ cycles
+[RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism confirmed on new rs `7c5fdc9777` (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold, CORS non-exploitable, descriptive-error class excluded
