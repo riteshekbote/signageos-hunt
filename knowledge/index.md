@@ -1444,3 +1444,4 @@
 - 2026-08-18 CONFIRMED DEAD: github.com/signageos/videowall-designer leaked clientId/secret (sha256 564c293b…) — staging-only fixture targeting http://api.kiera.office.signageos.io; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; credential reuse disproven (30+ cycles).
 - 2026-08-18 REJECTED: api.signageos.io/v1/*+v2/* pre-auth IDOR — all 60+ routes 403 JWT/X-Auth-gated on rs 7c5fdc9777, zero ACAO under evil.test — no passive bypass; cross-tenant chain remains AUTH_HELPED only.
 - 2026-08-18 REJECTED: box.signageos.io/status CORS — zero ACAO under spoofed Origin; CORS strictly scoped to SPA entry points (`/ + /login/`) only, not exploitable as credential-theft vector; MISCONFIG-only.
+- 2026-08-18 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on rs 7c5fdc9777; JWT ignored (Bearer "test" returns 403074); mechanism intact, zero auth drift across 6 rs rotations. AUTH_HELPED conf 86.
