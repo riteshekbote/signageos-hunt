@@ -8504,3 +8504,28 @@ testability: PASSIVE
 [LEARN] CONFIRMED DEAD @ videowall-designer leaked clientId/secret: staging-only fixture, credential reuse disproven — NO_DELTA.
 [RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid leak (secgrep=0) plus broad static CORS whitelist with http:// plaintext variant; no auth bypass, no credential-theft path, rs 54846c877b with zero hardening changes across 30+ cycles
 [RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism confirmed on rs 7c5fdc9777 (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold, CORS non-exploitable, descriptive-error class excluded
+## 2026-08-18 13:02:59 UTC [box] (model bigpickle)
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 97
+reasoning: HTTP 200 JSON returns pod hostname (box-54846c877b-5l9vx), 50-hex process.uid, Node v20.20.2, 9-svc topology (amqp0/redis0-3/mongoDB0-3), cpuUsage/memoryUsage. Headers ONLY x-powered-by: Express (secgrep=0). CloudFront fronted. Zero hardening added across 30+ cycles.
+evidence_needed: None — POC finalized 30+ cycles, evidence archived at artifacts/box-status/ (body sha256 ae1be0b3..., headers sha256 18591b78...)
+verify_steps: `curl -s https://box.signageos.io/status` → 200 JSON leak; `curl -sI https://box.signageos.io/status | grep -ciE 'strict-transport|x-frame|x-content|content-security'` → 0
+impact: K8s pod identity/UID/service-topology disclosure enables targeted lateral movement; LOW-MEDIUM
+testability: PASSIVE
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: 403074 errorDetail byte-identical on rs 7c5fdc9777. X-Auth gated (NOT JWT — Bearer "test" returns same 403074). Org identity from X-Auth header first-part before ":" while path {uid} is client-supplied. Zero auth drift across 6 rs rotations.
+evidence_needed: Valid account with ≥1 org + second org UID to prove cross-tenant mint
+verify_steps: AUTH_HELPED: `curl -s -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token`
+impact: Cross-tenant security token mint; HIGH severity if proven
+testability: AUTH_HELPED
+class: MISCONFIG
+asset: box.signageos.io/ + /login/
+confidence: 92
+reasoning: 17 static ACAO values confirmed under spoofed Origin https://evil.test (evil.test NOT reflected, 0 access-control-allow-credentials). Includes http:// plaintext variant, *.zdusercontent.com wildcard, api.signageos.io sibling, path-bearing recaptcha.
+evidence_needed: None — accepted finding, no credential-theft path without access-control-allow-credentials
+verify_steps: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/` → 17 ACAO, grep credentials = 0
+impact: Broadens postMessage/origin trust boundary; LOW severity (no creds flag)
+testability: PASSIVE

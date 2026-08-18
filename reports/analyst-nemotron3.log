@@ -27427,3 +27427,53 @@ All three hypotheses retained — confidence ≥86, classes not on REJECTED list
 **STEP 7 — RISK SCORE**
 [RISK] box.signageos.io: 58 reason: Persistent unauthenticated /status info-leak (K8s topology, pod identity, process UID, cpu/memory) with zero hardening headers behind CloudFront; nonce-hash middleware only on SPA routes; CORS whitelist scoped to / + /login/ (17 origins, http:// variant, *.zdusercontent.com wildcard) but no credentials flag; all other surfaces behind Auth0 login catch-all
 [RISK] api.signageos.io: 62 reason: Dual-auth API (JWT Bearer + X-Auth `id:unsafeDecryptedToken`) with org UID in path client-supplied; cross-tenant IDOR chain on /v1/organization/{uid}/security-token and /v1/organization/{uid} confirmed at mechanism level (403074 gating) but AUTH_HELPED only; descriptive errors leak auth internals (excluded class); /status hardened but still leaks hostname/uid/Node/topology; zero CORS surface
+===== ANALYST nemotron3 2026-08-18 13:05:02 UTC =====
+[0m
+> build · nemotron-3-ultra-free
+[0m
+[0m$ [0mcurl -s "https://box.signageos.io/status" > /tmp/box-status-body.json && sha256sum /tmp/box-status-body.json && curl -sI "https://box.signageos.io/status" | grep -iE 'strict-transport|x-frame|x-content|content-security|x-powered-by|cloudfront|x-cache|via|x-amz-cf-pop'
+9720d5313d04e9e91a4c52a9fd6fb1f58e545e00310bdc83a2b502320cc3a6c8  /tmp/box-status-body.json
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 19d5712808395a8562c5d719fafeba44.cloudfront.net (CloudFront)
+x-amz-cf-pop: PHX50-P2
+[0m
+[0m$ [0mcurl -s "https://api.signageos.io/status" > /tmp/api-status-body.json && sha256sum /tmp/api-status-body.json && curl -sI "https://api.signageos.io/status" | grep -iE 'strict-transport|x-frame|x-content|content-security|x-powered-by|cloudfront|x-cache|via|x-amz-cf-pop|access-control-allow-origin'
+a1ac6c441cde1d06ccce14c3ecf160e2c873cb8b0888184b0b105141daa1af5e  /tmp/api-status-body.json
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+via: 1.1 b54bc4c703bb3e95b0bab80cbdcacbd8.cloudfront.net (CloudFront)
+x-amz-cf-pop: PHX50-P2
+[0m
+[0m$ [0mcurl -sI -H "Origin: https://evil.test" "https://box.signageos.io/status" | grep -i access-control-allow-origin
+(no output)
+[0m
+[0m$ [0mcurl -sI -X POST -H "Origin: https://evil.test" "https://api.signageos.io/v1/organization/test/security-token" | grep -iE 'access-control-allow-origin|x-frame|x-content|strict-transport'
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+[0m
+[0m$ [0mcurl -sI -H "Origin: https://evil.test" "https://box.signageos.io/" | grep -iE 'access-control-allow-origin|access-control-allow-credentials'
+access-control-allow-origin: http://box.signageos.io
+access-control-allow-origin: https://2.signageos.io
+access-control-allow-origin: https://static.signageos.io
+access-control-allow-origin: https://upload.signageos.io
+access-control-allow-origin: https://platform.signageos.io
+access-control-allow-origin: https://weinre.signageos.io
+access-control-allow-origin: https://license.signageos.io
+access-control-allow-origin: https://signageos-device-monitoring.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://signageos-public.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://signageos-device-bulk-provisioning-parser.s3.eu-central-1.amazonaws.com
+access-control-allow-origin: https://storage.googleapis.com
+access-control-allow-origin: https://remote-desktop.signageos.io
+access-control-allow-origin: https://remote-desktop-us.signageos.io
+access-control-allow-origin: https://api.signageos.io
+access-control-allow-origin: https://signageos.zendesk.com
+access-control-allow-origin: https://*.zdusercontent.com
+access-control-allow-origin: https://www.google.com/recaptcha/api2/clr
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcat /tmp/box-status-body.json | head -c 500 && echo failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.

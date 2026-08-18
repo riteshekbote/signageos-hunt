@@ -6042,3 +6042,17 @@
 - LEARN: REJECTED IDOR @ api.signageos.io pre-auth: all 60+ routes still 403 JWT/X-Auth-gated, zero ACAO — NO_DELTA.
 - LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: zero ACAO on any path — not CORS-exploitable — NO_DELTA.
 - LEARN: CONFIRMED DEAD @ videowall-designer leaked clientId/secret: staging-only fixture, credential reuse disproven — NO_DELTA.
+
+## RANKED HYPOTHESES 2026-08-18 13:05:02 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-laguna.txt)
+- NEXT(hypotheses-laguna.txt): PROBE: Archive final POC evidence for box /status — curl -s "https://box.signageos.io/status" > /tmp/box-status-body.json && sha256sum /tmp/box-status-body.json
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Fresh rs `c877d9cc8` confirmed live — secgrep=0 persists (x-powered-by: Express + CloudFront only), 9-svc topology
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: rs `api-7c5fdc9777` (pod qkz7x) confirmed hardened (HSTS/xfo/xto/no-store secgrp=3), zero ACAO under evil.test, st
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403076 errorDetail byte-identical this probe ("first part (before char `:`) of x-auth hea
+- LEARN: REJECTED MISCONFIG @ box.signageos.io CORS credential-theft: 17 static ACAO on `/` + `/login/` (evil.test NOT reflected, 0 access-control-allow-credentials) — n
+- LEARN: REJECTED MISCONFIG @ box.signageos.io /ready: HTTP 200 "OK" (2 bytes) — trivial health check, no data leaked, NO_DELTA.
+- LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on /, /status, /v1/*, /v2/* under any Origin on rs 7c5fdc9777 — not CORS-exploitable, NO_DELTA.
+- LEARN: REJECTED MISCONFIG @ box.signageos.io WebSocket: wss://box.signageos.io/ → 302 login redirect — no unauthenticated WebSocket surface, NO_DELTA.
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session, NO_DELTA.
+- LEARN: REJECTED IDOR @ api.signageos.io pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass, cross-tenant chain remains AUTH_H
+- LEARN: REJECTED MISCONFIG @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket): all → 302 login catch-all — n
