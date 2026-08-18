@@ -1237,3 +1237,10 @@
 - CHANGED box.signageos.io/status now fronted by CloudFront (new `x-cache`/`via`/`x-amz-cf-pop` headers) — routing change only, body/header security posture unchanged (still zero hardening headers, leaks topolo
 - CHANGED box.signageos.io/ & /login/ now served via CloudFront with full hardening headers (HSTS `max-age=63072000; includeSubDomains; preload`, `xfo: DENY`, `xcto: nosniff`, CSP) — differential vs `/status` c
 - CHANGED api.signageos.io/status now also fronted by CloudFront — retains HSTS+xfo+xcto hardening
+
+## 2026-08-18 11:42:32 UTC
+- NEW box.signageos.io/status: Replica set `box-54846c877b` now includes mongoDB3 in succeededServices (9 services vs prior 8) — topology leak expanded
+- NEW api.signageos.io/status: Replica set `api-7c5fdc9777` shows mongoDB3 absent (8 services) — topology leak contracted vs box
+- CHANGED box.signageos.io/status now fronted by CloudFront (x-cache/via/x-amz-cf-pop headers) — routing change only, body/header security posture unchanged (secgrep=0, leaks topology)
+- CHANGED box.signageos.io/ & /login/ now served via CloudFront with full hardening headers (HSTS max-age=63072000; includeSubDomains; preload, xfo: DENY, xcto: nosniff, CSP) — differential vs /status confirmed
+- CHANGED api.signageos.io/status now also fronted by CloudFront — retains HSTS+xfo+xcto hardening
