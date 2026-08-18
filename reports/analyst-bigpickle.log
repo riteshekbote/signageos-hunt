@@ -40742,3 +40742,29 @@ testability: PASSIVE
 [RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid leak (secgrep=0) plus broad static CORS whitelist with http:// plaintext variant; no auth bypass, no credential-theft path, rs 54846c877b with zero hardening changes across 30+ cycles
 [RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism confirmed on rs 7c5fdc9777 (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold, CORS non-exploitable, descriptive-error class excluded
 ```
+===== ANALYST bigpickle 2026-08-18 06:54:59 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/ 2>/dev/null | grep -ci 'access-control-allow-origin' ; curl -sI -H "Origin: https://evil.test" https://box.signageos.io/login/ 2>/dev/null | grep -ci 'access-control-allow-credentials'
+17
+0
+[0m
+[0m$ [0mcurl -s -o /tmp/box-status.json -w '%{http_code}' https://box.signageos.io/status && echo "" && curl -s -o /tmp/api-status.json -w '%{http_code}' https://api.signageos.io/status
+200
+200
+[0m
+[0m$ [0mcurl -sI https://box.signageos.io/status 2>/dev/null | grep -ciE 'strict-transport|x-frame|x-content|content-security' ; curl -sI https://api.signageos.io/status 2>/dev/null | grep -ciE 'strict-transport|x-frame|x-content|content-security'
+0
+3
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcat /tmp/box-status.json | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps({k: d[k] for k in ['succeededServices','pod','process'] if k in d}, indent=2))" 2>/dev/null || cat /tmp/box-status.json | head -50 failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcat /tmp/api-status.json | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps({k: d[k] for k in ['succeededServices','pod','process'] if k in d}, indent=2))" 2>/dev/null || cat /tmp/api-status.json | head -50 failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[0m
+[0m$ [0mcurl -s -o /dev/null -w '%{http_code}' https://box.signageos.io/ready
+200
+[0m

@@ -1422,3 +1422,12 @@
 - 2026-08-18 REJECTED IDOR @ api.signageos.io pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO — NO_DELTA.
 - 2026-08-18 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live on rs 54846c877b — secgrep=0, full 9-svc topology + CPU/mem leak, zero hardening added across rs flip. POC stable 30+ cycles.
 - 2026-08-18 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical on rs 7c5fdc9777; JWT ignored (Bearer "test" returns 403074); mechanism intact, zero auth drift across 5 rs rotations. AUTH_HELPED conf 86.
+- 2026-08-18 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live on rs 54846c877b — secgrep=0, full 9-svc topology leak (mongoDB3 now present), zero hardening added; POC finalized 30+ cycles, evidence archive stable.
+- 2026-08-18 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074/403076 errorDetail byte-identical on rs 7c5fdc9777; JWT ignored (Bearer test returns 403076); mechanism intact, zero auth drift across 5 rs rotations; AUTH_HELPED conf 86.
+- 2026-08-18 ACCEPTED MISCONFIG @ box.signageos.io/ & /login/ CORS: 17 static ACAO (evil.test NOT reflected, 0 credentials flag), /+/login/ hardened (secgrep=4) vs /status (secgrep=0) differential confirmed.
+- 2026-08-18 ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (HSTS/xfo/xcto/no-store, secgrep=3, 0 ACAO) on rs 7c5fdc9777 — differential vs box /status (secgrep=0) persists.
+- 2026-08-18 REJECTED IDOR @ api.signageos.io pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass; cross-tenant chain remains AUTH_HELPED only.
+- 2026-08-18 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded per scope.yml (descriptive error messages); errorDetail retained only as mechanism evidence for IDOR.
+- 2026-08-18 REJECTED MISCONFIG @ box.signageos.io /ready: 200 "OK" (2 bytes) — trivial health check, no data leaked.
+- 2026-08-18 CONFIRMED DEAD @ videowall-designer leaked clientId/secret: Staging-only fixture (sha256 564c293b…), X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven.
+- 2026-08-18 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding — not passively testable without tenant/authenticated session.
