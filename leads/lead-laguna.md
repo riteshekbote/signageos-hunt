@@ -8990,3 +8990,4 @@ testability: PASSIVE
 [FINAL] (ranked by confidence + exploitability):
 [NEXT] HUMAN: Initiate `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<orgA-id>:<unsafeDecryptedToken>` pair → execute the IDOR verification chain: POST `/v1/organization/<orgA-uid>/security-token` baseline = 200 + securityToken, then repeat with `<orgB-uid>` → 200 = cross-tenant mint confirmed; then `curl -H "X-Auth: <minted-token>" https://api.signageos.io/v1/device` → 200 = token usable on foreign org. Box /status POC is finalized and can be submitted immediately as MISCONFIG report.
 ## 2026-08-18 05:26:04 UTC [box] (model laguna)
+## 2026-08-18 05:57:20 UTC [box] (model laguna)
