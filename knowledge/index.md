@@ -1546,3 +1546,4 @@
 - 2026-08-18 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live on rs c877d9cc8 — pod 2dkfw, secgrep=0, 9-svc topology (mongoDB3 present), cpuUsage/memoryUsage present, zero hardening. POC stable 59+ cycles.
 - 2026-08-18 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical; JWT Bearer ignored; mechanism intact across 6+ rs rotations. AUTH_HELPED conf 86.
 - 2026-08-18 ACCEPTED MISCONFIG @ box.signageos.io/ + /login/ CORS+CSP: 17 static ACAO, 0 credentials flag, evil.test NOT reflected — MISCONFIG-only.
+- 2026-08-18 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live on rs c877d9cc8 — secgrep=0 persists, 9-svc topology (mongoDB3 present), cpuUsage/memoryUsage present, zero hardening. POC stable 59+ cycles.
