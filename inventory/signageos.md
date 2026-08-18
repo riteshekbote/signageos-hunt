@@ -1134,3 +1134,16 @@
 - NEW api.signageos.io: Replica set rotated to `api-7c5fdc9777` (from `api-77955558bc`) — /status still secgrep=3 (HSTS/xfo/xcto/no-store), 8-svc topology (mongoDB3 absent), zero ACAO
 - CHANGED box.signageos.io/status: Now includes mongoDB3 in succeededServices (9 services vs prior 8 on old rs) — topology leak expanded
 - CHANGED api.signageos.io/status: mongoDB3 absent (8 services) — topology leak contracted vs box
+
+## 2026-08-18 04:58:48 UTC
+- NEW box.signageos.io/status: mongoDB3 now present in succeededServices (9 services vs 8 on old rs box-8676fb5f57) — topology leak expanded
+- NEW api.signageos.io/status: mongoDB3 absent (8 services vs box's 9) — topology leak contracted vs box
+- CHANGED box.signageos.io: Replica set rotated to box-54846c877b (from box-8676fb5f57) — /status secgrep=0 persists, 9-svc topology leak unchanged, zero hardening added
+- CHANGED api.signageos.io: Replica set rotated to api-7c5fdc9777 (from api-77955558bc) — /status secgrep=3 (HSTS/xfo/xcto/no-store) persists, 8-svc topology, zero ACAO
+- CHANGED box.signageos.io/status now fronted by CloudFront (new `x-cache`/`via`/`x-amz-cf-pop` headers) — routing change only, body/header security posture unchanged (still zero hardening headers, leaks topolo
+- CHANGED box.signageos.io/ & /login/ now served via CloudFront with full hardening headers (HSTS `max-age=63072000; includeSubDomains; preload`, `xfo: DENY`, `xcto: nosniff`, CSP) — differential vs `/status` c
+- CHANGED api.signageos.io/status now also fronted by CloudFront — retains HSTS+xfo+xcto hardening
+- CHANGED box.signageos.io now fronted by CloudFront (added `x-cache`/`via`/`x-amz-cf-pop`) — `/` and `/login/` now carry full hardening headers (HSTS `max-age=63072000; includeSubDomains; preload`, `xfo: DENY`
+- CHANGED api.signageos.io/status now also fronted by CloudFront — retains HSTS+xfo+xcto hardening differential vs box.status
+- CHANGED box.signageos.io now fronted by CloudFront (added `x-cache`/`via`/`x-amz-cf-pop`) — `/` and `/login/` now carry full hardening headers (HSTS `max-age=63072000; includeSubDomains; preload`, `xfo: DENY`
+- CHANGED api.signageos.io/status now also fronted by CloudFront — retains HSTS+xfo+xcto hardening differential vs box.status
