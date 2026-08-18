@@ -8968,3 +8968,15 @@ testability: PASSIVE
 [LEARN] CONFIRMED DEAD @ videowall-designer leaked clientId/secret: staging-only fixture, credential reuse disproven — NO_DELTA.
 [RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid/cpu/mem leak (secgrep=0) plus broad static CORS whitelist with http:// plaintext variant; no auth bypass, no credential-theft path; rs c877d9cc8 with zero hardening across 59+ cycles
 [RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism confirmed on rs 7c5fdc9777 (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold, CORS non-exploitable, descriptive-error class excluded
+## 2026-08-18 21:20:35 UTC [box] (model bigpickle)
+[PRIO] box.signageos.io/status | 39 | attack=8 business=4 tech=3 gate=10 cloud=2 fresh=0
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token | 37 | attack=8 business=8 tech=6 gate=0 cloud=2 fresh=0
+[PRIO] box.signageos.io/ + /login/ CORS+CSP | 36 | attack=7 business=5 tech=5 gate=5 cloud=1 fresh=0
+[NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire JWT + X-Auth pair → test cross-tenant access: curl -s -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token — the only way to progress the high-severity IDOR lead (conf 86, AUTH_HELPED). Without credentials, the passive surface is fully explored.
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live on rs c877d9cc8 — secgrep=0 persists, 9-svc topology, POC stable 59+ cycles
+[LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (secgrep=3, 0 ACAO) — differential vs box persists
+[LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 byte-identical, JWT ignored, zero auth drift across 6+ rs rotations
+[LEARN] REJECTED: All pre-auth IDOR, CORS-exploit, descriptive-errors, Auth0 OAuth2 — NO_DELTA
+[LEARN] CONFIRMED DEAD: videowall-designer leaked clientId/secret — staging-only fixture, credential reuse disproven
+[RISK] box.signageos.io: 32 — unauthenticated /status infra leak (secgrep=0) plus broad CORS whitelist; no auth bypass, no credential-theft path
+[RISK] api.signageos.io: 40 — cross-tenant IDOR mechanism confirmed but credential-gated; JWT/X-Auth gates hold, CORS non-exploitable

@@ -2878,3 +2878,10 @@ https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTT
 https://api.signageos.io/v1/organization/<orgA-own-uid>/security-token -> HTTP 403
 https://api.signageos.io/v1/organization/<foreign-orgB-uid>/security-token -> HTTP 403
 https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-18 21:22:44 UTC
+https://box.signageos.io/status -> 200 len=1436 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1333 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
