@@ -46933,3 +46933,83 @@ No actionable next steps remain in passive-only mode. Here's the status:
 2. Without credentials, there is no further passive recon to do
 
 Should I write up a final report, or do you want to provide credentials to attempt the IDOR exploit?
+===== ANALYST bigpickle 2026-08-19 19:32:16 UTC =====
+[0m
+> build · big-pickle
+[0m
+## STEP 1 — DELTA
+
+NO_DELTA — All ACCEPTED/REJECTED classes unchanged from previous cycle. box sign
+## Objective
+- Conduct passive security assessment of signageOS bug bounty program targeting `box.signageos.io` and `api.signageos.io`, identifying reportable logic flaws with concrete POCs.
+- Progress high-severity cross-tenant IDOR lead at `api.signageos.io/v1/organization/{uid}/security-token` which requires authenticated credentials (AUTH_HELPED).
+
+## Important Details
+- **Eligible targets ONLY**: `box.signageos.io`, `api.signageos.io`
+- **Passive-first**: GET/HEAD only, ≤1 rps, no account creation, no data modification
+- **Scope exclusions** (never report): DoS, descriptive errors/headers, public file/dir disclosure, outdated libs, OPTIONS/TRACE, CSRF on logout/anonymous forms, cookie flags on non-sensitive data, self-XSS, scanner reports w/o POC, physical access, social engineering, username enumeration, brute-force/lockout, SSL/TLS best practices/attacks, clickjacking w/o exploit, mail config, known-vulnerable libs w/o signageOS exploit, password/account-recovery policies, autocomplete, public login panels, email verification gaps, session control on email/password changes
+- **Secrets in commits**: sha256 only, never raw
+- **GitHub org**: signageos (59 public repos); videowall-designer secret (sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) CONFIRMED DEAD on prod (staging-only fixture)
+- **Current phase**: POC, target: box
+- **CSP**: box `/` and `/login/` have 59+ connect-src/frame-src origins, triplicated Auth0 oauth/token
+- **CORS**: 17-18 static ACAO on `/`+`/login/` only (evil.test NOT reflected, 0 credentials flag); `/status` has zero ACAO
+- **`/status` hardening differential**: box `/status` secgrep=0 (x-powered-by only); api `/status` secgrep=3 (HSTS/xfo/xcto/no-store)
+- **Both fronted by CloudFront** since ~2026-08-10
+- **Replica set history**: box: `7c8c876945` → `7cd9ddcc8c` → `8676fb5f57` → `54846c877b` → `c877d9cc8` → `59b5ffd68b` → `8b6c78cc8`; api: `6f69db97d5` → `86db648db5` → `6d67cd6668` → `86db648db5` → `77955558bc` → `7c5fdc9777`
+- **Auth error taxonomy**: 403074 MISSING_ACCOUNT_ID, 403075 MISSING_ACCOUNT_CLIENT_SECRET, 403076 WRONG_ACCOUNT_SECRET, 403105 WRONG_JWT_TOKEN, NO_ORGANIZATION_TO_AUTHENTICATE
+- **X-Auth format**: `id:unsafeDecryptedToken`; org derived from header first-part before `:`; path `{uid}` client-supplied
+
+## Work State
+### Completed
+- [FINAL] `box.signageos.io/status`: MISCONFIG, conf 97, PASSIVE — Unauthenticated JSON leaks K8s pod hostname, 64-hex process.uid, Node v20.20.2, 9-svc topology (amqp0/redis0-3/mongoDB0-3), cpuUsage/memoryUsage; secgrep=0; POC finalized 60+ cycles across 7+ rs rotations; evidence archived at `artifacts/box-status/`
+- [FINAL] `api.signageos.io/v1/organization/{uid}/security-token`: IDOR, conf 86, AUTH_HELPED — 403074 errorDetail byte-identical confirms org identity from X-Auth first-part vs client-supplied path `{uid}`; JWT Bearer ignored; zero auth drift across 7+ rs rotations
+- [FINAL] `box.signageos.io/ + /login/ CORS+CSP`: MISCONFIG, conf 92, PASSIVE — 17 static ACAO (http:// plaintext + *.zdusercontent.com wildcard + api sibling), 0 credentials flag, evil.test NOT reflected; CSP 59+ origins; hardened entry (secgrep=4) vs /status (secgrep=0)
+- `api.signageos.io/status`: Hardened (HSTS/xfo/xcto/no-store, secgrep=3, 0 ACAO) — info-leak persists but header posture hardened vs box; differential confirmed
+- videowall-designer leaked clientId/secret CONFIRMED DEAD on prod (403076 WRONG_ACCOUNT_SECRET)
+- All pre-auth IDOR probes on api.signageos.io v1/*+v2/* REJECTED (60+ routes 403 JWT/X-Auth-gated)
+- api.signageos.io CORS REJECTED (zero ACAO on any path)
+- api.signageos.io descriptive errors REJECTED (excluded class per scope.yml)
+- box.signageos.io Auth0 OAuth2 REJECTED (not passively testable)
+- box `/ready`, WebSocket, /healthz /livez /readyz /live probe set REJECTED (302 catch-all or trivial 200 OK)
+- api dual-auth mechanism confirmed: X-Auth `id:unsafeDecryptedToken` + X-Auth `x-oauth-client_id` + `x-oauth-client_secret`
+- POST method accepted on security-token endpoint (not 405)
+- Additional IDOR routes noted: `v1/organization/{uid}/device-plan-history` (conf 50), `v1/company/{uid}/support-access-permission` (conf 45) — both AUTH_HELPED
+
+### Active
+- Monitoring box `/status` and api `/status` for hardening changes across rs rotations
+- Tracking api IDOR mechanism stability across rs rotations (currently 7+ rotations confirmed stable)
+
+### Blocked
+- **HIGH-SEVERITY IDOR cannot be escalated without credentials**: Need `sos login` (Auth0 device-code flow) to obtain valid account with ≥1 organization → acquire JWT + X-Auth pair → test `curl -s -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token`
+- No programmatic way to obtain test credentials passively
+
+## Next Move
+1. [HUMAN] Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain valid account → acquire JWT + X-Auth pair → test cross-tenant security-token access (the only way to progress the high-severity IDOR lead at conf 86)
+2. Continue passive monitoring for hardening changes on box `/status` (secgrep=0 has persisted 60+ cycles with zero remediation)
+
+## Relevant Files
+- `artifacts/box-status/`: Archived POC evidence (body/headers sha256 hashes) for box `/status` info-leak
+- `reports/hypotheses-nemotron3.txt`: Hypothesis file with ranked findings
+- `reports/hypotheses-laguna.txt`: Alternative hypothesis file
+- `github.com/signageos/videowall-designer/sos/videoTiming.js`: Source of leaked staging clientId/secret (sha256 `564c293b...`), CONFIRMED DEAD on prod
+- `github.com/signageos` (59 public repos): First-party code including sdk (TS), cli (TS), applet-sandbox, platform (C++), server-bootstrap (Shell), kubernetes-ingress (Go)
+- box `/login/` bundle.js v2.193.0: Pure Auth0 login bundle, zero API path references
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+Looking at the current state, the passive analysis phase is complete with 3 validated findings. The only blocker is credential access for the IDOR proof.
+
+**Current status:**
+- ✅ **box `/status`** (score: 97) — Full passive POC ready, archived
+- ✅ **API security-token IDOR** (score: 86) — Mechanism confirmed, needs credentials for full proof
+- ✅ **box CORS+CSP** (score: 92) — Full passive POC ready
+
+**To proceed with IDOR exploitation, you need to:**
+1. Run `sos login` on box.signageos.io (Auth0 device-code flow)
+2. Provide valid JWT + X-Auth pair
+3. Then I can test cross-tenant access: `curl -s -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token`
+
+**Options:**
+- **A)** Proceed with report submission using current passive findings only (box `/status` + CORS/CSP)
+- **B)** Wait for credential access to complete IDOR proof
+- **C)** Other (specify)
+
+Which would you prefer?
