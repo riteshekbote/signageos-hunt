@@ -7410,3 +7410,16 @@
 - LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding not passively testable without tenant/session — NO_DELTA
 - LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass; cross-tenant chain rema
 - LEARN: CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) is staging-only fixture targeting http://api.kiera.office.si
+
+## RANKED HYPOTHESES 2026-08-19 19:58:19 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-laguna.txt)
+- NEXT(hypotheses-laguna.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire JWT + X-Auth pair → test cross-te
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Fresh probe (rs box-8b6c78cc8, pod qhxmb) confirms HTTP 200 1435-byte JSON infra-leak (hostname/uid/Node v20.20.2/
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Still hardened (secgrep=3 HFTS/xfo/xcto/no-store, 0 ACAO) but leaks hostname/uid/Node v24.19.0/8-svc topology — di
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: Fresh probe (rs 7c5fdc9777, pod rb52w) confirms 403 403074 errorDetail byte-identical; JW
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) trivial health check, no data leaked — NO_DELTA
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass; cross-tenant chain rema
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak auth account detail — excluded class per scope.yml; retai
+- LEARN: REJECTED MISCONFIG @ api.signageos.io CORS: Zero ACAO on all paths — not CORS-exploitable — NO_DELTA
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding not passively testable without tenant/session — NO_DELTA
+- LEARN: CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) staging-only fixture, X-Auth on prod → 403076 WRONG_ACCOUNT_
