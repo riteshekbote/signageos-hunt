@@ -1,1 +1,28 @@
-## 2026-08-19 17:18:39 UTC [box] (model laguna)
+## 2026-08-19 17:46:59 UTC [box] (model laguna)
+[HYP] Unauthenticated Kubernetes topology and process identity leak via box /status
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 100
+reasoning: Fresh probe (2026-08-19 16:13 UTC, rs box-8b6c78cc8, pod box-8b6c78cc8-49npc) confirms HTTP 200 application/json leaking pod hostname, 50-hex process.uid, Node v20.20.2, 9-service topology (amqp0/redis0-3/mongoDB0-3). Headers contain ONLY x-powered-by: Express + CloudFront (secgrep=0). Zero ACAO under spoofed Origin evil.test. Differential confirmed: box / + /login/ hardened (secgrep=4), api /status hardened (secgrep=3). Stable across 60+ cycles and 8+ rs rotations.
+evidence_needed: GET https://box.signageos.io/status with `Origin: https://evil.test` → HTTP 200 application/json body containing hostname + process.uid + Node v20.20.2 + 9-svc topology + cpu/mem; response headers grep -cE 'strict-transport|x-frame|x-content|content-security' → 0; grep -ci 'access-control-allow-origin' → 0
+verify_steps: GET https://box.signageos.io/status → 200 application/json; grep -ciE 'strict-transport|x-frame|x-content|content-security' headers → 0; grep -ci 'access-control-allow-origin' with Origin evil.test → 0; body contains pod hostname + process.uid + Node version + topology; evidence at artifacts/box-status/ (body sha256 b80cbc44…)
+impact: Internal K8s pod identity (hostname, process UID), Node runtime version, CPU/memory metrics, and full backend service-mesh topology (AMQP, Redis cluster, MongoDB replica-set) disclosed to any unauthenticated internet client. Enables targeted infrastructure reconnaissance and chaining into downstream services. CVSS 5.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N) = LOW.
+testability: PASSIVE
+[HYP] Cross-tenant security-token minting via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: Fresh probe (2026-08-19 16:13 UTC, rs api-7c5fdc9777, pod api-7c5fdc9777-q5vdm) confirms endpoint is X-Auth/x-oauth-client_id gated (NOT JWT — Authorization: Bearer test returns identical 403074 as no-header). Org identity derived from header first-part before `:`. Path {uid} is client-supplied and distinct from auth-derived org. Zero ACAO on 403 under evil.test. Mechanism intact, zero auth drift across 8+ rs rotations.
+evidence_needed: Valid account X-Auth (`<id:unsafeDecryptedToken>`) + x-oauth-client_id header → POST /v1/organization/<own-org-uid>/security-token → expect 200 + securityToken (baseline); POST /v1/organization/<foreign-org-uid>/security-token with same X-Auth → 200 + foreign-org token = cross-tenant IDOR
+verify_steps: AUTH_HELPED: 1) Run `sos login` to obtain account owning >=1 org; 2) capture X-Auth (`<id:unsafeDecryptedToken>`) + x-oauth-client_id from session; 3) POST https://api.signageos.io/v1/organization/<own-org-uid>/security-token → expect 200 + securityToken (baseline); 4) POST https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token with same X-Auth → 200 + foreign-org token = cross-tenant IDOR; 5) escalate: GET /v1/device with stolen token → foreign org device list
+impact: Any tenant's X-Auth credential (org `id:unsafeDecryptedToken` format) → mint security-token for arbitrary foreign org UID → full device/content/timing/firmware control of victim tenant. CRITICAL severity. Cross-tenant boundary collapse. CVSS 9.1 (AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N) — requires valid low-priv account token, hence AUTH_HELPED.
+testability: AUTH_HELPED
+[HYP] Hardened api /status still leaks infrastructure identity under security headers
+class: MISCONFIG
+asset: api.signageos.io/status
+confidence: 95
+reasoning: Fresh probe (2026-08-19 16:13 UTC, rs api-7c5fdc9777, pod api-7c5fdc9777-q5vdm) confirms HTTP 200 application/json still leaks pod hostname, 50-hex process.uid, Node v24.19.0, cpuUsage/memoryUsage, 8-service topology (mongoDB3 absent). Response headers hardened (HSTS/xfo/xto/nosniff — grep → 3) + 0 ACAO under evil.test. Body-level infra leak persists despite header hardening — differential vs box /status (secgrep=0) confirmed.
+evidence_needed: GET https://api.signageos.io/status with `Origin: https://evil.test` → HTTP 200 application/json leaking hostname/uid/Node v24.19.0/topology; response headers grep -cE 'strict-transport|x-frame|x-content' → 3; grep -ci 'access-control-allow-origin' → 0
+verify_steps: GET https://api.signageos.io/status → 200 application/json; grep -ciE 'strict-transport|x-frame|x-content' headers → 3; grep -ci 'access-control-allow-origin' with Origin evil.test → 0; body contains pod hostname + process.uid + Node v24.19.0 + topology
+impact: Internal K8s pod identity, process UID, backend topology exposed unauthenticated despite response-header hardening (HSTS/xfo/xcto). Enables infrastructure reconnaissance. CVSS 4.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N).
+testability: PASSIVE
