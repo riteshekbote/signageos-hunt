@@ -3041,3 +3041,11 @@ https://api.signageos.io/v1/device -> HTTP 403
 https://api.signageos.io/status -> 200 len=1330 type=application/json; charset=utf-8
 https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
 https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+
+## 2026-08-19 10:05:02 UTC
+https://box.signageos.io/status -> 200 len=1436 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1332 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404

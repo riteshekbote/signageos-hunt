@@ -1416,3 +1416,5 @@
 - NEW box.signageos.io replica set rotated to `box-c877d9cc8` (from `box-54846c877b`) — /status secgrep=0 persists, 9-svc topology leak (mongoDB3 present), zero hardening added
 - NEW api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced
 - NEW box.signageos.io/status CORS: Zero ACAO under spoofed Origin confirmed — CORS strictly scoped to SPA entry points only
+
+## 2026-08-19 10:04:59 UTC
