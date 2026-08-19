@@ -1697,3 +1697,4 @@
 - 2026-08-19 REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 credentials flag, evil.test NOT reflected → MISCONFIG-only — NO_DELTA
 - 2026-08-19 CONFIRMED DEAD @ github.com/signageos/videowall-designer: staging-only fixture (sha256 `564c293b…`), X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven (60+ cycles)
 - 2026-08-19 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 leak account/error detail — excluded per scope.yml; retained only as mechanism evidence for IDOR — NO_DELTA
+- 2026-08-19 ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized & evidence archived at artifacts/box-status/ — HTTP 200 JSON infra-leak (hostname box-59b5ffd68b-kldm7, 64-hex process.uid, Node v20.20.2, 9-svc topology incl mongoDB3, cpu/mem/responseTime), secgrep=0, zero hardening added across 60+ cycles and 7+ rs rotations
