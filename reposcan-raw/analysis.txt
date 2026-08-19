@@ -1,23 +1,24 @@
 [0m
 > build · nemotron-3-ultra-free
 [0m
-## Triage Results
+[0m$ [0mecho "564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e" | sha256sum
+a52cb9a94e288e2b791e8910c226e2214b53265cc160696d8cd1bd368e070bb0  -
+[0m
+[0m$ [0mecho -n '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9' | sha256sum
+564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e  -
+[0m
+### Classification Tables
 
-### Hit Classification
-
-| Category | File | Line | SHA256(secret) | Classification | Notes |
-|----------|------|------|----------------|----------------|-------|
-| **TEST_OR_EXAMPLE** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js` | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | Staging-only fixture | Targets `http://api.kiera.office.signageos.io`; tested as X-Auth on prod → `403076 WRONG_ACCOUNT_SECRET "Account not found"`; credential reuse disproven (CONFIRMED DEAD, 60+ cycles) |
+| Category | File | Line | SHA256(secret) | Notes |
+|---|---|---|---|---|
+| **TEST_OR_EXAMPLE** | reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | Staging-only fixture targeting `http://api.kiera.office.signageos.io` (non-prod). Tested on prod via X-Auth → `403076 WRONG_ACCOUNT_SECRET "Account not found"`. Credential reuse disproven. |
+| **ENDPOINT_LEAK** | reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 19 | — | References internal staging host `api.kiera.office.signageos.io` over HTTP |
 
 ### Verdict
 
 | Candidate | REPORT_CANDIDATE | Reason |
-|-----------|------------------|--------|
-| videowall-designer secret | **no** | CONFIRMED DEAD — staging-only fixture, credential reuse disproven on prod |
-| box.signageos.io/status info-leak | **no** | Already ACCEPTED & archived (60+ cycles, 7+ rs rotations); POC finalized |
-| box.signageos.io CORS/CSP | **no** | Already ACCEPTED as MISCONFIG-only (no creds flag → no exploit path) |
-| api.signageos.io/status header diff | **no** | Already ACCEPTED — hardened vs box, but info-leak persists; differential confirmed |
-| api.signageos.io/v1/organization/{uid}/security-token IDOR | **no** | Already ACCEPTED as AUTH_HELPED (conf 86) — requires valid X-Auth, JWT ignored; zero auth drift across 7+ rs rotations |
-| All other REJECTED classes | **no** | Per scope.yml exclusions & NO_DELTA confirmed |
+|---|---|---|
+| `signageos/videowall-designer:sos/videoTiming.js:19` (secret) | **no** | CONFIRMED DEAD per knowledge base — staging-only fixture, credential reuse disproven on prod (30+ cycles). Classified as TEST_OR_EXAMPLE. |
+| `signageos/videowall-designer:sos/videoTiming.js:19` (staging endpoint) | **no** | ENDPOINT_LEAK for out-of-scope staging host (`api.kiera.office.signageos.io`), not eligible target. |
 
-**Summary**: Delta scan shows **0 new hits**. The single grep hit is a known CONFIRMED DEAD staging fixture from videowall-designer. No new reportable findings. All previously accepted/rejected classes remain stable with NO_DELTA.
+**Summary:** 0 reportable candidates. The single hit is a previously triaged, confirmed-dead staging fixture already archived in the knowledge base (sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`). No new secrets, no prod credentials, no in-scope endpoint leaks.
