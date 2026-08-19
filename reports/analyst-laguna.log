@@ -79270,3 +79270,487 @@ testability: PASSIVE
 ## STEP 7 — RISK SCORE
 [RISK] box.signageos.io: 63 — /status unauthenticated infra leak (POC finalized, conf 100) + / + /login/ broad CORS/CSP (MISCONFIG-only, no credential-theft path, conf 85). /status is the sole unauthenticated bypass surface; all other paths behind Auth0 login catch-all.
 [RISK] api.signageos.io: 80 — Cross-tenant security-token minting IDOR mechanism fully CONFIRMED (conf 86, AUTH_HELPED) + unauthenticated /status infra leak under hardened headers (conf 95, PASSIVE). Critical business impact on api side — cross-tenant device/content/timing control.
+===== ANALYST laguna 2026-08-19 11:09:14 UTC =====
+[0m
+> build · laguna-s-2.1-free
+[0m
+I'll analyze the current knowledge base state to produce the structured security analysis. Let me first check the workspace for any evidence artifacts.
+[0m$ [0mls -la /home/runner/work/signageos-hunt/signageos-hunt/ 2>/dev/null && echo "---ARTIFACTS---" && ls -la /home/runner/work/signageos-hunt/signageos-hunt/artifacts/ 2>/dev/null && echo "---BOX-STATUS---" && ls -la /home/runner/work/signageos-hunt/signageos-hunt/artifacts/box-status/ 2>/dev/null
+total 1080
+drwxr-xr-x 11 runner runner   4096 Aug 19 11:02 .
+drwxr-xr-x  3 runner runner   4096 Aug 19 11:02 ..
+drwxr-xr-x  7 runner runner   4096 Aug 19 11:02 .git
+drwxr-xr-x  3 runner runner   4096 Aug 19 11:02 .github
+-rw-r--r--  1 runner runner    944 Aug 19 11:02 README.md
+-rw-r--r--  1 runner runner    191 Aug 19 11:03 analyst-out.txt
+-rw-r--r--  1 runner runner 394031 Aug 19 11:02 analyst-prompt.txt
+-rw-r--r--  1 runner runner 390042 Aug 19 11:02 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Aug 19 11:02 inventory
+drwxr-xr-x  2 runner runner   4096 Aug 19 11:02 knowledge
+drwxr-xr-x  2 runner runner  36864 Aug 19 11:02 leads
+-rw-r--r--  1 runner runner 186619 Aug 19 11:02 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Aug 19 11:02 reports
+drwxr-xr-x  3 runner runner   4096 Aug 19 11:02 reposcan-raw
+-rw-r--r--  1 runner runner   3086 Aug 19 11:02 scope.yml
+drwxr-xr-x  2 runner runner   4096 Aug 19 11:02 scripts
+-rw-r--r--  1 runner runner     33 Aug 19 11:02 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Aug 19 11:02 state_laguna.json
+-rw-r--r--  1 runner runner     33 Aug 19 11:02 state_ling3.json
+-rw-r--r--  1 runner runner     33 Aug 19 11:02 state_longcat.json
+-rw-r--r--  1 runner runner     33 Aug 19 11:02 state_nemotron3.json
+drwxr-xr-x  2 runner runner  20480 Aug 19 11:02 triage
+---ARTIFACTS---
+[0m
+[0m$ [0mcat /home/runner/work/signageos-hunt/signageos-hunt/analyst-out.txt
+[0m
+> build · laguna-s-2.1-free
+[0m
+I'll analyze the current knowledge base state to produce the structured security analysis. Let me first check the workspace for any evidence artifacts.
+[0m$ [0mls -la /home/runner/work/signageos-hunt/signageos-hunt/ 2>/dev/null && echo "---ARTIFACTS---" && ls -la /home/runner/work/signageos-hunt/signageos-hunt/artifacts/ 2>/dev/null && echo "---BOX-STATUS---" && ls -la /home/runner/work/signageos-hunt/signageos-hunt/artifacts/box-status/ 2>/dev/null
+total 1080
+drwxr-xr-x 11 runner runner   4096 Aug 19 11:02 .
+drwxr-xr-x  3 runner runner   4096 Aug 19 11:02 ..
+drwxr-xr-x  7 runner runner   4096 Aug 19 11:02 .git
+drwxr-xr-x  3 runner runner   4096 Aug 19 11:02 .github
+-rw-r--r--  1 runner runner    944 Aug 19 11:02 README.md
+-rw-r--r--  1 runner runner    191 Aug 19 11:03 analyst-out.txt
+-rw-r--r--  1 runner runner 394031 Aug 19 11:02 analyst-prompt.txt
+-rw-r--r--  1 runner runner 390042 Aug 19 11:02 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Aug 19 11:02 inventory
+drwxr-xr-x  2 runner runner   4096 Aug 19 11:02 knowledge
+drwxr-xr-x  2 runner runner  36864 Aug 19 11:02 leads
+-rw-r--r--  1 runner runner 186619 Aug 19 11:02 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Aug 19 11:02 reports
+drwxr-xr-x  3 runner runner   4096 Aug 19 11:02 reposcan-raw
+-rw-r--r--  1 runner runner   3086 Aug 19 11:02 scope.yml
+drwxr-xr-x  2 runner runner   4096 Aug 19 11:02 scripts
+-rw-r--r--  1 runner runner     33 Aug 19 11:02 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Aug 19 11:02 state_laguna.json
+-rw-r--r--  1 runner runner     33 Aug 19 11:02 state_ling3.json
+-rw-r--r--  1 runner runner     33 Aug 19 11:02 state_longcat.json
+-rw-r--r--  1 runner runner     33 Aug 19 11:02 state_nemotron3.json
+drwxr-xr-x  2 runner runner  20480 Aug 19 11:02 triage
+---ARTIFACTS---
+[0m
+[0m
+[0m$ [0mcat /home/runner/work/signageos-hunt/signageos-hunt/state_bigpickle.json && echo "---" && cat /home/runner/work/signageos-hunt/signageos-hunt/state_laguna.json
+{"phase": "POC", "target": "box"}---
+{"phase": "POC", "target": "box"}
+[0m
+[0m$ [0mcat /home/runner/work/signageos-hunt/signageos-hunt/state_laguna.json
+{"phase": "POC", "target": "box"}
+[0m
+[0m$ [0mls -la /home/runner/work/signageos-hunt/signageos-hunt/inventory/ && ls -la /home/runner/work/signageos-hunt/signageos-hunt/knowledge/ && ls -la /home/runner/work/signageos-hunt/signageos-hunt/leads/ | head -30
+total 124
+drwxr-xr-x  2 runner runner   4096 Aug 19 11:02 .
+drwxr-xr-x 11 runner runner   4096 Aug 19 11:02 ..
+-rw-r--r--  1 runner runner 118698 Aug 19 11:02 signageos.md
+total 372
+drwxr-xr-x  2 runner runner   4096 Aug 19 11:02 .
+drwxr-xr-x 11 runner runner   4096 Aug 19 11:02 ..
+-rw-r--r--  1 runner runner 368642 Aug 19 11:02 index.md
+total 7736
+drwxr-xr-x  2 runner runner   36864 Aug 19 11:02 .
+drwxr-xr-x 11 runner runner    4096 Aug 19 11:02 ..
+-rw-r--r--  1 runner runner 1047233 Aug 19 11:02 lead-bigpickle.md
+-rw-r--r--  1 runner runner 1945308 Aug 19 11:02 lead-laguna.md
+-rw-r--r--  1 runner runner   17393 Aug 19 11:02 lead-ling3.md
+-rw-r--r--  1 runner runner   81315 Aug 19 11:02 lead-longcat.md
+-rw-r--r--  1 runner runner 2143842 Aug 19 11:02 lead-nemotron3.md
+-rw-r--r--  1 runner runner    1412 Aug 19 11:02 reposcan-2026-08-07-18-57.md
+-rw-r--r--  1 runner runner    1523 Aug 19 11:02 reposcan-2026-08-07-19-27.md
+-rw-r--r--  1 runner runner    1889 Aug 19 11:02 reposcan-2026-08-07-19-37.md
+-rw-r--r--  1 runner runner    1180 Aug 19 11:02 reposcan-2026-08-07-20-04.md
+-rw-r--r--  1 runner runner    1125 Aug 19 11:02 reposcan-2026-08-07-20-16.md
+-rw-r--r--  1 runner runner    1229 Aug 19 11:02 reposcan-2026-08-07-21-07.md
+-rw-r--r--  1 runner runner    1623 Aug 19 11:02 reposcan-2026-08-07-21-35.md
+-rw-r--r--  1 runner runner    1368 Aug 19 11:02 reposcan-2026-08-07-22-03.md
+-rw-r--r--  1 runner runner    1472 Aug 19 11:02 reposcan-2026-08-07-22-08.md
+-rw-r--r--  1 runner runner    1595 Aug 19 11:02 reposcan-2026-08-07-22-52.md
+-rw-r--r--  1 runner runner    1601 Aug 19 11:02 reposcan-2026-08-07-23-01.md
+-rw-r--r--  1 runner runner    1151 Aug 19 11:02 reposcan-2026-08-07-23-29.md
+-rw-r--r--  1 runner runner    1501 Aug 19 11:02 reposcan-2026-08-07-23-55.md
+-rw-r--r--  1 runner runner    1256 Aug 19 11:02 reposcan-2026-08-08-00-43.md
+-rw-r--r--  1 runner runner    1236 Aug 19 11:02 reposcan-2026-08-08-00-51.md
+-rw-r--r--  1 runner runner    1533 Aug 19 11:02 reposcan-2026-08-08-02-39.md
+-rw-r--r--  1 runner runner    1793 Aug 19 11:02 reposcan-2026-08-08-02-51.md
+-rw-r--r--  1 runner runner    1439 Aug 19 11:02 reposcan-2026-08-08-03-57.md
+-rw-r--r--  1 runner runner    1219 Aug 19 11:02 reposcan-2026-08-08-04-02.md
+-rw-r--r--  1 runner runner    1439 Aug 19 11:02 reposcan-2026-08-08-04-48.md
+-rw-r--r--  1 runner runner    1368 Aug 19 11:02 reposcan-2026-08-08-05-13.md
+-rw-r--r--  1 runner runner    1255 Aug 19 11:02 reposcan-2026-08-08-05-32.md
+[0m
+[0m$ [0mhead -100 /home/runner/work/signageos-hunt/signageos-hunt/probe-results.md
+## 2026-08-08 17:04:06 UTC
+https://box.signageos.io/status -> 200 len=1440 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+
+## 2026-08-08 17:43:05 UTC
+
+
+## 2026-08-08 18:13:59 UTC
+
+
+## 2026-08-08 19:03:14 UTC
+
+
+## 2026-08-08 19:40:18 UTC
+
+
+## 2026-08-08 20:07:46 UTC
+
+
+## 2026-08-08 20:45:36 UTC
+
+
+## 2026-08-08 21:15:22 UTC
+
+
+## 2026-08-08 21:52:14 UTC
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://box.signageos.io/status -> 200 len=1441 type=application/json; charset=utf-8
+
+## 2026-08-08 22:17:52 UTC
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://box.signageos.io/status -> 200 len=1433 type=application/json; charset=utf-8
+
+## 2026-08-08 22:55:06 UTC
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://box.signageos.io/status -> 200 len=1441 type=application/json; charset=utf-8
+
+## 2026-08-08 23:22:42 UTC
+https://box.signageos.io/status -> 200 len=1441 type=application/json; charset=utf-8
+https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io` -> ERR <urlopen error [Errno -2] Name or service not know
+https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io/v1/organization/{otherTenantUid -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+
+## 2026-08-08 23:53:19 UTC
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://box.signageos.io/status -> 200 len=1437 type=application/json; charset=utf-8
+https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
+https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
+
+## 2026-08-09 01:07:13 UTC
+
+
+## 2026-08-09 03:08:09 UTC
+
+
+## 2026-08-09 04:36:22 UTC
+
+
+## 2026-08-09 05:35:10 UTC
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://box.signageos.io/status -> 200 len=1442 type=application/json; charset=utf-8
+https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
+https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
+
+## 2026-08-09 06:26:33 UTC
+
+
+## 2026-08-09 07:34:55 UTC
+
+
+## 2026-08-09 08:22:41 UTC
+https://box.signageos.io/status -> 200 len=1435 type=application/json; charset=utf-8
+https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io` -> ERR <urlopen error [Errno -2] Name or service not know
+https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+
+## 2026-08-09 09:12:31 UTC
+https://box.signageos.io/status -> 200 len=1434 type=application/json; charset=utf-8
+https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io -> 200 len=37036 type=text/html; charset=utf-8
+https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+
+## 2026-08-09 09:58:48 UTC
+https://box.signageos.io/status -> 200 len=1442 type=application/json; charset=utf-8
+https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
+https://api.signageos.io/v1/device/{targetUid -> HTTP 403
+[0m
+[0m$ [0mls -la /home/runner/work/signageos-hunt/signageos-hunt/triage/ | head -30
+total 2984
+drwxr-xr-x  2 runner runner  20480 Aug 19 11:02 .
+drwxr-xr-x 11 runner runner   4096 Aug 19 11:02 ..
+-rw-r--r--  1 runner runner   9404 Aug 19 11:02 run-2026-08-07-20-04.md
+-rw-r--r--  1 runner runner  19469 Aug 19 11:02 run-2026-08-07-21-05.md
+-rw-r--r--  1 runner runner    821 Aug 19 11:02 run-2026-08-07-21-58.md
+-rw-r--r--  1 runner runner    315 Aug 19 11:02 run-2026-08-07-22-57.md
+-rw-r--r--  1 runner runner  10680 Aug 19 11:02 run-2026-08-07-23-50.md
+-rw-r--r--  1 runner runner   8209 Aug 19 11:02 run-2026-08-07-23-54.md
+-rw-r--r--  1 runner runner  14208 Aug 19 11:02 run-2026-08-08-02-27.md
+-rw-r--r--  1 runner runner    274 Aug 19 11:02 run-2026-08-08-04-31.md
+-rw-r--r--  1 runner runner  29931 Aug 19 11:02 run-2026-08-08-06-03.md
+-rw-r--r--  1 runner runner  16365 Aug 19 11:02 run-2026-08-08-07-21.md
+-rw-r--r--  1 runner runner  14058 Aug 19 11:02 run-2026-08-08-09-07.md
+-rw-r--r--  1 runner runner  25049 Aug 19 11:02 run-2026-08-08-09-59.md
+-rw-r--r--  1 runner runner  30333 Aug 19 11:02 run-2026-08-08-10-59.md
+-rw-r--r--  1 runner runner  10676 Aug 19 11:02 run-2026-08-08-11-47.md
+-rw-r--r--  1 runner runner    247 Aug 19 11:02 run-2026-08-08-13-30.md
+-rw-r--r--  1 runner runner   2219 Aug 19 11:02 run-2026-08-08-14-09.md
+-rw-r--r--  1 runner runner   6719 Aug 19 11:02 run-2026-08-08-14-55.md
+-rw-r--r--  1 runner runner   2432 Aug 19 11:02 run-2026-08-08-15-52.md
+-rw-r--r--  1 runner runner   6550 Aug 19 11:02 run-2026-08-08-16-59.md
+-rw-r--r--  1 runner runner   6764 Aug 19 11:02 run-2026-08-08-17-55.md
+-rw-r--r--  1 runner runner  10604 Aug 19 11:02 run-2026-08-08-18-32.md
+-rw-r--r--  1 runner runner   5088 Aug 19 11:02 run-2026-08-08-19-20.md
+-rw-r--r--  1 runner runner  15294 Aug 19 11:02 run-2026-08-08-19-50.md
+-rw-r--r--  1 runner runner  23074 Aug 19 11:02 run-2026-08-08-20-16.md
+-rw-r--r--  1 runner runner  20038 Aug 19 11:02 run-2026-08-08-21-01.md
+-rw-r--r--  1 runner runner  26405 Aug 19 11:02 run-2026-08-08-22-19.md
+-rw-r--r--  1 runner runner  15410 Aug 19 11:02 run-2026-08-08-22-54.md
+[0m
+[0m$ [0mtail -200 /home/runner/work/signageos-hunt/signageos-hunt/probe-results.md
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-18 20:31:14 UTC
+https://box.signageos.io/status -> 200 len=1436 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1334 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<orgA-own-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<foreign-orgB-uid>/security-token -> HTTP 403
+
+## 2026-08-18 20:55:21 UTC
+https://box.signageos.io/status -> 200 len=1433 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1330 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<orgA-own-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<foreign-orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-18 21:22:44 UTC
+https://box.signageos.io/status -> 200 len=1436 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1333 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+
+## 2026-08-18 21:46:08 UTC
+https://box.signageos.io/status -> 200 len=1436 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1344 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-18 22:04:45 UTC
+https://box.signageos.io/status -> 200 len=1436 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1332 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<orgA-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+
+## 2026-08-18 22:38:41 UTC
+https://box.signageos.io/status -> 200 len=1436 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1332 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+
+## 2026-08-18 23:04:07 UTC
+https://box.signageos.io/status -> 200 len=1437 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1331 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token` -> HTTP 404
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token` -> HTTP 404
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-18 23:34:09 UTC
+https://box.signageos.io/status -> 200 len=1437 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1328 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token` -> HTTP 404
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token` -> HTTP 404
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-18 23:54:33 UTC
+https://box.signageos.io/status -> 200 len=1437 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1327 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token` -> HTTP 404
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token` -> HTTP 404
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-19 01:00:58 UTC
+https://box.signageos.io/status -> 200 len=1438 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1328 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-19 02:25:05 UTC
+https://box.signageos.io/status -> 200 len=1435 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1334 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+
+## 2026-08-19 03:26:03 UTC
+https://box.signageos.io/status -> 200 len=1433 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1342 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-19 04:10:25 UTC
+https://box.signageos.io/status -> 200 len=1435 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1332 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+
+## 2026-08-19 04:53:45 UTC
+https://box.signageos.io/status -> 200 len=1437 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1333 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-19 05:22:15 UTC
+https://box.signageos.io/status -> 200 len=1435 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1332 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+
+## 2026-08-19 05:57:28 UTC
+https://box.signageos.io/status -> 200 len=1435 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1334 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+
+## 2026-08-19 06:44:57 UTC
+https://box.signageos.io/status -> 200 len=1432 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1331 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+
+## 2026-08-19 07:27:51 UTC
+https://box.signageos.io/status -> 200 len=1431 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1331 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-19 08:06:36 UTC
+https://box.signageos.io/status -> 200 len=1429 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1324 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+
+## 2026-08-19 08:56:16 UTC
+https://box.signageos.io/status -> 200 len=1433 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1331 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+
+## 2026-08-19 09:29:08 UTC
+https://box.signageos.io/status -> 200 len=1436 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1330 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+
+## 2026-08-19 10:05:02 UTC
+https://box.signageos.io/status -> 200 len=1436 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1332 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-19 10:42:34 UTC
+https://box.signageos.io/status -> 200 len=1435 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1324 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+[0m
+[0m$ [0mcurl -s -D - -o /tmp/box-status-body.json "https://box.signageos.io/status" --max-time 15 -H "Origin: https://evil.test" 2>&1 | head -60
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1431
+date: Wed, 19 Aug 2026 11:04:03 GMT
+etag: W/"597-PdCwd98duF9Vl7yEi0CaiEaM+a8"
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 6edb5951ff8ac41a5bd6a31d01902240.cloudfront.net (CloudFront)
+x-amz-cf-pop: ORD58-P5
+x-amz-cf-id: Vhybbhrmnjrcj0-6-93gxy-ulqXepdSqCi1klVfdF4_WVEXwdBNuQQ==
+[0m
+Let me do a fresh probe to confirm the current state and capture evidence.
+[0m$ [0mcurl -s -D - -o /tmp/api-status-body.json "https://api.signageos.io/status" --max-time 15 -H "Origin: https://evil.test" 2>&1 | head -60
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1326
+date: Wed, 19 Aug 2026 11:04:06 GMT
+etag: W/"52e-he9QrwOKQLTPWWT0Mm8WKmXB/54"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+via: 1.1 b5a438ce0ef9bd741100c84c3520b1d4.cloudfront.net (CloudFront)
+x-amz-cf-pop: ORD56-P6
+x-amz-cf-id: M-t55g57shejAR6-uGKfMO-0V5HSeRiX78AEBppdj2a1SCanwOq-6g==
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mecho "=== BOX STATUS BODY ===" && cat /tmp/box-status-body.json | python3 -m json.tool 2>/dev/null || cat /tmp/box-status-body.json failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mecho "=== API STATUS BODY ===" && cat /tmp/api-status-body.json | python3 -m json.tool 2>/dev/null || cat /tmp/api-status-body.json failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[0m
+[0m$ [0mecho "=== BOX ACAO CHECK ===" && curl -s -D - -o /dev/null "https://box.signageos.io/status" --max-time 15 -H "Origin: https://evil.test" 2>&1 | grep -i "access-control-allow" || echo "NO ACAO on /status (as expected)"
+=== BOX ACAO CHECK ===
+NO ACAO on /status (as expected)
+[0m

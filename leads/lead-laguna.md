@@ -11503,3 +11503,4 @@ testability: PASSIVE
 [LEARN] CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) staging-only fixture targeting http://api.kiera.office.signageos.io; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven (60+ cycles)
 [RISK] box.signageos.io: 63 — /status unauthenticated infra leak (POC finalized, conf 100) + / + /login/ broad CORS/CSP (MISCONFIG-only, no credential-theft path, conf 85). /status is the sole unauthenticated bypass surface; all other paths behind Auth0 login catch-all.
 [RISK] api.signageos.io: 80 — Cross-tenant security-token minting IDOR mechanism fully CONFIRMED (conf 86, AUTH_HELPED) + unauthenticated /status infra leak under hardened headers (conf 95, PASSIVE). Critical business impact on api side — cross-tenant device/content/timing control.
+## 2026-08-19 11:04:13 UTC [box] (model laguna)

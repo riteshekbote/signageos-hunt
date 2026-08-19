@@ -1420,3 +1420,8 @@
 ## 2026-08-19 10:04:59 UTC
 
 ## 2026-08-19 10:42:32 UTC
+
+## 2026-08-19 11:09:14 UTC
+- NEW box.signageos.io replica set rotated to `box-59b5ffd68b` (from `box-c877d9cc8`) — /status secgrep=0 persists, 9-svc topology leak (mongoDB3 present), zero hardening added
+- NEW api.signageos.io/status: hardened (secgrep=3: HSTS/xfo/xcto/no-store, 0 ACAO) on rs api-7c5fdc9777, pod api-7c5fdc9777-zh49z, 8-svc topology (mongoDB3 absent) — differential vs box persists
+- NEW api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical, JWT Bearer ignored (same 403), zero ACAO under evil.test — mechanism intact, zero auth drift across rs rotatio
