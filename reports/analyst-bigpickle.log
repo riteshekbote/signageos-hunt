@@ -47183,3 +47183,170 @@ The passive recon is complete. Here's where things stand:
 2. If not → submit the `/status` info-leak as-is and move on
 
 Nothing more to discover on the passive surface of either host.
+===== ANALYST bigpickle 2026-08-19 20:58:17 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s -o /tmp/api-status-body.json -w "%{http_code}" https://api.signageos.io/status 2>/dev/null
+200
+[0m
+[0m$ [0mcurl -s -o /tmp/box-status-body.json -w "%{http_code}" https://box.signageos.io/status 2>/dev/null
+200
+[0m
+[0m$ [0mcurl -sI https://box.signageos.io/status 2>/dev/null | grep -iE 'strict-transport|x-frame|x-content|content-security|access-control|x-powered|via|cache|server|set-cookie|nonce' | head -20
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 cc5a019539e6efe2b661a72253272ed6.cloudfront.net (CloudFront)
+[0m
+[0m$ [0mcurl -sI https://api.signageos.io/status 2>/dev/null | grep -iE 'strict-transport|x-frame|x-content|content-security|access-control|x-powered|via|cache|server|set-cookie' | head -20
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+via: 1.1 979084a90b32fe3f5fdc377fb6e67b76.cloudfront.net (CloudFront)
+[0m
+[0m$ [0mcurl -sI -H "Origin: https://evil.test" https://api.signageos.io/v1/organization/test/security-token 2>/dev/null | grep -iE 'access-control|x-frame|x-content|strict-transport' | head -10
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+[0m
+## Objective
+- Conduct passive bug bounty recon on signageOS program targeting `box.signageos.io` and `api.signageos.io`, identifying reportable misconfigurations and logic flaws per scope.yml rules.
+- Advance high-severity IDOR lead at `api.signageos.io/v1/organization/{uid}/security-token` (conf 86, AUTH_HELPED) which requires credentials to verify.
+
+## Important Details
+- **Eligible targets ONLY**: `box.signageos.io`, `api.signageos.io`
+- **Passive-first**: GET/HEAD only, ≤1 rps, no account creation, no data modification
+- **Secrets**: sha256 only, never raw
+- **Excluded classes** (never report): DoS, descriptive errors/headers, public file/dir disclosure, outdated libs, OPTIONS/TRACE, CSRF on logout/anonymous forms, cookie flags non-sensitive, self-XSS, scanner reports, physical access, social engineering, username enumeration, brute-force/lockout, SSL/TLS, clickjacking w/o exploit, mail config, known-vulnerable lib w/o signageOS exploit, password/account-recovery policies, autocomplete, public login panels, email verification gaps, session control on email/password change
+- **Key finding 1**: `box.signageos.io/status` — unauthenticated JSON leaks K8s pod hostname, 64-hex process.uid, Node v20.20.2, 9-svc topology (amqp0/redis0-3/mongoDB0-3), cpuUsage/memoryUsage; secgrep=0 (only x-powered-by: Express + CloudFront); POC finalized 60+ cycles
+- **Key finding 2**: `api.signageos.io/v1/organization/{uid}/security-token` — cross-tenant IDOR mechanism confirmed (org from X-Auth header first-part before `:`, path `{uid}` client-supplied); 403074 errorDetail byte-identical; JWT Bearer ignored; AUTH_HELPED conf 86
+- **Key finding 3**: `box.signageos.io/` & `/login/` CORS+CSP — 17 static ACAO incl http:// plaintext + `*.zdusercontent.com` wildcard + api sibling; 0 access-control-allow-credentials; evil.test NOT reflected; MISCONFIG-only (no credential-theft path)
+- **Current rs rotations**: box rs `8b6c78cc8` (secgrep=0), api rs `7c5fdc9777` (secgrep=3 HSTS/xfo/xcto/no-store)
+- **Hardening differential**: box `/status` secgrep=0 vs box `/`+`/login/` secgrep=4 vs api `/status` secgrep=3
+- **Dead leads**: videowall-designer leaked clientId/secret (staging-only, 403076 on prod); api CORS (zero ACAO); api descriptive errors (excluded class); all pre-auth IDOR (60+ routes 403 JWT/X-Auth-gated); Auth0 OAuth2 (not testable passively)
+
+## Work State
+### Completed
+- POC for `box.signageos.io/status` finalized and archived at `artifacts/box-status/` — 60+ cycles stable across 7+ rs rotations (box-8676fb5f57 → 54846c877b → c877d9cc8 → 59b5ffd68b → 8b6c78cc8)
+- CORS+CSP on `box.signageos.io/` & `/login/` confirmed 17 static ACAO, 0 credentials flag, MISCONFIG-only
+- api.signageos.io/status hardened with HSTS/xfo/xcto/no-store, differential vs box confirmed
+- IDOR mechanism for `api.signageos.io/v1/organization/{uid}/security-token` confirmed: 403074 errorDetail, JWT ignored, X-Auth/x-oauth-client_id gating, org identity from header first-part
+- videowall-designer leaked clientId/secret CONFIRMED DEAD on prod (staging-only fixture, 403076)
+- api.signageos.io v1 route map enumerated: org-scoped routes (organization, device, applet, account, timing) return NO_ORGANIZATION_TO_AUTHENTICATE; 38 other paths return 404
+- Dual-auth taxonomy confirmed: 403074 (no headers), 403075 (x-oauth-client_id only), 403076 (bad pair), NO_ORGANIZATION_TO_AUTHENTICATE (X-Auth org-scoped)
+- Server-bootstrap code reviewed — legitimate tooling, no vulns found
+- Comprehensive probe set exhausted: /ready, /healthz, /livez, /readyz, /live, /metrics, /env, /config.json, /csp-report, /websocket, /graphql, /.well-known/openid-configuration — all 302 login catch-all or trivial 200 "OK"
+
+### Active
+- Monitoring passive surface for drift across rs rotations (box rs `8b6c78cc8`, api rs `7c5fdc9777`)
+- IDOR lead at conf 86 awaiting AUTH_HELPED verification with real credentials
+
+### Blocked
+- Cross-tenant IDOR at `api.signageos.io/v1/organization/{uid}/security-token` (conf 86) requires valid JWT + X-Auth pair from two different organizations — cannot proceed without `sos login` or equivalent credential acquisition
+- Auth0 OAuth2 on `box.signageos.io/login` not testable without tenant/authenticated session
+
+## Next Move
+1. HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain valid account owning ≥1 organization → acquire JWT + X-Auth pair → test cross-tenant access: `curl -s -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token`
+2. Continue passive monitoring for any rs-rotation drift or new unauthenticated surface on both targets
+
+## Relevant Files
+- `artifacts/box-status/`: POC evidence archive (body sha256, headers sha256) for box.signageos.io/status info-leak
+- `sos/videoTiming.js` (github.com/signageos/videowall-designer): Hardcoded clientId/secret targeting staging `http://api.kiera.office.signageos.io` — CONFIRMED DEAD on prod
+- `server-bootstrap/server.js` (github.com/signageos/server-bootstrap): Docker/container setup code reviewed — legitimate tooling
+- `hypotheses-nemotron3.txt`, `hypotheses-laguna.txt`: Hypothesis reports in `reports/` directory
+- Knowledge base in scope.yml: Program rules, eligible targets, exclusion list
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+[0m$ [0mcurl -sI https://box.signageos.io/robots.txt 2>/dev/null | head -10
+HTTP/2 302 
+content-type: text/plain; charset=utf-8
+content-length: 42
+date: Wed, 19 Aug 2026 20:56:05 GMT
+vary: Accept
+x-recaptcha-nonce-hash: a0b913f5cc60888f6c2981d5
+x-sentry-client-nonce-hash: 3192cf20c04d71afc1e9810e
+x-dom-purify-nonce-hash: 45b1ec2bc0ea8abb7057d497
+x-trusted-html-nonce-hash: 074c539663fe8e3a9a41050e
+x-bundle-nonce-hash: ac03d5911fd3fa585b17e7d1
+[0m
+[0m$ [0mcurl -s https://box.signageos.io/status 2>/dev/null | python3 -c "
+import json,sys,hashlib
+raw = sys.stdin.read()
+sha = hashlib.sha256(raw.encode()).hexdigest()
+print(f'[{sha}] /rest/v1/box/status (len={len(raw)}):')
+obj = json.loads(raw)
+for k,v in obj.items():
+    if isinstance(v, dict):
+        print(f'  {k}:')
+        for k2,v2 in v.items():
+            print(f'    {k2}: {v2}')
+    else:
+        print(f'  {k}: {v}')
+"
+[60ee41e6c65fcde3e7eb815e64b732b954d0f58bbf8215a3cd88fc22623a04b0] /rest/v1/box/status (len=1439):
+  name: box
+  status: OK
+  process:
+    uid: a587f32cafad9de56686814a0968ec54927a530ac9b9adaf08
+    pid: 1
+    version: v20.20.2
+    uptime: 15538.786113069
+    cpuUsage: {'user': 1078009315, 'system': 129525784}
+    memoryUsage: {'rss': 324820992, 'heapTotal': 245207040, 'heapUsed': 186105696, 'external': 26994958, 'arrayBuffers': 23476661}
+  hostname: box-8b6c78cc8-hfcg2
+  failedServices: []
+  succeededServices: ['amqp0', 'redis2', 'redis1', 'redis0', 'redis3', 'mongoDB2', 'mongoDB3', 'mongoDB1', 'mongoDB0']
+  timeout: 30000
+  requestedAt: 1787172965077
+  respondedAt: 1787172965137
+  amqp0:
+    response: {'requestedAt': 1787172965077, 'respondedAt': 1787172965137, 'responseTime': 60}
+  redis2:
+    response: {'requestedAt': 1787172965077, 'respondedAt': 1787172965078, 'responseTime': 1}
+  redis1:
+    response: {'requestedAt': 1787172965077, 'respondedAt': 1787172965078, 'responseTime': 1}
+  redis0:
+    response: {'requestedAt': 1787172965077, 'respondedAt': 1787172965079, 'responseTime': 2}
+  redis3:
+    response: {'requestedAt': 1787172965077, 'respondedAt': 1787172965079, 'responseTime': 2}
+  mongoDB2:
+    response: {'requestedAt': 1787172965077, 'respondedAt': 1787172965079, 'responseTime': 2}
+  mongoDB3:
+    response: {'requestedAt': 1787172965077, 'respondedAt': 1787172965080, 'responseTime': 3}
+  mongoDB1:
+    response: {'requestedAt': 1787172965077, 'respondedAt': 1787172965081, 'responseTime': 4}
+  mongoDB0:
+    response: {'requestedAt': 1787172965077, 'respondedAt': 1787172965087, 'responseTime': 10}
+[0m
+The recent verification shows everything is still in the same state. Let me gather final evidence and check for any remaining passive extensions.
+[0m$ [0mcurl -sI https://box.signageos.io/.well-known/security.txt 2>/dev/null | head -10
+HTTP/2 302 
+content-type: text/plain; charset=utf-8
+content-length: 58
+date: Wed, 19 Aug 2026 20:56:05 GMT
+vary: Accept
+x-recaptcha-nonce-hash: f55625894b7a858a17650223
+x-sentry-client-nonce-hash: 7ad77ea591cb2d1416651470
+x-dom-purify-nonce-hash: 7d581ab4c6ee054102ce8b01
+x-trusted-html-nonce-hash: bcd15a6f3ac1be1c2671f36f
+x-bundle-nonce-hash: a4c2702fb132c4034eae7a8c
+[0m
+Here's the current state:
+
+**box.signageos.io/status** — still leaking infrastructure data, pod now at rs hash `8b6c78cc8`, process uid `a587f32cafad...`, uptime 15538s, 9 services all healthy. No header hardening changes.
+
+**api.signageos.io/status** — hardened headers confirmed (no-store, DENY, nosniff, HSTS), same CloudFront rs `7c5fdc9777`.
+
+**Remaining passive surface**: `robots.txt` and `.well-known/security.txt` both 302 → `/login/` (same nonce pattern as `/` and `/login/`), no new surface there.
+
+The only actionable finding is the **unauthenticated info leak at `box.signageos.io/status`** — infrastructure metadata (pod hostname, process uid, Node version, service topology, CPU/memory stats) exposed without authentication, on a page with zero security hardening headers. This is **passive-only, zero-account**, reproducible across 60+ rotation cycles.
+
+Everything else (IDOR at `/v1/organization/{uid}/security-token`, CORS 17-value ACAO) requires authenticated sessions and is blocked without `sos login`.
+
+**No further passive probe options remain.** The next steps are:
+
+1. Run `sos login` (Auth0 device-code flow) to acquire credentials → test the IDOR
+2. Write up the box.signageos.io/status finding for submission (high-confidence MISCONFIG, information disclosure)
+
+Which would you like to do?

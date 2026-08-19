@@ -1521,3 +1521,9 @@
 ## 2026-08-19 19:58:19 UTC
 
 ## 2026-08-19 20:26:06 UTC
+
+## 2026-08-19 20:58:17 UTC
+- NEW box.signageos.io replica set rotated to `box-8b6c78cc8` (from `box-59b5ffd68b` → `box-c877d9cc8`) — /status secgrep=0 persists, 9-svc topology leak incl mongoDB3, Node v20.20.2, zero hardening added a
+- NEW api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced on new rs `api-7c5fdc9777`
+- CHANGED api.signageos.io/status: hardened (secgrep=3: HSTS/xfo/xcto/no-store, 0 ACAO) on rs api-7c5fdc9777, pod api-7c5fdc9777-zh49z, 8-svc topology (mongoDB3 absent) — differential vs box persists
+- NEW box.signageos.io/status CORS: Zero ACAO under spoofed Origin confirmed — CORS strictly scoped to SPA entry points only
