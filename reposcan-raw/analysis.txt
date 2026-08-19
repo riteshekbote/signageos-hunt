@@ -1,19 +1,65 @@
 [0m
 > build · nemotron-3-ultra-free
 [0m
-[0m$ [0mecho -n '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9' | sha256sum
-564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e  -
+[0m$ [0mcat reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
+const RestApi = require('@signageos/test/dist/RestApi/RestApi').default;
+
+/**
+ * @param {Array.<{ index: Number, deviceUid: String, uri: String }>} videos
+ * @param {Object} [auth]
+ * @param {String} [auth].clientId
+ * @param {String} [auth].secret
+ * @param {String} [appletUid]
+ * @param {String} [appletVersion]
+ * @param {String} [apiUrl]
+ * @param {String} [syncGroup]
+ * @param {String} [syncServer]
+ */
+module.exports = exports = {
+    async setupVideoTimings(
+        videos,
+        auth = {
+            clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47',
+            secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+        },
+        appletUid = 'c790b56805154b80e12309453ee2c387511179106563165848',
+        appletVersion = '1.0.0',
+        apiUrl = 'http://api.kiera.office.signageos.io',
+        syncGroup = 'video-' + Math.random(),
+        syncServer,
+    ) {
+        const sos = new RestApi({
+            url: apiUrl,
+            version: 'v1',
+            auth,
+        });
+        const nowDate = new Date();
+        for (const video of videos) {
+            await sos.timing.create({
+                deviceUid: video.deviceUid,
+                appletUid,
+                appletVersion,
+                configuration: {
+                    identification: 'video-' + video.index,
+                    sync_server: syncServer,
+                    sync_group: syncGroup,
+                    video_uri: video.uri,
+                },
+                startsAt: nowDate,
+                endsAt: nowDate,
+                finishEvent: {
+                    type: 'DURATION',
+                    data: null,
+                },
+                position: 1,
+            })
+        }
+    },
+};
 [0m
-### Classification Table
+| Category | File | Line | SHA256(secret) | Classification |
+|----------|------|------|----------------|----------------|
+| TEST_OR_EXAMPLE | reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | Staging test fixture (clientId + secret for `http://api.kiera.office.signageos.io`), default params in test utility |
 
-| Category | File | Line | Secret SHA256 | Classification |
-|----------|------|------|---------------|----------------|
-| **STAGING_FIXTURE** | `signageos/videowall-designer/sos/videoTiming.js` | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | **TEST_OR_EXAMPLE** — Known staging-only fixture targeting `http://api.kiera.office.signageos.io` (HTTP, internal). Tested as X-Auth on production → `403076 WRONG_ACCOUNT_SECRET "Account not found"`. Credential reuse **disproven** across 60+ recon cycles. |
-
-### Verdict
-
-| Candidate | REPORT_CANDIDATE |
-|-----------|------------------|
-| `signageos/videowall-designer/sos/videoTiming.js:19` | **no** — Known duplicate, staging-only fixture, credential reuse disproven on production (CONFIRMED DEAD per knowledge base, 60+ cycles) |
-
-**No new reportable secrets found in this scan.** The single hit is a previously triaged, confirmed-dead staging fixture.
+**Verdict:**
+- REPORT_CANDIDATE: **no** — Known CONFIRMED DEAD (knowledge base: 30+ cycles). Staging-only fixture targeting internal `api.kiera.office.signageos.io`; tested as X-Auth on prod → `403076 WRONG_ACCOUNT_SECRET "Account not found"`; credential reuse disproven.
