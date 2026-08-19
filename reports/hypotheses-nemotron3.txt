@@ -1,8 +1,5 @@
-## 2026-08-19 05:53:55 UTC [api] (model nemotron3)
-[NEW] box.signageos.io: Replica set rotated to `box-c877d9cc8` (from `box-54846c877b`) — /status secgrep=0 persists, 9-svc topology leak (mongoDB3 present), zero hardening added
-[NEW] api.signageos.io: Replica set `api-7c5fdc9777` stable — /status secgrep=3 (HSTS/xfo/xcto/no-store) persists, 8-svc topology (mongoDB3 absent), zero ACAO
-[NEW] api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced
-[NEW] box.signageos.io/status CORS: Zero ACAO under spoofed Origin confirmed — CORS strictly scoped to SPA entry points only
+## 2026-08-19 06:40:47 UTC [api] (model nemotron3)
+[NEW] NO_DELTA
 [PRIO] box.signageos.io/status, 9.10, attack=10, business=8, tech=8, gate=10, cloud=9, fresh=10
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token, 7.70, attack=9, business=9, tech=8, gate=2, cloud=8, fresh=9
 [PRIO] api.signageos.io/status, 7.05, attack=6, business=6, tech=7, gate=10, cloud=7, fresh=8
@@ -41,15 +38,15 @@ testability: PASSIVE
 [PARKED] Videowall-designer leaked clientId/secret on PROD: Staging-only fixture (sha256 564c293b…), X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven (CONFIRMED DEAD)
 [FINAL] 1) Unauthenticated K8s topology and process identity leak via /status (confidence 100, MEDIUM, PASSIVE) 2) Cross-tenant security-token minting via X-Auth org-UID path override (confidence 86, CRITICAL, AUTH_HELPED) 3) Hardened /status still leaks hostname/uid/Node/topology under security headers (confidence 95, LOW-MEDIUM, PASSIVE)
 [NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id:unsafeDecryptedToken>` pair → then execute AUTH_HELPED verify_steps for the CRITICAL cross-tenant security-token IDOR: POST https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token with X-Auth header from orgA
-[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod 62cq2 (rs c877d9cc8), secgrep=0, 9-svc topology, zero hardening. POC stable 60+ cycles.
-[LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical; mechanism intact across 7+ rs rotations; zero auth drift.
-[LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (secgrep=3), zero ACAO under any Origin, still leaks hostname/uid/Node/topology. Differential vs box persists.
-[LEARN] REJECTED MISCONFIG @ box.signageos.io /ready: 200 "OK" (2 bytes) trivial health check, no data leaked — NO_DELTA
-[LEARN] REJECTED MISCONFIG @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket): all → 302 login catch-all — no unauthenticated surface beyond /status
-[LEARN] REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml; retained only as mechanism evidence for IDOR
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized & evidence archived at artifacts/box-status/ — HTTP 200 JSON infra-leak (hostname box-c877d9cc8-*, 64-hex process.uid, Node v20.20.2, 9-svc topology incl mongoDB3, cpu/mem/responseTime), secgrep=0, zero hardening added across 60+ cycles and 7+ rs rotations
+[LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed IGNORED (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced; mechanism intact, zero auth drift across 7+ rs rotations
+[LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (HSTS/xfo/xcto/no-store, secgrep=3) but still leaks hostname/uid/Node v24.19.0/8-svc topology (mongoDB3 absent); header differential vs box /status (secgrep=0) persists
+[LEARN] REJECTED MISCONFIG @ box.signageos.io /ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked — NO_DELTA
+[LEARN] REJECTED MISCONFIG @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket): all → 302 login catch-all — no unauthenticated surface beyond /status — NO_DELTA
+[LEARN] REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml; retained only as mechanism evidence for IDOR — NO_DELTA
 [LEARN] REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 access-control-allow-credentials — not CORS-exploitable, MISCONFIG-only — NO_DELTA
 [LEARN] REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding not passively testable without tenant/session — NO_DELTA
-[LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass — NO_DELTA
-[LEARN] CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) is staging-only fixture targeting http://api.kiera.office.signageos.io; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven
+[LEARN] REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass; cross-tenant chain remains AUTH_HELPED only — NO_DELTA
+[LEARN] CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) is staging-only fixture targeting http://api.kiera.office.signageos.io; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven (60+ cycles)
 [RISK] box.signageos.io: 58 reason: Persistent unauthenticated /status info-leak (K8s topology, pod identity, process UID, cpu/memory) with zero hardening headers behind CloudFront; nonce-hash middleware only on SPA routes; CORS whitelist scoped to / + /login/ (17 origins, http:// variant, *.zdusercontent.com wildcard) but no credentials flag; all other surfaces behind Auth0 login catch-all
 [RISK] api.signageos.io: 62 reason: Dual-auth API (JWT Bearer + X-Auth `id:unsafeDecryptedToken`) with org UID in path client-supplied; cross-tenant IDOR chain on /v1/organization/{uid}/security-token and /v1/organization/{uid} confirmed at mechanism level (403074 gating) but AUTH_HELPED only; descriptive errors leak auth internals (excluded class); /status hardened but still leaks hostname/uid/Node/topology; zero CORS surface

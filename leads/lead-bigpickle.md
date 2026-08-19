@@ -9311,3 +9311,4 @@ testability: PASSIVE
 [RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism confirmed on rs 7c5fdc9777 (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold, CORS non-exploitable, descriptive-error class excluded
 ## 2026-08-19 05:21:01 UTC [box] (model bigpickle)
 ## 2026-08-19 05:54:38 UTC [box] (model bigpickle)
+## 2026-08-19 06:44:44 UTC [box] (model bigpickle)
