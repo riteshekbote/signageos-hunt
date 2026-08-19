@@ -1,20 +1,28 @@
 [0m
 > build · nemotron-3-ultra-free
 [0m
-**Hit Classification:**
+The scan data you provided is for **signageos** org (not gladiaio), and there's only **1 hit** which is already documented in the knowledge base.
 
-| Category | File | Line | SHA256(secret) | Verdict |
-|----------|------|------|----------------|---------|
-| TEST_OR_EXAMPLE | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js` | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | Staging-only test fixture targeting `http://api.kiera.office.signageos.io` (non-prod). Tested against production API via X-Auth → `403076 WRONG_ACCOUNT_SECRET "Account not found"`. Credential reuse disproven. |
+## Triage Result
 
-**Verdict:**
+| Category | File | Line | SHA256 | Classification | Verdict |
+|----------|------|------|--------|----------------|---------|
+| **ENDPOINT_LEAK** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js` | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | **TEST_OR_EXAMPLE** (staging fixture) | **REPORT_CANDIDATE: no** |
+
+## Analysis
+
+This hit is the **hardcoded clientId/secret pair** in `videowall-designer/sos/videoTiming.js:19` targeting `http://api.kiera.office.signageos.io` (staging, HTTP).
+
+**Why NOT reportable:**
+1. **CONFIRMED DEAD** per knowledge base (2026-08-07 through 2026-08-19): Tested as `X-Auth: <clientId>:<secret>` on **prod** `api.signageos.io/v1/organization/{uid}/security-token` → returns `403076 WRONG_ACCOUNT_SECRET "Account not found"`
+2. Credential reuse **disproven** — account doesn't exist on production
+3. Staging-only fixture (HTTP, internal `kiera.office` subdomain)
+4. Already tracked for 60+ recon cycles with zero drift
+
+## Summary
 
 | Candidate | REPORT_CANDIDATE |
-|-----------|-----------------|
-| videowall-designer videoTiming.js secret | **no** — Confirmed DEAD (staging fixture, no prod validity, 60+ cycle confirmation) |
+|-----------|------------------|
+| videowall-designer hardcoded secret | **no** (staging fixture, prod reuse disproven) |
 
-**Notes:**
-- This exact secret was previously triaged (2026-08-07 seed, reconfirmed 2026-08-14 through 2026-08-19)
-- The clientId `fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47` + this secret were tested as X-Auth against production `api.signageos.io` → account does not exist
-- Target host `api.kiera.office.signageos.io` is internal staging (HTTP, not HTTPS)
-- Per program scope: out-of-scope host + no credential reuse = not reportable
+**No new reportable findings** in this scan delta. The signageos org scan surface remains stable with only previously accepted/confirmed-dead findings.
