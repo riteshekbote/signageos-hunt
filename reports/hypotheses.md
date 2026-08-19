@@ -7033,3 +7033,26 @@
 - LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod 62cq2 (rs c877d9cc8), secgrep=0, 9-svc topology, zero hardening. POC stable 60+ cycles.
 - LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical; mechanism intact across 7+ rs rotations; zero auth dri
 - LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (secgrep=3), zero ACAO under any Origin, still leaks hostname/uid/Node/topology. Differential vs box pers
+
+## RANKED HYPOTHESES 2026-08-19 10:42:32 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-nemotron3.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id:unsafeD
+- NEXT(hypotheses-laguna.txt): PROBE: GET https://box.signageos.io/status — confirm HTTP 200 application/json body leaks hostname (`box-59b5ffd68b-kldm7`), 64-hex process.uid (`9c5560749e86…`
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized & evidence archived at artifacts/box-status/ — HTTP 200 JSON infra-leak (hostname box-c877d9cc8-*, 6
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed IGNORED (returns 403074 same as no-header); only X-Auth/x-oaut
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (HSTS/xfo/xcto/no-store, secgrep=3) but still leaks hostname/uid/Node v24.19.0/8-svc topology (mongoDB3 a
+- LEARN: REJECTED MISCONFIG @ box.signageos.io /ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked — NO_DELTA
+- LEARN: REJECTED MISCONFIG @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket): all → 302 login catch-all — n
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml; reta
+- LEARN: REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 access-control-allow-credentials — not CORS-exploitable, MISCONFIG-only — NO_DELTA
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding not passively testable without tenant/session — NO_DELTA
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass; cross-tenant chain rema
+- LEARN: CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) is staging-only fixture targeting http://api.kiera.office.si
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: 200 "OK" (2 bytes) trivial health check, no data leaked — NO_DELTA
+- LEARN: CONFIRMED ALIVE @ box.signageos.io/status: Fresh probe confirms rs box-59b5ffd68b, pod box-59b5ffd68b-kldm7, secgrep=0, 9-svc topology (mongoDB3 present), zero 
+- LEARN: CONFIRMED ALIVE @ api.signageos.io/status: Fresh probe confirms hardened (secgrep=3: HSTS/xfo/xcto/no-store, 0 ACAO) on rs api-7c5fdc9777, pod api-7c5fdc9777-zh
+- LEARN: CONFIRMED ALIVE @ api.signageos.io/v1/organization/{uid}/security-token: Fresh probe confirms 403074 errorDetail byte-identical, JWT Bearer ignored (same 403), 
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml (desc
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding not passively testable without tenant/authenticated session — NO_DELTA
+- LEARN: REJECTED MISCONFIG @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket /graphql): all → 302 login catc
+- LEARN: CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) staging-only fixture targeting http://api.kiera.office.signa
