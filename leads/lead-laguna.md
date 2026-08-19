@@ -11964,3 +11964,4 @@ evidence_needed: GET https://api.signageos.io/status with `Origin: https://evil.
 verify_steps: GET https://api.signageos.io/status → 200 application/json; grep -ciE 'strict-transport|x-frame|x-content' headers → 3; grep -ci 'access-control-allow-origin' with Origin evil.test → 0; body contains pod hostname + process.uid + Node v24.19.0 + topology
 impact: Internal K8s pod identity, process UID, backend topology exposed unauthenticated despite response-header hardening (HSTS/xfo/xcto). Enables infrastructure reconnaissance. CVSS 4.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N).
 testability: PASSIVE
+## 2026-08-19 18:12:48 UTC [box] (model laguna)
