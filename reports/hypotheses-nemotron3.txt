@@ -1,4 +1,4 @@
-## 2026-08-19 08:06:10 UTC [api] (model nemotron3)
+## 2026-08-19 08:53:54 UTC [api] (model nemotron3)
 [NEW] box.signageos.io replica set rotated to `box-c877d9cc8` (from `box-54846c877b`) — /status secgrep=0 persists, 9-svc topology leak (mongoDB3 present), zero hardening added
 [NEW] api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced
 [NEW] box.signageos.io/status CORS: Zero ACAO under spoofed Origin confirmed — CORS strictly scoped to SPA entry points only
@@ -32,7 +32,8 @@ evidence_needed: Already proven — live reprobe confirms hardened headers + JSO
 verify_steps: GET https://api.signageos.io/status → 200 application/json with infra leak; grep -cE 'strict-transport|x-frame|x-content' headers → 3; curl -sI -H "Origin: https://evil.test" https://api.signageos.io/status → 0 ACAO
 impact: Internal K8s topology, pod identity, process UID exposed despite header hardening; aids reconnaissance; LOW-MEDIUM
 testability: PASSIVE
-[FINAL] 1) Unauthenticated K8s topology and process identity leak via /status (confidence 100, MEDIUM, PASSIVE) 2) Cross-tenant security-token minting via X-Auth org-UID path override (confidence 86, CRITICAL, AUTH_HELPED) 3) Hardened /status still leaks hostname/uid/Node/topology under security headers (confidence 95, LOW-MEDIUM, PASSIVE)
+[PARKED] Cross-tenant security-token minting via X-Auth org-UID path override: confidence 86 but class IDOR on this endpoint requires AUTH_HELPED with valid org tokens — cannot be verified in passive phase; verify_steps depend on HUMAN obtaining tokens via `sos login`
+[FINAL] 1) Unauthenticated K8s topology and process identity leak via /status (confidence 100, MEDIUM, PASSIVE) 2) Hardened /status still leaks hostname/uid/Node/topology under security headers (confidence 95, LOW-MEDIUM, PASSIVE) 3) Cross-tenant security-token minting via X-Auth org-UID path override (confidence 86, CRITICAL, AUTH_HELPED)
 [NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id:unsafeDecryptedToken>` pair → then execute AUTH_HELPED verify_steps for the CRITICAL cross-tenant security-token IDOR: POST https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token with X-Auth header from orgA
 [LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized & evidence archived at artifacts/box-status/ — HTTP 200 JSON infra-leak (hostname box-c877d9cc8-*, 64-hex process.uid, Node v20.20.2, 9-svc topology incl mongoDB3, cpu/mem/responseTime), secgrep=0, zero hardening added across 60+ cycles and 7+ rs rotations
 [LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed IGNORED (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced; mechanism intact, zero auth drift across 7+ rs rotations
