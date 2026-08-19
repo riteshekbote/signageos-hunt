@@ -78533,3 +78533,365 @@ testability: PASSIVE
 
 - **box.signageos.io: 59** | reason: Unauthenticated /status info-leak (K8s pod identity, 64-hex process UID, 9-service topology incl mongoDB3, CPU/mem/responseTime) with zero hardening headers (secgrep=0, x-powered-by only + CloudFront) on rs `box-59b5ffd68b`; 17 static ACAO on / + /login/ (http:// plaintext + *.zdcpkg.com wildcard + api sibling + path-bearing recaptcha) with 0 access-control-allow-credentials — MISCONFIG-only; entry hardened (secgrep=4) but /status differential confirmed across 60+ cycles and 7+ rs rotations; all other surfaces behind Auth0 login catch-all
 - **api.signageos.io: 63** | reason: AUTH_HELPED cross-tenant IDOR mechanism confirmed on /v1/organization/{uid}/security-token (403074 errorDetail byte-identical across 7+ rs rotations, JWT Bearer ignored, org from X-Auth first-part before `:` vs client-supplied path UID, zero ACAO under evil.test); /status hardened (secgrep=3 HSTS/xfo/xcto/no-store) but still leaks hostname/uid/Node v24.19.0/8-svc topology; all 60+ routes 403 JWT/X-Auth-gated pre-auth with zero ACAO (not CORS-exploitable); dual-auth (JWT Bearer + X-Auth `id:unsafeDecryptedToken`) increases attack surface; descriptive error bodies leak auth internals (excluded class)
+===== ANALYST laguna 2026-08-19 09:29:07 UTC =====
+[0m
+> build · laguna-s-2.1-free
+[0m
+[0m$ [0mls -la /home/runner/work/signageos-hunt/signageos-hunt/
+total 1072
+drwxr-xr-x 11 runner runner   4096 Aug 19 09:27 .
+drwxr-xr-x  3 runner runner   4096 Aug 19 09:27 ..
+drwxr-xr-x  7 runner runner   4096 Aug 19 09:27 .git
+drwxr-xr-x  3 runner runner   4096 Aug 19 09:27 .github
+-rw-r--r--  1 runner runner    944 Aug 19 09:27 README.md
+-rw-r--r--  1 runner runner     39 Aug 19 09:27 analyst-out.txt
+-rw-r--r--  1 runner runner 389560 Aug 19 09:27 analyst-prompt.txt
+-rw-r--r--  1 runner runner 385571 Aug 19 09:27 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Aug 19 09:27 inventory
+drwxr-xr-x  2 runner runner   4096 Aug 19 09:27 knowledge
+drwxr-xr-x  2 runner runner  36864 Aug 19 09:27 leads
+-rw-r--r--  1 runner runner 185145 Aug 19 09:27 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Aug 19 09:27 reports
+drwxr-xr-x  3 runner runner   4096 Aug 19 09:27 reposcan-raw
+-rw-r--r--  1 runner runner   3086 Aug 19 09:27 scope.yml
+drwxr-xr-x  2 runner runner   4096 Aug 19 09:27 scripts
+-rw-r--r--  1 runner runner     33 Aug 19 09:27 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Aug 19 09:27 state_laguna.json
+-rw-r--r--  1 runner runner     33 Aug 19 09:27 state_ling3.json
+-rw-r--r--  1 runner runner     33 Aug 19 09:27 state_longcat.json
+-rw-r--r--  1 runner runner     33 Aug 19 09:27 state_nemotron3.json
+drwxr-xr-x  2 runner runner  20480 Aug 19 09:27 triage
+[0m
+[0m→ [0mRead state_laguna.json
+[0m
+[0m$ [0mls -la /home/runner/work/signageos-hunt/signageos-hunt/inventory/ /home/runner/work/signageos-hunt/signageos-hunt/knowledge/ /home/runner/work/signageos-hunt/signageos-hunt/reports/ | head -60
+/home/runner/work/signageos-hunt/signageos-hunt/inventory/:
+total 124
+drwxr-xr-x  2 runner runner   4096 Aug 19 09:27 .
+drwxr-xr-x 11 runner runner   4096 Aug 19 09:27 ..
+-rw-r--r--  1 runner runner 118130 Aug 19 09:27 signageos.md
+
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/:
+total 368
+drwxr-xr-x  2 runner runner   4096 Aug 19 09:27 .
+drwxr-xr-x 11 runner runner   4096 Aug 19 09:27 ..
+-rw-r--r--  1 runner runner 365191 Aug 19 09:27 index.md
+
+/home/runner/work/signageos-hunt/signageos-hunt/reports/:
+total 15964
+drwxr-xr-x  2 runner runner    4096 Aug 19 09:27 .
+drwxr-xr-x 11 runner runner    4096 Aug 19 09:27 ..
+-rw-r--r--  1 runner runner 3854458 Aug 19 09:27 analyst-bigpickle.log
+-rw-r--r--  1 runner runner 7631029 Aug 19 09:27 analyst-laguna.log
+-rw-r--r--  1 runner runner   79056 Aug 19 09:27 analyst-ling3.log
+-rw-r--r--  1 runner runner  351836 Aug 19 09:27 analyst-longcat.log
+-rw-r--r--  1 runner runner 3461852 Aug 19 09:27 analyst-nemotron3.log
+-rw-r--r--  1 runner runner      51 Aug 19 09:27 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner    4639 Aug 19 09:27 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      47 Aug 19 09:27 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      49 Aug 19 09:27 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner    8129 Aug 19 09:27 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner 1028204 Aug 19 09:27 hypotheses.md
+-rw-r--r--  1 runner runner   77501 Aug 19 09:27 valid-bugs.md
+[0m
+[0m→ [0mRead probe-results.md[90m [limit=120][0m
+[0m
+[0m$ [0mtail -80 /home/runner/work/signageos-hunt/signageos-hunt/probe-results.md
+https://box.signageos.io/status -> 200 len=1435 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1334 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+
+## 2026-08-19 03:26:03 UTC
+https://box.signageos.io/status -> 200 len=1433 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1342 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-19 04:10:25 UTC
+https://box.signageos.io/status -> 200 len=1435 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1332 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+
+## 2026-08-19 04:53:45 UTC
+https://box.signageos.io/status -> 200 len=1437 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1333 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-19 05:22:15 UTC
+https://box.signageos.io/status -> 200 len=1435 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1332 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+
+## 2026-08-19 05:57:28 UTC
+https://box.signageos.io/status -> 200 len=1435 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1334 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+
+## 2026-08-19 06:44:57 UTC
+https://box.signageos.io/status -> 200 len=1432 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1331 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+
+## 2026-08-19 07:27:51 UTC
+https://box.signageos.io/status -> 200 len=1431 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1331 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404
+
+## 2026-08-19 08:06:36 UTC
+https://box.signageos.io/status -> 200 len=1429 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1324 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+
+## 2026-08-19 08:56:16 UTC
+https://box.signageos.io/status -> 200 len=1433 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1331 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
+[0m
+[0m$ [0mtail -50 /home/runner/work/signageos-hunt/signageos-hunt/inventory/signageos.md
+## 2026-08-18 23:04:04 UTC
+- NEW NO_DELTA
+
+## 2026-08-18 23:34:06 UTC
+- NEW NO_DELTA
+
+## 2026-08-18 23:54:27 UTC
+- NEW box.signageos.io: Replica set rotated to `box-c877d9cc8` (from `box-54846c877b`) — /status secgrep=0 persists, 9-svc topology leak (mongoDB3 present), zero hardening added
+- NEW api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced
+- NEW box.signageos.io/status CORS: Zero ACAO under spoofed Origin confirmed — CORS strictly scoped to SPA entry points only
+
+## 2026-08-19 01:00:55 UTC
+
+## 2026-08-19 02:25:03 UTC
+- NEW NO_DELTA
+
+## 2026-08-19 03:26:01 UTC
+
+## 2026-08-19 04:10:23 UTC
+- NEW box.signageos.io: Replica set rotated to `box-c877d9cc8` (from `box-54846c877b`) — /status secgrep=0 persists, 9-svc topology leak (mongoDB3 present), zero hardening added
+- NEW api.signageos.io: Replica set `api-7c5fdc9777` stable — /status secgrep=3 (HSTS/xfo/xcto/no-store), 8-svc topology (mongoDB3 absent), zero ACAO
+- NEW api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced
+- NEW box.signageos.io/status CORS: Zero ACAO under spoofed Origin confirmed — CORS strictly scoped to SPA entry points only
+
+## 2026-08-19 04:53:43 UTC
+
+## 2026-08-19 05:22:14 UTC
+
+## 2026-08-19 05:57:26 UTC
+- NEW box.signageos.io: Replica set rotated to `box-c877d9cc8` (from `box-54846c877b`) — /status secgrep=0 persists, 9-svc topology leak (mongoDB3 present), zero hardening added
+- NEW api.signageos.io: Replica set `api-7c5fdc9777` stable — /status secgrep=3 (HSTS/xfo/xcto/no-store) persists, 8-svc topology (mongoDB3 absent), zero ACAO
+- NEW api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced
+- NEW box.signageos.io/status CORS: Zero ACAO under spoofed Origin confirmed — CORS strictly scoped to SPA entry points only
+
+## 2026-08-19 06:44:55 UTC
+- NEW NO_DELTA
+
+## 2026-08-19 07:27:49 UTC
+- NEW NO_DELTA
+
+## 2026-08-19 08:06:34 UTC
+- NEW box.signageos.io replica set rotated to `box-c877d9cc8` (from `box-54846c877b`) — /status secgrep=0 persists, 9-svc topology leak (mongoDB3 present), zero hardening added
+- NEW api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced
+- NEW box.signageos.io/status CORS: Zero ACAO under spoofed Origin confirmed — CORS strictly scoped to SPA entry points only
+
+## 2026-08-19 08:56:15 UTC
+- NEW box.signageos.io replica set rotated to `box-c877d9cc8` (from `box-54846c877b`) — /status secgrep=0 persists, 9-svc topology leak (mongoDB3 present), zero hardening added
+- NEW api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced
+- NEW box.signageos.io/status CORS: Zero ACAO under spoofed Origin confirmed — CORS strictly scoped to SPA entry points only
+[0m
+[0m$ [0mcat /home/runner/work/signageos-hunt/signageos-hunt/reports/hypotheses-laguna.txt
+## 2026-08-19 08:56:03 UTC [box] (model laguna)
+[HYP] Unauthenticated K8s topology and process identity leak via /status
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 100
+reasoning: HTTP 200 JSON confirmed live on new rs `box-59b5ffd68b` (pod `box-59b5ffd68b-kfj9b`, uid `df86242a611ace4af3fbf9626377681b6c3f976016b6801345`), leaks hostname, 64-hex process.uid, Node v20.20.2, 9-service topology (amqp0/redis0-3/mongoDB0-3), cpuUsage/memoryUsage/responseTime. Headers: ONLY `x-powered-by: Express` + CloudFront (`secgrep=0`, zero HSTS/xfo/xcto/CSP). Zero ACAO under `evil.test` Origin.
+evidence_needed: Evidence archive at artifacts/box-status/ (body sha256 `5d1f2e8a…`, headers sha256 `e3a9b5c1…`); fresh probe confirms 1433-byte body, only x-powered-by + CloudFront
+verify_steps: GET https://box.signageos.io/status → 200 application/json; `grep -cE 'strict-transport|x-frame|x-content|content-security'` → 0; curl -sI -H "Origin: https://evil.test" → zero access-control-allow-origin
+impact: Attacker obtains internal K8s pod identity, process UID, full backend service-mesh topology, CPU/memory/uptime — enables targeted lateral movement and infrastructure mapping; MEDIUM
+testability: PASSIVE
+[HYP] Cross-tenant security-token minting via X-Auth org-UID path override
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: 403 403074 with byte-identical errorDetail ("Both x-oauth-client_id header and first part (before char `:`) of x-auth header are missing…") confirms org identity derived from X-Auth header first-part before `:` while path `{uid}` is client-supplied and distinct. JWT Bearer token IGNORED (returns identical 403 as no-header). Only X-Auth/x-oauth-client_id enforced. Zero auth drift across 7+ rs rotations (box-8676fb5f57 → 54846c877b → c877d9cc8 → 59b5ffd68b; api-6f69db97d5 → 86db648db5 → 8676fb5f57 → 77955558bc → 6cc9959bb4 → 7c5fdc9777).
+evidence_needed: Valid account X-Auth pair `<id:unsafeDecryptedToken>` + x-oauth-client_id → POST /v1/organization/<own-org-uid>/security-token (baseline 200 + securityToken) → POST /v1/organization/<foreign-org-uid>/security-token with same X-Auth header → 200 + securityToken = cross-tenant IDOR
+verify_steps: AUTH_HELPED: 1) Run `sos login` → obtain account owning ≥1 org; 2) capture X-Auth `<id:unsafeDecryptedToken>` + x-oauth-client_id from browser session; 3) POST https://api.signageos.io/v1/organization/<own-org-uid>/security-token → expect 200 + securityToken (baseline); 4) POST https://api.signageos.io/v1/organization/<foreign-org-uid>/security-token with same X-Auth header → 200 + securityToken = cross-tenant IDOR CONFIRMED
+impact: Any tenant org X-Auth pair → mint security-token for foreign org → full device/content/timing/firmware control of victim tenant; CRITICAL
+testability: AUTH_HELPED
+[HYP] Hardened /status still leaks hostname/uid/Node/topology under security headers
+class: MISCONFIG
+asset: api.signageos.io/status
+confidence: 95
+reasoning: rs `api-7c5fdc9777` (pod `api-7c5fdc9777-q5vdm`) confirmed hardened (HSTS max-age=31536000, x-frame-options: DENY, x-content-type-options: nosniff, cache-control no-store, secgrep=3) behind CloudFront. Still leaks 64-hex process.uid (`b31bdda50cba3925ba988e0c999892fd6dc09608d05f41b7f8`), hostname `api-7c5fdc9777-q5vdm`, Node v24.19.0, 8-service topology, CPU/mem. Zero ACAO under evil.test Origin.
+evidence_needed: Live probe showing 200 application/json body with hostname/uid/Node v24.19.0/topology + response headers containing HSTS/xfo/xcto/no-store (secgrep=3)
+verify_steps: GET https://api.signageos.io/status → 200 application/json; curl -sI -H "Origin: https://evil.test" → zero ACAO, observe body leaks hostname + process.uid + Node v24.19.0 + topology; `grep -cE 'strict-transport|x-frame|x-content'` → 3
+impact: Internal K8s pod identity, process UID, backend service topology exposed despite header hardening — aids reconnaissance; LOW-MEDIUM
+testability: PASSIVE
+[FINAL] 1) Unauthenticated K8s topology and process identity leak via /status — box.signageos.io/status — confidence 100, MEDIUM, PASSIVE, POC finalized & archived (evidence at artifacts/box-status/, stable across rs rotation `box-59b5ffd68b`, zero hardening added)
+[FINAL] 2) Cross-tenant security-token minting via X-Auth org-UID path override — api.signageos.io/v1/organization/{uid}/security-token — confidence 86, CRITICAL, AUTH_HELPED
+[FINAL] 3) Hardened /status still leaks hostname/uid/Node/topology under security headers — api.signageos.io/status — confidence 95, LOW-MEDIUM, PASSIVE
+[0m
+[0m$ [0mls -la /home/runner/work/signageos-hunt/signageos-hunt/scripts/ /home/runner/work/signageos-hunt/signageos-hunt/artifacts/ 2>/dev/null; ls /home/runner/work/signageos-hunt/signageos-hunt/triage/ | head -40
+/home/runner/work/signageos-hunt/signageos-hunt/scripts/:
+total 28
+drwxr-xr-x  2 runner runner  4096 Aug 19 09:27 .
+drwxr-xr-x 11 runner runner  4096 Aug 19 09:27 ..
+-rw-r--r--  1 runner runner 16987 Aug 19 09:27 sync-issues.py
+run-2026-08-07-20-04.md
+run-2026-08-07-21-05.md
+run-2026-08-07-21-58.md
+run-2026-08-07-22-57.md
+run-2026-08-07-23-50.md
+run-2026-08-07-23-54.md
+run-2026-08-08-02-27.md
+run-2026-08-08-04-31.md
+run-2026-08-08-06-03.md
+run-2026-08-08-07-21.md
+run-2026-08-08-09-07.md
+run-2026-08-08-09-59.md
+run-2026-08-08-10-59.md
+run-2026-08-08-11-47.md
+run-2026-08-08-13-30.md
+run-2026-08-08-14-09.md
+run-2026-08-08-14-55.md
+run-2026-08-08-15-52.md
+run-2026-08-08-16-59.md
+run-2026-08-08-17-55.md
+run-2026-08-08-18-32.md
+run-2026-08-08-19-20.md
+run-2026-08-08-19-50.md
+run-2026-08-08-20-16.md
+run-2026-08-08-21-01.md
+run-2026-08-08-22-19.md
+run-2026-08-08-22-54.md
+run-2026-08-08-23-21.md
+run-2026-08-08-23-53.md
+run-2026-08-09-01-00.md
+run-2026-08-09-03-10.md
+run-2026-08-09-04-41.md
+run-2026-08-09-05-41.md
+run-2026-08-09-06-32.md
+run-2026-08-09-07-43.md
+run-2026-08-09-08-28.md
+run-2026-08-09-09-28.md
+run-2026-08-09-10-22.md
+run-2026-08-09-11-00.md
+run-2026-08-09-11-51.md
+[0m
+[0m$ [0mhead -80 /home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md
+# Knowledge Base (seed)
+
+## Program rules (from scope.yml)
+- Eligible targets (ONLY): box.signageos.io, api.signageos.io
+- Long exclusion list (all NOT eligible): DoS (network + account lockout), descriptive errors/headers, public file/dir disclosure, outdated libs, OPTIONS/TRACE, CSRF on logout, CSRF on anonymous forms, cookie flags on non-sensitive data, self-XSS, scanner reports without POC, physical access, social engineering, username enumeration, brute-force/lockout policies, SSL/TLS best practices + SSL attacks, clickjacking without demonstrated exploit, mail config, known-vulnerable lib without signageOS-specific exploit, password/account-recovery policies, autocomplete, public login panels, email verification gaps (registration/invite/password restore), session control on email/password change
+- Reportable focus: real logic flaws (IDOR/authz/business logic/SSRF-type) with a concrete POC on the two eligible hosts
+- Passive-first: GET/HEAD only, <=1 rps, no account creation, no data modification
+- Secrets in commits: sha256 only, never raw
+
+## Baseline surface (2026-08-07 passive recon)
+- box.signageos.io: HTTP 302 (redirect - determine where; likely dashboard/player box admin)
+- api.signageos.io: HTTP 200 on /
+- signageos.io: 301 to www
+- GitHub org signageos (59 public repos): first-party code incl. sdk (TS), cli (TS), applet-sandbox, platform (C++), videowall-designer (TS), server-bootstrap (Shell), kubernetes-ingress (Go), minio, plus many forks (DefinitelyTyped, HTML5test, zip.js, libcec, raspidmx, node-amqp10, WebGLSamples, webpack-dev-server, aports, charts)
+
+## Rejected / parked (explicit program exclusions - never report)
+- username enumeration on login/forgot-password, rate-limit/lockout policy, cookie flags non-sensitive, OPTIONS/TRACE, banner/stack-trace, robots.txt, outdated versions, SSL/TLS, clickjacking w/o exploit, CSRF on logout/anonymous forms, email verification gaps, session control on email/password change, autocomplete, public login panels, account recovery policies
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation not testable passively without tenant config access
+- 2026-08-07 REJECTED IDOR @ api.signageos.io: No public API endpoints discoverable via passive probing (all common paths 404)
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state parameter — class AUTH excluded as "CSRF on forms that are available to anonymous users" per scope.yml
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary (carried forward from 2026-08-07)
+- 2026-08-07 REJECTED IDOR @ api.signageos.io via undiscovered versioned endpoints: no public endpoints discoverable via passive probing (all common paths 404) — carried forward from 2026-08-07
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state parameter — class AUTH excluded as "CSRF on forms that are available to anonymous users" per scope.yml
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary (carried forward from 2026-08-07)
+- 2026-08-07 REJECTED IDOR @ api.signageos.io via undiscovered versioned endpoints: no public endpoints discoverable via passive probing (all common paths 404) — carried forward from 2026-08-07
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed NEW. Unauthenticated JSON health endpoint leaks K8s pod hostname, process UID, Node version, and backend service topology (redis0-3, mongoDB0-3, amqp0). Not on the rejected list (not banner/stack-trace, not file/dir disclosure, not outdated-version-only).
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed NEW. 18× static `access-control-allow-origin` headers (incl `http://` HTTP variant + `https://*.zdusercontent.com` wildcard) on `/` and `/login/`. No `Access-Control-Allow-Credentials` observed. Not on the rejected list.
+- 2026-08-07 REJECTED IDOR @ api.signageos.io: Real `/v1/*` endpoints confirmed via client bundle (bundle.js) — 40+ paths mapped. BUT all return 403 with `WRONG_JWT_TOKEN`/`403105` without a JWT. No unauthenticated data access found → IDOR not testable passively. The earlier seed rejection ("all common paths 404") was based on probing wrong paths (`/api/v1`, `/v1`) that don't exist; the real paths DO exist but are JWT-gated.
+- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io: 403 error body leaks descriptive auth detail (`"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105`, `errorName WRONG_JWT_TOKEN`) — falls under "descriptive error messages" (excluded per scope.yml).
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation — still not testable passively without tenant config access (carried forward).
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state — excluded per "CSRF on anonymous-accessible forms" (carried forward).
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → mtnct), process UID, Node v20.20.2, and service topology (amqp0, redis0-3, mongoDB0-3). Not on rejected list.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin `https://evil.test`. Includes `http://` variant + `https://*.zdusercontent.com` wildcard + sibling `api.signageos.io`. No `Access-Control-Allow-Credentials` on any box path. api.signageos.io has NO ACAO on any path (including /status, /v1/*, /v2/*).
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Confirmed live. /login/ CSP broadened vs / (triplicated Auth0 oauth/token, additional recaptcha frame-src). 40+ connect-src/frame-src origins spanning Auth0, Sony/BroadSign/MoodMedia device APIs, S3 buckets, AWS API Gateway, and api.signageos.io.
+- 2026-08-07 REJECTED MISCONFIG @ box.signageos.io /ready: Returns 200 `OK` (2 bytes) — trivial health check, no data leaked. Not reportable.
+- 2026-08-07 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All 60+ endpoints return 403 JWT-gated (WRONG_JWT_TOKEN/403105). No pre-auth bypass. Dual auth confirmed: JWT Bearer (main API) + X-Auth API-key format (`id:unsafeDecryptedToken`) for bulk provisioning.
+- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io CORS: 403/404 carry `vary: Origin` + `access-control-expose-headers: *` but NO ACAO under any Origin — not CORS-exploitable.
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation — not testable passively without tenant config access (carried forward).
+- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105` — falls under descriptive error messages (excluded).
+- 2026-08-07 ACCEPTED SECRET_LEAK @ github.com/signageos/videowall-designer: Hardcoded clientId/secret (SHA256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) in `sos/videoTiming.js` targeting internal staging `http://api.kiera.office.signageos.io` over HTTP — credential reuse risk; not directly reportable (out-of-scope host) but informs prod org-boundary testing.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin `https://evil.test`. Includes `http://` variant + `https://*.zdusercontent.com` wildcard + sibling `api.signageos.io`. No `Access-Control-Allow-Credentials` on any box path. api.signageos.io has NO ACAO on any path.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname, process UID, Node v20.20.2, and service topology.
+- 2026-08-07 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All endpoints return 403 JWT-gated without pre-auth bypass. Requires AUTH_HELPED verification.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname, process UID, Node v20.20.2, and service topology.
+- 2026-08-07 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All endpoints return 403 JWT-gated without pre-auth bypass. Requires AUTH_HELPED verification.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → st6zq), process UID, Node v24.19.0, and service topology (amqp0, redis0-3, mongoDB0-2). Not on rejected list.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → bk4vh), process UID, Node v20.20.2, and service topology (amqp0, redis0-3, mongoDB0-3). Not on rejected list.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. HTTP 200 JSON leaks pod hostname (box-7c8c876945-gkzcp), process UID (b341def86253cd23a7db1382d94c091a590c400c1b4d8d9602), Node v20.20.2, service topology (amqp0, redis0-3, mongoDB0-3). Unchanged.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin https://evil.test. No Access-Control-Allow-Credentials. Includes http:// variant + https://*.zdusercontent.com wildcard + api.signageos.io sibling. Unchanged.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed live. /login/ CSP triplicates Auth0 oauth/token entries, 33 distinct origin patterns across connect-src/frame-src directives (device APIs, S3, AWS API Gateway, siblings). Unchanged.
+- 2026-08-07 REJECTED MISCONFIG @ box.signageos.io /ready: Reconfirmed. Returns 200 "OK" (2 bytes), trivial health check, no data leaked. Not reportable.
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: All Auth0 OAuth2 flow parameters hidden in minified bundle.js (v2.192.0); redirect_uri validation, OAuth2 state binding — not testable passively without Auth0 tenant access or authenticated session. Carried forward.
+- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io CORS: Confirmed — 403/404 responses carry vary: Origin + access-control-expose-headers: * but NO ACAO under any Origin. Not CORS-exploitable. Carried forward.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. HTTP 200 JSON leaks pod hostname (box-7c8c876945-52dpt), process UID, Node v20.20.2, service topology (amqp0, redis0-3, mongoDB0-3). Unchanged.
+- 2026-08-07 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. HTTP 200 JSON leaks pod hostname (api-6f69db97d5-97fjw), process UID, Node v24.19.0, service topology (amqp0, redis0-3, mongoDB0-3). Unchanged.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed live. /login/ CSP triplicates Auth0 oauth/token entries, 33+ distinct origin patterns across connect-src/frame-src directives. Unchanged.
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 flow parameters hidden in minified bundle.js (v2.192.0); redirect_uri validation, OAuth2 state binding — not testable passively without Auth0 tenant access or authenticated session.
+- 2026-08-08 NO_NEW_PROOF — This cycle is passive analysis only; no AUTH_HELPED tests executed. All previously ACCEPTED/REJECTED classes from 2026-08-07 23:54 reconfirmed via delta (status endpoints, CORS, CSP, /ready, api CORS, api descriptive errors, box Auth0 OAuth2). v2/device now 403 (was 404) supports AUTH hypothesis but not proven.
+- 2026-08-08 NO_NEW_PROOF — This cycle is passive analysis only; no AUTH_HELPED tests executed. All previously ACCEPTED/REJECTED classes from 2026-08-07 23:54 reconfirmed via delta (status endpoints, CORS, CSP, /ready, api CORS, api descriptive errors, box Auth0 OAuth2). v2/device now 403 (was 404) supports AUTH hypothesis but not proven.
+- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105` — falls under descriptive error messages (excluded per scope.yml).
+- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v2/device: Returns 403 JWT-gated (previously 404) — now JWT-gated, not a pre-auth bypass.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Node v20.20.2, hostname box-7c8c876945-52dpt, succeededServices (amqp0, redis0-3, mongoDB0-3).
+- 2026-08-08 REJECTED MISCONFIG @ box.signageos.io/cors: No `access-control-allow-credentials` observed on any box path despite 18 static ACAO values.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle. Node v20.20.2, pod box-7c8c876945-gkzcp, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live this cycle. Node v24.19.0, pod api-6f69db97d5-st6zq, same topology. Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed — 17 static ACAO (incl http:// variant + https://*.zdusercontent.com), no credentials header, unchanged under any Origin. Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed — /login/ CSP 40+ connect-src/frame-src origins, triplicated Auth0 oauth/token. Unchanged.
+- 2026-08-08 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — all routes 403 JWT/X-Auth-gated, no pre-auth bypass surface. Unchanged.
+- 2026-08-08 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 flow params still not testable passively. Carried forward.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. Node v20.20.2, pod box-7c8c876945-9v4gf, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. Node v24.19.0, pod api-6f69db97d5-9kg9l, succeededServices (amqp0, redis0-3, mongoDB0-2). Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed — 17 static ACAO (incl https://*.zdusercontent.com wildcard), no credentials header, unchanged under spoofed Origin. Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. Node v20.20.2, pod box-7c8c876945-52dpt, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. Node v24.19.0, pod api-6f69db97d5-dw2j2, same topology. Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live this cycle. Node v24.19.0, pod api-6f69db97d5-dw2j2, same topology. Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed — /login/ CSP 40+ connect-src/frame-src origins (mapbox, events.mapbox, sentry, Auth0 oauth/token), triplicated Auth0 entries. Unchanged.
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live (pod xmdhm, Node v20.20.2, full topology). Unchanged in data shape; new headers absent (no HSTS/xfo/xcto).
+- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: Reconfirmed — 18 ACAO incl. http:// + *.zdusercontent.com, NO `access-control-allow-credentials` under any Origin → not directly credential-theft exploitable (carried forward).
+- 2026-08-08 REJECTED MISCONFIG @ box.signageos.io/ready: Returns 200 "OK" (2 bytes) trivial health check, no data leaked (carried forward).
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mecho "=== box /status ==="; curl -s -o /tmp/box_status.json -w "HTTP %{http_code} len=%{size_download} type=%{content_type}\n" https://box.signageos.io/status; echo "--- body ---"; cat /tmp/box_status.json 2>/dev/null | head -c 600; echo; echo "--- headers ---"; curl -sI https://box.signageos.io/status | head -30; echo; echo "=== box /status with evil.test Origin ==="; curl -sI -H "Origin: https://evil.test" https://box.signageos.io/status | grep -iE "access-control|strict-transport|x-frame|x-content|content-security|x-powered" ; echo; echo "=== api /status ==="; curl -s -o /tmp/api_status.json -w "HTTP %{http_code} len=%{size_download} type=%{content_type}\n" https://api.signageos.io/status; echo "--- body ---"; cat /tmp/api_status.json 2>/dev/null | head -c 600; echo; echo "--- headers ---"; curl -sI https://api.signageos.io/status | grep -iE "access-control|strict-transport|x-frame|x-content|content-security|x-powered|cache-control"; echo "=== api /status evil.test ==="; curl -sI -H "Origin: https://evil.test" https://api.signageos.io/status | grep -iE "access-control-allow" failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+Let me run fresh live probes to verify the current state before the delta analysis.
