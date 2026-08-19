@@ -6762,3 +6762,29 @@
 - LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical; JWT Bearer ignored; mechanism intact across 6+ rs rota
 - LEARN: REJECTED IDOR @ api.signageos.io pre-auth: all 60+ routes 403 JWT/X-Auth-gated, zero ACAO — NO_DELTA.
 - LEARN: CONFIRMED DEAD @ videowall-designer leaked clientId/secret: staging-only fixture, credential reuse disproven — NO_DELTA.
+
+## RANKED HYPOTHESES 2026-08-19 02:25:03 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-nemotron3.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire account JWT + X-Auth `<id:unsafeD
+- NEXT(hypotheses-laguna.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → capture X-Auth `<id:unsafeDecryptedToken>
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: secgrep=0 confirmed on new rs box-c877d9cc8 (9-svc incl mongoDB3), zero hardening added across rs rotation — 59+ c
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: secgrep=3 (HSTS/xfo/xcto/no-store) persists on rs 7c5fdc9777, 0 ACAO under evil.test, 8-svc topology leak — differ
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical confirmed on new rs; JWT Bearer ignored (returns same 4
+- LEARN: REJECTED MISCONFIG @ box.signageos.io /ready: 200 "OK" (2 bytes) trivial health check, no data leaked — NO_DELTA
+- LEARN: REJECTED MISCONFIG @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket): all → 302 login catch-all — n
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml; reta
+- LEARN: REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 access-control-allow-credentials — not CORS-exploitable, MISCONFIG-only — NO_DELTA
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding not passively testable without tenant/session — NO_DELTA
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass — NO_DELTA
+- LEARN: CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) is staging-only fixture targeting http://api.kiera.office.si
+- LEARN: ACCEPTED box.signageos.io/status: Fresh probe (02:23 UTC) confirms HTTP 200 JSON infra-leak (pod box-c877d9cc8-ml5cv, uid 019b88b5ce7e…, Node v20.20.2, 9-svc to
+- LEARN: ACCEPTED api.signageos.io/status: Fresh probe confirms hardened (secgrp=3 HSTS/xfo/xcto/no-store, 0 ACAO) but still leaks hostname/uid/Node v24.19.0/topology (8
+- LEARN: ACCEPTED api.signageos.io/v1/organization/{uid}/security-token: Fresh probe confirms 403076 errorDetail byte-identical; JWT Bearer ignored (returns same error);
+- LEARN: REJECTED box.signageos.io/ready: 200 "OK" (2 bytes) trivial health check, no data leaked — NO_DELTA
+- LEARN: REJECTED box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket): all → 302 login catch-all — no unauthenti
+- LEARN: REJECTED api.signageos.io CORS: zero ACAO on /, /status, /v1/*, /v2/* under any Origin — not CORS-exploitable — NO_DELTA
+- LEARN: REJECTED api.signageos.io/v1/*+v2/* pre-auth IDOR: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass — NO_DELTA
+- LEARN: REJECTED api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml; errorDetail reta
+- LEARN: REJECTED box.signageos.io/login Auth0 OAuth2: redirect_uri/state binding not passively testable without tenant/session — NO_DELTA
+- LEARN: REJECTED cors-exploit box.signageos.io / + /login/: 17 static ACAO (evil.test NOT reflected), 0 access-control-allow-credentials → no credential-theft path, MIS
+- LEARN: CONFIRMED DEAD github.com/signageos/videowall-designer: leaked clientId/secret (sha256 564c293b…) staging-only fixture targeting http://api.kiera.office.signage
