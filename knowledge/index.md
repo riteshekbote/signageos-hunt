@@ -1647,3 +1647,5 @@
 - 2026-08-19 REJECTED cors-exploit api.signageos.io/v1/organization/{uid}/security-token: 0 ACAO on 403 response under evil.test — not CORS-exploitable, pure AUTH_HELPED IDOR — NO_DELTA
 - 2026-08-19 CONFIRMED DEAD github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) is staging-only fixture targeting http://api.kiera.office.signageos.io; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — credential reuse disproven (59+ cycles)
 - 2026-08-19 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod ml5cv (rs c877d9cc8), secgrep=0, 9-svc topology + cpu/mem leak, Node v20.20.2, zero hardening. POC stable 59+ cycles.
+- 2026-08-19 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live — pod 62cq2 (rs c877d9cc8), secgrep=0, 9-svc topology, zero hardening. POC stable 60+ cycles.
+- 2026-08-19 ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (secgrep=3), zero ACAO under any Origin, still leaks hostname/uid/Node/topology. Differential vs box persists.
