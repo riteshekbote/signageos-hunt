@@ -1379,3 +1379,9 @@
 - NEW NO_DELTA
 
 ## 2026-08-19 03:26:01 UTC
+
+## 2026-08-19 04:10:23 UTC
+- NEW box.signageos.io: Replica set rotated to `box-c877d9cc8` (from `box-54846c877b`) — /status secgrep=0 persists, 9-svc topology leak (mongoDB3 present), zero hardening added
+- NEW api.signageos.io: Replica set `api-7c5fdc9777` stable — /status secgrep=3 (HSTS/xfo/xcto/no-store), 8-svc topology (mongoDB3 absent), zero ACAO
+- NEW api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced
+- NEW box.signageos.io/status CORS: Zero ACAO under spoofed Origin confirmed — CORS strictly scoped to SPA entry points only
