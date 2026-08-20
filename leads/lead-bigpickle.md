@@ -10635,3 +10635,19 @@ testability: PASSIVE
 [LEARN] ACCEPTED MISCONFIG @ api.signageos.io: non-versioned unknown paths return uniform 404 application/json 192B envelope (no path disclosure, no stack trace)
 [RISK] box.signageos.io: 32 — unauthenticated /status infra leak (secgrep=0, alive on rs `77bfdd94d8`) plus static CORS whitelist; no auth bypass
 [RISK] api.signageos.io: 40 — cross-tenant token IDOR mechanism confirmed but credential-gated; gates hold everywhere else
+## 2026-08-20 23:06:07 UTC [box] (model bigpickle)
+[PRIO] box.signageos.io/status score=9.10 (attack=10, business=8, tech=8, gate=10, cloud=9, fresh=10)
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token score=7.70 (attack=9, business=9, tech=8, gate=2, cloud=8, fresh=9)
+[PRIO] api.signageos.io/status score=7.05 (attack=6, business=6, tech=7, gate=10, cloud=7, fresh=8)
+[HYP] box.signageos.io/status :: unauthenticated infrastructure disclosure
+[HYP] api.signageos.io/v1/organization/{uid}/security-token :: cross-tenant token mint via path/header identity split
+[HYP] api.signageos.io/status :: info-leak behind hardened edge
+[FINAL] H1 box.signageos.io/status MISCONFIG conf=100 PASSIVE — reconfirmed live this cycle; POC archived.
+[FINAL] H2 api security-token IDOR conf=86 AUTH_HELPED — mechanism proven; execution blocked on credentials.
+[FINAL] H3 api.signageos.io/status MISCONFIG conf=95 PASSIVE — differential vs H1 persists on fresh probe.
+[NEXT] HUMAN — run `sos login` (Auth0 device-code flow via box.signageos.io) to obtain a valid account JWT + X-Auth pair, then provide orgA `id:secret` plus any second org uid; I will execute the cross-tenant test against `v1/organization/<orgB-uid>/security-token`. Passive surface is exhausted; this is the sole open lead.
+[LEARN] ACCEPTED: box /status leak ALIVE 2026-08-20T23:04Z — body sha256 `133f95ab…`, pod `box-77bfdd94d8-wjmhn`, secgrep=0 unchanged.
+[LEARN] ACCEPTED: api /status leak ALIVE under hardened headers (no CSP) — body sha256 `ff51da64…`.
+[LEARN] api rs rotated `7c5fdc9777`→`75f6d7c5b7`; box rs `77bfdd94d8` stable — zero auth/config drift on either host.
+[RISK] box.signageos.io score=32 reason=unauth /status infra-leak persists (secgrep=0) + static CORS whitelist; no auth bypass found.
+[RISK] api.signageos.io score=40 reason=cross-tenant token-mint IDOR mechanism confirmed (credential-gated, unverified end-to-end); all other routes JWT/X-Auth-gated.

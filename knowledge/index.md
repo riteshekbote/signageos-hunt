@@ -1859,3 +1859,6 @@
 - 2026-08-20 ACCEPTED MISCONFIG @ api.signageos.io/status: alive — secgrep=3 hardened but hostname/uid/Node/topology leak persists on rs `api-7c5fdc9777`
 - 2026-08-20 ACCEPTED MISCONFIG @ box.signageos.io: 302 login catch-all confirmed on 10 additional paths (/version /info /debug /debug/vars /actuator/health /swagger.json /openapi.json /api-docs /healthcheck /ping) — /status remains the sole unauthenticated escape hatch
 - 2026-08-20 ACCEPTED MISCONFIG @ api.signageos.io: non-versioned unknown paths return uniform 404 application/json 192B envelope (no path disclosure, no stack trace)
+- 2026-08-20 ACCEPTED: box /status leak ALIVE 2026-08-20T23:04Z — body sha256 `133f95ab…`, pod `box-77bfdd94d8-wjmhn`, secgrep=0 unchanged.
+- 2026-08-20 ACCEPTED: api /status leak ALIVE under hardened headers (no CSP) — body sha256 `ff51da64…`.
+- 2026-08-20 api rs rotated `7c5fdc9777`→`75f6d7c5b7`; box rs `77bfdd94d8` stable — zero auth/config drift on either host.
