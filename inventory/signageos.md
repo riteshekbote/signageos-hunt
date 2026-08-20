@@ -1604,3 +1604,8 @@
 - CHANGED None — no new endpoints, headers, or behavior changes since last inventory
 
 ## 2026-08-20 09:52:46 UTC
+
+## 2026-08-20 10:23:25 UTC
+- NEW api.signageos.io/status: hardened to secgrep=4 (HSTS/xfo/xcto/no-store) on rs api-7c5fdc9777 pod zh49z — differential vs box /status (secgrep=0) persists
+- NEW api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced — mechanism intact across 8+
+- NEW box.signageos.io/status CORS: Zero ACAO under spoofed Origin reconfirmed — CORS strictly scoped to SPA entry points (`/` + `/login/`) only

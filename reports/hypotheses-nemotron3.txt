@@ -1,4 +1,7 @@
-## 2026-08-20 09:51:38 UTC [api] (model nemotron3)
+## 2026-08-20 10:20:58 UTC [api] (model nemotron3)
+[NEW] api.signageos.io/status: hardened to secgrep=4 (HSTS/xfo/xcto/no-store) on rs api-7c5fdc9777 pod zh49z — differential vs box /status (secgrep=0) persists
+[NEW] api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced — mechanism intact across 8+ rs rotations
+[NEW] box.signageos.io/status CORS: Zero ACAO under spoofed Origin reconfirmed — CORS strictly scoped to SPA entry points (`/` + `/login/`) only
 [PRIO] box.signageos.io/status, 9.10, attack=10, business=8, tech=8, gate=10, cloud=9, fresh=10
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token, 7.70, attack=9, business=9, tech=8, gate=2, cloud=8, fresh=9
 [PRIO] api.signageos.io/status, 7.05, attack=6, business=6, tech=7, gate=10, cloud=7, fresh=8
@@ -6,7 +9,7 @@
 class: MISCONFIG
 asset: box.signageos.io/status
 confidence: 100
-reasoning: Unauthenticated GET returns JSON with pod hostname (box-8b6c78cc8-jsn4l), 64-hex process UID, Node v20.20.2, 9-service topology (amqp0/redis0-3/mongoDB0-3), per-service responseTime, cpuUsage, memoryUsage. Headers ONLY x-powered-by: Express + CloudFront — zero hardening headers (no HSTS/xfo/xcto/CSP). Differential vs /+/login/ (secgrep=4) and api /status (secgrep=4) confirmed live across 60+ cycles and 8+ rs rotations.
+reasoning: Unauthenticated GET returns JSON with pod hostname (box-8b6c78cc8-vc9c4), 64-hex process UID, Node v20.20.2, 9-service topology (amqp0/redis0-3/mongoDB0-3), per-service responseTime, cpuUsage, memoryUsage. Headers ONLY x-powered-by: Express + CloudFront — zero hardening headers (no HSTS/xfo/xcto/CSP). Differential vs /+/login/ (secgrep=4) and api /status (secgrep=4) confirmed live across 60+ cycles and 8+ rs rotations.
 evidence_needed: Already proven — evidence archive sha256 body 38737948dcd9... / headers b11ba5ba... (60+ cycles stable)
 verify_steps: GET https://box.signageos.io/status → 200 application/json with infra leak; grep -cE 'strict-transport|x-frame|x-content|content-security' headers → 0
 impact: Internal K8s topology, pod identity, process UID, service mesh exposed to unauthenticated internet; aids reconnaissance and chaining; MEDIUM
@@ -29,7 +32,6 @@ evidence_needed: Already proven — live reprobe confirms hardened headers + JSO
 verify_steps: GET https://api.signageos.io/status → 200 application/json with infra leak; grep -cE 'strict-transport|x-frame|x-content' headers → 4; curl -sI -H "Origin: https://evil.test" https://api.signageos.io/status → 0 ACAO
 impact: Internal K8s topology, pod identity, process UID exposed despite header hardening; aids reconnaissance; LOW-MEDIUM
 testability: PASSIVE
-[PARKED] None — all three hypotheses meet confidence ≥40, are not on REJECTED list, and have concrete verify_steps
 [FINAL] 1) Cross-tenant security-token minting via X-Auth org-UID path override (confidence 86, CRITICAL, AUTH_HELPED)
 [FINAL] 2) Unauthenticated K8s topology and process identity leak via /status (confidence 100, MEDIUM, PASSIVE)
 [FINAL] 3) Hardened /status still leaks hostname/uid/Node/topology under security headers (confidence 95, LOW-MEDIUM, PASSIVE)
