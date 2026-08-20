@@ -12628,3 +12628,31 @@ testability: PASSIVE
 [LEARN] CONFIRMED DEAD @ github.com/signageos/videowall-designer leaked clientId/secret: NO_DELTA — staging-only fixture (sha256 564c293b…), X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven (60+ cycles)
 [RISK] box.signageos.io: **62** — Persistent unauthenticated /status JSON infra-leak (K8s pod hostname box-8b6c78cc8-*, 64-hex process UID, Node v20.20.2, 9-service topology incl mongoDB3, CPU/mem) with secgrep=0 (no HSTS/xfo/xct/CSP); 17 static ACAO on SPA routes `/`+`/login/` (0 credentials flag, evil.test not reflected → MISCONFIG-only); nonce-hash middleware + hardened entry confirmed; all non-/status endpoints behind Auth0 login catch-all; /ready trivial 200 OK (excluded); Auth0 OAuth2 redirect_uri binding not passively testable
 [RISK] api.signageos.io: **64** — Dual-auth API (JWT Bearer + X-Auth `id:unsafeDecryptedToken`) with client-supplied org UID in path; cross-tenant IDOR chain on /v1/organization/{uid}/security-token confirmed at mechanism level (403074 gating, JWT Bearer IGNORED, zero auth drift across 8+ rs rotations) but AUTH_HELPED only (conf 86); /status hardened headers (secgrep=3) but body still leaks hostname/uid/Node v24.19.0/8-svc topology; zero ACAO on all paths (not CORS-exploitable); descriptive auth errors leak internals (excluded class but retain mechanism-evidence value); all 60+ routes JWT/X-Auth-gated pre-auth (no passive bypass)
+## 2026-08-20 04:21:05 UTC [box] (model laguna)
+[HYP] Cross-tenant IDOR via organizationUid on api.signageos.io /v1
+class: IDOR
+asset: api.signageos.io/v1/{device,organization,alert,...}
+confidence: 60
+reasoning: 19 routes confirmed present (403-only, no auth header). SDK appends `organizationUid` query param to JWT calls and builds `apiUrl/version/resource`; JWT identifies account, UID selects tenant — if authorization is per-JWT and not re-checked per-UID, cross-org reads/writes are possible. Untestable without a token.
+evidence_needed: valid `X-Auth` JWT + observed 200 vs 403 for a foreign `organizationUid`.
+verify_steps: AUTH_HELPED: with a box-generated token, `GET https://api.signageos.io/v1/device` (own org), then `GET /v1/device?organizationUid=<other-org-uid>` and `GET /v1/organization/<foreign-uid>` — any non-403 is a finding.
+impact: cross-tenant device/org data disclosure and manipulation; CRITICAL
+testability: AUTH_HELPED
+[HYP] Device-scoped endpoint auth weaker than user JWT on telemetry/alive/peer-recovery
+class: AUTH
+asset: api.signageos.io/v1/device/{uid}/telemetry/latest
+confidence: 45
+reasoning: device-side resources (`telemetry/latest`, `device/{uid}/alive`, `peer-recovery`) may accept device tokens or no-auth in device onboarding path; `device/telemetry/latest` confirmed 403 today but subresource matrix unprobed.
+evidence_needed: any `/v1/device
+[NEW] box.signageos.io/status: unauthenticated JSON (HTTP 200, application/json) leaking K8s pod hostname (`box-7c8c876945-gkzcp`), process UID (40-hex), Node v20.20.2, uptime, CPU/memory, and internal service topology (`amqp0`, `redis0-3`, `mongoDB0-3`)
+[NEW] api.signageos.io/status: unauthenticated JSON (HTTP 200, application/json) leaking K8s pod hostname (`api-6f69db97d5-9szk2`), process UID, Node v24.19.0, service topology (redis0-3, mongoDB0-2, amqp0)
+[NEW] api.signageos.io: real REST endpoints at `/v1/{device,organization,account,license,content-guard/item,location,company,bulk-operation,export/device,device/screenshot,device/telemetry/latest,...}` + `/v2/{device,firmware,logout}` — all return 403 with `{"errorName":"WRONG_JWT_TOKEN","errorCode":403105}` (JWT required)
+[NEW] box.signageos.io: 18× static `access-control-allow-origin` header values on `/` (302) and `/login/` (200) — including `http://box.signageos.io` (HTTP/plaintext variant), `https://*.zdusercontent.com` (wildcard), plus sentry.io/zendesk.com/storage.googleapis.com — no `Access-Control-Allow-Credentials` observed; not Origin-reflected
+[CHANGED] box.signageos.io CSP: `connect-src`/`frame-src` enlarged vs seed (additional S3 buckets + triplicated Auth0 `oauth/token` entries); CSP still ACCEPTED from seed
+[NEW] api.signageos.io: Root (/) serves static HTML landing page (37KB), not API JSON — no public API surface exposed (404 on /v1, /v2, /health, /docs, /api, /swagger.json, /openapi.json)
+[NEW] box.signageos.io: 302 → /login/%2F with Auth0 OAuth2 flow (sos-production.us.auth0.com, auth0.signageos.io in CSP connect-src) — confirms Auth0 as IdP
+[NEW] box.signageos.io CSP reveals extensive 3rd-party integrations: Mapbox, Sentry, MoodMedia/BroadSign/Sony device APIs, remote-desktop.signageos.io, upload.signageos.io, platform.signageos.io, license.signageos.io, S3 buckets, Zendesk — broad attack surface via postMessage/origin trust
+[CHANGED] api.signageos.io auth model unknown — no public docs, no swagger, no obvious auth headers on root; SDK/cli repos (signageos org, 59 repos) likely contain actual endpoint mappings and auth schemes
+[PRIO] box.signageos.io/login (Auth0 callback/origin flow), score=72, axes: attack=8, business=9, tech=8 (OAuth2/Auth0/nonce-CSP/trusted-types), gate=8 (no auth needed to probe login), cloud=7 (Auth0, S3, Mapbox, device APIs), fresh=7
+[PRIO] api.signageos.io (root + hidden endpoints), score=68, axes: attack=7, business=9, tech=6 (CloudFront, no public spec), gate=10 (public root), cloud=7 (AWS, likely internal microservices), fresh=6
+[PRIO] box.signageos.io CSP origins (remote-desktop, upload, platform, license, device APIs), score=65, ax===HYPOTHESES===
