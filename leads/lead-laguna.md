@@ -12658,3 +12658,4 @@ evidence_needed: any `/v1/device
 [PRIO] box.signageos.io CSP origins (remote-desktop, upload, platform, license, device APIs), score=65, ax===HYPOTHESES===
 ## 2026-08-20 04:59:21 UTC [box] (model laguna)
 ## 2026-08-20 05:39:09 UTC [box] (model laguna)
+## 2026-08-20 06:02:56 UTC [box] (model laguna)

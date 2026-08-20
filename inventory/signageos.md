@@ -1582,3 +1582,9 @@
 - CHANGED box.signageos.io replica set rotated `c877d9cc8` → `59b5ffd68b` → `box-8b6c78cc8` (rs churn, secgrep=0 persists, same infra-leak pattern, 9-svc topology incl mongoDB3)
 
 ## 2026-08-20 05:41:29 UTC
+
+## 2026-08-20 06:08:43 UTC
+- NEW api.signageos.io/status: secgrep hardened to 4 (HSTS/xfo/xcto/no-store) on rs api-7c5fdc9777 pod zh49z, still leaks hostname/uid/Node v24.19.0/8-svc topology
+- NEW api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced
+- CHANGED box.signageos.io replica set rotated `c877d9cc8` → `59b5ffd68b` → `box-8b6c78cc8` (rs churn, secgrep=0 persists, same infra-leak pattern, 9-svc topology incl mongoDB3)
+- CHANGED api.signageos.io/status: hardened (secgrep=4 HSTS/xfo/xto/no-store, 0 ACAO) on rs api-7c5fdc9777, pod api-7c5fdc9777-zh49z, 8-svc topology (mongoDB3 absent) — differential vs box persists
