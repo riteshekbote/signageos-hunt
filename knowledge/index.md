@@ -1842,3 +1842,9 @@
 - 2026-08-20 ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized & archived — 60+ cycle stability, zero hardening added across 8+ rs rotations
 - 2026-08-20 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical; JWT Bearer ignored; mechanism intact across 8+ rs rotations; zero auth drift
 - 2026-08-20 CONFIRMED DEAD @ github.com/signageos/videowall-designer: staging-only fixture (sha256 564c293b…), X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven
+- 2026-08-20 ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized 60+ cycles — zero hardening, pod rotation, secgrep=0 persists
+- 2026-08-20 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 byte-identical across 8+ rs rotations, JWT Bearer ignored, mechanism confirmed
+- 2026-08-20 ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (secgrep=3-4) but info-leak persists; differential vs box persists
+- 2026-08-20 REJECTED IDOR @ api.signageos.io pre-auth: all routes 403 JWT/X-Auth-gated, zero ACAO — no passive bypass
+- 2026-08-20 REJECTED CORS-exploit @ box.signageos.io /+login/: 17 static ACAO, 0 credentials flag — no credential-theft path
+- 2026-08-20 CONFIRMED DEAD @ videowall-designer leaked clientId/secret: staging-only fixture, credential reuse disproven

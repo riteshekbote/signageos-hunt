@@ -12657,3 +12657,4 @@ evidence_needed: any `/v1/device
 [PRIO] api.signageos.io (root + hidden endpoints), score=68, axes: attack=7, business=9, tech=6 (CloudFront, no public spec), gate=10 (public root), cloud=7 (AWS, likely internal microservices), fresh=6
 [PRIO] box.signageos.io CSP origins (remote-desktop, upload, platform, license, device APIs), score=65, ax===HYPOTHESES===
 ## 2026-08-20 04:59:21 UTC [box] (model laguna)
+## 2026-08-20 05:39:09 UTC [box] (model laguna)
