@@ -1621,3 +1621,9 @@
 - NEW api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced — mechanism intact across 8+
 - NEW box.signageos.io/status CORS: Zero ACAO under spoofed Origin reconfirmed — CORS strictly scoped to SPA entry points (`/` + `/login/`) only
 - CHANGED box.signageos.io replica set rotated `c877d9cc8` → `59b5ffd68b` → `box-8b6c78cc8` (rs churn, secgrep=0 persists, same infra-leak pattern, 9-svc topology incl mongoDB3)
+
+## 2026-08-20 11:53:33 UTC
+- NEW api.signageos.io/status: hardened to secgrep=4 (HSTS/xfo/xcto/no-store) on rs api-7c5fdc9777 pod 9xxnc — differential vs box /status (secgrep=0) persists
+- NEW api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced — mechanism intact across 8+
+- NEW box.signageos.io/status CORS: Zero ACAO under spoofed Origin reconfirmed — CORS strictly scoped to SPA entry points (`/` + `/login/`) only
+- CHANGED box.signageos.io replica set rotated `c877d9cc8` → `59b5ffd68b` → `box-8b6c78cc8` (rs churn, secgrep=0 persists, same infra-leak pattern, 9-svc topology incl mongoDB3)
