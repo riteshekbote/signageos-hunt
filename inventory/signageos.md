@@ -1555,3 +1555,8 @@
 - NEW api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed ignored (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced
 - CHANGED box.signageos.io replica set rotated `c877d9cc8` → `59b5ffd68b` → `box-8b6c78cc8` (rs churn, secgrep=0 persists, same infra-leak pattern, 9-svc topology incl mongoDB3)
 - CHANGED api.signageos.io/status: hardened (secgrep=4 HSTS/xfo/xto/no-store, 0 ACAO) on rs api-7c5fdc9777, pod api-7c5fdc9777-zh49z, 8-svc topology (mongoDB3 absent) — differential vs box persists
+
+## 2026-08-20 02:49:09 UTC
+- NEW NO_DELTA
+- NEW NO_DELTA — all live probes at 02:45 UTC confirm identical surface to 2026-08-20 01:46 cycle:
+- CHANGED None
