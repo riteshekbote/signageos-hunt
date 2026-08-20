@@ -1850,3 +1850,4 @@
 - 2026-08-20 CONFIRMED DEAD @ videowall-designer leaked clientId/secret: staging-only fixture, credential reuse disproven
 - 2026-08-20 ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized & evidence archived at artifacts/box-status/ — HTTP 200 JSON infra-leak (hostname box-8b6c78cc8-jsn4l, 64-hex process.uid, Node v20.20.2, 9-svc topology incl mongoDB3, cpu/mem/responseTime), secgrep=0, zero hardening added across 60+ cycles and 8+ rs rotations
 - 2026-08-20 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed IGNORED (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced; mechanism intact, zero auth drift across 8+ rs rotations
+- 2026-08-20 ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (secgrep=4) but info-leak persists; differential vs box persists
