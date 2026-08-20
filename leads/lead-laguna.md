@@ -12656,3 +12656,4 @@ evidence_needed: any `/v1/device
 [PRIO] box.signageos.io/login (Auth0 callback/origin flow), score=72, axes: attack=8, business=9, tech=8 (OAuth2/Auth0/nonce-CSP/trusted-types), gate=8 (no auth needed to probe login), cloud=7 (Auth0, S3, Mapbox, device APIs), fresh=7
 [PRIO] api.signageos.io (root + hidden endpoints), score=68, axes: attack=7, business=9, tech=6 (CloudFront, no public spec), gate=10 (public root), cloud=7 (AWS, likely internal microservices), fresh=6
 [PRIO] box.signageos.io CSP origins (remote-desktop, upload, platform, license, device APIs), score=65, ax===HYPOTHESES===
+## 2026-08-20 04:59:21 UTC [box] (model laguna)

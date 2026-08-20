@@ -1838,3 +1838,7 @@
 - 2026-08-20 REJECTED MISCONFIG @ box.signageos.io CORS credential-theft: NO_DELTA — 17 static ACAO, 0 access-control-allow-credentials → no credential-theft path; MISCONFIG-only (59+ cycles)
 - 2026-08-20 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: NO_DELTA — all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass; cross-tenant security-token chain remains AUTH_HELPED only
 - 2026-08-20 CONFIRMED DEAD @ github.com/signageos/videowall-designer leaked clientId/secret: NO_DELTA — staging-only fixture (sha256 564c293b…), X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven (60+ cycles)
+- 2026-08-20 ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (HSTS/xfo/xcto/no-store, secgrep=4) but still leaks hostname/uid/Node v24.19.0/8-svc topology (mongoDB3 absent); header differential vs box /status (secgrep=0) persists
+- 2026-08-20 ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized & archived — 60+ cycle stability, zero hardening added across 8+ rs rotations
+- 2026-08-20 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical; JWT Bearer ignored; mechanism intact across 8+ rs rotations; zero auth drift
+- 2026-08-20 CONFIRMED DEAD @ github.com/signageos/videowall-designer: staging-only fixture (sha256 564c293b…), X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven

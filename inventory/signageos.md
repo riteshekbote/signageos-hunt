@@ -1575,3 +1575,8 @@
 - NEW box.signageos.io: 302 → /login/%2F with Auth0 OAuth2 flow (sos-production.us.auth0.com, auth0.signageos.io in CSP connect-src) — confirms Auth0 as IdP
 - NEW box.signageos.io CSP reveals extensive 3rd-party integrations: Mapbox, Sentry, MoodMedia/BroadSign/Sony device APIs, remote-desktop.signageos.io, upload.signageos.io, platform.signageos.io, license.si
 - CHANGED api.signageos.io auth model unknown — no public docs, no swagger, no obvious auth headers on root; SDK/cli repos (signageos org, 59 repos) likely contain actual endpoint mappings and auth schemes
+
+## 2026-08-20 05:05:49 UTC
+- NEW box.signageos.io/status CORS: Zero ACAO under spoofed Origin confirmed — CORS strictly scoped to SPA entry points only
+- CHANGED api.signageos.io/status: hardened (secgrep=4 HSTS/xfo/xto/no-store, 0 ACAO) on rs api-7c5fdc9777, pod api-7c5fdc9777-zh49z, 8-svc topology (mongoDB3 absent) — differential vs box persists
+- CHANGED box.signageos.io replica set rotated `c877d9cc8` → `59b5ffd68b` → `box-8b6c78cc8` (rs churn, secgrep=0 persists, same infra-leak pattern, 9-svc topology incl mongoDB3)
