@@ -10424,3 +10424,4 @@ testability: PASSIVE
 [RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid/cpu/mem leak (secgrep=0) plus broad static CORS whitelist with http:// plaintext variant; no auth bypass, no credential-theft path; rs 8b6c78cc8 with zero hardening across 60+ cycles
 [RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism confirmed on rs 7c5fdc9777 (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold, CORS non-exploitable, descriptive-error class excluded
 ## 2026-08-20 19:02:06 UTC [box] (model bigpickle)
+## 2026-08-20 19:32:44 UTC [box] (model bigpickle)
