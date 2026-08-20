@@ -9861,3 +9861,4 @@ testability: PASSIVE
 [LEARN] CONFIRMED DEAD @ github.com/signageos/videowall-designer: staging-only fixture (sha256 `564c293b…`), X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven
 [RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid/cpu/mem leak (secgrep=0) plus broad static CORS whitelist with http:// plaintext variant; no auth bypass, no credential-theft path; rs 8b6c78cc8 with zero hardening across 60+ cycles
 [RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism confirmed on rs 7c5fdc9777 (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold, CORS non-exploitable, descriptive-error class excluded
+## 2026-08-20 01:46:30 UTC [box] (model bigpickle)

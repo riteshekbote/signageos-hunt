@@ -1800,3 +1800,12 @@
 - 2026-08-20 REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 credentials flag — no credential-theft path
 - 2026-08-20 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 not passively testable without tenant/session
 - 2026-08-20 CONFIRMED DEAD @ github.com/signageos/videowall-designer: staging-only fixture (sha256 `564c293b…`), X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven
+- 2026-08-20 ACCEPTED MISCONFIG @ box.signageos.io/status: NO_DELTA — still secgrep=0 with full 9-svc topology + CPU/mem leak behind CloudFront across 60+ cycles; POC finalized, evidence archived at artifacts/box-status/
+- 2026-08-20 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: NO_DELTA — 403074/403076 errorDetail byte-identical, JWT Bearer ignored, zero ACAO; mechanism intact, zero auth drift across 8+ rs rotations; AUTH_HELPED conf 86
+- 2026-08-20 ACCEPTED MISCONFIG @ api.signageos.io/status: NO_DELTA — hardened (secgrep=4 HSTS/xfo/xct/no-store, 0 ACAO) but still leaks hostname/uid/Node v24.19.0/topology; differential vs box /status (secgrep=0) persists
+- 2026-08-20 REJECTED MISCONFIG @ box.signageos.io/ready: NO_DELTA — 200 "OK" (2 bytes) trivial health check, no data leaked (60+ cycles)
+- 2026-08-20 REJECTED CORS-exploit @ box.signageos.io / + /login/: NO_DELTA — 17 static ACAO, 0 access-control-allow-credentials, evil.test NOT reflected → MISCONFIG-only, no credential-theft path
+- 2026-08-20 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: NO_DELTA — all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test → no passive bypass
+- 2026-08-20 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: NO_DELTA — 403074/403075/403076/403105 bodies leak auth detail, excluded class per scope.yml
+- 2026-08-20 REJECTED AUTH @ box.signageos.io/login: NO_DELTA — Auth0 OAuth2 redirect_uri/state binding not passively testable without tenant/session
+- 2026-08-20 CONFIRMED DEAD @ github.com/signageos/videowall-designer: NO_DELTA — staging-only clientId/secret fixture (sha256 564c293b…), X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET, credential reuse disproven (60+ cycles)

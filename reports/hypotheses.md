@@ -7660,3 +7660,28 @@
 - LEARN: REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 credentials flag — no credential-theft path
 - LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 not passively testable without tenant/session
 - LEARN: CONFIRMED DEAD @ github.com/signageos/videowall-designer: staging-only fixture (sha256 `564c293b…`), X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential r
+
+## RANKED HYPOTHESES 2026-08-20 01:47:02 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-nemotron3.txt)
+- [100] box.signageos.io/status: Unauthenticated K8s pod identity and service topology leak via /status (from reports/hypotheses-laguna.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire JWT + X-Auth pair → test cross-te
+- NEXT(hypotheses-laguna.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire X-Auth (`<id:unsafeDecryptedToken
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized & evidence archived at artifacts/box-status/ — HTTP 200 JSON infra-leak (hostname box-8b6c78cc8-jsn4
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed IGNORED (returns 403074 same as no-header); only X-Auth/x-oaut
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (HSTS/xfo/xcto/no-store, secgrep=3) but still leaks hostname/uid/Node v24.19.0/8-svc topology (mongoDB3 a
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked — NO_DELTA
+- LEARN: REJECTED MISCONFIG @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket): all → 302 login catch-all — n
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml; reta
+- LEARN: REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 access-control-allow-credentials — not CORS-exploitable, MISCONFIG-only — NO_DELTA
+- LEARN: REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding not passively testable without tenant/session — NO_DELTA
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass; cross-tenant chain rema
+- LEARN: CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) is staging-only fixture targeting http://api.kiera.office.si
+- LEARN: ACCEPTED MISCONFIG @ box.signageos.io/status: NO_DELTA — still secgrep=0 with full 9-svc topology + CPU/mem leak behind CloudFront across 60+ cycles; POC finali
+- LEARN: ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: NO_DELTA — 403074/403076 errorDetail byte-identical, JWT Bearer ignored, zero ACAO; mecha
+- LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: NO_DELTA — hardened (secgrep=4 HSTS/xfo/xct/no-store, 0 ACAO) but still leaks hostname/uid/Node v24.19.0/topology;
+- LEARN: REJECTED MISCONFIG @ box.signageos.io/ready: NO_DELTA — 200 "OK" (2 bytes) trivial health check, no data leaked (60+ cycles)
+- LEARN: REJECTED CORS-exploit @ box.signageos.io / + /login/: NO_DELTA — 17 static ACAO, 0 access-control-allow-credentials, evil.test NOT reflected → MISCONFIG-only, n
+- LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: NO_DELTA — all 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test → no passive bypass
+- LEARN: REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: NO_DELTA — 403074/403075/403076/403105 bodies leak auth detail, excluded class per scope.yml
+- LEARN: REJECTED AUTH @ box.signageos.io/login: NO_DELTA — Auth0 OAuth2 redirect_uri/state binding not passively testable without tenant/session
+- LEARN: CONFIRMED DEAD @ github.com/signageos/videowall-designer: NO_DELTA — staging-only clientId/secret fixture (sha256 564c293b…), X-Auth on prod → 403076 WRONG_ACCO
