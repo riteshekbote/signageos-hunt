@@ -10554,3 +10554,5 @@ testability: PASSIVE
 [LEARN] ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: mechanism intact across 8+ rs rotations, JWT Bearer ignored, X-Auth/x-oauth-client_id gating exclusive — class alive pending credentials
 [RISK] box.signageos.io: 32 — unauthenticated /status infra/topology/process-uid/cpu/mem leak (secgrep=0) plus broad static CORS whitelist with http:// plaintext variant; no auth bypass, no credential-theft path; rs churn with zero hardening across 60+ cycles
 [RISK] api.signageos.io: 40 — cross-tenant security-token IDOR mechanism confirmed (org from X-Auth first-part vs client-supplied path {uid}) but gated behind valid credentials; JWT/X-Auth gates hold, CORS non-exploitable, descriptive-error class excluded
+## 2026-08-20 22:04:20 UTC [box] (model bigpickle)
+[NEXT] HUMAN: run `sos login` (Auth0 device-code flow via box.signageos.io) to obtain a valid account owning ≥1 organization → acquire JWT + X-Auth pair. This is the sole blocker for the conf-86 cross-tenant IDOR verification; all passive surface is exhausted and stable.
