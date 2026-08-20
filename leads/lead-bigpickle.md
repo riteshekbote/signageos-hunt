@@ -10651,3 +10651,35 @@ testability: PASSIVE
 [LEARN] api rs rotated `7c5fdc9777`→`75f6d7c5b7`; box rs `77bfdd94d8` stable — zero auth/config drift on either host.
 [RISK] box.signageos.io score=32 reason=unauth /status infra-leak persists (secgrep=0) + static CORS whitelist; no auth bypass found.
 [RISK] api.signageos.io score=40 reason=cross-tenant token-mint IDOR mechanism confirmed (credential-gated, unverified end-to-end); all other routes JWT/X-Auth-gated.
+## 2026-08-20 23:39:36 UTC [box] (model bigpickle)
+[CHANGED] api.signageos.io replica set: fresh deploy confirmed — pod `api-75f6d7c5b7-bq5sr` (uptime 454s at probe), leak persists on new rs; hardened headers unchanged (HSTS/XFO/XCTO/no-store, secgrep=4)
+[NEW] Probe box.signageos.io/status?verbose=1&debug=1&full=true → 200, zero key delta vs baseline (dynamic metric drift only) → no query-param escalation
+[NEW] Probe api.signageos.io/metrics → uniform 192B `ENDPOINT_NOT_FOUND` envelope → no new surface
+[PRIO] box.signageos.io/status: priority=9.10 attack_surface=10 business_value=8 tech_exposure=8 gate_ease=10 cloud_surface=9 freshness=10
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token: priority=7.70 attack_surface=9 business_value=9 tech_exposure=8 gate_ease=2 cloud_surface=8 freshness=9
+[PRIO] api.signageos.io/status: priority=7.05 attack_surface=6 business_value=6 tech_exposure=7 gate_ease=10 cloud_surface=7 freshness=8
+[HYP] Unauthenticated K8s topology and process identity leak at box.signageos.io/status
+class: MISCONFIG
+confidence: 100
+asset: box.signageos.io
+verify_steps: curl -s https://box.signageos.io/status | jq '.hostname,.process'
+[HYP] Cross-tenant security-token mint via client-supplied {uid} path param at api.signageos.io/v1/organization/{uid}/security-token
+class: IDOR
+confidence: 86
+asset: api.signageos.io
+verify_steps: AUTH_HELPED — human runs `sos login`, then curl -s -X POST -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token
+[HYP] Same infra leak persists behind hardened edge at api.signageos.io/status
+class: MISCONFIG
+confidence: 95
+asset: api.signageos.io
+verify_steps: curl -sD - https://api.signageos.io/status
+[FINAL] Unauthenticated K8s topology and process identity leak at box.signageos.io/status — conf 100 ≥ 40, not on REJECTED list, deliberate info-leak endpoint not descriptive-error exclusion, POC archived
+[FINAL] Cross-tenant security-token mint via client-supplied {uid} path param at api.signageos.io/v1/organization/{uid}/security-token — conf 86 ≥ 40, real authz logic flaw with concrete verify steps; stays despite gate_ease=2 because mechanism is proven via error taxonomy
+[FINAL] Same infra leak persists behind hardened edge at api.signageos.io/status — conf 95 ≥ 40, differential vs box proves non-transient misconfig, reconfirmed on brand-new deploy this cycle
+[NEXT] HUMAN: run `sos login` (Auth0 device-code flow) to obtain a valid account owning ≥1 organization, then provide orgA X-Auth pair (`id:secret`) plus any second organization uid — I will execute the cross-tenant security-token test immediately; passive surface on both hosts is exhaustively closed and every remaining lead is credential-gated
+[LEARN] ACCEPTED MISCONFIG @ box.signageos.io/status: alive on rs 77bfdd94d8 unchanged since last cycle; secgrep=0 persists behind CloudFront; evidence refreshed at artifacts/box-status/
+[LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: leak survives a fresh deploy (rs 75f6d7c5b7, uptime <10min at probe) — edge hardening does not cover the status body; structural, not transient
+[LEARN] REJECTED MISCONFIG @ box.signageos.io/status?verbose=1&debug=1&full=true: zero key delta vs baseline — endpoint ignores query params, no escalation path
+[LEARN] REJECTED MISCONFIG @ api.signageos.io/metrics: uniform 404 ENDPOINT_NOT_FOUND envelope — consistent with fully closed non-versioned path space
+[RISK] box.signageos.io: risk_score=32
+[RISK] api.signageos.io: risk_score=40

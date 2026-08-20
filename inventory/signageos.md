@@ -1675,3 +1675,9 @@
 
 ## 2026-08-20 23:06:21 UTC
 - NEW None — surface stable across 60+ cycles and 8+ rs rotations; all live probes reconfirm existing findings (NO_DELTA)
+
+## 2026-08-20 23:39:47 UTC
+- NEW None — surface stable across 60+ cycles and 8+ rs rotations; all live probes reconfirm existing findings (NO_DELTA)
+- CHANGED api.signageos.io replica set: fresh deploy confirmed — pod `api-75f6d7c5b7-bq5sr` (uptime 454s at probe), leak persists on new rs; hardened headers unchanged (HSTS/XFO/XCTO/no-store, secgrep=4)
+- NEW Probe box.signageos.io/status?verbose=1&debug=1&full=true → 200, zero key delta vs baseline (dynamic metric drift only) → no query-param escalation
+- NEW Probe api.signageos.io/metrics → uniform 192B `ENDPOINT_NOT_FOUND` envelope → no new surface

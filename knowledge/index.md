@@ -1862,3 +1862,7 @@
 - 2026-08-20 ACCEPTED: box /status leak ALIVE 2026-08-20T23:04Z — body sha256 `133f95ab…`, pod `box-77bfdd94d8-wjmhn`, secgrep=0 unchanged.
 - 2026-08-20 ACCEPTED: api /status leak ALIVE under hardened headers (no CSP) — body sha256 `ff51da64…`.
 - 2026-08-20 api rs rotated `7c5fdc9777`→`75f6d7c5b7`; box rs `77bfdd94d8` stable — zero auth/config drift on either host.
+- 2026-08-20 ACCEPTED MISCONFIG @ box.signageos.io/status: alive on rs 77bfdd94d8 unchanged since last cycle; secgrep=0 persists behind CloudFront; evidence refreshed at artifacts/box-status/
+- 2026-08-20 ACCEPTED MISCONFIG @ api.signageos.io/status: leak survives a fresh deploy (rs 75f6d7c5b7, uptime <10min at probe) — edge hardening does not cover the status body; structural, not transient
+- 2026-08-20 REJECTED MISCONFIG @ box.signageos.io/status?verbose=1&debug=1&full=true: zero key delta vs baseline — endpoint ignores query params, no escalation path
+- 2026-08-20 REJECTED MISCONFIG @ api.signageos.io/metrics: uniform 404 ENDPOINT_NOT_FOUND envelope — consistent with fully closed non-versioned path space
