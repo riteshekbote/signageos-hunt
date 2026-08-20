@@ -3386,3 +3386,9 @@ https://box.signageos.io/status -> 200 len=1434 type=application/json; charset=u
 https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
 https://api.signageos.io/v1/device -> HTTP 403
 https://api.signageos.io/status -> 200 len=1325 type=application/json; charset=utf-8
+
+## 2026-08-20 14:20:40 UTC
+https://box.signageos.io/status -> 200 len=1436 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1336 type=application/json; charset=utf-8
