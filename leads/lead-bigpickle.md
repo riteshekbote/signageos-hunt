@@ -10151,3 +10151,4 @@ reasoning: Hardened with HSTS/xfo/xcto/no-store (secgrep=4) behind CloudFront bu
 evidence_needed: Already proven — live reprobe confirms hardened headers + JSON body leak
 verify_steps: GET https://api.signageos.io/status → 200 application/json with infra leak; grep -cE 'strict-transport|x-frame|x-content' headers → 4; curl -sI -H "Origin: https://evil.test" https://api.signageos.io/status → 0 ACAO
 impact: Internal K8s topology, pod identity, process UID exposed despite header hardening; aids reconnaissance; LOW-MEDIUM
+## 2026-08-20 09:52:37 UTC [box] (model bigpickle)
