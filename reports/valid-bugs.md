@@ -850,3 +850,9 @@
   - | 1 | `box.signageos.io/status` infra info leak | MISCONFIG | **VALID** | 5.3 | Duplicate reconfirmation; passive PoC stable |
   - | 2 | `api.signageos.io/status` infra info leak | MISCONFIG | **VALID** | 5.3 | Duplicate reconfirmation; hardened w/ HSTS/xfo/xcto |
   - | 3 | `box.signageos.io` CORS HTTP variant + wildcard | MISCONFIG | **VALID (LOW)** | 3.7 | Duplicate reconfirmation; static whitelist, no creds |
+
+- 4 lead(s) marked VALID at 2026-08-21 21:47:21 UTC
+  - | Q4 Provable read-only? | **No** — requires AUTH_HELPED: valid account credentials for 2+ orgs + cross-tenant request. Cannot prove with GET/HEAD alone without creds. |
+  - | Q4 Provable read-only? | **No** — requires AUTH_HELPED with valid account token + foreign org UID |
+  - | Q4 Provable read-only? | **No** — requires AUTH_HELPED: valid org X-Auth (client-id:client-secret) + foreign device UID |
+  - | **VALID** | 0 | — |
