@@ -11085,3 +11085,34 @@ impact: MEDIUM-HIGH — admin-plane recon disclosure
 testability: PASSIVE
 [FINAL]
 [NEXT] HUMAN: run `sos login` (Auth0 device-code flow), then reply with (a) org
+## 2026-08-21 16:40:32 UTC [box] (model bigpickle)
+[PRIO]
+class: MISCONFIG
+asset: https://box.signageos.io/status
+confidence: 100
+reasoning: Unauthenticated GET discloses K8s pod hostname/rs-id, 64-hex process.uid, pid, Node v20.20.2, full 9-service dependency topology (amqp0/redis0-3/mongoDB0-3) with per-service latency, cpu/mem metrics; response carries only x-powered-by: Express + CloudFront (secgrep=0); stable across 8+ rs rotations and intra-rs reschedules ⇒ structural deployment-template flaw, not transient.
+evidence_needed: None — POC archived (artifacts/box-status/ SHA256SUMS chain; latest body sha256 2fcbeccd…).
+verify_steps: Single unauthenticated GET /status; diff against archived sha256 chain.
+impact: Internal infra recon (naming conventions, service map, runtime fingerprint) enabling targeted downstream attacks.
+testability: PASSIVE
+class: MISCONFIG
+asset: https://api.signageos.io/status
+confidence: 95
+reasoning: Same handler exposed on hardened edge (HSTS max-age=31536000, x-frame-options DENY, x-content-type-options nosniff, cache-control no-store — verified live) still leaks hostname/rs-id/process.uid/topology; mongoDB3 absent reveals env-specific service map; fresh pod hrcg9 confirms persistence across reschedules.
+evidence_needed: None for passive report; optional: confirm no CDN caching of responses (x-cache: Miss observed).
+verify_steps: Unauthenticated GET /status; assert hardened header set + body schema.
+impact: Internal topology + runtime fingerprint of the primary API edge.
+testability: PASSIVE
+class: IDOR
+asset: https://api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: 403074 errorDetail binds account identity to "first part (before char `:`) of x-auth header" while path {uid} is client-supplied; JWT Bearer provably ignored (identical 403074 with `Authorization: Bearer test`); byte-identical error across 8+ rs rotations ⇒ deterministic auth-context/path-target split; if server trusts header identity over path target, orgA credentials can mint orgB security tokens.
+evidence_needed: Valid orgA X-Auth pair (`id:secret`) + second organization uid orgB; exactly one POST resolves.
+verify_steps: `sos login` → POST https://api.signageos.io/v1/organization/<orgB-uid>/security-token with `X-Auth: <orgA-id>:<secret>`; 200/201 + orgB-scoped token ⇒ CRITICAL confirmed; 403076/403105 ⇒ lead killed.
+impact: Potential cross-org security-token mint = full tenant takeover (critical if proven).
+testability: AUTH_HELPED
+[PARKED] HYP 3 conf 86 — mechanism inferred solely from error-string semantics; server may enforce X-Auth↔{uid} binding server-side. Do not exceed conf 90 without the single-request proof.
+[PARKED] HYP 2 conf 95 — hardened headers indicate a deliberate hardening pass; triager may rate body leak low/info on the API edge; frame strictly as recon-grade MISCONFIG.
+[FINAL] HYP 1 conf 100 — evidence complete and durable across every rotation; ready for submission as-is.
+[NEXT]
+[LEARN]
