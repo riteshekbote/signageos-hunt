@@ -10973,3 +10973,31 @@ impact: primary API plane exposes internal service topology to unauthenticated r
 testability: PASSIVE
 [FINAL]
 [NEXT] HUMAN: run `sos login` (Auth0 device-code flow), then reply with (a) orgA X-Auth pair `id:secret`, (b) any second organization uid orgB. Agent executes exactly ONE request: `curl -sS -X POST -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` — 200/201 + orgB-scoped token proves CRITICAL cross-tenant IDOR; 403076/403105 kills the lead (downgrade ≤30). If credentials unavailable, submit both /status reports as-is.
+## 2026-08-21 13:18:54 UTC [box] (model bigpickle)
+class: IDOR
+asset: https://api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: POST returns 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE with errorDetail byte-identical across all rs rotations; JWT Bearer ignored (Bearer "test" → same 403074 as no-header); org identity binds solely to X-Auth header first-part before ':' while path {uid} is client-supplied; zero ACAO on 403 under spoofed Origin.
+evidence_needed: valid orgA X-Auth pair (id:secret) + any second organization uid orgB.
+verify_steps: AUTH_HELPED: exactly one request — curl -sS -X POST -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token → 200/201 + orgB-scoped token confirms; 403076/403105 kills hypothesis (downgrade ≤30).
+impact: cross-org token mint = tenant takeover of arbitrary organization data.
+testability: AUTH_HELPED
+class: MISCONFIG
+asset: https://box.signageos.io/status
+confidence: 100
+reasoning: unauthenticated JSON leaks pod hostname, 64-hex process.uid, Node v20.20.2, 9-svc topology (amqp0/redis0-3/mongoDB0-3 incl mongoDB3), cpuUsage/memoryUsage/responseTime; headers limited to x-powered-by: Express + CloudFront (secgrep=0).
+evidence_needed: none — POC finalized and archived at artifacts/box-status/.
+verify_steps: PASSIVE: GET /status; alive across 60+ cycles, 8+ rs rotations, latest intra-rs reschedule zfqwm→xlwpr (body sha256 e8287b65…).
+impact: internal topology/process identity aids targeted intrusion; violates least-exposure on public edge.
+testability: PASSIVE
+class: MISCONFIG
+asset: https://api.signageos.io/status
+confidence: 95
+reasoning: identical leak schema (Node v24.19.0, 8-svc topology, mongoDB3 absent) despite hardened headers (HSTS max-age=31536000, x-frame-options DENY, x-content-type-options nosniff, cache-control no-store; secgrep=3); structural across rs 75f6d7c5b7 rotations.
+evidence_needed: none — passive confirmation complete.
+verify_steps: PASSIVE: GET /status; latest intra-rs reschedule 2lgqn→dk5kn (body sha256 febf3291…).
+impact: primary API edge discloses internal service topology unauthenticated.
+testability: PASSIVE
+[PARKED] none dropped — all three ≥40 confidence, none overlap rejected classes (/status info-leak ≠ banner grabbing/descriptive errors per scope.yml determination; CORS/OAuth2/probe-set/rejected-error-body classes already parked in prior cycles).
+[FINAL] 1. IDOR @ api/v1/organization/{uid}/security-token (conf 86, AUTH_HELPED) · 2. MISCONFIG @ api/signageos.io/status (conf 95, PASSIVE) · 3. MISCONFIG @ box.signageos.io/status (conf 100, PASSIVE)
+[NEXT] HUMAN: run `sos login` (Auth0 device-code flow), then reply with (a) a valid orgA X-Auth pair `id:secret`, (b) any second organization uid orgB. Agent will execute exactly ONE request: curl -sS -X POST -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token. Fallback if unavailable: submit both /status reports as-is (PASSIVE, evidence complete).

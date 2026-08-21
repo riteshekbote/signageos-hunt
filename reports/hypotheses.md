@@ -8536,3 +8536,6 @@
 - LEARN: ALIVE MISCONFIG @ box.signageos.io/status: reconfirmed 2026-08-21T11:15:07Z; pod wjmhn→zfqwm within rs 77bfdd94d8; secgrep=0 persists; body sha256 2d2ae00d...
 - LEARN: ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T11:15:07Z; pod 5hw9c→2lgqn within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent fro
 - LEARN: CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
+
+## RANKED HYPOTHESES 2026-08-21 13:19:07 UTC
+- NEXT(hypotheses-bigpickle.txt): HUMAN: run `sos login` (Auth0 device-code flow), then reply with (a) a valid orgA X-Auth pair `id:secret`, (b) any second organization uid orgB. Agent will exec
