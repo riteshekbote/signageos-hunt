@@ -1,39 +1,35 @@
 [0m
 > build · mimo-v2.5-free
 [0m
-[0m• [0mExplore workspace for scan data[90m Explore Agent[0m
-[0m✓ [0mExplore workspace for scan data[90m Explore Agent[0m
-[0m→ [0mRead reposcan-raw/grep-hits.txt
-[0m→ [0mRead reposcan-raw/grep-delta.txt
-[0m→ [0mRead reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
-The workspace has a mismatch: the scan prompt targets `gladiaio/` but the actual repo scan data is from `signageos/`. Let me examine the actual hits and scan results.
-[0m→ [0mRead scan-prompt.txt[90m [limit=50][0m
-[0m→ [0mRead reposcan-raw/rag.txt[90m [limit=30][0m
-[0m
-[0m$ [0mfind /home/runner/work/signageos-hunt/signageos-hunt -iname '*gladia*' -type f 2>/dev/null | head -20
-(no output)
-[0m
-[0m✱ [0mGrep "gladia"[90m in reposcan-raw · 3 matches[0m
-[0m→ [0mRead reposcan-raw/rag.txt[90m [offset=1905][0m
-[0m→ [0mRead reposcan-raw/analysis.txt
-No `gladiaio/` repos or npm data exist in this workspace. The scan only covered `signageos/` repos. Here's what was found:
+## Scan Triage: gladiaio/ org + @gladiaio/sdk
 
-## Scan Results
+**Scan scope**: 1075 files scanned from signageos repos (note: `reposcan-raw/signageos/`, not gladiaio). Only 1 hit.
 
-| File | Line | Type | Classification |
+---
+
+### Hit Classification Table
+
+| File | Line | Category | Verdict |
 |---|---|---|---|
-| `videowall-designer/sos/videoTiming.js` | 19 | Hardcoded `secret` | `CONFIRMED DEAD` |
+| `videowall-designer/sos/videoTiming.js` | 19 | `TEST_OR_EXAMPLE` | Not reportable |
 
-**The sole hit** is a hardcoded `clientId:secret` pair (SHA256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) targeting `http://api.kiera.office.signageos.io` (internal staging host over HTTP). This is:
+**Details**: Hardcoded `secret` value `9d5e257...fe1c9` targeting `http://api.kiera.office.signageos.io` (internal staging, HTTP). This is a **signageos** repo, not gladiaio.
 
-- **NOT a real production credential** — the `apiUrl` default points to an internal office staging host
-- **CONFIRMED DEAD** on production — X-Auth test on `api.signageos.io` returned `403076 WRONG_ACCOUNT_SECRET "Account not found"` across 60+ cycles
-- **Excluded per scope.yml** — staging-only fixture, not a reportable secret
+---
 
-## Verdict
+### Prior Triage (from Knowledge Base)
 
-| Candidate | REPORT_CANDIDATE |
-|---|---|
-| `videowall-designer` hardcoded `clientId`/`secret` | **No** — staging-only fixture, dead on prod |
+This exact secret was already:
+- Hashed as sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`
+- Tested as X-Auth on **production** api.signageos.io: `403076 WRONG_ACCOUNT_SECRET "Account not found"`
+- **CONFIRMED DEAD** across 60+ cycles — staging-only fixture, credential reuse disproven
 
-**Zero reportable candidates.** The `gladiaio/` scan was not executed (no repos cloned, no npm data fetched). Only `signageos/` repos were scanned, and the sole hit is a confirmed-dead staging fixture.
+---
+
+### Verdict
+
+| Candidate | REPORT_CANDIDATE | Rationale |
+|---|---|---|
+| videowall-designer secret | **No** | Staging-only test fixture; tested on prod → 403076 "Account not found"; CONFIRMED DEAD |
+
+**Summary**: Zero reportable findings. No gladiaio/ repos were scanned (only signageos repos present in scan output). The single hit is a dead staging fixture already validated 60+ times against production. No new candidates.
