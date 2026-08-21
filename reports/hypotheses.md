@@ -8660,3 +8660,16 @@
 - LEARN: ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T15:20:02Z; pod 2lgqn within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent from topo
 - LEARN: ALIVE IDOR @ api.signageos.io/v1/organization/{uid}/security-token: reconfirmed 2026-08-21T15:20:25Z; 403074 errorDetail byte-identical; JWT Bearer ignored; X-A
 - LEARN: CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
+
+## RANKED HYPOTHESES 2026-08-21 20:48:11 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-nemotron3.txt)
+- NEXT(hypotheses-mimo.txt): PROBE: GET https://api.signageos.io/v1/organization/{uid}/security-token (passive recheck — confirm 403074 byte-stability on current rs 75f6d7c5b7, secgrep coun
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire JWT + X-Auth pair → test cross-te
+- LEARN: ALIVE MISCONFIG @ box.signageos.io/status: reconfirmed 2026-08-21T20:21Z; pod fhkpv within rs 77bfdd94d8; secgrep=0 persists; 9-svc topology + cpu/mem leak unch
+- LEARN: ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T20:21Z; pod 5hw9c within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent; differentia
+- LEARN: ALIVE IDOR @ api.signageos.io/v1/organization/{uid}/security-token: reconfirmed 2026-08-21T20:21Z; 403074 errorDetail byte-identical; JWT Bearer ignored; X-Auth
+- LEARN: CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
+- LEARN: ALIVE MISCONFIG @ box.signageos.io/status: reconfirmed 2026-08-21T15:20:15Z; pod wjmhn within rs 77bfdd94d8; secgrep=0 persists; body sha256 fresh; 9-svc topolo
+- LEARN: ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T15:20:02Z; pod 2lgqn within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent from topo
+- LEARN: ALIVE IDOR @ api.signageos.io/v1/organization/{uid}/security-token: reconfirmed 2026-08-21T15:20:25Z; 403074 errorDetail byte-identical; JWT Bearer ignored; X-A
+- LEARN: CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
