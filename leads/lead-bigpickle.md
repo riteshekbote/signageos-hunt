@@ -11194,3 +11194,5 @@ testability: PASSIVE
 [LEARN]
 [RISK] box.signageos.io: 55 — sole unauthenticated escape hatch is /status infra-leak (zero hardening); everything else behind Auth0 catch-all; exposure stable pending IDOR test
 [RISK] api.signageos.io: 70 — hardened edge but structural /status leak plus plausible cross-tenant token mint (unproven); collapses toward 45 if IDOR dies at first authenticated POST
+## 2026-08-21 18:18:14 UTC [box] (model bigpickle)
+[FINAL]
