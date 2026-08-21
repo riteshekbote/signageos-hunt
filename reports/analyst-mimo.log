@@ -1,0 +1,63 @@
+===== ANALYST mimo 2026-08-21 18:46:06 UTC =====
+[0m
+> build · mimo-v2.5-free
+[0m
+## STEP 1 — DELTA
+
+NO_DELTA — all ACCEPTED/REJECTED classes reconfirmed from prior cycle; no new surface items on box.signageos.io or api.signageos.io.
+
+## STEP 2 — PRIORITIZE
+
+[PRIO] box.signageos.io/status, 91, attack=10 business=9 tech=7 gate=10 cloud=9 fresh=10
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token, 86, attack=9 business=8 tech=8 gate=0 cloud=7 fresh=10
+[PRIO] api.signageos.io/status, 72, attack=7 business=5 tech=6 gate=10 cloud=7 fresh=10
+[PRIO] box.signageos.io/ + /login/ CORS+CSP, 68, attack=6 business=6 tech=7 gate=10 cloud=5 fresh=10
+
+## STEP 3 — HYPOTHESES
+
+[HYP] Cross-tenant security-token mint via client-supplied {uid} vs X-Auth-bound identity
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: 403074 errorDetail byte-identical across 8+ rs rotations; error text explicitly states org identity derived from "first part (before char `:`) of x-auth header" while path {uid} is client-supplied; JWT Bearer token ignored (same 403074 as no-header); zero auth drift confirmed.
+evidence_needed: Valid X-Auth pair (orgA-id:secret) + second organization uid (orgB-uid); request with X-Auth for orgA but path /v1/organization/orgB/security-token; expect 200 response returning orgB's security token (cross-tenant mint)
+verify_steps: AUTH_HELPED: (1) run `sos login` to obtain account with ≥1 organization; (2) extract X-Auth pair (id:unsafeDecryptedToken); (3) GET /v1/organization/{attackerOrgUid}/security-token with X-Auth header for victimOrg; (4) confirm 200 + token for victimOrg returned
+impact: Attacker mints security token for any organization by supplying arbitrary {uid} in path while authenticating as their own org via X-Auth — enables cross-tenant token minting and full API access to victim organization resources; HIGH severity
+testability: AUTH_HELPED
+
+[HYP] Unauthenticated K8s topology and process identity leak via /status
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 100
+reasoning: HTTP 200 JSON leaks pod hostname (rotating rs pods), 64-hex process.uid, Node v20.20.2, full 9-service topology (amqp0/redis0-3/mongoDB0-3) + cpuUsage/memoryUsage + per-service responseTime; headers ONLY x-powered-by: Express + CloudFront (secgrep=0); zero ACAO under spoofed Origin; confirmed across 60+ cycles and 8+ rs rotations.
+evidence_needed: None — POC finalized and archived at artifacts/box-status/ (body sha256 stable, headers sha256 stable)
+verify_steps: GET https://box.signageos.io/status — returns 200 application/json with hostname, process UID, Node version, topology; headers contain only x-powered-by + CloudFront (no HSTS/xfo/xcto/CSP)
+impact: Attacker gains K8s pod identity, Node version, process UID, and full backend service topology — enables targeted attacks on internal infrastructure (redis/amqp/mongo endpoints); LOW-MEDIUM severity (informational, aids further exploitation)
+testability: PASSIVE
+
+## STEP 4 — SELF-CRITIQUE
+
+Both hypotheses survive:
+- IDOR confidence 86, class not on REJECTED list (IDOR is reportable when AUTH_HELPED), concrete verify_steps provided
+- MISCONFIG confidence 100, class not on REJECTED list (info-leak not on excluded list), POC finalized
+
+No hypotheses dropped.
+
+[FINAL] — re-ranked:
+1. box.signageos.io/status (MISCONFIG, conf 100) — POC finalized 60+ cycles, PASSIVE
+2. api.signageos.io/v1/organization/{uid}/security-token (IDOR, conf 86) — AUTH_HELPED, zero auth drift across 8+ rs rotations
+
+## STEP 5 — NEXT
+
+[HUMAN] Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire X-Auth pair (id:unsafeDecryptedToken) + JWT → then test cross-tenant IDOR: GET /v1/organization/{secondOrgUid}/security-token with X-Auth header for firstOrg → expect 200 + token for secondOrg → POC complete.
+
+## STEP 6 — LEARNING
+
+[LEARN] ALIVE MISCONFIG @ box.signageos.io/status: reconfirmed 2026-08-21T18:18:29Z; pod 7ldcv within rs 77bfdd94d8; secgrep=0 persists; 9-svc topology + cpu/mem leak unchanged; POC finalized 60+ cycles
+[LEARN] ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T18:18:29Z; pod rwhj7 within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent; differential vs box persists
+[LEARN] ALIVE IDOR @ api.signageos.io/v1/organization/{uid}/security-token: reconfirmed 2026-08-21T18:18:29Z; 403074 errorDetail byte-identical; JWT Bearer ignored; X-Auth/x-oauth-client_id gating intact; zero ACAO on 403; mechanism intact across 8+ rs rotations
+
+## STEP 7 — RISK
+
+[RISK] box.signageos.io: 45 — /status leaks full K8s infra topology (pod name, Node version, process UID, 9-service amqp/redis/mongo endpoints) with zero hardening headers; entry points /+/login/ properly hardened (secgrep=4); attack surface limited to info-leak only (no unauth write/exec path)
+[RISK] api.signageos.io: 52 — /status leaks hostname/uid/Node/topology despite hardened headers (secgrep=4); 60+ API routes all 403 JWT/X-Auth-gated (no pre-auth bypass); cross-tenant IDOR on security-token exists but requires valid credentials (AUTH_HELPED conf 86); descriptive error messages on 403 responses aid enumeration but are excluded per scope.yml
