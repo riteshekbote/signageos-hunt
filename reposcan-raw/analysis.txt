@@ -1,14 +1,22 @@
 [0m
 > build · nemotron-3-ultra-free
 [0m
-### Secret Scan Triage - signageos/videowall-designer
+[0m$ [0mecho -n '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9' | sha256sum
+564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e  -
+[0m
+**Classification Table**
 
-| Category | File | Line | SHA256 (secret) | Classification |
-|----------|------|------|-----------------|----------------|
-| TEST_OR_EXAMPLE | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js` | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | Staging-only test fixture (targets `http://api.kiera.office.signageos.io`) |
+| Category | Hits |
+|----------|------|
+| REAL_SECRET | *(none)* |
+| TEST_OR_EXAMPLE | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` — hardcoded client secret (sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) for staging fixture |
+| ENDPOINT_LEAK | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` — references staging endpoint `http://api.kiera.office.signageos.io` (HTTP, non-prod) |
+| INTERESTING | *(none)* |
 
-### Verdict
+**Verdict**
 
-| Candidate | REPORT_CANDIDATE |
-|-----------|------------------|
-| videowall-designer videoTiming.js:19 secret | **no** — CONFIRMED DEAD: credential pair tested against prod `api.signageos.io` via X-Auth header → `403076 WRONG_ACCOUNT_SECRET "Account not found"`; staging-only fixture, credential reuse disproven (60+ cycles) |
+| File | Line | Secret SHA256 | Classification | REPORT_CANDIDATE |
+|------|------|---------------|----------------|------------------|
+| reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | TEST_OR_EXAMPLE + ENDPOINT_LEAK | **no** |
+
+**Reasoning**: This credential pair (clientId `fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47` + secret) is a **staging-only test fixture** targeting `http://api.kiera.office.signageos.io`. It was validated against production `api.signageos.io` via X-Auth header and returned `403076 WRONG_ACCOUNT_SECRET "Account not found"` — credential reuse is **disproven**. Per program scope, staging fixtures and dead credentials are not reportable. The endpoint leak (staging HTTP URL) is informational only.
