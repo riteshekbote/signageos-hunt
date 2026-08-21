@@ -10946,3 +10946,30 @@ testability: PASSIVE
 [LEARN] ALIVE @ https://api.signageos.io/status — persists through another pod reschedule (5hw9c→2lgqn, rs 75f6d7c5b7); hardened edge (secgrep=4); fresh body sha256 e9b06361b9ccfe3a31cd22434ea50a15c7b698aaa88b0dbdf82f4437be69076d.
 [RISK] box=45 | api=60 | rationale: box = unauthenticated read-only infra metadata disclosure (no auth bypass, no secrets); api = same leak on primary API edge plus credentialed cross-tenant token-mint hypothesis at conf 86 awaiting the single decisive authenticated test.
 ## 2026-08-21 11:48:19 UTC [box] (model bigpickle)
+## 2026-08-21 12:20:25 UTC [box] (model bigpickle)
+class: IDOR
+asset: https://api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: byte-identical 403074 errorDetail across 8+ rs rotations proves org identity binds solely to X-Auth header first-part (before `:`) while path {uid} is client-supplied; JWT Bearer ignored
+evidence_needed: valid orgA X-Auth pair `id:secret` + any second organization uid orgB
+verify_steps: AUTH_HELPED single request: curl -sS -X POST -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token
+impact: cross-org security-token mint enables full tenant takeover of arbitrary organizations
+testability: AUTH_HELPED
+class: MISCONFIG
+asset: https://box.signageos.io/status
+confidence: 100
+reasoning: GET 200 JSON leaks pod hostname process.uid Node v20.20.2 9-svc topology incl mongoDB3 cpu/mem metrics with zero security headers secgrep=0 structural across 60+ cycles and 8+ rs rotations
+evidence_needed: none — POC re-archived at artifacts/box-status/ (body sha256 622a4abfe20420a03955bbf71e582f2b4a535a580ff32d48874b24a1880bcb42)
+verify_steps: PASSIVE single GET https://box.signageos.io/status diff against artifacts/box-status/SHA256SUMS-20260821.txt
+impact: internal topology plus runtime fingerprint supports targeted attack planning against infra components
+testability: PASSIVE
+class: MISCONFIG
+asset: https://api.signageos.io/status
+confidence: 95
+reasoning: identical leak schema Node v24.19.0 8-svc topology mongoDB3 absent despite hardened headers secgrep=4; leaked on brand-new pod sbs98 uptime 965s proving deployment-template root cause
+evidence_needed: none beyond archived probe; pair with box instance as one systemic finding
+verify_steps: PASSIVE single GET https://api.signageos.io/status compare schema to box POC and report as shared template misconfiguration
+impact: primary API plane exposes internal service topology to unauthenticated recon
+testability: PASSIVE
+[FINAL]
+[NEXT] HUMAN: run `sos login` (Auth0 device-code flow), then reply with (a) orgA X-Auth pair `id:secret`, (b) any second organization uid orgB. Agent executes exactly ONE request: `curl -sS -X POST -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` — 200/201 + orgB-scoped token proves CRITICAL cross-tenant IDOR; 403076/403105 kills the lead (downgrade ≤30). If credentials unavailable, submit both /status reports as-is.
