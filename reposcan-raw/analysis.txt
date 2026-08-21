@@ -1,21 +1,47 @@
 [0m
-> build · nemotron-3-ultra-free
+> build · mimo-v2.5-free
 [0m
-[0m$ [0mecho -n '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9' | sha256sum
-564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e  -
-[0m
-**Triage Results**
+## Scan Triage: gladiaio/ GitHub Org + @gladiaio/sdk
 
-| Category | File | Line | SHA256(secret) | Classification | REPORT_CANDIDATE |
-|----------|------|------|----------------|----------------|------------------|
-| SECRET | reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | 19 | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | **TEST_OR_EXAMPLE** (staging-only fixture) | **no** |
+**Scanner**: reposcan v1 (cladieux/repo-scan, concurrency=8)
+**Delta from previous**: 0 new hits
+**Total hits**: 1
 
-**Verdict**
+### Category: REAL_SECRET
 
-- **This secret is CONFIRMED DEAD** — already triaged in the knowledge base (2026-08-14 through 2026-08-21)
-- The credential pair (`clientId: fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47` + this secret) was tested against production `api.signageos.io` via X-Auth header → returns `403076 WRONG_ACCOUNT_SECRET "Account not found"`
-- It targets a staging host (`http://api.kiera.office.signageos.io` over HTTP) that doesn't exist in production
-- Credential reuse on prod is **disproven** — this is a test fixture, not a live credential
-- **No other hits** in the 1075 scanned files
+| File | Line | Field | sha256 (partial) | Verdict |
+|------|------|-------|-------------------|---------|
+| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js` | 19 | `secret` | `564c293b…` | Already ACCEPTED — CONFIRMED DEAD on prod (403076 WRONG_ACCOUNT_SECRET) |
 
-**No reportable findings** from this scan delta.
+**Assessment**: This is the same hardcoded `clientId/secret` from `signageos/videowall-designer` that has been tested and confirmed as a **staging-only test fixture** targeting `http://api.kiera.office.signageos.io` (internal staging HTTP). X-Auth on prod returns 403076 — the account does not exist on production. Credential reuse disproven across 60+ cycles.
+
+**Note**: The scan covered `signageos/` repos (59 public), not `gladiaio/` — the gladiaio org either has no public repos, no code content, or the scan tool targeted the wrong org scope.
+
+### Category: TEST_OR_EXAMPLE
+
+| File | Line | Field | sha256 (partial) | Verdict |
+|------|------|-------|-------------------|---------|
+| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js` | 19 | `secret` | `564c293b…` | **TEST_FIXTURE** — internal staging only, not production |
+
+**Assessment**: The secret targets `http://api.kiera.office.signageos.io` (plain HTTP, staging hostname). Verified on prod → no match. This is developer test data, not a live credential.
+
+### Category: ENDPOINT_LEAK
+
+None discovered.
+
+### Category: INTERESTING
+
+None beyond the above (no debug flags, cloud configs, or cross-org references found).
+
+---
+
+### Final Verdict
+
+| Category | Count | REPORT_CANDIDATE |
+|----------|-------|------------------|
+| REAL_SECRET | 0 | no (CONFIRMED DEAD) |
+| TEST_OR_EXAMPLE | 1 | no |
+| ENDPOINT_LEAK | 0 | no |
+| INTERESTING | 0 | no |
+
+**REPORT_CANDIDATE: no** — The sole hit is a stale staging-only fixture with no production credential reuse, already confirmed dead across 60+ cycles. No new reportable findings from this scan cycle.
