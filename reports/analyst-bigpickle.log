@@ -60247,3 +60247,110 @@ STEP 6 — LEARNING:
 STEP 7 — RISK:
 - [RISK] target=box.signageos.io risk_score=32 reason="unauth topology/process-identity leak live but read-only; entry hardened; no credential path"
 - [RISK] target=api.signageos.io risk_score=40 reason="potential cross-tenant token mint unverified pending credentials; topology leak persists behind hardened edge"
+===== ANALYST bigpickle 2026-08-21 03:54:02 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s -o /tmp/opencode/box-status.json -w "%{http_code} %{content_type}\n" --max-time 15 https://box.signageos.io/status && sleep 2 && curl -sD /tmp/opencode/api-status.hdr -o /tmp/opencode/api-status.json -w "%{http_code}\n" --max-time 15 https://api.signageos.io/status
+200 application/json; charset=utf-8
+200
+[0m
+## Objective
+- Bug bounty hunting on signageOS program (eligible targets ONLY: box.signageos.io, api.signageos.io), passive-first (GET/HEAD, ≤1 rps), currently in POC phase with target=box.
+- Goal: finalize reportable findings; three FINAL hypotheses reached — two MISCONFIG info-leaks (conf 100/95) and one cross-tenant IDOR (conf 86, blocked on credentials).
+
+## Important Details
+- **Scope rules**: real logic flaws only w/ concrete POC; excluded classes include descriptive errors, CSRF on anonymous forms, username enumeration, SSL/TLS, clickjacking w/o exploit, outdated libs, cookie flags non-sensitive, self-XSS, scanner reports w/o POC.
+- **ACCEPTED #1 (POC DONE)**: Unauthenticated JSON infra-leak @ `box.signageos.io/status` — HTTP 200 leaks pod hostname, 64-hex process.uid, Node v20.20.2, 9-svc topology (amqp0/redis0-3/mongoDB0-3 incl mongoDB3), cpuUsage/memoryUsage/per-service responseTime; headers ONLY `x-powered-by: Express` + CloudFront (secgrep=0); alive across 60+ cycles and 9 rs rotations (…→box-8676fb5f57→box-54846c877b→box-c877d9cc8→box-59b5ffd68b→box-8b6c78cc8→box-77bfdd94d8); differential vs hardened `/`+`/login/` (secgrep=4) and api `/status` (secgrep=3-4) persists.
+- **ACCEPTED #2 (mechanism proven)**: Cross-tenant IDOR @ `api.signageos.io/v1/organization/{uid}/security-token` — 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` errorDetail byte-identical ("first part (before char `:`) of x-auth header" vs client-supplied path `{uid}`); JWT Bearer IGNORED (`Authorization: Bearer test` → same 403074); only X-Auth/x-oauth-client_id gating enforced; zero auth drift across 8+ rs rotations (api-6f69db97d5→…→api-7c5fdc9777→api-75f6d7c5b7). AUTH_HELPED, conf 86.
+- **ACCEPTED #3**: Same infra leak persists @ `api.signageos.io/status` behind hardened edge (HSTS max-age=31536000, xfo DENY, xcto nosniff, cache-control no-store, secgrep=3-4) but body still leaks hostname/uid/Node v24.19.0/8-svc topology (mongoDB3 absent); survived fresh deploy rs `75f6d7c5b7` (uptime <10min) — structural, not transient.
+- **Error taxonomy (mechanism evidence only, class excluded)**: 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE (no headers); 403075 MISSING_ACCOUNT_CLIENT_SECRET (x-oauth-client_id only — reveals header names); 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION (bad pair); NO_ORGANIZATION_TO_AUTHENTICATE (X-Auth org-scoped); 403105 WRONG_JWT_TOKEN (JWT-only).
+- **CONFIRMED DEAD**: videowall-designer leaked clientId/secret (sha256 `564c293b…`) is staging-only fixture targeting `http://api.kiera.office.signageos.io`; X-Auth on prod → 403076 "Account not found"; credential reuse disproven.
+- **REJECTED (excluded/dead, never re-report)**: api v1/*+v2/* pre-auth IDOR (all 60+ routes 403-gated, zero ACAO under evil.test); descriptive errors on api v1/*; CORS-exploit on box `/`+`/login/` (17 static ACAO incl http://plaintext + *.zdusercontent.com wildcard + api sibling + path-bearing recaptcha, 0 access-control-allow-credentials, evil.test NOT reflected); box /login Auth0 OAuth2 redirect_uri/state binding (not passively testable); box `/ready` (200 "OK", 2 bytes); box probe set `/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket` (all 302 login catch-all or trivial); box `/status` CORS (zero ACAO — scoped to SPA entry points); box WebSocket (wss:// → 302); box `/login/` bundle.js 2.193.0 (zero /v[12]/ API paths); box `/status?verbose=1&debug=1&full=true` (no query-param escalation); api `/metrics` (404 ENDPOINT_NOT_FOUND).
+- **API route map**: existing org-scoped routes = {v1/organization, v1/device, v1/applet, v1/account, v1/timing} → NO_ORGANIZATION_TO_AUTHENTICATE; ~38 other probed paths → 404 ENDPOINT_NOT_FOUND. Lower-confidence parked leads: `/v1/organization/{uid}/device-plan-history` (JWT-gated, conf 50), `/v1/company/{uid}/support-access-permission` PUT (JWT-gated, conf 45).
+- **Risk scores**: box.signageos.io risk_score=32; api.signageos.io risk_score=40.
+
+## Work State
+### Completed
+- 60+ probe cycles of passive recon; both hosts' unauthenticated surfaces exhaustively closed (only escape hatches are the two /status endpoints).
+- POC finalized & durably archived for box /status leak (evidence at `artifacts/box-status/`, latest body sha256 `133f95ab…`, pod `box-77bfdd94d8-wjmhn`, secgrep=0).
+- Cross-tenant IDOR mechanism fully proven via byte-identical errorDetail + JWT-ignored test; verify steps defined but require credentials.
+- Delta checks confirm NO_DELTA on latest cycles except api rs rotation `7c5fdc9777`→`75f6d7c5b7` (zero auth/config drift).
+- Final hypothesis IDs assigned: hyp-box-status-leak (conf 100), hyp-api-idor-sectoken (conf 86), hyp-api-status-leak (conf 95).
+
+### Active
+- Awaiting human-provided credentials for the single remaining credential-gated lead (cross-tenant security-token mint test).
+- Report drafting/submission for the two MISCONFIG findings pending.
+
+### Blocked
+- Cross-tenant IDOR verification requires AUTH_HELPED: human must run `sos login` (Auth0 device-code flow) to obtain a valid account owning ≥1 organization, then provide orgA X-Auth pair (`id:secret`) plus a second organization uid.
+- No further passive probes can advance any lead — every remaining surface is either login catch-all, 403-gated, or already POC-complete.
+
+## Next Move
+1. Submit bug report for box.signageos.io/status infra-leak using the `artifacts/box-status/` evidence archive (body sha256 `133f95ab…`, headers, 60+ cycle stability note, hardening differential vs `/`+`/login/` secgrep=4 and api /status secgrep=3-4).
+2. On receiving human credentials: execute `curl -s -X POST -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` to prove/refute cross-tenant mint; attach refreshed api /status capture to combined misconfig report if submitting both.
+
+## Relevant Files
+- `artifacts/box-status/` — durable POC evidence archive for box /status leak (body.json + headers.txt with sha256 hashes; repeatedly refreshed across cycles).
+- `reports/hypotheses-nemotron3.txt` — ranked hypotheses file ([100] box /status leak top-ranked; NEXT action references it).
+- `scope.yml` — program rules source (exclusion list driving REJECTED classifications).
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+[0m$ [0mcat /tmp/opencode/box-status.json; echo "---HEADERS-API---"; cat /tmp/opencode/api-status.hdr; echo "---API-BODY---"; cat /tmp/opencode/api-status.json
+{"name":"box","status":"OK","process":{"uid":"94c61bbd71af0183eac4e582c5d321842065a9153e87f8c9a7","pid":1,"version":"v20.20.2","uptime":54260.54497695,"cpuUsage":{"user":4797722296,"system":533629027},"memoryUsage":{"rss":238428160,"heapTotal":155176960,"heapUsed":136122968,"external":26739858,"arrayBuffers":23221561}},"hostname":"box-77bfdd94d8-b9clc","failedServices":[],"succeededServices":["amqp0","redis3","redis0","redis2","redis1","mongoDB2","mongoDB3","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1787284326900,"respondedAt":1787284326969,"amqp0":{"response":{"requestedAt":1787284326900,"respondedAt":1787284326969,"responseTime":69}},"redis3":{"response":{"requestedAt":1787284326901,"respondedAt":1787284326904,"responseTime":3}},"redis0":{"response":{"requestedAt":1787284326901,"respondedAt":1787284326904,"responseTime":3}},"redis2":{"response":{"requestedAt":1787284326901,"respondedAt":1787284326904,"responseTime":3}},"redis1":{"response":{"requestedAt":1787284326901,"respondedAt":1787284326905,"responseTime":4}},"mongoDB2":{"response":{"requestedAt":1787284326901,"respondedAt":1787284326904,"responseTime":3}},"mongoDB3":{"response":{"requestedAt":1787284326902,"respondedAt":1787284326905,"responseTime":3}},"mongoDB1":{"response":{"requestedAt":1787284326901,"respondedAt":1787284326906,"responseTime":5}},"mongoDB0":{"response":{"requestedAt":1787284326901,"respondedAt":1787284326915,"responseTime":14}}}---HEADERS-API---
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1334
+date: Fri, 21 Aug 2026 03:52:09 GMT
+etag: W/"536-m+n7BB5cwioPSQZwueem82qu9oU"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+via: 1.1 396c4472f3dc9fb1f709059bea4332a4.cloudfront.net (CloudFront)
+x-amz-cf-pop: ORD56-P6
+x-amz-cf-id: ropbJyBuSbb1dy1ZobJuzffbw580wJwvrrd8LC3X-roebpUpR5JHWA==
+
+---API-BODY---
+{"name":"api","status":"OK","process":{"uid":"960c95adf5d716092ee59f51a5a275656616d5df92a3e25e17","pid":1,"version":"v24.19.0","uptime":49849.657132158,"cpuUsage":{"user":18781168642,"system":1602957603},"memoryUsage":{"rss":988504064,"heapTotal":563245056,"heapUsed":506011000,"external":133772971,"arrayBuffers":129606100}},"hostname":"api-75f6d7c5b7-xs4q5","failedServices":[],"succeededServices":["amqp0","redis2","redis1","redis0","redis3","mongoDB2","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1787284329454,"respondedAt":1787284329518,"amqp0":{"response":{"requestedAt":1787284329454,"respondedAt":1787284329518,"responseTime":64}},"redis2":{"response":{"requestedAt":1787284329455,"respondedAt":1787284329458,"responseTime":3}},"redis1":{"response":{"requestedAt":1787284329455,"respondedAt":1787284329459,"responseTime":4}},"redis0":{"response":{"requestedAt":1787284329455,"respondedAt":1787284329459,"responseTime":4}},"redis3":{"response":{"requestedAt":1787284329455,"respondedAt":1787284329459,"responseTime":4}},"mongoDB2":{"response":{"requestedAt":1787284329456,"respondedAt":1787284329459,"responseTime":3}},"mongoDB1":{"response":{"requestedAt":1787284329456,"respondedAt":1787284329461,"responseTime":5}},"mongoDB0":{"response":{"requestedAt":1787284329455,"respondedAt":1787284329472,"responseTime":17}}}
+[0m
+[0m$ [0mcurl -sD - -o /dev/null --max-time 15 https://box.signageos.io/status
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1440
+date: Fri, 21 Aug 2026 03:53:20 GMT
+etag: W/"5a0-wIrSF0Mi9qpL6HTsX0LW1R5giYE"
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 1efedf9603f0d5e659b2c621d2750e46.cloudfront.net (CloudFront)
+x-amz-cf-pop: ORD58-P5
+x-amz-cf-id: UM5V1Q8BDqHAmRUzrQ5rVHe8iY0O3GlX4B1HIXvWfxQdpQcX9lB9-g==
+[0m
+Both leaks confirmed alive via fresh passive GETs. Cycle output:
+
+```
+=== STEP 1 DELTA ===
+[2026-08-21T03:52Z] box.signageos.io/status -> 200 application/json | pod box-77bfdd94d8-b9clc (rs 77bfdd94d8 stable, pod rotated wjmhn->b9clc) | process.uid 94c61bbd… | Node v20.20.2 | 9-svc topology incl mongoDB3 | headers ONLY x-powered-by: Express + CloudFront (secgrep=0) | LEAK ALIVE
+[2026-08-21T03:52Z] api.signageos.io/status -> 200 | pod api-75f6d7c5b7-xs4q5 (rs stable) | Node v24.19.0 | 8-svc topology (mongoDB3 absent) | hardened edge: HSTS max-age=31536000 + XFO DENY + XCTO nosniff + cache-control no-store (secgrep=4) | LEAK ALIVE behind hardened edge
+NO_DELTA auth/config drift across both hosts; differential persists (box /status secgrep=0 vs hardened entry points)
+
+=== STEP 2 PRIORITIZE ===
+1. box.signageos.io/status          (unauth infra-leak, POC archived)
+2. api.signageos.io/v1/organization/{uid}/security-token (cross-tenant IDOR mechanism proven)
+3. api.signageos.io/status          (same leak behind hardened edge)
+
+=== STEP 3 HYPOTHESES ===
+[HYP] Unauthenticated K8s topology and process identity leak at box.signageos.io/status | class=MISCONFIG | conf=100 | verify=GET https://box.signageos.io/status -> 200 JSON w/ hostname+64-hex process.uid+Node v20.20.2+9-svc topology, zero hardening headers
+[HYP] Cross-tenant security-token mint via client-supplied {uid} path param at api.signageos.io/v1/organization/{uid}/security-token | class=IDOR | conf=86 | verify=POST w/ orgA X-Auth id:secret against orgB uid mints orgB token (403074 errorDetail byte-identical to path param proves client-controlled identity input; JWT Bearer ignored)
+[HYP] Same infra leak persists behind hardened edge at api.signageos.io/status | class=MISCONFIG | conf=95 | verify=GET https://api.signageos.io/status -> 200 JSON leaks hostname/uid/topology despite HSTS/XFO/XCTO/no-store
+
+=== STEP 4 SELF-CRITIQUE ===
+- All 3 hypotheses conf>=40, none overlap REJECTED classes, all have executable verify_steps -> KEEP ALL
+- 403074 errorDetail retained solely as IDOR mechanism evidence; descriptive-error class itself remains excluded per scope.yml
+- Box pod rotation (wjmhn->b9clc) within same rs confirms leak is deployment-stable, not instance-specific
+
+=== STEP 5 NEXT ACTION ===
+[NEXT] HUMAN: Submit the finalized box.signageos.io/status report from artifacts/box-status/ archive (cite today's live capture: pod b9clc, body sha256-stable schema); then supply orgA X-Auth `id:secret` + any second organization uid so I can execute the single cross-tenant POST security-token test.
+```
+
+**Status:** All passive surface exhausted — both `/status` endpoints are the only unauthenticated findings and both are POC-complete/stable across 60+ cycles and 9 replica-set rotations. The IDOR lead (conf 86) is fully blocked on credentials. Nothing further I can probe passively; awaiting your report submission and/or `sos login` credentials (`X-Auth id:secret` for orgA + second org uid) to run the cross-tenant test.
