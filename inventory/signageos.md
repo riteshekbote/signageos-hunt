@@ -1773,3 +1773,9 @@
 - CHANGED api.signageos.io/status ALIVE pod rot rs75f6d7c5b7 2lgqn→5hw9c body-sha e9b06361→adaa19e4 uid 9b1e6682a0cac09e309514a4bf7a2f808266a4b72766a68bda uptime 18263s secgrep=4 persist leak intact
 
 ## 2026-08-21 15:24:20 UTC
+
+## 2026-08-21 16:00:18 UTC
+- NEW api.signageos.io/status pod rescheduled within rs `75f6d7c5b7` (2lgqn→5hw9c) — leak persists, hardened headers unchanged (HSTS/XFO/XCTO/no-store, secgrep=4)
+- NEW box.signageos.io/status pod rescheduled within rs `box-77bfdd94d8` (wjmhn→zfqwm→nhmqz) — leak persists, secgrep=0 unchanged
+- CHANGED https://box.signageos.io/status: intra-rs reschedule jzchd→**c248m** (rs `77bfdd94d8`), uptime 2467s (fresh restart), new body sha256 `41f1e86800b05134e08736106d1a08e71710ac5d01293e60e97f0bd3f1885228`
+- CHANGED https://api.signageos.io/status: pod **2lgqn** re-observed within rs `75f6d7c5b7` (uptime 23146s ≈ 6.4h), new body sha256 `eefb7b74d7b007967297699b9b68ff1fe61fd303bad80c9b1debcf1d2d153b9b`; secgrep=4 
