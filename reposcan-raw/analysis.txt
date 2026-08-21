@@ -1,22 +1,29 @@
 [0m
 > build · mimo-v2.5-free
 [0m
-## Scan Triage — 2026-08-21
+## Scan Results: gladiaio/ + @gladiaio/sdk
 
-### HIT Analysis
+**Target scope:** github.com/gladiaio (official org) — SDK repos MEDIUM priority per program scope. **No gladiaio repos exist** in the current reposcan dataset. Only `signageos` repos were scanned.
 
-| File | Line | Finding | Classification |
-|------|------|---------|----------------|
-| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` | `secret: '9d5e257e...'` | Hardcoded clientSecret targeting internal staging `http://api.kiera.office.signageos.io` | **CONFIRMED DEAD** — X-Auth on prod → 403076 `WRONG_ACCOUNT_SECRET "Account not found"`; staging-only fixture, credential reuse disproven across 60+ cycles |
+### Findings
+
+| Category | File | Line | Details |
+|----------|------|------|---------|
+| **REAL_SECRET (already triaged)** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js` | 19 | Hardcoded clientId/secret (sha256 `564c293b…`), targets internal staging `http://api.kiera.office.signageos.io` over HTTP |
 
 ### Verdict
 
-| Candidate | REPORT_CANDIDATE | Rationale |
-|-----------|-----------------|-----------|
-| videowall-designer hardcoded clientId/secret | **No** | CONFIRMED DEAD — staging-only test fixture, does not authenticate on prod (tested 60+ cycles, X-Auth 403076 WRONG_ACCOUNT_SECRET) |
+| Finding | Reportable? | Rationale |
+|---------|-------------|-----------|
+| videowall-designer secret | **No** | CONFIRMED DEAD after 60+ cycles — tested as X-Auth on prod → `403076 WRONG_ACCOUNT_SECRET "Account not found"`. Staging-only test fixture; credential reuse disproven. Not in-scope host (`api.kiera.office.signageos.io` ≠ `box.signageos.io`/`api.signageos.io`). |
 
-### No new findings this cycle
+### Delta Summary
 
-Delta = 0. No new hits vs previous scan. The single hit is already tracked as CONFIRMED DEAD in the knowledge base. All previously accepted/rejected classes unchanged.
+- **0 new hits** vs previous scan
+- **gladiaio repos: not present** in reposcan dataset — cannot triage what isn't scanned
+- **@gladiaio/sdk npm metadata: not scanned** this cycle
 
-**REPORT_CANDIDATE: no** — no new reportable findings.
+### Action Required
+
+1. **Expand scan to gladiaio repos** — the current dataset only covers signageos org. The task specifies gladiaio/ as the target; reposcan must be run against `github.com/gladiaio` explicitly.
+2. **Scan @gladiaio/sdk npm package** for hardcoded tokens, internal URLs, or pre-release/RC markers.
