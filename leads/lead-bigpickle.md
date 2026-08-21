@@ -10714,3 +10714,7 @@ verify_steps: curl -sD - https://api.signageos.io/status
 [LEARN] REJECTED MISCONFIG @ box.signageos.io/status?verbose=1&debug=1&full=true: zero key delta vs baseline — endpoint ignores query params, no escalation path
 [LEARN] REJECTED MISCONFIG @ api.signageos.io/metrics: uniform 404 ENDPOINT_NOT_FOUND envelope — consistent with fully closed non-versioned path space
 ## 2026-08-21 01:52:57 UTC [box] (model bigpickle)
+## 2026-08-21 02:57:32 UTC [box] (model bigpickle)
+[FINAL] hyp-box-status-leak | conf=100 | next_step=submit report from artifacts/box-status/ archive
+[FINAL] hyp-api-idor-sectoken | conf=86 | next_step=await AUTH_HELPED credentials then single POST cross-tenant test
+[FINAL] hyp-api-status-leak | conf=95 | next_step=attach refreshed capture to combined misconfig report
