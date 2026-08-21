@@ -1,4 +1,4 @@
-## 2026-08-21 19:53:38 UTC [api] (model mimo)
+## 2026-08-21 20:21:46 UTC [api] (model mimo)
 [PRIO] box.signageos.io/status, 100, attack=10 business=9 tech=7 gate=10 cloud=9 fresh=10
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token, 86, attack=9 business=8 tech=8 gate=0 cloud=7 fresh=10
 [PRIO] api.signageos.io/status, 72, attack=7 business=5 tech=6 gate=10 cloud=7 fresh=10
@@ -16,7 +16,7 @@ class: IDOR
 asset: api.signageos.io/v1/organization/{uid}/security-token
 confidence: 86
 reasoning: 403074 errorDetail byte-identical across 8+ rs rotations; error text explicitly states org identity derived from "first part (before char `:`) of x-auth header" while path {uid} is client-supplied; JWT Bearer ignored (same 403074 as no-header); zero auth drift confirmed.
-evidence_needed: Valid X-Auth pair (orgA-id:secret) + second organization uid (orgB-uid); request with X-Auth for orgA but path /v1/organization/orgB/security-token; expect 200 response returning orgB's security token (cross-tenant mint)
+evidence_needed: Valid X-Auth pair (orgA-id:secret) + second organization uid (orgB-uid)
 verify_steps: AUTH_HELPED: (1) run `sos login` to obtain account with ≥1 organization; (2) extract X-Auth pair (id:unsafeDecryptedToken); (3) GET /v1/organization/{attackerOrgUid}/security-token with X-Auth header for victimOrg; (4) confirm 200 + token for victimOrg returned
 impact: Attacker mints security token for any organization by supplying arbitrary {uid} in path while authenticating as their own org via X-Auth — enables cross-tenant token minting and full API access to victim organization resources; HIGH severity
 testability: AUTH_HELPED
@@ -35,5 +35,5 @@ testability: PASSIVE
 [LEARN] ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T19:32Z; pod 5hw9c within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent; differential vs box persists
 [LEARN] ALIVE IDOR @ api.signageos.io/v1/organization/{uid}/security-token: reconfirmed 2026-08-21T19:32Z; 403074 errorDetail byte-identical; JWT Bearer ignored; X-Auth/x-oauth-client_id gating intact; zero ACAO on 403; mechanism intact across 8+ rs rotations
 [LEARN] CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
-[RISK] box.signageos.io: 45 — /status leaks full K8s infra topology (pod name, Node version, process UID, 9-service amqp/redis/mongo endpoints) with zero hardening headers; entry points /+/login/ properly hardened (secgrep=4); attack surface limited to info-leak only (no unauth write/exec path)
-[RISK] api.signageos.io: 52 — /status leaks hostname/uid/Node/topology despite hardened headers (secgrep=4); 60+ API routes all 403 JWT/X-Auth-gated (no pre-auth bypass); cross-tenant IDOR on security-token exists but requires valid credentials (AUTH_HELPED conf 86); descriptive error messages on 403 responses aid enumeration but are excluded per scope.yml
+[RISK] box.signageos.io: 45 — /status leaks full K8s infra topology with zero hardening headers; entry points properly hardened; attack surface limited to info-leak only
+[RISK] api.signageos.io: 52 — /status leaks hostname/uid/Node/topology despite hardened headers; 60+ API routes all 403 JWT/X-Auth-gated; cross-tenant IDOR exists but requires credentials (AUTH_HELPED conf 86)
