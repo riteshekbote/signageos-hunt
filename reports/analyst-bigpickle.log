@@ -63114,3 +63114,287 @@ ACCEPTED IDOR @ https://api.signageos.io/v1/organization/{uid}/security-token: 4
 box.signageos.io: 35 — single unauth /status leak; every other path 302 login-gated catch-all
 api.signageos.io: 60 — recon-grade /status leak plus plausible critical cross-tenant IDOR awaiting single-request proof
 overall exposure of surface: 55
+===== ANALYST bigpickle 2026-08-21 17:55:01 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -sS -o /tmp/opencode/box-status.json -D /tmp/opencode/box-status.h -w "%{http_code}\n" https://box.signageos.io/status && sha256sum /tmp/opencode/box-status.json
+200
+d087f8a6fcf17d0b5e7b20c2bdda73616cd72e2c71f372ddc5ffdfba21b8baee  /tmp/opencode/box-status.json
+[0m
+## Objective
+- Run senior-analyst bug-bounty cycles (8 steps: DELTA→PRIORITIZE→HYPOTHESES→SELF-CRITIQUE→NEXT→LEARN→RISK) against the signageOS program, eligible targets ONLY `box.signageos.io` and `api.signageos.io`.
+- Finalize passive POCs for report submission and drive the one remaining AUTH_HELPED lead (cross-tenant security-token IDOR) to proof-or-kill.
+
+## Important Details
+- Program rules: passive-first (GET/HEAD, ≤1 rps, no account creation, no data modification); secrets in commits hashed sha256-only; focus = real logic flaws (IDOR/authz/business logic/SSRF-type) with concrete POC.
+- Excluded classes (never report): descriptive errors/headers, DoS, CSRF on logout/anonymous forms, cookie flags non-sensitive, self-XSS, scanner-no-POC, username enumeration, brute-force policies, SSL/TLS, clickjacking w/o exploit, mail config, outdated libs, password-recovery policies, autocomplete, public login panels, email verification gaps, session control on email/password change.
+- State: `{"phase": "POC", "target": "box"}`.
+- Three live hypotheses (last cycle):
+  - [FINAL] HYP 1 conf 100 — MISCONFIG @ `box.signageos.io/status`: unauth JSON infra-leak (pod hostname, 64-hex process.uid, Node v20.20.2, 9-svc topology incl mongoDB3, cpu/mem/responseTime); headers ONLY `x-powered-by: Express` + CloudFront (secgrep=0) vs secgrep=4 on `/`+`/login/`; stable 60+ cycles across 8+ rs rotations. Ready for submission as-is.
+  - HYP 2 conf 95 — MISCONFIG @ `api.signageos.io/status`: same leak schema behind deliberately hardened edge (HSTS max-age=31536000, x-frame-options DENY, x-content-type-options nosniff, cache-control no-store, secgrep=3–4); Node v24.19.0, 8-svc topology (mongoDB3 absent); structural — survives fresh deploys + intra-rs reschedules. Frame strictly as recon-grade MISCONFIG (triager may rate low/info).
+  - HYP 3 conf 86 (PARKED cap at ≤90 without proof) — IDOR @ `api.signageos.io/v1/organization/{uid}/security-token`: 403074 errorDetail binds identity to "first part (before char `:`) of x-auth header" while path `{uid}` is client-supplied; JWT Bearer provably ignored (`Authorization: Bearer test` → identical 403074); byte-identical across 8+ rs rotations. Server may still enforce X-Auth↔{uid} binding server-side.
+- Priority scores: security-token 7.10 (attack_surface 7, business_value 10, tech_exposure 9, gate_ease 2, cloud_surface 3, freshness 9); api/status 5.90; box/status 5.65.
+- CONFIRMED DEAD: videowall-designer leaked clientId/secret (`fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47`, sha256 `564c293b…`) — staging-only fixture targeting `http://api.kiera.office.signageos.io`; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found".
+- Rejected/dead surface (do not re-probe): box CORS credential-theft (17 static ACAO, 0 `access-control-allow-credentials`, evil.test NOT reflected → MISCONFIG-only); api CORS (zero ACAO all paths); api v1/*+v2/* pre-auth (all 60+ routes 403 JWT/X-Auth-gated); api v1/* descriptive errors (excluded class; errorDetail retained only as IDOR mechanism evidence); box Auth0 OAuth2 redirect_uri/state (not passively testable); box `/ready` (200 "OK" 2 bytes); box probe set `/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket /graphql /.well-known/openid-configuration` (all 302 login catch-all); box WebSocket (wss:// → 302); box `/login/ bundle.js 2.193.0` (zero `/v[12]/` API paths); box `/status?verbose=1&debug=1&full=true` (zero key delta); api `/metrics` (uniform 404 ENDPOINT_NOT_FOUND).
+- Latest replica sets/pods (2026-08-21 ~17:11Z): box rs `77bfdd94d8` pod `wjmhn` unchanged since 15:20Z, body sha256 `00682ecd…`; api rs `75f6d7c5b7` pod reschedule `2lgqn`→`rwhj7`, body sha256 `330ad9cb…`; leak schema + header posture unchanged on both.
+- Error taxonomy @ api auth family: 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE (no headers); 403075 MISSING_ACCOUNT_CLIENT_SECRET (x-oauth-client_id only); 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION (bad pair); NO_ORGANIZATION_TO_AUTHENTICATE (X-Auth on org-scoped routes); 403105 WRONG_JWT_TOKEN (JWT routes).
+
+## Work State
+### Completed
+- box `/status` POC finalized & durably archived (conf 100, 60+ cycles, 8+ rs rotations: `8676fb5f57`→`54846c877b`→`c877d9cc8`→`77bfdd94d8`); evidence chain at `artifacts/box-status/`.
+- api `/status` leak confirmed structural across deploys/reschedules (conf 95); hardened-edge differential vs box documented.
+- Security-token mechanism enumeration complete: dual-auth mapped (JWT Bearer main API; X-Auth `id:unsafeDecryptedToken` bulk provisioning); JWT proven ignored at security-token endpoint; taxonomy byte-stable.
+- Videowall-designer prod secret reuse disproven (CONFIRMED DEAD).
+- Exhaustive rejection pass over box unauthenticated surface (probe sets, WebSocket, CSP-report, healthz-family, bundle.js path-diff) and api pre-auth/CORS/descriptive-errors classes.
+
+### Active
+- Awaiting human credentials to execute the single decisive POST for the cross-tenant IDOR (HYP 3).
+- Ongoing freshness tracking of both `/status` endpoints via pod/rs rotation deltas (latest inventory: api pod `rwhj7`, box pod `wjmhn`).
+
+### Blocked
+- All AUTH_HELPED verification blocked on `sos login` (Auth0 device-code flow) yielding (a) valid orgA X-Auth pair `id:secret`, (b) a second organization uid orgB; cannot exceed confidence 90 on HYP 3 without it.
+
+## Next Move
+1. Emit `[NEXT] HUMAN:` request — run `sos login` (Auth0 device-code flow on box.signageos.io), then supply (a) orgA X-Auth pair `id:secret`, (b) any second organization uid orgB; agent then executes exactly one POST `https://api.signageos.io/v1/organization/<orgB-uid>/security-token` with header `X-Auth: <orgA-id>:<orgA-secret>` (200/201 + orgB-scoped token ⇒ CRITICAL confirmed; 403076/403105 ⇒ kill lead).
+2. If no credentials arrive, continue PASSIVE freshness delta on both `/status` endpoints (GET, ≤1 rps) and refresh evidence shas at `artifacts/box-status/`.
+
+## Relevant Files
+- `artifacts/box-status/` — durable POC evidence archive for box `/status` (body/headers sha256 chain; latest body sha `00682ecd…`, headers `9818d96f…`).
+- `reports/hypotheses-nemotron3.txt` — ranked hypotheses source (box /status conf 100; NEXT/HUMAN sos-login instruction).
+- `reports/hypotheses-bigpickle.txt` — ranked hypotheses source (security-token IDOR conf 86; api/status conf 95).
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+[0m→ [0mRead /tmp/opencode/box-status.h
+[0m
+[0m$ [0msleep 2 && curl -sS -o /tmp/opencode/api-status.json -D /tmp/opencode/api-status.h -w "%{http_code}\n" https://api.signageos.io/status && sha256sum /tmp/opencode/api-status.json
+200
+b34f77a4f0ff66944562f3a031caf5b8104104f697ae0e67fb1971082685e3f6  /tmp/opencode/api-status.json
+[0m
+[0m→ [0mRead /tmp/opencode/api-status.h
+[0m
+[0m$ [0msleep 2 && curl -sS -o /tmp/opencode/st.json -D /tmp/opencode/st.h -w "%{http_code}\n" 'https://api.signageos.io/v1/organization/test/security-token' && sha256sum /tmp/opencode/st.json
+403
+628adb24a70197a35a01463f6780cfa304e00019c17a2a08ebb80142a09a00b6  /tmp/opencode/st.json
+[0m
+[0m→ [0mRead /tmp/opencode/box-status.json
+[0m→ [0mRead /tmp/opencode/api-status.json
+[0m→ [0mRead /tmp/opencode/st.json
+[0m
+[0m$ [0mls -la && ls -la reports artifacts 2>/dev/null
+total 1212
+drwxr-xr-x 11 runner runner   4096 Aug 21 17:42 .
+drwxr-xr-x  3 runner runner   4096 Aug 21 17:42 ..
+drwxr-xr-x  7 runner runner   4096 Aug 21 17:42 .git
+drwxr-xr-x  3 runner runner   4096 Aug 21 17:42 .github
+-rw-r--r--  1 runner runner    944 Aug 21 17:42 README.md
+-rw-r--r--  1 runner runner   7667 Aug 21 17:46 analyst-out.txt
+-rw-r--r--  1 runner runner 434254 Aug 21 17:42 analyst-prompt.txt
+-rw-r--r--  1 runner runner 430265 Aug 21 17:42 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Aug 21 17:42 inventory
+drwxr-xr-x  2 runner runner   4096 Aug 21 17:42 knowledge
+drwxr-xr-x  2 runner runner  45056 Aug 21 17:42 leads
+-rw-r--r--  1 runner runner 221320 Aug 21 17:42 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Aug 21 17:42 reports
+drwxr-xr-x  3 runner runner   4096 Aug 21 17:42 reposcan-raw
+-rw-r--r--  1 runner runner   3086 Aug 21 17:42 scope.yml
+drwxr-xr-x  2 runner runner   4096 Aug 21 17:42 scripts
+-rw-r--r--  1 runner runner     33 Aug 21 17:42 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Aug 21 17:42 state_laguna.json
+-rw-r--r--  1 runner runner     33 Aug 21 17:42 state_ling3.json
+-rw-r--r--  1 runner runner     33 Aug 21 17:42 state_longcat.json
+-rw-r--r--  1 runner runner     33 Aug 21 17:42 state_nemotron3.json
+drwxr-xr-x  2 runner runner  20480 Aug 21 17:42 triage
+reports:
+total 19336
+drwxr-xr-x  2 runner runner    4096 Aug 21 17:42 .
+drwxr-xr-x 11 runner runner    4096 Aug 21 17:42 ..
+-rw-r--r--  1 runner runner 5395962 Aug 21 17:42 analyst-bigpickle.log
+-rw-r--r--  1 runner runner 8613998 Aug 21 17:42 analyst-laguna.log
+-rw-r--r--  1 runner runner   97848 Aug 21 17:42 analyst-ling3.log
+-rw-r--r--  1 runner runner  370802 Aug 21 17:42 analyst-longcat.log
+-rw-r--r--  1 runner runner 4129220 Aug 21 17:42 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    3467 Aug 21 17:42 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      48 Aug 21 17:42 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      47 Aug 21 17:42 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      49 Aug 21 17:42 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner      51 Aug 21 17:42 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner 1263493 Aug 21 17:42 hypotheses.md
+-rw-r--r--  1 runner runner   77501 Aug 21 17:42 valid-bugs.md
+[0m
+[0m→ [0mRead state_bigpickle.json
+[0m→ [0mRead reports/hypotheses-bigpickle.txt
+[0m
+[0m$ [0mls inventory leads | head -50 && find . -path ./.git -prune -o -type d -name "*box-status*" -print
+inventory:
+signageos.md
+
+leads:
+lead-bigpickle.md
+lead-laguna.md
+lead-ling3.md
+lead-longcat.md
+lead-nemotron3.md
+reposcan-2026-08-07-18-57.md
+reposcan-2026-08-07-19-27.md
+reposcan-2026-08-07-19-37.md
+reposcan-2026-08-07-20-04.md
+reposcan-2026-08-07-20-16.md
+reposcan-2026-08-07-21-07.md
+reposcan-2026-08-07-21-35.md
+reposcan-2026-08-07-22-03.md
+reposcan-2026-08-07-22-08.md
+reposcan-2026-08-07-22-52.md
+reposcan-2026-08-07-23-01.md
+reposcan-2026-08-07-23-29.md
+reposcan-2026-08-07-23-55.md
+reposcan-2026-08-08-00-43.md
+reposcan-2026-08-08-00-51.md
+reposcan-2026-08-08-02-39.md
+reposcan-2026-08-08-02-51.md
+reposcan-2026-08-08-03-57.md
+reposcan-2026-08-08-04-02.md
+reposcan-2026-08-08-04-48.md
+reposcan-2026-08-08-05-13.md
+reposcan-2026-08-08-05-32.md
+reposcan-2026-08-08-06-03.md
+reposcan-2026-08-08-06-09.md
+reposcan-2026-08-08-07-04.md
+reposcan-2026-08-08-07-11.md
+reposcan-2026-08-08-07-27.md
+reposcan-2026-08-08-07-59.md
+reposcan-2026-08-08-08-06.md
+reposcan-2026-08-08-08-32.md
+reposcan-2026-08-08-09-08.md
+reposcan-2026-08-08-09-14.md
+reposcan-2026-08-08-09-56.md
+reposcan-2026-08-08-10-01.md
+reposcan-2026-08-08-10-29.md
+reposcan-2026-08-08-10-35.md
+reposcan-2026-08-08-10-59.md
+reposcan-2026-08-08-11-19.md
+reposcan-2026-08-08-11-23.md
+reposcan-2026-08-08-11-48.md
+reposcan-2026-08-08-11-52.md
+[0m
+[0m→ [0mRead leads/lead-bigpickle.md[90m [limit=60][0m
+Evidence confirmed fresh. Now archiving this cycle's probes and updating my lead logs per established convention.
+[0m
+[0m$ [0mdate -u '+%Y-%m-%d %H:%M:%S UTC' && mkdir -p artifacts/box-status/2026-08-21T17-44Z && cp /tmp/opencode/box-status.json /tmp/opencode/box-status.h /tmp/opencode/api-status.json /tmp/opencode/api-status.h /tmp/opencode/st.json /tmp/opencode/st.h artifacts/box-status/2026-08-21T17-44Z/ && sha256sum artifacts/box-status/2026-08-21T17-44Z/* | sed 's|artifacts/box-status/2026-08-21T17-44Z/||'
+2026-08-21 17:48:38 UTC
+c05381f91e872aea39479fc6f5e20f393616f02dcef65b7633fe45a87d32eef8  api-status.h
+b34f77a4f0ff66944562f3a031caf5b8104104f697ae0e67fb1971082685e3f6  api-status.json
+2dd3be706b5cd0c140f9530bc4fc3b56d5de5b3c9faca28cf2f6e5b9e59fc5a2  box-status.h
+d087f8a6fcf17d0b5e7b20c2bdda73616cd72e2c71f372ddc5ffdfba21b8baee  box-status.json
+6ca5ea414c38215d3618304ac6202df08003bdf8a1a82f955d9edd6f4ab23747  st.h
+628adb24a70197a35a01463f6780cfa304e00019c17a2a08ebb80142a09a00b6  st.json
+[0m
+[0m→ [0mRead leads/lead-bigpickle.md[90m [offset=11120][0m
+[0m
+[0m$ [0mcat >> leads/lead-bigpickle.md <<'EOF'
+## 2026-08-21 17:48:38 UTC [box] (model bigpickle)
+[CHANGED] box.signageos.io/status — intra-rs pod reschedule within rs 77bfdd94d8: wjmhn → 7ldcv; fresh body sha256 d087f8a6… (uptime 324s ⇒ fresh pod); secgrep=0 persists
+[CHANGED] api.signageos.io/status — pod rwhj7 / rs 75f6d7c5b7 unchanged since 17:11Z (uptime ~3.7h consistent); fresh body sha256 b34f77a4…; hardened header set secgrep=4 persists
+[CHANGED] api.signageos.io/v1/organization/{uid}/security-token — unauth GET reconfirms byte-stable 403074 errorDetail MISSING_ACCOUNT_ID_TO_AUTHENTICATE at 17:46Z; IDOR mechanism taxonomy intact
+[PRIO]
+asset: https://api.signageos.io/v1/organization/{uid}/security-token, score: 7.20, attack_surface: 7, business_value: 10, tech_exposure: 9, gate_ease: 2, cloud_surface: 3, freshness: 10
+asset: https://api.signageos.io/status, score: 5.90, attack_surface: 4, business_value: 7, tech_exposure: 3, gate_ease: 10, cloud_surface: 2, freshness: 10
+asset: https://box.signageos.io/status, score: 5.65, attack_surface: 4, business_value: 6, tech_exposure: 3, gate_ease: 10, cloud_surface: 2, freshness: 10
+[HYP] Cross-tenant security-token mint via client-supplied {uid} vs X-Auth-bound identity
+class: IDOR
+asset: https://api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: 403074 errorDetail binds account identity to "first part (before char :) of x-auth header" while path {uid} is client-supplied; Authorization Bearer provably ignored (junk JWT → identical 403074); taxonomy byte-stable across 9+ replica-set rotations including this cycle's probe
+evidence_needed: One authenticated POST with valid orgA X-Auth pair against orgB uid returning 200/201 + orgB-scoped token
+verify_steps: AUTH_HELPED: after `sos login`, POST https://api.signageos.io/v1/organization/<orgB-uid>/security-token with header X-Auth: <orgA-id>:<orgA-secret>; 200/201 + orgB-scoped token ⇒ CRITICAL confirmed; 403076/403105 ⇒ kill lead
+impact: Cross-tenant token minting ⇒ takeover of arbitrary organization uid (Critical if proven)
+testability: AUTH_HELPED
+[HYP] Unauthenticated infra-leak on hardened api edge (/status)
+class: MISCONFIG
+asset: https://api.signageos.io/status
+confidence: 95
+reasoning: Unauth GET 200 application/json discloses pod hostname/rs-id (rwhj7 unchanged), process.uid, Node v24.19.0, service topology + per-service latency, cpu/mem; edge carries deliberate hardening yet body leak is structural — survives deploys and intra-rs reschedules across 60+ cycles
+evidence_needed: None — passive POC complete; fresh body sha256 b34f77a4… recorded this cycle
+verify_steps: curl -sS https://api.signageos.io/status → assert 200 JSON leak schema behind hardened header set
+impact: Internal topology/runtime fingerprint of primary API edge aids targeted attacks (Medium)
+testability: PASSIVE
+[HYP] Unauthenticated infra-leak @ box /status with zero-hardening differential
+class: MISCONFIG
+asset: https://box.signageos.io/status
+confidence: 100
+reasoning: Same leak schema (Node v20.20.2, 9-svc topology incl mongoDB3, cpu/mem/responseTime); /status returns only x-powered-by: Express (+CloudFront), secgrep=0 vs secgrep=4 on box / and /login/ — hardening elsewhere proves differential is structural; stable across 9th rs rotation, incl intra-rs reschedule wjmhn→7ldcv this cycle
+evidence_needed: None — POC finalized; evidence refreshed at artifacts/box-status/2026-08-21T17-44Z/ (body d087f8a6…, headers 2dd3be70…)
+verify_steps: curl -sS https://box.signageos.io/status → assert 200 JSON leak + absent security headers
+impact: Unauthenticated internal infrastructure disclosure on admin-plane host (Medium)
+testability: PASSIVE
+[FINAL]
+1. Unauthenticated infra-leak @ box.signageos.io/status — MISCONFIG conf 100 PASSIVE: POC submission-ready, evidence durable across 9th replica-set rotation
+2. Cross-tenant security-token mint @ api.signageos.io/v1/organization/{uid}/security-token — IDOR conf 86 AUTH_HELPED: one decisive POST separates proof from kill; blocked on credentials
+3. Unauthenticated infra-leak @ api.signageos.io/status — MISCONFIG conf 95 PASSIVE: POC complete; frame as recon-grade Medium on hardened edge
+[NEXT] HUMAN: run `sos login` (Auth0 device-code flow on box.signageos.io), then reply with (a) valid orgA X-Auth pair id:secret and (b) any second organization uid orgB — agent executes exactly one POST https://api.signageos.io/v1/organization/<orgB-uid>/security-token with X-Auth header (200/201 + orgB-scoped token ⇒ CRITICAL confirmed; 403076/403105 ⇒ kill lead). No further passive probes required — both MISCONFIG POCs are final.
+[LEARN]
+ACCEPTED MISCONFIG @ box.signageos.io/status: alive through intra-rs reschedule #9+ (wjmhn→7ldcv); leak structural to deployment template, not transient instance state
+ACCEPTED MISCONFIG @ api.signageos.io/status: alive on deliberately hardened edge (secgrep=4 vs box secgrep=0); per-route hardening gap confirmed cross-host
+ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical again — auth-gate semantics unchanged, no server-side fix shipped
+DEAD: none this cycle
+[RISK] box.signageos.io: 55 — sole unauthenticated escape hatch is /status infra-leak (zero hardening); everything else behind Auth0 catch-all; exposure stable pending IDOR test
+[RISK] api.signageos.io: 70 — hardened edge but structural /status leak plus plausible cross-tenant token mint (unproven); collapses toward 45 if IDOR dies at first authenticated POST
+EOF
+wc -l leads/lead-bigpickle.md
+11203 leads/lead-bigpickle.md
+[0m
+[0m← [0mWrite reports/hypotheses-bigpickle.txt
+Wrote file successfully.
+[0m
+Cycle complete. Summary of this pass:
+
+**DELTA (probed 17:44–17:46Z, passive GET ≤1 rps)**
+- `box.signageos.io/status` — intra-rs pod reschedule `wjmhn` → `7ldcv` (rs `77bfdd94d8` unchanged); fresh body sha256 `d087f8a6…`; **secgrep=0 persists**
+- `api.signageos.io/status` — pod `rwhj7` unchanged; body sha256 `b34f77a4…`; hardened set secgrep=4 persists
+- `/v1/organization/{uid}/security-token` — byte-stable 403074 errorDetail reconfirmed; IDOR mechanism intact
+
+**Actions taken**
+- Evidence archived → `artifacts/box-status/2026-08-21T17-44Z/` (bodies + headers + sha256s)
+- Cycle logged → `leads/lead-bigpickle.md` and `reports/hypotheses-bigpickle.txt`
+- Both MISCONFIG POCs remain FINAL (box conf 100, api conf 95); no further passive probing adds value
+
+**[NEXT] HUMAN — blocked on you:** run `sos login` (Auth0 device-code flow), then provide:
+1. a valid orgA X-Auth pair (`id:secret`)
+2. any second organization uid (`orgB`)
+
+I will then execute exactly one POST to `https://api.signageos.io/v1/organization/<orgB>/security-token` with the X-Auth header — `200/201` confirms a Critical cross-tenant token mint; `403076/
+[0m→ [0mRead reports/valid-bugs.md[90m [limit=80][0m
+[0m
+[0m← [0mEdit reports/valid-bugs.md
+Index: /home/runner/work/signageos-hunt/signageos-hunt/reports/valid-bugs.md
+===================================================================
+--- /home/runner/work/signageos-hunt/signageos-hunt/reports/valid-bugs.md
++++ /home/runner/work/signageos-hunt/signageos-hunt/reports/valid-bugs.md
+@@ -1,6 +1,12 @@
+ # Validated Bugs
+ 
++- 3 lead(s) reconfirmed at 2026-08-21 17:48 UTC (passive probe cycle 17:44–17:46 UTC, model bigpickle)
++  - | 1 | box.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 5.3 | DUPLICATE reconfirmed; intra-rs reschedule wjmhn→7ldcv, secgrep=0 stable across 9th rotation; body sha256 d087f8a6… |
++  - | 2 | api.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 5.3 | DUPLICATE reconfirmed; pod rwhj7 unchanged, hardened headers stable; body sha256 b34f77a4… |
++  - | 3 | api /v1/org/{uid}/security-token cross-tenant mint | IDOR | **HOLD** | — | AUTH_HELPED — 403074 errorDetail byte-stable at 17:46Z; blocked on `sos login` credentials (orgA X-Auth pair + orgB uid) |
++  - **0 new VALID findings.** 2 VALID reconfirmations. 1 HOLD carried.
++
+ - 17 lead(s) triaged at 2026-08-11 12:30 UTC (strict triage, latest probe cycle 12:28 UTC)
+   - | 1 | box.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 5.3 | DUPLICATE reconfirmed; passive PoC stable |
+   - | 2 | api.signageos.io/status — infra info disclosure | MISCONFIG | **VALID (Low)** | 5.3 | DUPLICATE reconfirmed; hardened w/ security headers |
+   - | 3 | box.signageos.io CORS ACAO whitelist (http:// + wildcard) | MISCONFIG | **VALID (Low, border)** | 3.1 | DUPLICATE reconfirmed; static whitelist, no creds flag |
+
+[0m
+Ledger updated. Current position:
+
+**Done this session**
+- Fresh passive probes (17:44–17:46Z): box `/status` pod reschedule `wjmhn`→`7ldcv` (secgrep=0 stable), api `/status` unchanged (hardened set stable), security-token 403074 byte-stable
+- Evidence archived → `artifacts/box-status/2026-08-21T17-44Z/`
+- Cycle logged → `leads/lead-bigpickle.md`, `reports/hypotheses-bigpickle.txt`
+- Triage ledger refreshed → `reports/valid-bugs.md` (2 VALID reconfirmations, 1 HOLD)
+
+**Blocked — awaiting your input (the only remaining next step):**
+Run `sos login`, then provide:
+1. orgA X-Auth pair (`id:secret`)
+2. a second organization uid (`orgB`)
+
+I'll fire exactly one POST to `/v1/organization/<orgB>/security-token` with the X-Auth header — `200/201` = Critical cross-tenant mint confirmed; `403076/403105` = lead killed. Both MISCONFIG POCs are final and submission-ready in the meantime; no further autonomous probing adds value.
