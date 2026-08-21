@@ -8502,3 +8502,15 @@
 - LEARN: ALIVE MISCONFIG @ box.signageos.io/status: reconfirmed 2026-08-21T06:22:49Z; pod grdj4→twhcf→zfqwm within rs 77bfdd94d8; secgrep=0 persists; body sha256 d357880
 - LEARN: ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T06:22:51Z; pod 78gz9→pdppm→lln8l within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still abse
 - LEARN: CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
+
+## RANKED HYPOTHESES 2026-08-21 10:48:10 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-nemotron3.txt)
+- [86] https://api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via client-supplied organization uid (from reports/hypotheses-bigpickle.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire JWT + X-Auth pair → test cross-te
+- NEXT(hypotheses-bigpickle.txt): HUMAN: run `sos login` (Auth0 device-code flow), then supply orgA X-Auth pair (`id:secret`) plus any second organization uid; agent will execute exactly ONE dec
+- LEARN: ALIVE MISCONFIG @ box.signageos.io/status: reconfirmed 2026-08-21T06:22:49Z; pod grdj4→twhcf→zfqwm→wjmhn within rs 77bfdd94d8; secgrep=0 persists; body sha256 d
+- LEARN: ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T06:22:51Z; pod 78gz9→pdppm→lln8l→x84wf within rs 75f6d7c5b7; secgrep=3-4 persists; mongoDB3 st
+- LEARN: CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
+- LEARN: ACCEPTED MISCONFIG @ https://box.signageos.io/status — ALIVE again this cycle (same pod wjmhn, fresh body sha c400dcca…, bare header set unchanged).
+- LEARN: ACCEPTED MISCONFIG @ https://api.signageos.io/status — ALIVE across another pod reschedule (x84wf→5hw9c, body sha bd4fd3c6…): rotation-resilience reconfirmed, s
+- LEARN: CONFIRMED DEAD: none new this cycle (surface exhaustively closed; probes limited to /status freshness checks).

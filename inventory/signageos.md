@@ -1746,3 +1746,8 @@
 - NEW api.signageos.io/status pod rescheduled within rs `75f6d7c5b7` (pdppm→lln8l); fresh GET 200, body sha256 `0af28a4d6fd6f243bbc132fc64ddd77ec65a48e0074f839a1cd6921fb3ab0055`; HSTS/xfo/xcto/no-store pers
 - CHANGED box.status pod reschedule zfqwm→wjmhn (rs 77bfdd94d8 stable); body sha256 afdac52ef861ce95…; leak intact (uid ba325853…, Node v20.20.2); secgrep=0, ACAO=0
 - CHANGED api.status pod reschedule lln8l→x84wf (rs 75f6d7c5b7 stable); body sha256 331bee2c6bca5737…; leak intact (uid ec7a7195…, Node v24.19.0); secgrep=3, ACAO=0
+
+## 2026-08-21 10:48:10 UTC
+- NEW box.signageos.io/status pod rescheduled within rs `box-77bfdd94d8` (twhcf→zfqwm→wjmhn); fresh GET 200, body sha256 `d357880f...`→`afdac52e...`; leak intact, secgrep=0 (x-powered-by only)
+- NEW api.signageos.io/status pod rescheduled within rs `75f6d7c5b7` (pdppm→lln8l→x84wf); fresh GET 200, body sha256 `0af28a4d...`→`331bee2c...`; HSTS/xfo/xcto/no-store persist (secgrep=3-4), 8-svc topology
+- CHANGED api.signageos.io/status pod reschedule: hostname api-75f6d7c5b7-x84wf → api-75f6d7c5b7-5hw9c within rs 75f6d7c5b7; unauth GET /status still 200 with identical leak schema (Node v24.19.0, 8-svc topolog
