@@ -10855,3 +10855,16 @@ testability: PASSIVE
 [FINAL] api.status MISCONFIG conf 95 submit-ready
 [FINAL] security-token IDOR conf 86 credential-gated
 [NEXT] HUMAN: run `sos login` (Auth0 device-code flow), then reply with (a) orgA X-Auth pair `id:secret`, (b) any second organization uid. I will execute exactly one request:
+## 2026-08-21 10:08:07 UTC [box] (model bigpickle)
+[CHANGED] box.status pod reschedule zfqwm→wjmhn (rs 77bfdd94d8 stable); body sha256 afdac52ef861ce95…; leak intact (uid ba325853…, Node v20.20.2); secgrep=0, ACAO=0
+[CHANGED] api.status pod reschedule lln8l→x84wf (rs 75f6d7c5b7 stable); body sha256 331bee2c6bca5737…; leak intact (uid ec7a7195…, Node v24.19.0); secgrep=3, ACAO=0
+[PRIO] security-token IDOR @ api.signageos.io/v1/organization/{uid}/security-token | priority 6.75 | attack_surface=7 business_impact=9 technical_severity=9 gate_ease=2 cloud_security=2 freshness=9
+[PRIO] infra-leak @ api.signageos.io/status | priority 6.40 | attack_surface=6 business_impact=6 technical_severity=4 gate_ease=10 cloud_security=3 freshness=10
+[PRIO] infra-leak @ box.signageos.io/status | priority 6.15 | attack_surface=6 business_impact=5 technical_severity=4 gate_ease=10 cloud_security=3 freshness=10
+[HYP] Cross-tenant security-token mint via client-supplied path {uid} while X-Auth header binds org identity | asset=api.signageos.io/v1/organization/{uid}/security-token | class=IDOR | confidence=86 | status=AUTH_HELPED | verify_steps=single POST with valid orgA X-Auth pair against orgB uid; 200/201 + orgB-scoped token proves CRITICAL, 403076/403105 denies (conf≤30)
+[HYP] Unauthenticated /status discloses K8s topology + process identity behind hardened edge (HSTS/xfo/xcto/no-store) | asset=api.signageos.io/status | class=MISCONFIG | confidence=95 | status=PASSIVE | verify_steps=GET /status returns 200 JSON with hostname/64-hex uid/Node v24.19.0/8-svc topology despite secgrep=3 headers
+[HYP] Unauthenticated /status discloses K8s topology + process identity with zero hardening headers | asset=box.signageos.io/status | class=MISCONFIG | confidence=100 | status=PASSIVE | verify_steps=GET /status returns 200 JSON with hostname/64-hex uid/Node v20.20.2/9-svc topology; only x-powered-by + CloudFront headers (secgrep=0)
+[FINAL] security-token IDOR @ api.signageos.io/v1/organization/{uid}/security-token | confidence=86
+[FINAL] infra-leak @ api.signageos.io/status | confidence=95
+[FINAL] infra-leak @ box.signageos.io/status | confidence=100
+[NEXT] HUMAN: run `sos login` (Auth0 device-code flow), then reply with (a) orgA X-Auth pair `id:secret`, (b) any second organization uid; agent will execute exactly one request: curl -sS -X POST -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token

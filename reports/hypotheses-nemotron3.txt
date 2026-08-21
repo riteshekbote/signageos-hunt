@@ -1,8 +1,6 @@
-## 2026-08-21 09:35:29 UTC [api] (model nemotron3)
-[NEW] box.signageos.io/status pod rescheduled within rs `box-77bfdd94d8` (wjmhn → grdj4 → twhcf, uptime 55579s) — leak persists across pod lifecycle, structural not instance-bound
-[NEW] api.signageos.io/status pod rescheduled within rs `75f6d7c5b7` (78gz9 → pdppm) — leak persists, hardened headers unchanged (HSTS/XFO/XCTO/no-store, secgrep=4)
-[CHANGED] box.signageos.io/status body sha256 `1a2f2ec654da859ea2561c9eaf1c077d867ce66cc7dfd459d26730128cc44560` (fresh probe 2026-08-21T06:22:49Z)
-[CHANGED] api.signageos.io/status body sha256 `02b86eb4ed57bb8baebb1f1f6e7f739ce939898baa9e184913c46f0a9d692253` (probe 06:22:51Z)
+## 2026-08-21 10:05:58 UTC [api] (model nemotron3)
+[NEW] box.signageos.io/status pod rescheduled within rs `box-77bfdd94d8` (twhcf→zfqwm); fresh GET 200, body sha256 `d357880f217c319a3066b2f92dc1304cba62976454b26ec423018c42c0c00aef`; leak intact, secgrep=0
+[NEW] api.signageos.io/status pod rescheduled within rs `75f6d7c5b7` (pdppm→lln8l); fresh GET 200, body sha256 `0af28a4d6fd6f243bbc132fc64ddd77ec65a48e0074f839a1cd6921fb3ab0055`; HSTS/xfo/xcto/no-store persist, 8-svc topology (mongoDB3 absent), leak intact
 [PRIO] box.signageos.io/status, 9.10, attack=10 business=8 tech=8 gate=10 cloud=9 fresh=10
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token, 7.70, attack=9 business=9 tech=8 gate=2 cloud=8 fresh=9
 [PRIO] api.signageos.io/status, 7.05, attack=6 business=6 tech=7 gate=10 cloud=7 fresh=8
@@ -38,8 +36,8 @@ testability: PASSIVE
 [FINAL] 2) Cross-tenant security-token minting via X-Auth org-UID path override (confidence 86, CRITICAL, AUTH_HELPED)
 [FINAL] 3) Hardened /status still leaks hostname/uid/Node/topology under security headers (confidence 95, LOW-MEDIUM, PASSIVE)
 [NEXT] HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire JWT + X-Auth pair → test cross-tenant IDOR on POST /v1/organization/<foreign-org-uid>/security-token
-[LEARN] ALIVE MISCONFIG @ box.signageos.io/status: reconfirmed 2026-08-21T06:22:49Z; pod grdj4→twhcf within rs 77bfdd94d8; secgrep=0 persists; body sha256 1a2f2ec654da859ea2561c9eaf1c077d867ce66cc7dfd459d26730128cc44560
-[LEARN] ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T06:22:51Z; pod 78gz9→pdppm within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent from topology; body sha256 02b86eb4ed57bb8baebb1f1f6e7f739ce939898baa9e184913c46f0a9d692253
+[LEARN] ALIVE MISCONFIG @ box.signageos.io/status: reconfirmed 2026-08-21T06:22:49Z; pod grdj4→twhcf→zfqwm within rs 77bfdd94d8; secgrep=0 persists; body sha256 d357880f217c319a3066b2f92dc1304cba62976454b26ec423018c42c0c00aef
+[LEARN] ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T06:22:51Z; pod 78gz9→pdppm→lln8l within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent from topology; body sha256 0af28a4d6fd6f243bbc132fc64ddd77ec65a48e0074f839a1cd6921fb3ab0055
 [LEARN] CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
 [RISK] box.signageos.io: 58 reason: Persistent unauthenticated /status info-leak (K8s topology, pod identity, process UID, cpu/memory) with zero hardening headers behind CloudFront; nonce-hash middleware only on SPA routes; CORS whitelist scoped to / + /login/ (17 origins, http:// variant, *.zdusercontent.com wildcard) but no credentials flag; all other surfaces behind Auth0 login catch-all
 [RISK] api.signageos.io: 62 reason: Dual-auth API (JWT Bearer + X-Auth `id:unsafeDecryptedToken`) with org UID in path client-supplied; cross-tenant IDOR chain on /v1/organization/{uid}/security-token and /v1/organization/{uid} confirmed at mechanism level (403074 gating) but AUTH_HELPED only; descriptive errors leak auth internals (excluded class); /status hardened but still leaks hostname/uid/Node/topology; zero CORS surface

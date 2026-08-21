@@ -1740,3 +1740,9 @@
 - CHANGED api.signageos.io/status body sha256 `02b86eb4ed57bb8baebb1f1f6e7f739ce939898baa9e184913c46f0a9d692253` (probe 06:22:51Z)
 - CHANGED box.signageos.io/status — pod reschedule twhcf→zfqwm (rs `77bfdd94d8` stable); fresh GET 200, body sha256 `d357880f217c319a3066b2f92dc1304cba62976454b26ec423018c42c0c00aef`; leak intact, secgrep=0 (x-
 - CHANGED api.signageos.io/status — pod reschedule pdppm→lln8l (rs `75f6d7c5b7` stable); fresh GET 200, body sha256 `0af28a4d6fd6f243bbc132fc64ddd77ec65a48e0074f839a1cd6921fb3ab0055`; HSTS/xfo/xcto/no-store per
+
+## 2026-08-21 10:08:19 UTC
+- NEW box.signageos.io/status pod rescheduled within rs `box-77bfdd94d8` (twhcf→zfqwm); fresh GET 200, body sha256 `d357880f217c319a3066b2f92dc1304cba62976454b26ec423018c42c0c00aef`; leak intact, secgrep=0
+- NEW api.signageos.io/status pod rescheduled within rs `75f6d7c5b7` (pdppm→lln8l); fresh GET 200, body sha256 `0af28a4d6fd6f243bbc132fc64ddd77ec65a48e0074f839a1cd6921fb3ab0055`; HSTS/xfo/xcto/no-store pers
+- CHANGED box.status pod reschedule zfqwm→wjmhn (rs 77bfdd94d8 stable); body sha256 afdac52ef861ce95…; leak intact (uid ba325853…, Node v20.20.2); secgrep=0, ACAO=0
+- CHANGED api.status pod reschedule lln8l→x84wf (rs 75f6d7c5b7 stable); body sha256 331bee2c6bca5737…; leak intact (uid ec7a7195…, Node v24.19.0); secgrep=3, ACAO=0
