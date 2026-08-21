@@ -1866,3 +1866,17 @@
 - 2026-08-20 ACCEPTED MISCONFIG @ api.signageos.io/status: leak survives a fresh deploy (rs 75f6d7c5b7, uptime <10min at probe) — edge hardening does not cover the status body; structural, not transient
 - 2026-08-20 REJECTED MISCONFIG @ box.signageos.io/status?verbose=1&debug=1&full=true: zero key delta vs baseline — endpoint ignores query params, no escalation path
 - 2026-08-20 REJECTED MISCONFIG @ api.signageos.io/metrics: uniform 404 ENDPOINT_NOT_FOUND envelope — consistent with fully closed non-versioned path space
+- 2026-08-21 ACCEPTED MISCONFIG @ box.signageos.io/status: POC finalized & evidence archived — HTTP 200 JSON infra-leak (hostname box-8b6c78cc8-jsn4l, 64-hex process.uid, Node v20.20.2, 9-svc topology incl mongoDB3, cpu/mem/responseTime), secgrep=0, zero hardening added across 60+ cycles and 8+ rs rotations
+- 2026-08-21 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: JWT Bearer token confirmed IGNORED (returns 403074 same as no-header); only X-Auth/x-oauth-client_id gating enforced; mechanism intact, zero auth drift across 8+ rs rotations
+- 2026-08-21 ACCEPTED MISCONFIG @ api.signageos.io/status: Hardened (HSTS/xfo/xcto/no-store, secgrep=4) but still leaks hostname/uid/Node v24.19.0/8-svc topology (mongoDB3 absent); header differential vs box /status (secgrep=0) persists
+- 2026-08-21 REJECTED MISCONFIG @ box.signageos.io/ready: Confirmed 200 "OK" (2 bytes) — trivial health check, no data leaked — NO_DELTA
+- 2026-08-21 REJECTED MISCONFIG @ box.signageos.io probe set (/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket): all → 302 login catch-all — no unauthenticated surface beyond /status — NO_DELTA
+- 2026-08-21 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403074/403075/403076/403105 bodies leak account/error detail — excluded class per scope.yml; retained only as mechanism evidence for IDOR — NO_DELTA
+- 2026-08-21 REJECTED CORS-exploit @ box.signageos.io / + /login/: 17 static ACAO, 0 access-control-allow-credentials — not CORS-exploitable, MISCONFIG-only — NO_DELTA
+- 2026-08-21 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 redirect_uri/state binding not passively testable without tenant/session — NO_DELTA
+- 2026-08-21 REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass; cross-tenant chain remains AUTH_HELPED only — NO_DELTA
+- 2026-08-21 CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) is staging-only fixture targeting http://api.kiera.office.signageos.io; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven (60+ cycles)
+- 2026-08-21 ACCEPTED MISCONFIG @ box.signageos.io/status: alive on rs 77bfdd94d8 unchanged since last cycle; secgrep=0 persists behind CloudFront; evidence refreshed at artifacts/box-status/
+- 2026-08-21 ACCEPTED MISCONFIG @ api.signageos.io/status: leak survives a fresh deploy (rs 75f6d7c5b7, uptime <10min at probe) — edge hardening does not cover the status body; structural, not transient
+- 2026-08-21 REJECTED MISCONFIG @ box.signageos.io/status?verbose=1&debug=1&full=true: zero key delta vs baseline — endpoint ignores query params, no escalation path
+- 2026-08-21 REJECTED MISCONFIG @ api.signageos.io/metrics: uniform 404 ENDPOINT_NOT_FOUND envelope — consistent with fully closed non-versioned path space

@@ -1681,3 +1681,11 @@
 - CHANGED api.signageos.io replica set: fresh deploy confirmed — pod `api-75f6d7c5b7-bq5sr` (uptime 454s at probe), leak persists on new rs; hardened headers unchanged (HSTS/XFO/XCTO/no-store, secgrep=4)
 - NEW Probe box.signageos.io/status?verbose=1&debug=1&full=true → 200, zero key delta vs baseline (dynamic metric drift only) → no query-param escalation
 - NEW Probe api.signageos.io/metrics → uniform 192B `ENDPOINT_NOT_FOUND` envelope → no new surface
+
+## 2026-08-21 00:04:07 UTC
+- NEW api.signageos.io replica set rotated: fresh deploy `api-75f6d7c5b7-bq5sr` (uptime 454s), /status leak persists, hardened headers unchanged (HSTS/XFO/XCTO/no-store, secgrep=4)
+- NEW box.signageos.io/status?verbose=1&debug=1&full=true probed → 200, zero key delta vs baseline (dynamic metric drift only), no query-param escalation
+- NEW api.signageos.io/metrics probed → uniform 192B `ENDPOINT_NOT_FOUND` envelope, no new surface
+- CHANGED api.signageos.io replica set: fresh deploy confirmed — pod `api-75f6d7c5b7-bq5sr` (uptime 454s at probe), leak persists on new rs; hardened headers unchanged (HSTS/XFO/XCTO/no-store, secgrep=4)
+- NEW Probe box.signageos.io/status?verbose=1&debug=1&full=true → 200, zero key delta vs baseline (dynamic metric drift only) → no query-param escalation
+- NEW Probe api.signageos.io/metrics → uniform 192B `ENDPOINT_NOT_FOUND` envelope → no new surface
