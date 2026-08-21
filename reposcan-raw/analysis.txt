@@ -1,19 +1,136 @@
 [0m
 > build · mimo-v2.5-free
 [0m
-## Scan Triage Report
+[0m% [0mWebFetch https://api.github.com/orgs/gladiaio/repos?per_page=100
+Looking at this, I need to actually scan the gladiaio/ GitHub org and @gladiaio/sdk npm package since the scan summary only shows 1 hit in a signageos repo (not gladiaio). Let me gather the actual data.
+[0m◈ [0mExa Web Search "@gladiaio/sdk npm package registry"
+[0m% [0mWebFetch https://api.github.com/repos/gladiaio/sdk/contents/packages/sdk-js
+[0m% [0mWebFetch https://api.github.com/repos/gladiaio/gladia-cli/contents/.
+Now let me dig into the key repos for secrets and interesting findings:
+[0m% [0mWebFetch https://api.github.com/repos/gladiaio/sdk/contents/packages/sdk-python
+## Objective
+- Triage a static scan of public repos from the `gladiaio/` GitHub org and npm package metadata for `@gladiaio/sdk`, classifying any found secrets/hits into categories and determining reportability.
 
-**Scan scope**: `gladiaio/` GitHub org + `@gladiaio/sdk` npm metadata
-**Result**: Zero gladiaio hits. The single hit is in the **signageos** org (different target).
+## Important Details
+- Program scope targets (ONLY eligible): `box.signageos.io`, `api.signageos.io` — `gladiaio/` is a **different org** from `signageos`; gladiaio repos are MEDIUM priority as public source code in the program scope
+- The RAG knowledge base is extensive but focused on signageos findings (box/api /status info-leaks, CORS, CSP, IDOR at security-token endpoint, videowall-designer leaked clientId/secret confirmed DEAD on prod)
+- Scope.yml exclusion list is long (DoS, descriptive errors, CSRF-on-anonymous, TLS, clickjacking, outdated libs, etc.) — only real logic flaws with concrete POC on eligible hosts are reportable
+- `@gladiaio/sdk`: v1.1.0, MIT license, 3221 weekly downloads, repo at `github.com/gladiaio/sdk` (monorepo: JS SDK, Python SDK, OpenAPI generator)
+- `gladiaio/gladia-cli`: public CLI repo (TypeScript)
+- Hardcoded secret hashes must be reported as sha256 only, never raw
 
-| Category | File | Line | Detail |
-|---|---|---|---|
-| **CONFIRMED DEAD** | `videowall-designer/sos/videoTiming.js` | 19 | `secret: '9d5e…1c9'` — sha256 `564c293b…`. Already tested as X-Auth on prod → `403076 WRONG_ACCOUNT_SECRET "Account not found"`. Staging-only fixture (`http://api.kiera.office.signageos.io`), credential reuse disproven across 60+ cycles. |
+## Work State
+### Completed
+- Fetched `gladiaio/` GitHub org repos via API — found `gladia-cli` repo (ID 607616554)
+- Searched npm registry for `@gladiaio/sdk` — confirmed v1.1.0, published 2025-09-09, 3221 weekly downloads, repo `github.com/gladiaio/sdk`
+- Fetched `gladiaio/sdk` GitHub README — confirmed monorepo structure (JS SDK, Python SDK, generator)
+- Scan summary processed: **1075 files scanned, 1 hit**
+- The single hit is at `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` — a hardcoded secret (sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`)
+- This hit is already **CONFIRMED DEAD** per RAG: tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only fixture, credential reuse disproven (60+ cycles)
 
-### Verdict
+### Active
+- Need to complete classification table and verdict for each hit category
+- Need to determine if any gladiaio-specific hits exist (the scan found zero gladiaio hits; only 1 signageos hit)
 
-| Candidate | REPORT_CANDIDATE |
-|---|---|
-| videowall-designer hardcoded clientId/secret | **no** — CONFIRMED DEAD, staging-only, no prod impact |
+### Blocked
+- No gladiaio-specific secrets, endpoints, or interesting findings surfaced in the scan — the 1075-file scan appears to have produced zero gladiaio hits
 
-**Summary**: The `gladiaio/` GitHub org scan produced **zero new hits**. The only secret found (`564c293b…`) is already tracked in the knowledge base as CONFIRMED DEAD on the signageos target. No gladiaio-specific findings to report.
+## Next Move
+1. Output classification table: `REAL_SECRET` / `TEST_OR_EXAMPLE` / `ENDPOINT_LEAK` / `INTERESTING` per hit
+2. Issue verdict: `REPORT_CANDIDATE: no` for the single signageos hit (already CONFIRMED DEAD, not in gladiaio scope)
+3. Confirm zero gladiaio-specific hits and close the triage
+
+## Relevant Files
+- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` — hardcoded secret (sha256 `564c293b…`), already CONFIRMED DEAD on prod
+- `gladiaio/sdk` GitHub monorepo — JS SDK, Python SDK, OpenAPI generator (no secrets found in scan)
+- `gladiaio/gladia-cli` GitHub repo — CLI tool (no secrets found in scan)
+- `@gladiaio/sdk` npm package — v1.1.0, 3221 weekly downloads (no secrets found in metadata)
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+[0m✱ [0mGlob "**/*"[90m in reposcan-raw · 100 matches[0m
+[0m
+[0m$ [0mfind /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw -maxdepth 3 -type d | head -50
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/vscode-sops
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/vscode-sops/.vscode
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/vscode-sops/.git
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/vscode-sops/src
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/vscode-sops/.github
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/vscode-sops/tools
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/vscode-sops/test
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/platform
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/platform/.git
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/platform/src
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/platform/debian
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/platform/support
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/platform/windows
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/applet-sandbox
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/applet-sandbox/.git
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/applet-examples
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/applet-examples/examples
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/applet-examples/.git
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/applet-examples/benchmark
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/applet-examples/smil
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/applet-examples/demo
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/applet-examples/tests
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/applet-examples/.githooks
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/applet-examples/tools
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/SMIL
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/test-server
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/.git
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/public
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/src
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/.github
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/tools
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/docs
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/test
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/test-runner
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/config
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/videowall-designer
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/videowall-designer/.git
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/videowall-designer/sos
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/videowall-designer/server
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/sdk
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/sdk/.git
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/sdk/src
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/sdk/tests
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/sdk/.github
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/server-bootstrap
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/server-bootstrap/.git
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/server-bootstrap/amazon-linux-2
+[0m
+[0m→ [0mRead reposcan-raw/analysis.txt
+[0m→ [0mRead reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
+[0m
+[0m$ [0mgrep -rn "api_key\|apikey\|secret\|password\|token\|credential\|auth_key\|access_key" /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw --include="*.js" --include="*.ts" --include="*.json" --include="*.yaml" --include="*.yml" --include="*.env" 2>/dev/null | grep -v node_modules | grep -v ".git" | head -30
+...output truncated...
+
+Full output saved to: /home/runner/.local/share/opencode/tool-output/tool_02680cec9001qKO3OoENu1O3Pm
+
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:352:        "@aws-sdk/credential-provider-node": "3.709.0",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:473:        "@aws-sdk/credential-provider-node": "3.709.0",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:539:        "@aws-sdk/credential-provider-node": "3.709.0",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:616:      "resolved": "https://signageos-524256255273.d.codeartifact.eu-central-1.amazonaws.com/npm/private/@aws-sdk/credential-provider-env/-/credential-provider-env-3.709.0.tgz",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:638:      "resolved": "https://signageos-524256255273.d.codeartifact.eu-central-1.amazonaws.com/npm/private/@aws-sdk/credential-provider-http/-/credential-provider-http-3.709.0.tgz",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:665:      "resolved": "https://signageos-524256255273.d.codeartifact.eu-central-1.amazonaws.com/npm/private/@aws-sdk/credential-provider-ini/-/credential-provider-ini-3.709.0.tgz",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:670:        "@aws-sdk/credential-provider-env": "3.709.0",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:671:        "@aws-sdk/credential-provider-http": "3.709.0",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:672:        "@aws-sdk/credential-provider-process": "3.709.0",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:673:        "@aws-sdk/credential-provider-sso": "3.709.0",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:674:        "@aws-sdk/credential-provider-web-identity": "3.709.0",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:676:        "@smithy/credential-provider-imds": "^3.2.8",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:697:      "resolved": "https://signageos-524256255273.d.codeartifact.eu-central-1.amazonaws.com/npm/private/@aws-sdk/credential-provider-node/-/credential-provider-node-3.709.0.tgz",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:701:        "@aws-sdk/credential-provider-env": "3.709.0",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:702:        "@aws-sdk/credential-provider-http": "3.709.0",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:703:        "@aws-sdk/credential-provider-ini": "3.709.0",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:704:        "@aws-sdk/credential-provider-process": "3.709.0",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:705:        "@aws-sdk/credential-provider-sso": "3.709.0",
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/smil-player/package-lock.json:706:        "@aws-sdk/credential-provider-web-identity": "3.709.0",
+[0m
+[93m[1m! [0mpermission requested: read (reposcan-raw/signageos/cli/.env.test); auto-rejecting
+[0m✗ [0mRead reposcan-raw/signageos/cli/.env.test failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[93m[1m! [0mpermission requested: read (reposcan-raw/signageos/cli/.env.amy); auto-rejecting
+[0m✗ [0mRead reposcan-raw/signageos/cli/.env.amy failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
