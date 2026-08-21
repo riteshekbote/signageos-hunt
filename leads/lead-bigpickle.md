@@ -11001,3 +11001,10 @@ testability: PASSIVE
 [PARKED] none dropped — all three ≥40 confidence, none overlap rejected classes (/status info-leak ≠ banner grabbing/descriptive errors per scope.yml determination; CORS/OAuth2/probe-set/rejected-error-body classes already parked in prior cycles).
 [FINAL] 1. IDOR @ api/v1/organization/{uid}/security-token (conf 86, AUTH_HELPED) · 2. MISCONFIG @ api/signageos.io/status (conf 95, PASSIVE) · 3. MISCONFIG @ box.signageos.io/status (conf 100, PASSIVE)
 [NEXT] HUMAN: run `sos login` (Auth0 device-code flow), then reply with (a) a valid orgA X-Auth pair `id:secret`, (b) any second organization uid orgB. Agent will execute exactly ONE request: curl -sS -X POST -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token. Fallback if unavailable: submit both /status reports as-is (PASSIVE, evidence complete).
+## 2026-08-21 14:08:52 UTC [box] (model bigpickle)
+[PRIO]
+[PARKED]
+[FINAL]
+[NEXT]
+[LEARN]
+[RISK]
