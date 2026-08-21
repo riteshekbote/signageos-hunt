@@ -3671,3 +3671,8 @@ https://api.signageos.io/status -> 200 len=1330 type=application/json; charset=u
 
 ## 2026-08-21 18:46:08 UTC
 https://box.signageos.io/status -> 200 len=1456 type=application/json; charset=utf-8
+
+## 2026-08-21 19:01:51 UTC
+https://box.signageos.io/status -> 200 len=1435 type=application/json; charset=utf-8
+https://api.signageos.io/status -> 200 len=1338 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/{uid -> HTTP 403

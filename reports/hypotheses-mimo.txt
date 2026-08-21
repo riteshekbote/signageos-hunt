@@ -1,5 +1,5 @@
-## 2026-08-21 18:45:54 UTC [api] (model mimo)
-[PRIO] box.signageos.io/status, 91, attack=10 business=9 tech=7 gate=10 cloud=9 fresh=10
+## 2026-08-21 19:01:39 UTC [api] (model mimo)
+[PRIO] box.signageos.io/status, 100, attack=10 business=9 tech=7 gate=10 cloud=9 fresh=10
 [PRIO] api.signageos.io/v1/organization/{uid}/security-token, 86, attack=9 business=8 tech=8 gate=0 cloud=7 fresh=10
 [PRIO] api.signageos.io/status, 72, attack=7 business=5 tech=6 gate=10 cloud=7 fresh=10
 [PRIO] box.signageos.io/ + /login/ CORS+CSP, 68, attack=6 business=6 tech=7 gate=10 cloud=5 fresh=10
@@ -22,8 +22,10 @@ verify_steps: GET https://box.signageos.io/status — returns 200 application/js
 impact: Attacker gains K8s pod identity, Node version, process UID, and full backend service topology — enables targeted attacks on internal infrastructure (redis/amqp/mongo endpoints); LOW-MEDIUM severity (informational, aids further exploitation)
 testability: PASSIVE
 [FINAL] — re-ranked:
+[NEXT] PROBE: GET https://api.signageos.io/status + GET https://api.signageos.io/v1/organization/{uid}/security-token (passive recheck — confirm no header/behavior delta this cycle, secgrep count, body schema stability)
 [LEARN] ALIVE MISCONFIG @ box.signageos.io/status: reconfirmed 2026-08-21T18:18:29Z; pod 7ldcv within rs 77bfdd94d8; secgrep=0 persists; 9-svc topology + cpu/mem leak unchanged; POC finalized 60+ cycles
 [LEARN] ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T18:18:29Z; pod rwhj7 within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent; differential vs box persists
 [LEARN] ALIVE IDOR @ api.signageos.io/v1/organization/{uid}/security-token: reconfirmed 2026-08-21T18:18:29Z; 403074 errorDetail byte-identical; JWT Bearer ignored; X-Auth/x-oauth-client_id gating intact; zero ACAO on 403; mechanism intact across 8+ rs rotations
+[LEARN] CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
 [RISK] box.signageos.io: 45 — /status leaks full K8s infra topology (pod name, Node version, process UID, 9-service amqp/redis/mongo endpoints) with zero hardening headers; entry points /+/login/ properly hardened (secgrep=4); attack surface limited to info-leak only (no unauth write/exec path)
 [RISK] api.signageos.io: 52 — /status leaks hostname/uid/Node/topology despite hardened headers (secgrep=4); 60+ API routes all 403 JWT/X-Auth-gated (no pre-auth bypass); cross-tenant IDOR on security-token exists but requires valid credentials (AUTH_HELPED conf 86); descriptive error messages on 403 responses aid enumeration but are excluded per scope.yml
