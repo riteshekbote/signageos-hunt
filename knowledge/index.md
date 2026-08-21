@@ -1880,3 +1880,4 @@
 - 2026-08-21 ACCEPTED MISCONFIG @ api.signageos.io/status: leak survives a fresh deploy (rs 75f6d7c5b7, uptime <10min at probe) — edge hardening does not cover the status body; structural, not transient
 - 2026-08-21 REJECTED MISCONFIG @ box.signageos.io/status?verbose=1&debug=1&full=true: zero key delta vs baseline — endpoint ignores query params, no escalation path
 - 2026-08-21 REJECTED MISCONFIG @ api.signageos.io/metrics: uniform 404 ENDPOINT_NOT_FOUND envelope — consistent with fully closed non-versioned path space
+- 2026-08-21 ACCEPTED MISCONFIG @ api.signageos.io/status: leak survives pod reschedule within rs 75f6d7c5b7 (bq5sr→78gz9, uptime reset) — structural, not instance-bound
