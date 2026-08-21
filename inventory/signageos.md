@@ -1714,3 +1714,9 @@
 - NEW box.signageos.io/status pod rescheduled within rs `box-77bfdd94d8` (wjmhn → grdj4, uptime 55579s) — leak persists across pod lifecycle, structural not instance-bound
 - CHANGED box.signageos.io/status: pod rescheduled again within SAME rs `77bfdd94d8`: `grdj4`→`twhcf` (fresh probe 2026-08-21T06:22:49Z); body sha256 `1a2f2ec654da859ea2561c9eaf1c077d867ce66cc7dfd459d26730128cc
 - CHANGED api.signageos.io/status: pod rescheduled within rs `75f6d7c5b7`: `78gz9`→`pdppm` (probe 06:22:51Z); sha256 `02b86eb4ed57bb8baebb1f1f6e7f739ce939898baa9e184913c46f0a9d692253`; leak persists; topology s
+
+## 2026-08-21 07:19:57 UTC
+- NEW box.signageos.io/status pod rescheduled within rs `box-77bfdd94d8` (wjmhn → grdj4 → twhcf, uptime 55579s) — leak persists across pod lifecycle, structural not instance-bound
+- NEW api.signageos.io/status pod rescheduled within rs `75f6d7c5b7` (78gz9 → pdppm) — leak persists, hardened headers unchanged (HSTS/XFO/XCTO/no-store, secgrep=4)
+- CHANGED box.signageos.io/status body sha256 `1a2f2ec654da859ea2561c9eaf1c077d867ce66cc7dfd459d26730128cc44560` (fresh probe 2026-08-21T06:22:49Z)
+- CHANGED api.signageos.io/status body sha256 `02b86eb4ed57bb8baebb1f1f6e7f739ce939898baa9e184913c46f0a9d692253` (probe 06:22:51Z)

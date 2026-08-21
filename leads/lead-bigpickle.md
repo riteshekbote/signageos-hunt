@@ -10806,3 +10806,13 @@ testability: PASSIVE
 [LEARN] CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
 [RISK] box.signageos.io: 45 | reason: unauth /status infra disclosure + zero hardening headers, but auth surface closed passively; no data exposure
 [RISK] api.signageos.io: 60 | reason: confirmed cross-tenant token-mint mechanism (critical if proven, currently credential-gated) + structural status leak behind hardened edge
+## 2026-08-21 07:19:46 UTC [box] (model bigpickle)
+[PRIO] asset=api.signageos.io/v1/organization/{uid}/security-token priority=6.75 attack=7 biz=9 tech=9 gate_ease=2 cloud=2 freshness=9
+[PRIO] asset=api.signageos.io/status priority=6.40 attack=6 biz=6 tech=4 gate_ease=10 cloud=3 freshness=10
+[PRIO] asset=box.signageos.io/status priority=6.15 attack=6 biz=5 tech=4 gate_ease=10 cloud=3 freshness=10
+[HYP] title=MISCONFIG @ box.signageos.io/status status=FINAL confidence=100
+[HYP] title=IDOR @ api.signageos.io/v1/organization/{uid}/security-token status=FINAL confidence=86
+[HYP] title=MISCONFIG @ api.signageos.io/status status=FINAL confidence=95
+[NEXT] type=HUMAN action=Run `sos login` (Auth0 device-code flow), then reply with: (a) orgA X-Auth pair "id:secret", (b) any second organization uid. Agent will execute ONE decisive request: curl -X POST -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token — 200/201 with orgB-scoped token = CRITICAL confirmed; 403076/403105 = hypothesis denied, downgrade to conf≤30.
+[RISK] asset=box.signageos.io risk_score=45/100 reasons=Unauth /status discloses full internal infra topology + runtime identifiers (high recon value, low direct compromise); auth surface closed passively; CORS credential-theft disproven; no other live findings.
+[RISK] asset=api.signageos.io risk_score=60/100 reasons=Confirmed cross-tenant security-token mint MECHANISM (credential-gated, exploitability pending single POST — potential full org takeover if confirmed) + structural unauth /status internals leak behind hardened edge.
