@@ -892,3 +892,79 @@ testability: PASSIVE
 
 [RISK] box.signageos.io: 45 — /status leaks full K8s infra topology (pod name, Node version, process UID, 9-service amqp/redis/mongo endpoints) with zero hardening headers; entry points /+/login/ properly hardened (secgrep=4); attack surface limited to info-leak only (no unauth write/exec path)
 [RISK] api.signageos.io: 52 — /status leaks hostname/uid/Node/topology despite hardened headers (secgrep=4); 60+ API routes all 403 JWT/X-Auth-gated (no pre-auth bypass); cross-tenant IDOR on security-token exists but requires valid credentials (AUTH_HELPED conf 86); descriptive error messages on 403 responses aid enumeration but are excluded per scope.yml
+===== ANALYST mimo 2026-08-21 23:55:36 UTC =====
+[0m
+> build · mimo-v2.5-free
+[0m
+[0m$ [0mcurl -sS -D - -o /tmp/api-sec-token-headers.txt -w '\nHTTP_CODE:%{http_code}\nTIME:%{time_total}\n' -H "Origin: https://evil.test" -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0" https://api.signageos.io/v1/organization/test/security-token 2>&1 | head -80
+HTTP/2 403 
+content-type: application/json; charset=utf-8
+content-length: 326
+date: Fri, 21 Aug 2026 23:55:12 GMT
+etag: W/"146-fj8PODy5yJPHl8tjg58lQ2aMPQg"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Error from cloudfront
+via: 1.1 ab691c2d3f0bdcb972f433508cfd5492.cloudfront.net (CloudFront)
+x-amz-cf-pop: SFO53-P12
+x-amz-cf-id: am3_efapW0C_s38NatVEQnlCZ5aLgweOmLHVKnb9nT8lJr-hkSUvmw==
+
+
+HTTP_CODE:403
+TIME:0.196538
+[0m
+[0m$ [0mcurl -sS -D - -o /tmp/api-status-headers.txt -w '\nHTTP_CODE:%{http_code}\nTIME:%{time_total}\n' -H "Origin: https://evil.test" -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0" https://api.signageos.io/status 2>&1 | head -60
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1332
+date: Fri, 21 Aug 2026 23:55:14 GMT
+etag: W/"534-FunawuLmTOEDNweRaRqKtL9Ke2c"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+via: 1.1 cb49307f74b9f0e283e53d9af4052830.cloudfront.net (CloudFront)
+x-amz-cf-pop: SFO53-P12
+x-amz-cf-id: 6QixZJ_vR8Bl55aUotGUqVBVzIGRgna_NNKiteLbHi96huuGI6vMhw==
+
+
+HTTP_CODE:200
+TIME:0.281292
+[0m
+[0m$ [0mcurl -sS -D - -o /tmp/box-status-headers.txt -w '\nHTTP_CODE:%{http_code}\nTIME:%{time_total}\n' -H "Origin: https://evil.test" -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0" https://box.signageos.io/status 2>&1 | head -60
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1434
+date: Fri, 21 Aug 2026 23:55:16 GMT
+etag: W/"59a-9Z2O+/C6gSmi4Nxx8T80Xz+dATg"
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 3d4a6e7eb738ddcd8d810f8af7dc83ca.cloudfront.net (CloudFront)
+x-amz-cf-pop: SFO53-P6
+x-amz-cf-id: DeEgsNS-5j259HSGgO_OmGzlf1CxFk59lPXZmR40LT--ZU7ZMlN53g==
+
+
+HTTP_CODE:200
+TIME:0.572338
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcat /tmp/api-sec-token-headers.txt failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcat /tmp/api-status-headers.txt failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcat /tmp/box-status-headers.txt failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcurl -sS -o /tmp/api-sec-body.json -w '%{http_code}' -H "Origin: https://evil.test" https://api.signageos.io/v1/organization/test/security-token 2>&1; echo; cat /tmp/api-sec-body.json failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcurl -sS -o /tmp/api-status-body.json -w '%{http_code}' https://api.signageos.io/status 2>&1; echo; cat /tmp/api-status-body.json failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcurl -sS -o /tmp/box-status-body.json -w '%{http_code}' https://box.signageos.io/status 2>&1; echo; cat /tmp/box-status-body.json failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
