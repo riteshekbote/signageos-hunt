@@ -1,20 +1,20 @@
 [0m
 > build · mimo-v2.5-free
 [0m
-## Scan Triage: gladiaio/ + @gladiaio/sdk
+| Category | File | Line | Detail |
+|---|---|---|---|
+| **REAL_SECRET (DEAD)** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js` | 19 | Hardcoded `clientId` + `secret` targeting internal staging `http://api.kiera.office.signageos.io` over HTTP. Secret sha256: `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` |
 
-**Scan stats:** 1075 code/config files scanned, **1 hit** (zero new since last cycle)
+**Classification rationale:**
 
-| # | File | Line | SHA256 (truncated) | Classification |
-|---|------|------|---------------------|----------------|
-| 1 | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` | `secret: '9d5e257e…'` | `564c293b…` | **CONFIRMED DEAD** — staging-only fixture targeting `http://api.kiera.office.signageos.io`; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; credential reuse disproven (60+ cycles) |
+- This is the **same hit** identified in the RAG base as `ACCEPTED SECRET_LEAK` (2026-08-07) and subsequently **CONFIRMED DEAD** (2026-08-14 onwards): the pair was tested as X-Auth `<orgA-id:secret>` on **production** (`api.signageos.io`) → 403076 `WRONG_ACCOUNT_SECRET` "Account not found". The credential is a staging-only test fixture targeting `http://api.kiera.office.signageos.io` (internal staging), not production.
 
-### Verdict
+- **No new discovery** — delta = 0 new hit lines vs previous scan. The sole hit has been exhaustively triaged across 60+ cycles.
 
-| Finding | gladiaio? | Reportable? | Rationale |
-|---------|-----------|-------------|-----------|
-| videowall-designer hardcoded secret | **NO** (signageos org) | **No** | Out-of-scope org; CONFIRMED DEAD on prod (60+ cycles); staging-only test fixture |
+**Verdict:**
 
-**REPORT_CANDIDATE: no**
+| Candidate | Reportable? | Reason |
+|---|---|---|
+| `videowall-designer/sos/videoTiming.js:19` | **No** | CONFIRMED DEAD — staging-only fixture, credential reuse disproven on prod; not on in-scope hosts (`box.signageos.io`, `api.signageos.io`); targets out-of-scope internal staging URL |
 
-Zero gladiaio-specific hits across 1075 files. The sole hit belongs to signageos (previously triaged and marked CONFIRMED DEAD). No npm metadata anomalies surfaced for `@gladiaio/sdk`. No actionable candidates from this scan cycle.
+**REPORT_CANDIDATE: No** — zero new findings. The sole hit is a known-dead staging fixture that has been exhaustively tested and confirmed inactive on production across 60+ probe cycles.
