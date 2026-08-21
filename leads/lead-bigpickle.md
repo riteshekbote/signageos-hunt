@@ -10729,3 +10729,9 @@ verify_steps: curl -sD - https://api.signageos.io/status
 [HYP] Same infra-leak persists behind hardened edge at api.signageos.io/status
 [NEXT] HUMAN: Submit the finalized box.signageos.io/status report from artifacts/box-status/ (attach today's captures + SHA256SUMS-20260821.txt); then supply orgA X-Auth `id:secret` + any second organization uid for the single cross-tenant POST test
 [LEARN] ACCEPTED MISCONFIG @ api.signageos.io/status: leak survives pod reschedule within rs 75f6d7c5b7 (bq5sr→78gz9, uptime reset) — structural, not instance-bound
+## 2026-08-21 05:10:03 UTC [box] (model bigpickle)
+[CHANGED] box.signageos.io/status — pod reschedule within SAME rs: box-77bfdd94d8-wjmhn → box-77bfdd94d8-grdj4 (uptime 55579s); leak persists across pod lifecycle → structural, not instance-bound
+[HYP] class: MISCONFIG | asset: box.signageos.io/status | confidence: 100
+[HYP] class: IDOR | asset: api.signageos.io/v1/organization/{uid}/security-token | confidence: 86
+[HYP] class: MISCONFIG | asset: api.signageos.io/status | confidence: 95
+[NEXT] HUMAN: Submit the finalized box.signageos.io/status report from artifacts/box-status/ (attach live capture + SHA256SUMS-20260821.txt). Then run `sos login` and supply orgA X-Auth `id:secret` + any second organization uid → I execute the single cross-tenant POST to https://api.signageos.io/v1/organization/<orgB-uid>/security-token immediately.

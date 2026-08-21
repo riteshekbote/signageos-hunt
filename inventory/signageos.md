@@ -1702,3 +1702,7 @@
 
 ## 2026-08-21 04:34:18 UTC
 - NEW NO_DELTA — surface stable across 60+ cycles and 8+ rs rotations; all live probes reconfirm existing findings
+
+## 2026-08-21 05:10:44 UTC
+- NEW NO_DELTA — surface stable across 60+ cycles and 8+ rs rotations; all live probes reconfirm existing findings
+- CHANGED box.signageos.io/status — pod reschedule within SAME rs: box-77bfdd94d8-wjmhn → box-77bfdd94d8-grdj4 (uptime 55579s); leak persists across pod lifecycle → structural, not instance-bound
