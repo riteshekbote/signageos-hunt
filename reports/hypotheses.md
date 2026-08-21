@@ -8514,3 +8514,10 @@
 - LEARN: ACCEPTED MISCONFIG @ https://box.signageos.io/status — ALIVE again this cycle (same pod wjmhn, fresh body sha c400dcca…, bare header set unchanged).
 - LEARN: ACCEPTED MISCONFIG @ https://api.signageos.io/status — ALIVE across another pod reschedule (x84wf→5hw9c, body sha bd4fd3c6…): rotation-resilience reconfirmed, s
 - LEARN: CONFIRMED DEAD: none new this cycle (surface exhaustively closed; probes limited to /status freshness checks).
+
+## RANKED HYPOTHESES 2026-08-21 11:15:07 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-nemotron3.txt)
+- [86] https://api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via client-supplied {uid} path param (from reports/hypotheses-bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: run `sos login` (Auth0 device-code flow), then reply with (a) orgA X-Auth pair `id:secret`, (b) any second organization uid. Agent will execute exactly O
+- LEARN: ALIVE @ https://box.signageos.io/status — persists through another pod reschedule (wjmhn→zfqwm, rs 77bfdd94d8); bare header set unchanged (secgrep=0); fresh bod
+- LEARN: ALIVE @ https://api.signageos.io/status — persists through another pod reschedule (5hw9c→2lgqn, rs 75f6d7c5b7); hardened edge (secgrep=4); fresh body sha256 e9b
