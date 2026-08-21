@@ -3623,3 +3623,11 @@ https://api.signageos.io/status -> 200 len=1326 type=application/json; charset=u
 https://box.signageos.io/status -> 200 len=1433 type=application/json; charset=utf-8
 https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
 https://api.signageos.io/v1/device -> HTTP 403
+
+## 2026-08-21 15:24:22 UTC
+https://box.signageos.io/status -> 200 len=1432 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token -> HTTP 403
+https://api.signageos.io/v1/device -> HTTP 403
+https://api.signageos.io/status -> 200 len=1328 type=application/json; charset=utf-8
+https://api.signageos.io/v1/organization/{uid -> HTTP 403
+https://api.signageos.io/v1/organization/<orgB-uid>/security-token` -> HTTP 404

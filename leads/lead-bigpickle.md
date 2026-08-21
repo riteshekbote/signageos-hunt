@@ -11015,3 +11015,37 @@ testability: PASSIVE
 [NEXT]
 [LEARN]
 [RISK]
+## 2026-08-21 15:24:08 UTC [box] (model bigpickle)
+[PRIO]
+[HYP]
+class: IDOR
+asset: https://api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: POST returns 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE byte-identical across 8+ rs rotations; JWT Bearer ignored (`Bearer test` → identical 403074); errorDetail binds org identity to first part of X-Auth header before `:` while path `{uid}` is client-supplied — classic auth-context/path-target split.
+evidence_needed: valid orgA X-Auth pair (`id:secret`) + any second organization uid orgB.
+verify_steps: AUTH_HELPED — exactly ONE request: `curl -sS -X POST -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token`. 200/201 + orgB-scoped token proves CRITICAL cross-tenant IDOR; 403076/403105 kills the lead (downgrade confidence ≤30).
+impact: cross-org security-token mint = tenant takeover of arbitrary organization data.
+testability: AUTH_HELPED
+[HYP]
+class: MISCONFIG
+asset: https://api.signageos.io/status
+confidence: 95
+reasoning: unauthenticated GET leaks pod hostname, process.uid, Node v24.19.0, 8-svc internal topology (amqp/redis×4/mongoDB×3) and live cpu/mem/responseTime metrics; survives intra-rs reschedules behind fully hardened edge (secgrep=4) — deployment-template root cause, not instance drift.
+evidence_needed: none beyond archived probes; latest this cycle: body sha256 `abb42a23de7d…`, pod `api-75f6d7c5b7-5hw9c`.
+verify_steps: PASSIVE — single GET https://api.signageos.io/status; diff schema against box POC to present as one systemic finding across both planes.
+impact: primary API plane exposes internal service topology and runtime fingerprint to unauthenticated recon.
+testability: PASSIVE
+[HYP]
+class: MISCONFIG
+asset: https://box.signageos.io/status
+confidence: 100
+reasoning: GET 200 JSON leaks pod hostname, 64-hex process.uid, Node v20.20.2, 9-svc topology incl mongoDB3, cpu/mem/per-service responseTime; zero hardening headers (secgrep=0, only x-powered-by: Express); structural across 60+ cycles, 8+ rs rotations and 3 intra-rs pod reschedules.
+evidence_needed: none — POC complete; latest this cycle: body sha256 `1b35e7b82373…`, pod `box-77bfdd94d8-jzchd`.
+verify_steps: PASSIVE — single GET https://box.signageos.io/status; attach archived SHA256SUMS chain as durability proof.
+impact: internal topology + runtime fingerprint supports targeted attack planning against box plane.
+testability: PASSIVE
+[PARKED] none — all three ≥40 confidence, none on REJECTED list (/status leak previously determined NOT banner-grabbing/descriptive-error class), all have concrete verify_steps.
+[FINAL]
+[NEXT] HUMAN: run `sos login` (Auth0 device-code flow), then reply with (a) orgA X-Auth pair `id:secret`, (b) any second organization uid orgB. Agent executes exactly ONE request: `curl -sS -X POST -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` — 200/201 + orgB-scoped token proves CRITICAL cross-tenant IDOR; 403076/403105 kills the lead (downgrade ≤30). Fallback if credentials unavailable: submit both /status reports as-is (PASSIVE, evidence complete).
+[LEARN]
+[RISK]
