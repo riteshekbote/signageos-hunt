@@ -11116,3 +11116,41 @@ testability: AUTH_HELPED
 [FINAL] HYP 1 conf 100 — evidence complete and durable across every rotation; ready for submission as-is.
 [NEXT]
 [LEARN]
+## 2026-08-21 17:11:07 UTC [box] (model bigpickle)
+[CHANGED] api.signageos.io/status — intra-rs pod reschedule within rs 75f6d7c5b7: 2lgqn → rwhj7; fresh body sha256 330ad9cb…; leak schema + hardened headers (HSTS/XFO/XCTO) unchanged
+[CHANGED] box.signageos.io/status — pod wjmhn / rs 77bfdd94d8 unchanged since 15:20Z; fresh body sha256 00682ecd… (uptime/cpu drift only); secgrep=0 persists
+[PRIO]
+asset: https://api.signageos.io/v1/organization/{uid}/security-token, score: 7.10, attack_surface: 7, business_value: 10, tech_exposure: 9, gate_ease: 2, cloud_surface: 3, freshness: 9
+asset: https://api.signageos.io/status, score: 5.90, attack_surface: 4, business_value: 7, tech_exposure: 3, gate_ease: 10, cloud_surface: 2, freshness: 10
+asset: https://box.signageos.io/status, score: 5.65, attack_surface: 4, business_value: 6, tech_exposure: 3, gate_ease: 10, cloud_surface: 2, freshness: 10
+[HYP] Cross-tenant security-token mint via client-supplied {uid} vs X-Auth-bound identity
+class: IDOR
+asset: https://api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: 403074 errorDetail binds account identity to "first part (before char :) of x-auth header" while path {uid} is client-supplied; Authorization Bearer provably ignored (junk JWT → identical 403074); taxonomy byte-stable across 8+ replica-set rotations including this cycle's probe
+evidence_needed: One authenticated POST with valid orgA X-Auth pair against orgB uid returning 200/201 + orgB-scoped token
+verify_steps: AUTH_HELPED: after `sos login`, POST https://api.signageos.io/v1/organization/<orgB-uid>/security-token with header X-Auth: <orgA-id>:<orgA-secret>; 200/201 + orgB-scoped token ⇒ CRITICAL confirmed; 403076/403105 ⇒ kill lead
+impact: Cross-tenant token minting ⇒ takeover of arbitrary organization uid (Critical if proven)
+testability: AUTH_HELPED
+[HYP] Unauthenticated infra-leak on hardened api edge (/status)
+class: MISCONFIG
+asset: https://api.signageos.io/status
+confidence: 95
+reasoning: Unauth GET 200 application/json discloses pod hostname/rs-id (now rwhj7), process.uid, Node v24.19.0, service topology + per-service latency, cpu/mem; edge carries deliberate hardening yet body leak is structural — survives fresh deploys and intra-rs reschedules across 60+ cycles
+evidence_needed: None — passive POC complete; fresh body sha256 330ad9cb… recorded this cycle
+verify_steps: curl -sS https://api.signageos.io/status → assert 200 JSON leak schema behind hardened header set
+impact: Internal topology/runtime fingerprint of primary API edge aids targeted attacks (Medium)
+testability: PASSIVE
+[HYP] Unauthenticated infra-leak @ box /status with zero-hardening differential
+class: MISCONFIG
+asset: https://box.signageos.io/status
+confidence: 100
+reasoning: Same leak schema (Node v20.20.2, 9-svc topology incl mongoDB3, cpu/mem/responseTime); /status returns only x-powered-by: Express (+CloudFront), secgrep=0 vs secgrep=4 on box / and /login/ — hardening elsewhere proves differential is structural; stable 60+ cycles across 8+ rs rotations
+evidence_needed: None — POC finalized; evidence chain refreshed at artifacts/box-status/ (body sha256 00682ecd…, headers 9818d96f…)
+verify_steps: curl -sS https://box.signageos.io/status → assert 200 JSON leak + absent security headers
+impact: Unauthenticated internal infrastructure disclosure on admin-plane host (Medium)
+testability: PASSIVE
+[FINAL]
+[NEXT]
+[LEARN]
+[RISK]

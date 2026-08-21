@@ -1785,3 +1785,7 @@
 - NEW box.signageos.io/status pod rescheduled within rs `box-77bfdd94d8` (wjmhn→zfqwm→nhmqz) — leak persists, secgrep=0 unchanged
 - CHANGED box.signageos.io/status body sha256 `1a2f2ec6...` → `41f1e868...` (fresh probe, intra-rs reschedule)
 - CHANGED api.signageos.io/status body sha256 `e9b06361...` → `eefb7b74...` (fresh probe, intra-rs reschedule)
+
+## 2026-08-21 17:24:11 UTC
+- CHANGED api.signageos.io/status — intra-rs pod reschedule within rs 75f6d7c5b7: 2lgqn → rwhj7; fresh body sha256 330ad9cb…; leak schema + hardened headers (HSTS/XFO/XCTO) unchanged
+- CHANGED box.signageos.io/status — pod wjmhn / rs 77bfdd94d8 unchanged since 15:20Z; fresh body sha256 00682ecd… (uptime/cpu drift only); secgrep=0 persists

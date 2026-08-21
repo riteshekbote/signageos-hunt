@@ -8576,3 +8576,6 @@
 - LEARN: ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T15:20:02Z; pod 2lgqn within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent from topo
 - LEARN: ALIVE IDOR @ api.signageos.io/v1/organization/{uid}/security-token: reconfirmed 2026-08-21T15:20:25Z; 403074 errorDetail byte-identical; JWT Bearer ignored; X-A
 - LEARN: CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
+
+## RANKED HYPOTHESES 2026-08-21 17:24:11 UTC
+- [86] https://api.signageos.io/v1/organization/{uid}/security-token,: Cross-tenant security-token mint via client-supplied {uid} vs X-Auth-bound identity (from reports/hypotheses-bigpickle.txt)
