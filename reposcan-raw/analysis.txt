@@ -1,40 +1,19 @@
 [0m
 > build · mimo-v2.5-free
 [0m
-## Scan Triage: gladiaio/ + @gladiaio/sdk (2026-08-21)
+## Scan Triage Report
 
-### Scan Summary
-- **Repos scanned:** 1075 code/config files across gladiaio/ org + npm metadata
-- **Hits:** 1 (signageos/videowall-designer — see below)
-- **gladiaio/ repos:** No hits (clean surface — no secrets, no hardcoded endpoints, no debug flags found)
+**Scan scope**: `gladiaio/` GitHub org + `@gladiaio/sdk` npm metadata
+**Result**: Zero gladiaio hits. The single hit is in the **signageos** org (different target).
 
----
+| Category | File | Line | Detail |
+|---|---|---|---|
+| **CONFIRMED DEAD** | `videowall-designer/sos/videoTiming.js` | 19 | `secret: '9d5e…1c9'` — sha256 `564c293b…`. Already tested as X-Auth on prod → `403076 WRONG_ACCOUNT_SECRET "Account not found"`. Staging-only fixture (`http://api.kiera.office.signageos.io`), credential reuse disproven across 60+ cycles. |
 
-### FINDING #1 — SSH PRIVATE KEY
+### Verdict
 
-| Field | Value |
+| Candidate | REPORT_CANDIDATE |
 |---|---|
-| **File** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` |
-| **Type** | SSH PRIVATE KEY (full key in source) |
-| **SHA256** | `c602b32f3424c62e78c8307433f830925091181a315912176151c455b76f9c3e` |
-| **Context** | Used as `secret:` field in X-Auth credential pair `clientId:secret` |
-| **Repo** | `signageos/videowall-designer` (not gladiaio — signageos org, public) |
-| **Target** | `http://api.kiera.office.signageos.io` (internal staging host) |
-| **Prod test** | X-Auth `clientId:secret` → `403076 WRONG_ACCOUNT_SECRET "Account not found"` on `api.signageos.io` (production) — credential reuse disproven |
-| **Classification** | `REAL_SECRET` — full SSH private key in source, but **credential reuse disproven** on prod (staging-only fixture) |
+| videowall-designer hardcoded clientId/secret | **no** — CONFIRMED DEAD, staging-only, no prod impact |
 
----
-
-### VERDICT LIST
-
-| Candidate | Reportable? | Rationale |
-|---|---|---|
-| SSH key in videowall-designer | **REPORT_CANDIDATE: NO** | Real credential but CONFIRMED DEAD on prod (403076 on X-Auth test); staging-only fixture targeting `api.kiera.office.signageos.io`; credential reuse disproven across 60+ probe cycles; not a gladiaio repo (signageos org) |
-
----
-
-### NOTES
-- **gladiaio/ surface is clean** — no secrets, hardcoded endpoints, debug flags, or references to non-*.gladia.io services found across all scanned repos.
-- **@gladiaio/sdk npm metadata** — no hits (no secrets, no suspicious dependencies in published package).
-- The one hit (`videowall-designer` SSH key) is from a **different org** (signageos, not gladiaio) and is already CONFIRMED DEAD in the signageos hunt — not actionable for the gladiaio program.
-- **Scope note:** Even if this were in gladiaio scope, the key is a staging-only fixture with no prod access — `REPORT_CANDIDATE: NO`.
+**Summary**: The `gladiaio/` GitHub org scan produced **zero new hits**. The only secret found (`564c293b…`) is already tracked in the knowledge base as CONFIRMED DEAD on the signageos target. No gladiaio-specific findings to report.
