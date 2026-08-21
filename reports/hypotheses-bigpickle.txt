@@ -1,31 +1,7 @@
-## 2026-08-21 08:58:14 UTC [box] (model bigpickle)
-[HYP] Cross-tenant security-token mint via client-supplied org uid
-class: IDOR
-asset: api.signageos.io/v1/organization/{uid}/security-token
-confidence: 86
-reasoning: error taxonomy proves org identity binds to first part of X-Auth header (before `:`) while path `{uid}` is client-supplied; JWT Bearer ignored (Bearer "test" → byte-identical 403074); stable across 8+ rs rotations
-evidence_needed: valid orgA X-Auth pair (`id:secret`) + any second organization uid
-verify_steps: AUTH_HELPED — single POST https://api.signageos.io/v1/organization/<orgB-uid>/security-token with X-Auth header; 200/201 with orgB-scoped token confirms
-impact: cross-tenant credential mint → full organization takeover (critical if proven)
-testability: AUTH_HELPED
-[HYP] Unauthenticated infra disclosure on status endpoint
-class: MISCONFIG
-asset: box.signageos.io/status
-confidence: 100
-reasoning: anon GET 200 JSON leaks pod hostname/process.uid/pid/Node v20.20.2/9-svc topology + cpu/mem/responseTime; zero hardening headers (secgrep=0); stable 60+ cycles, 9 rs rotations, multiple pod reschedules today
-evidence_needed: none — archived at artifacts/box-status/ (body.json, headers.txt, SHA256SUMS-20260821.txt)
-verify_steps: PASSIVE — single GET https://box.signageos.io/status; diff vs archive
-impact: internal topology disclosed anonymously; medium
-testability: PASSIVE
-[HYP] Same infra disclosure behind hardened edge
-class: MISCONFIG
-asset: api.signageos.io/status
-confidence: 95
-reasoning: anon GET 200 JSON leaks hostname/uid/Node v24.19.0/8-svc topology despite secgrep=4 hardening; survives fresh deploy rs `75f6d7c5b7` + pod rf2jv — structural, not instance-bound
-evidence_needed: none — fresh capture archived (api-body.json sha256 `7a8169f3…`)
-verify_steps: PASSIVE — single GET https://api.signageos.io/status
-impact: same disclosure class on primary API edge; medium
-testability: PASSIVE
-[NEXT] HUMAN: run `sos login` and reply with orgA X-Auth pair `id:secret` + any second organization uid → agent executes ONE request: `curl -sS -X POST -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` — 200/201 with orgB-scoped token = CRITICAL proven; 403076/403105 = denied, downgrade conf≤30. (box POC archive is regenerated and ready to attach to the report.)
-[RISK] box.signageos.io: 45 | reason: unauth /status infra disclosure + zero hardening headers; auth surface closed passively; no data exposure
-[RISK] api.signageos.io: 60 | reason: confirmed cross-tenant token-mint mechanism (critical if proven, credential-gated) + structural /status leak behind hardened edge
+## 2026-08-21 09:38:10 UTC [box] (model bigpickle)
+[CHANGED] box.signageos.io/status — pod reschedule twhcf→zfqwm (rs `77bfdd94d8` stable); fresh GET 200, body sha256 `d357880f217c319a3066b2f92dc1304cba62976454b26ec423018c42c0c00aef`; leak intact, secgrep=0 (x-powered-by: Express + CloudFront only)
+[CHANGED] api.signageos.io/status — pod reschedule pdppm→lln8l (rs `75f6d7c5b7` stable); fresh GET 200, body sha256 `0af28a4d6fd6f243bbc132fc64ddd77ec65a48e0074f839a1cd6921fb3ab0055`; HSTS/xfo/xcto/no-store persist, zero ACAO
+[FINAL] box.status MISCONFIG conf 100 submit-ready
+[FINAL] api.status MISCONFIG conf 95 submit-ready
+[FINAL] security-token IDOR conf 86 credential-gated
+[NEXT] HUMAN: run `sos login` (Auth0 device-code flow), then reply with (a) orgA X-Auth pair `id:secret`, (b) any second organization uid. I will execute exactly one request:

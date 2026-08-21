@@ -8485,3 +8485,11 @@
 - LEARN: ALIVE MISCONFIG @ box.signageos.io/status: reconfirmed 2026-08-21T06:22:49Z; pod grdj4→twhcf within rs 77bfdd94d8; secgrep=0 persists; body sha256 1a2f2ec654da8
 - LEARN: ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T06:22:51Z; pod 78gz9→pdppm within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent fro
 - LEARN: CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
+
+## RANKED HYPOTHESES 2026-08-21 09:38:21 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-nemotron3.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire JWT + X-Auth pair → test cross-te
+- NEXT(hypotheses-bigpickle.txt): HUMAN: run `sos login` (Auth0 device-code flow), then reply with (a) orgA X-Auth pair `id:secret`, (b) any second organization uid. I will execute exactly one r
+- LEARN: ALIVE MISCONFIG @ box.signageos.io/status: reconfirmed 2026-08-21T06:22:49Z; pod grdj4→twhcf within rs 77bfdd94d8; secgrep=0 persists; body sha256 1a2f2ec654da8
+- LEARN: ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T06:22:51Z; pod 78gz9→pdppm within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent fro
+- LEARN: CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
