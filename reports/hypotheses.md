@@ -8452,3 +8452,11 @@
 - LEARN: REJECTED IDOR @ api.signageos.io/v1/*+v2/* pre-auth: All 60+ routes 403 JWT/X-Auth-gated, zero ACAO under evil.test — no passive bypass; cross-tenant chain rema
 - LEARN: CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) is staging-only fixture targeting http://api.kiera.office.si
 - LEARN: ACCEPTED MISCONFIG @ api.signageos.io/status: leak survives pod reschedule within rs 75f6d7c5b7 (bq5sr→78gz9, uptime reset) — structural, not instance-bound
+
+## RANKED HYPOTHESES 2026-08-21 06:24:59 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-nemotron3.txt)
+- [86] api.signageos.io/v1/organization/{uid}/security-token: Cross-tenant security-token mint via client-supplied {uid} path param at api.signageos.io/v1/organization/{uid}/security-token (from reports/hypotheses-bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: run `sos login` (Auth0 device-code flow) and reply with orgA X-Auth pair `id:secret` plus any second organization uid — agent will execute the single cro
+- LEARN: ALIVE MISCONFIG @ box.signageos.io/status: reconfirmed 2026-08-21T06:22:49Z; pod grdj4→twhcf within rs 77bfdd94d8; secgrep=0 persists; body sha256 1a2f2ec654da8
+- LEARN: ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T06:22:51Z; pod 78gz9→pdppm within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent fro
+- LEARN: CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)

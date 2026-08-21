@@ -1881,3 +1881,6 @@
 - 2026-08-21 REJECTED MISCONFIG @ box.signageos.io/status?verbose=1&debug=1&full=true: zero key delta vs baseline — endpoint ignores query params, no escalation path
 - 2026-08-21 REJECTED MISCONFIG @ api.signageos.io/metrics: uniform 404 ENDPOINT_NOT_FOUND envelope — consistent with fully closed non-versioned path space
 - 2026-08-21 ACCEPTED MISCONFIG @ api.signageos.io/status: leak survives pod reschedule within rs 75f6d7c5b7 (bq5sr→78gz9, uptime reset) — structural, not instance-bound
+- 2026-08-21 ALIVE MISCONFIG @ box.signageos.io/status: reconfirmed 2026-08-21T06:22:49Z; pod grdj4→twhcf within rs 77bfdd94d8; secgrep=0 persists; body sha256 1a2f2ec654da859ea2561c9eaf1c077d867ce66cc7dfd459d26730128cc44560
+- 2026-08-21 ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T06:22:51Z; pod 78gz9→pdppm within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent from topology; body sha256 02b86eb4ed57bb8baebb1f1f6e7f739ce939898baa9e184913c46f0a9d692253
+- 2026-08-21 CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)

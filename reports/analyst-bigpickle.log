@@ -60887,3 +60887,147 @@ No drops: none overlap REJECTED list; all have concrete verify steps.
 
 ## STEP 7 — RISK SCORE
 box.signageos.io=32; api.signageos.io=40
+===== ANALYST bigpickle 2026-08-21 06:24:59 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mmkdir -p /tmp/opencode/probe && date -u '+%Y-%m-%d %H:%M:%S UTC' && curl -sS --max-time 15 -D /tmp/opencode/probe/box-h.txt -o /tmp/opencode/probe/box-b.json -w 'box HTTP %{http_code}\n' https://box.signageos.io/status ; sleep 2 ; curl -sS --max-time 15 -D /tmp/opencode/probe/api-h.txt -o /tmp/opencode/probe/api-b.json -w 'api HTTP %{http_code}\n' https://api.signageos.io/status
+2026-08-21 06:22:48 UTC
+box HTTP 200
+api HTTP 200
+[0m
+## Objective
+- Run a passive-first bug bounty analysis of the signageOS program limited to two eligible hosts (`box.signageos.io`, `api.signageos.io`), producing structured analyst output blocks (DELTA → PRIORITIZE → HYPOTHESES → SELF-CRITIQUE → NEXT ACTION → LEARNING → RISK) each cycle.
+- Current state: POC phase finalized for the primary finding; remaining lead requires human-supplied credentials (AUTH_HELPED).
+
+## Important Details
+- Program scope rules: ONLY `box.signageos.io` + `api.signageos.io`; long exclusion list (descriptive errors, DoS, CSRF-on-anonymous-forms, username enumeration, SSL/TLS, clickjacking w/o exploit, etc.); passive-first GET/HEAD ≤1 rps, no account creation, no data modification; secrets never raw — sha256 only.
+- Three surviving FINAL hypotheses:
+  - `[HYP] Unauthenticated K8s topology and process identity leak at box.signageos.io/status` — class MISCONFIG, conf 100. GET returns 200 JSON leaking pod hostname, 64-hex process.uid, Node v20.20.2, 9-svc topology (amqp0, redis0-3, mongoDB0-3 incl mongoDB3), cpu/mem/responseTime; headers only `x-powered-by: Express` + CloudFront (secgrep=0); stable 60+ cycles across 8-9 replica-set rotations; PASSIVE.
+  - `[HYP] Cross-tenant security-token mint via client-supplied {uid} path param at api.signageos.io/v1/organization/{uid}/security-token` — class IDOR, conf 86. Org identity bound to X-Auth header first-part (before `:`) while path `{uid}` is client-supplied; JWT Bearer IGNORED (Bearer "test" → identical 403074 as no-header); AUTH_HELPED.
+  - `[HYP] Same infra-leak persists behind hardened edge at api.signageos.io/status` — class MISCONFIG, conf 95. Leaks hostname/uid/Node v24.19.0/topology despite HSTS/XFO/XCTO/no-store (secgrep=3-4), zero ACAO; structural across deploys/pods.
+- Confirmed auth error taxonomy @ api.signageos.io: 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE (no headers); 403075 MISSING_ACCOUNT_CLIENT_SECRET (reveals header names `x-oauth-client_id` + `x-oauth-client_secret`); 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION (bad pair); NO_ORGANIZATION_TO_AUTHENTICATE (org-scoped routes); 403105 WRONG_JWT_TOKEN (JWT-only routes).
+- Replica-set history proving zero auth drift: box `8676fb5f57`→`54846c877b`→`c877d9cc8`→`77bfdd94d8` (current); api `86db648db5`→`7676fc7c89`→`6cc9959bb4`→`77955558bc`→`7c5fdc9777`→`75f6d7c5b7` (current).
+- Rejected/dead classes (do NOT re-report): CORS-exploit on box `/`+`/login/` (17 static ACAO, 0 `access-control-allow-credentials`, evil.test NOT reflected → MISCONFIG-only); Auth0 OAuth2 redirect_uri/state binding (not passively testable without tenant/session); box `/ready` (trivial 200 "OK", 2 bytes); box probe set `/healthz /livez /readyz /live /metrics /env /config.json /csp-report /websocket` (all 302 login catch-all); api `/v1/*`+`/v2/*` pre-auth IDOR (all 60+ routes 403 JWT/X-Auth-gated); api descriptive errors (excluded class per scope.yml — errorDetail retained only as mechanism evidence); box `/status` CORS (zero ACAO under spoofed Origin); `box.signageos.io/status?verbose=1&debug=1&full=true` (zero key delta); api `/metrics` (uniform 192B ENDPOINT_NOT_FOUND envelope).
+- CONFIRMED DEAD: leaked clientId/secret from github.com/signageos/videowall-designer (`sos/videoTiming.js`, sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) — staging-only fixture targeting `http://api.kiera.office.signageos.io`; tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; credential reuse disproven.
+- MY STATE: `{"phase": "POC", "target": "box"}`.
+- Latest inventory deltas (2026-08-21): box pod reschedule within SAME rs `77bfdd94d8`: `wjmhn`→`grdj4` (uptime 55579s) — leak persists across pod lifecycle → structural; api pod reschedule within rs `75f6d7c5b7`: `bq5sr`→`78gz9` (uptime reset) — structural, not instance-bound; otherwise NO_DELTA.
+
+## Work State
+### Completed
+- Passive surface exhaustively mapped on both hosts over 60+ cycles; all unauthenticated paths enumerated (only `/status` leaks data; everything else 302 login catch-all or trivial `/ready`).
+- POC for box `/status` finalized & archived at `artifacts/box-status/` (body.json, headers.txt, SHA256SUMS-20260821.txt); latest live capture body sha256 `133f95ab…` (pod `box-77bfdd94d8-wjmhn`), refreshed again after reschedule.
+- Cross-tenant IDOR mechanism proven via byte-identical 403074/403076 errorDetail text ("first part (before char `:`) of x-auth header" vs client-supplied path `{uid}`) across all rs rotations; JWT Bearer ignored confirmed.
+- api `/status` differential established: hardened headers (secgrep=3-4) but body still leaks hostname/uid/Node v24.19.0/8-svc topology (mongoDB3 absent) — survives fresh deploy (rs `75f6d7c5b7`, uptime <10min at probe).
+- All rejected classes reconfirmed repeatedly (NO_DELTA); videowall-designer secret reuse disproven on prod.
+
+### Active
+- Pending: emit the 8-step structured analyst output for the current cycle (STEP 1 DELTA likely NO_DELTA given latest inventory; STEP 2 PRIORITIZE; STEP 3 three [HYP] blocks matching the three FINAL hypotheses above; STEP 4 SELF-CRITIQUE — all survive, conf ≥ 40; STEP 5 NEXT = HUMAN; STEP 6 LEARN lines; STEP 7 RISK scores for both hosts).
+- Awaiting human inputs to close out both remaining reportable items.
+
+### Blocked
+- Cross-tenant IDOR final proof blocked on credentials: needs valid orgA X-Auth pair (`id:secret`) + a second organization uid; requires human to run `sos login` (Auth0 device-code flow) — cannot be done passively.
+- Report submission itself is a human action (agent can only prepare artifacts).
+
+## Next Move
+1. Produce the full 8-step analyst block output for this cycle: `[PRIO]` scoring for box `/status`, api `/security-token`, api `/status`; three `[HYP]` blocks (one field per line, no inline metadata); `[FINAL]` re-ranked list; `[NEXT] HUMAN:` submit finalized box `/status` report from `artifacts/box-status/` (attach body.json, headers.txt, SHA256SUMS-20260821.txt) AND run `sos login` then supply orgA X-Auth `id:secret` + any second organization uid; `[LEARN]` lines for newly proven alive/dead classes; `[RISK]` scores for both hosts.
+2. Once human supplies orgA X-Auth pair + orgB uid: execute single cross-tenant test `POST https://api.signageos.io/v1/organization/<orgB-uid>/security-token` with `-H "X-Auth: <orgA-id>:<secret>"` to prove/deny token minting across tenants.
+
+## Relevant Files
+- `artifacts/box-status/` — durable POC evidence archive for box `/status` (body.json, headers.txt, SHA256SUMS-20260821.txt); attach to the finalized report.
+- `reports/hypotheses-nemotron3.txt` — ranked hypotheses source ([100] box `/status` leak; NEXT entry for `sos login` credential acquisition).
+- `reports/hypotheses-bigpickle.txt` — ranked hypotheses source (three [HYP]/[FINAL]/[NEXT] blocks mirroring current state).
+- `scope.yml` — program rules/exclusions referenced for class admissibility decisions.
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+[0m$ [0msha256sum /tmp/opencode/probe/box-b.json /tmp/opencode/probe/api-b.json && echo '--- BOX BODY ---' && cat /tmp/opencode/probe/box-b.json && echo '--- API BODY ---' && cat /tmp/opencode/probe/api-b.json && echo '--- BOX HEADERS ---' && cat /tmp/opencode/probe/box-h.txt && echo '--- API HEADERS ---' && cat /tmp/opencode/probe/api-h.txt
+1a2f2ec654da859ea2561c9eaf1c077d867ce66cc7dfd459d26730128cc44560  /tmp/opencode/probe/box-b.json
+02b86eb4ed57bb8baebb1f1f6e7f739ce939898baa9e184913c46f0a9d692253  /tmp/opencode/probe/api-b.json
+--- BOX BODY ---
+{"name":"box","status":"OK","process":{"uid":"38ccf2c5f3653598a4da2023bf1ffad47143647c7f6d417f2e","pid":1,"version":"v20.20.2","uptime":2133.610167958,"cpuUsage":{"user":70728178,"system":10902881},"memoryUsage":{"rss":174731264,"heapTotal":119857152,"heapUsed":111056216,"external":24352859,"arrayBuffers":20902146}},"hostname":"box-77bfdd94d8-twhcf","failedServices":[],"succeededServices":["amqp0","redis0","redis3","redis1","redis2","mongoDB2","mongoDB3","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1787293369143,"respondedAt":1787293369207,"amqp0":{"response":{"requestedAt":1787293369143,"respondedAt":1787293369206,"responseTime":63}},"redis0":{"response":{"requestedAt":1787293369143,"respondedAt":1787293369145,"responseTime":2}},"redis3":{"response":{"requestedAt":1787293369144,"respondedAt":1787293369146,"responseTime":2}},"redis1":{"response":{"requestedAt":1787293369143,"respondedAt":1787293369146,"responseTime":3}},"redis2":{"response":{"requestedAt":1787293369143,"respondedAt":1787293369147,"responseTime":4}},"mongoDB2":{"response":{"requestedAt":1787293369144,"respondedAt":1787293369146,"responseTime":2}},"mongoDB3":{"response":{"requestedAt":1787293369144,"respondedAt":1787293369146,"responseTime":2}},"mongoDB1":{"response":{"requestedAt":1787293369144,"respondedAt":1787293369148,"responseTime":4}},"mongoDB0":{"response":{"requestedAt":1787293369144,"respondedAt":1787293369151,"responseTime":7}}}--- API BODY ---
+{"name":"api","status":"OK","process":{"uid":"10e8414a1ae9c27e6fc53b0fd06d46fe974be0d2878321ba65","pid":1,"version":"v24.19.0","uptime":2223.474228656,"cpuUsage":{"user":965919127,"system":89618813},"memoryUsage":{"rss":813010944,"heapTotal":506490880,"heapUsed":400513240,"external":79420816,"arrayBuffers":75324128}},"hostname":"api-75f6d7c5b7-pdppm","failedServices":[],"succeededServices":["amqp0","redis2","redis3","redis1","redis0","mongoDB2","mongoDB1","mongoDB0"],"timeout":30000,"requestedAt":1787293371418,"respondedAt":1787293371483,"amqp0":{"response":{"requestedAt":1787293371418,"respondedAt":1787293371483,"responseTime":65}},"redis2":{"response":{"requestedAt":1787293371418,"respondedAt":1787293371420,"responseTime":2}},"redis3":{"response":{"requestedAt":1787293371418,"respondedAt":1787293371420,"responseTime":2}},"redis1":{"response":{"requestedAt":1787293371418,"respondedAt":1787293371420,"responseTime":2}},"redis0":{"response":{"requestedAt":1787293371418,"respondedAt":1787293371421,"responseTime":3}},"mongoDB2":{"response":{"requestedAt":1787293371418,"respondedAt":1787293371420,"responseTime":2}},"mongoDB1":{"response":{"requestedAt":1787293371418,"respondedAt":1787293371423,"responseTime":5}},"mongoDB0":{"response":{"requestedAt":1787293371418,"respondedAt":1787293371424,"responseTime":6}}}--- BOX HEADERS ---
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1435
+date: Fri, 21 Aug 2026 06:22:49 GMT
+etag: W/"59b-npO4KTEEA2pvK6n5CBvDjybkytQ"
+x-powered-by: Express
+x-cache: Miss from cloudfront
+via: 1.1 ef53285dd5b91a1ddb0051c6c7e101a0.cloudfront.net (CloudFront)
+x-amz-cf-pop: SFO53-P6
+x-amz-cf-id: HqGxV5d1aZ1U0z1Ey0SIMMpVvSdS6583UE-OxnwhKZqaz09YlirQNQ==
+
+--- API HEADERS ---
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 1326
+date: Fri, 21 Aug 2026 06:22:51 GMT
+etag: W/"52e-P0VokecFg6Uq1cxjc/5jK+r4tTk"
+cache-control: no-store
+x-frame-options: DENY
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000
+x-cache: Miss from cloudfront
+via: 1.1 7c8ef15b9a6901da80272de96260a1fc.cloudfront.net (CloudFront)
+x-amz-cf-pop: SFO53-P12
+x-amz-cf-id: 4UzSWBd5tsCsi5ZwSAJMxRkYyw4VrBfaOXhymCcfLXyRWSyz59xoew==
+[0m
+STEP 1 — DELTA
+[CHANGED] box.signageos.io/status: pod rescheduled again within SAME rs `77bfdd94d8`: `grdj4`→`twhcf` (fresh probe 2026-08-21T06:22:49Z); body sha256 `1a2f2ec654da859ea2561c9eaf1c077d867ce66cc7dfd459d26730128cc44560`; leak persists across pod lifecycle → structural, not instance-bound
+[CHANGED] api.signageos.io/status: pod rescheduled within rs `75f6d7c5b7`: `78gz9`→`pdppm` (probe 06:22:51Z); sha256 `02b86eb4ed57bb8baebb1f1f6e7f739ce939898baa9e184913c46f0a9d692253`; leak persists; topology still 8-svc (mongoDB3 absent)
+NO_DELTA — all other surface stable; secgrep unchanged (box=0, api=4)
+
+STEP 2 — PRIORITIZE
+[PRIO] api.signageos.io/v1/organization/{uid}/security-token — 6.75 | attack 7 biz 9 tech 9 gate 2 cloud 2 fresh 9
+[PRIO] api.signageos.io/status — 6.40 | attack 6 biz 6 tech 4 gate 10 cloud 3 fresh 10
+[PRIO] box.signageos.io/status — 6.15 | attack 6 biz 5 tech 4 gate 10 cloud 3 fresh 10
+
+STEP 3 — HYPOTHESES
+
+[HYP] Cross-tenant security-token mint via client-supplied {uid} path param at api.signageos.io/v1/organization/{uid}/security-token
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: facts — error taxonomy proves org identity bound to first part of X-Auth header (before `:`) while path {uid} is client-supplied; JWT Bearer ignored (Bearer "test" → byte-identical 403074 as no-header); taxonomy stable across 9 rs rotations; endpoint live this cycle
+evidence_needed: valid orgA X-Auth pair (`id:secret`) + any second organization uid; response minting an orgB-scoped token while authenticated as orgA
+verify_steps: AUTH_HELPED — human runs `sos login`, supplies orgA X-Auth + orgB uid; agent executes single `POST https://api.signageos.io/v1/organization/<orgB-uid>/security-token -H "X-Auth: <orgA-id>:<secret>"`; 200/201 with orgB token = proven, 403076/403105 = denied
+impact: cross-tenant credential mint → full organization takeover; critical if proven
+testability: AUTH_HELPED
+
+[HYP] Unauthenticated K8s topology and process identity leak at box.signageos.io/status
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 100
+reasoning: facts — unauthenticated GET returns 200 application/json leaking pod hostname (`box-77bfdd94d8-twhcf`), 50-hex process.uid, pid 1, Node v20.20.2, 9-svc topology (amqp0, redis0-3, mongoDB0-3) with per-service responseTime; zero hardening headers (only x-powered-by: Express + CloudFront, secgrep=0); stable 60+ cycles, 9 rs rotations, 3 pod reschedules incl. today's
+evidence_needed: archived capture at artifacts/box-status/ (body.json, headers.txt, SHA256SUMS-20260821.txt) + fresh probe sha256 above
+verify_steps: PASSIVE — single `GET https://box.signageos.io/status`; diff against archive; no auth, no mutation
+impact: internal infra topology, pod identity, runtime versions disclosed anonymously; aids targeted intrusion; medium severity
+testability: PASSIVE
+
+[HYP] Same infra-leak persists behind hardened edge at api.signageos.io/status
+class: MISCONFIG
+asset: api.signageos.io/status
+confidence: 95
+reasoning: facts — unauthenticated 200 JSON leaks hostname (`api-75f6d7c5b7-pdppm`), process.uid, Node v24.19.0, 8-svc topology despite HSTS/XFO/XCTO/no-store (secgrep=4); survives fresh deploy (rs 75f6d7c5b7) and repeated pod reschedules → structural config gap, not instance drift
+evidence_needed: fresh probe capture (sha256 above) + prior archived bodies showing persistence across deploys
+verify_steps: PASSIVE — single `GET https://api.signageos.io/status`; confirm hostname/process fields present; no auth, no mutation
+impact: identical disclosure class on primary API edge; medium severity
+testability: PASSIVE
+
+STEP 4 — SELF-CRITIQUE
+(no PARKED)
+All three hypotheses have confidence ≥ 40 and concrete verify_steps; none collide with REJECTED list (status endpoints are deliberate info-leak responses, not banner/stack-trace/descriptive-error classes; api 403 errorDetail used solely as IDOR mechanism evidence).
+[FINAL] Unauthenticated K8s topology and process identity leak at box.signageos.io/status — class MISCONFIG, conf 100, POC archived, submit-ready
+[FINAL] Same infra-leak persists behind hardened edge at api.signageos.io/status — class MISCONFIG, conf 95, submit-ready
+[FINAL] Cross-tenant security-token mint via client-supplied {uid} path param at api.signageos.io/v1/organization/{uid}/security-token — class IDOR, conf 86, highest impact but credential-gated
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: run `sos login` (Auth0 device-code flow) and reply with orgA X-Auth pair `id:secret` plus any second organization uid — agent will execute the single cross-tenant POST to prove/deny the critical IDOR
+
+STEP 6 — LEARNING
+[LEARN] ALIVE MISCONFIG @ box.signageos.io/status: reconfirmed 2026-08-21T06:22:49Z; pod grdj4→twhcf within rs 77bfdd94d8; secgrep=0 persists; body sha256 1a2f2ec654da859ea2561c9eaf1c077d867ce66cc7dfd459d26730128cc44560
+[LEARN] ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T06:22:51Z; pod 78gz9→pdppm within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent from topology; body sha256 02b86eb4ed57bb8baebb1f1f6e7f739ce939898baa9e184913c46f0a9d692253
+[LEARN] CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
+
+STEP 7 — RISK SCORE
+[RISK] box.signageos.io: 45 | reason: unauth /status infra disclosure + zero hardening headers, but auth surface closed passively; no data exposure
+[RISK] api.signageos.io: 60 | reason: confirmed cross-tenant token-mint mechanism (critical if proven, currently credential-gated) + structural status leak behind hardened edge
