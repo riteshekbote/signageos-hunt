@@ -10945,3 +10945,4 @@ testability: PASSIVE
 [LEARN] ALIVE @ https://box.signageos.io/status — persists through another pod reschedule (wjmhn→zfqwm, rs 77bfdd94d8); bare header set unchanged (secgrep=0); fresh body sha256 2d2ae00de25f9c2768f2f2f97f9751e729c9cc94d273f496ec47421dab50a5e4.
 [LEARN] ALIVE @ https://api.signageos.io/status — persists through another pod reschedule (5hw9c→2lgqn, rs 75f6d7c5b7); hardened edge (secgrep=4); fresh body sha256 e9b06361b9ccfe3a31cd22434ea50a15c7b698aaa88b0dbdf82f4437be69076d.
 [RISK] box=45 | api=60 | rationale: box = unauthenticated read-only infra metadata disclosure (no auth bypass, no secrets); api = same leak on primary API edge plus credentialed cross-tenant token-mint hypothesis at conf 86 awaiting the single decisive authenticated test.
+## 2026-08-21 11:48:19 UTC [box] (model bigpickle)

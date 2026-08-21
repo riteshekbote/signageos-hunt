@@ -8521,3 +8521,10 @@
 - NEXT(hypotheses-bigpickle.txt): HUMAN: run `sos login` (Auth0 device-code flow), then reply with (a) orgA X-Auth pair `id:secret`, (b) any second organization uid. Agent will execute exactly O
 - LEARN: ALIVE @ https://box.signageos.io/status — persists through another pod reschedule (wjmhn→zfqwm, rs 77bfdd94d8); bare header set unchanged (secgrep=0); fresh bod
 - LEARN: ALIVE @ https://api.signageos.io/status — persists through another pod reschedule (5hw9c→2lgqn, rs 75f6d7c5b7); hardened edge (secgrep=4); fresh body sha256 e9b
+
+## RANKED HYPOTHESES 2026-08-21 11:48:32 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-nemotron3.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire JWT + X-Auth pair → test cross-te
+- LEARN: ALIVE MISCONFIG @ box.signageos.io/status: reconfirmed 2026-08-21T11:15:07Z; pod wjmhn→zfqwm within rs 77bfdd94d8; secgrep=0 persists; body sha256 2d2ae00d...
+- LEARN: ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T11:15:07Z; pod 5hw9c→2lgqn within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent fro
+- LEARN: CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
