@@ -1,19 +1,22 @@
 [0m
 > build · mimo-v2.5-free
 [0m
-## Scan Classification Table
+## Scan Triage — 2026-08-21
 
-| Category | File | Line | Finding | Status |
-|----------|------|------|---------|--------|
-| **SECRET** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js` | 19 | Hardcoded `secret` (SHA256 `564c293b…`) | **CONFIRMED DEAD** |
-| **ENDPOINT_LEAK** | Same file | - | Targets `http://api.kiera.office.signageos.io` (internal staging, HTTP plaintext) | **DEAD** — staging-only |
+### HIT Analysis
 
-## Verdict
+| File | Line | Finding | Classification |
+|------|------|---------|----------------|
+| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` | `secret: '9d5e257e...'` | Hardcoded clientSecret targeting internal staging `http://api.kiera.office.signageos.io` | **CONFIRMED DEAD** — X-Auth on prod → 403076 `WRONG_ACCOUNT_SECRET "Account not found"`; staging-only fixture, credential reuse disproven across 60+ cycles |
 
-| Candidate | Reportable | Reason |
-|-----------|------------|--------|
-| videowall-designer secret | **No** | CONFIRMED DEAD across 60+ cycles. Secret is a **staging-only test fixture** targeting internal host `http://api.kiera.office.signageos.io`. Tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found". Credential reuse disproven. |
+### Verdict
 
-**REPORT_CANDIDATE: no**
+| Candidate | REPORT_CANDIDATE | Rationale |
+|-----------|-----------------|-----------|
+| videowall-designer hardcoded clientId/secret | **No** | CONFIRMED DEAD — staging-only test fixture, does not authenticate on prod (tested 60+ cycles, X-Auth 403076 WRONG_ACCOUNT_SECRET) |
 
-No new actionable findings. The sole hit is the pre-existing staged fixture secret that was exhaustively validated as dead on production across 60+ probe cycles and 8+ replica-set rotations. No delta from previous scan.
+### No new findings this cycle
+
+Delta = 0. No new hits vs previous scan. The single hit is already tracked as CONFIRMED DEAD in the knowledge base. All previously accepted/rejected classes unchanged.
+
+**REPORT_CANDIDATE: no** — no new reportable findings.
