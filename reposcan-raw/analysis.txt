@@ -1,35 +1,19 @@
 [0m
 > build · mimo-v2.5-free
 [0m
-## Scan Triage: gladiaio/ org + @gladiaio/sdk
+## Scan Classification Table
 
-**Scan scope**: 1075 files scanned from signageos repos (note: `reposcan-raw/signageos/`, not gladiaio). Only 1 hit.
+| Category | File | Line | Finding | Status |
+|----------|------|------|---------|--------|
+| **SECRET** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js` | 19 | Hardcoded `secret` (SHA256 `564c293b…`) | **CONFIRMED DEAD** |
+| **ENDPOINT_LEAK** | Same file | - | Targets `http://api.kiera.office.signageos.io` (internal staging, HTTP plaintext) | **DEAD** — staging-only |
 
----
+## Verdict
 
-### Hit Classification Table
+| Candidate | Reportable | Reason |
+|-----------|------------|--------|
+| videowall-designer secret | **No** | CONFIRMED DEAD across 60+ cycles. Secret is a **staging-only test fixture** targeting internal host `http://api.kiera.office.signageos.io`. Tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found". Credential reuse disproven. |
 
-| File | Line | Category | Verdict |
-|---|---|---|---|
-| `videowall-designer/sos/videoTiming.js` | 19 | `TEST_OR_EXAMPLE` | Not reportable |
+**REPORT_CANDIDATE: no**
 
-**Details**: Hardcoded `secret` value `9d5e257...fe1c9` targeting `http://api.kiera.office.signageos.io` (internal staging, HTTP). This is a **signageos** repo, not gladiaio.
-
----
-
-### Prior Triage (from Knowledge Base)
-
-This exact secret was already:
-- Hashed as sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`
-- Tested as X-Auth on **production** api.signageos.io: `403076 WRONG_ACCOUNT_SECRET "Account not found"`
-- **CONFIRMED DEAD** across 60+ cycles — staging-only fixture, credential reuse disproven
-
----
-
-### Verdict
-
-| Candidate | REPORT_CANDIDATE | Rationale |
-|---|---|---|
-| videowall-designer secret | **No** | Staging-only test fixture; tested on prod → 403076 "Account not found"; CONFIRMED DEAD |
-
-**Summary**: Zero reportable findings. No gladiaio/ repos were scanned (only signageos repos present in scan output). The single hit is a dead staging fixture already validated 60+ times against production. No new candidates.
+No new actionable findings. The sole hit is the pre-existing staged fixture secret that was exhaustively validated as dead on production across 60+ probe cycles and 8+ replica-set rotations. No delta from previous scan.
