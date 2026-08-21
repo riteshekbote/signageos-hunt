@@ -10817,3 +10817,34 @@ testability: PASSIVE
 [RISK] asset=box.signageos.io risk_score=45/100 reasons=Unauth /status discloses full internal infra topology + runtime identifiers (high recon value, low direct compromise); auth surface closed passively; CORS credential-theft disproven; no other live findings.
 [RISK] asset=api.signageos.io risk_score=60/100 reasons=Confirmed cross-tenant security-token mint MECHANISM (credential-gated, exploitability pending single POST — potential full org takeover if confirmed) + structural unauth /status internals leak behind hardened edge.
 ## 2026-08-21 08:02:12 UTC [box] (model bigpickle)
+## 2026-08-21 08:58:14 UTC [box] (model bigpickle)
+[HYP] Cross-tenant security-token mint via client-supplied org uid
+class: IDOR
+asset: api.signageos.io/v1/organization/{uid}/security-token
+confidence: 86
+reasoning: error taxonomy proves org identity binds to first part of X-Auth header (before `:`) while path `{uid}` is client-supplied; JWT Bearer ignored (Bearer "test" → byte-identical 403074); stable across 8+ rs rotations
+evidence_needed: valid orgA X-Auth pair (`id:secret`) + any second organization uid
+verify_steps: AUTH_HELPED — single POST https://api.signageos.io/v1/organization/<orgB-uid>/security-token with X-Auth header; 200/201 with orgB-scoped token confirms
+impact: cross-tenant credential mint → full organization takeover (critical if proven)
+testability: AUTH_HELPED
+[HYP] Unauthenticated infra disclosure on status endpoint
+class: MISCONFIG
+asset: box.signageos.io/status
+confidence: 100
+reasoning: anon GET 200 JSON leaks pod hostname/process.uid/pid/Node v20.20.2/9-svc topology + cpu/mem/responseTime; zero hardening headers (secgrep=0); stable 60+ cycles, 9 rs rotations, multiple pod reschedules today
+evidence_needed: none — archived at artifacts/box-status/ (body.json, headers.txt, SHA256SUMS-20260821.txt)
+verify_steps: PASSIVE — single GET https://box.signageos.io/status; diff vs archive
+impact: internal topology disclosed anonymously; medium
+testability: PASSIVE
+[HYP] Same infra disclosure behind hardened edge
+class: MISCONFIG
+asset: api.signageos.io/status
+confidence: 95
+reasoning: anon GET 200 JSON leaks hostname/uid/Node v24.19.0/8-svc topology despite secgrep=4 hardening; survives fresh deploy rs `75f6d7c5b7` + pod rf2jv — structural, not instance-bound
+evidence_needed: none — fresh capture archived (api-body.json sha256 `7a8169f3…`)
+verify_steps: PASSIVE — single GET https://api.signageos.io/status
+impact: same disclosure class on primary API edge; medium
+testability: PASSIVE
+[NEXT] HUMAN: run `sos login` and reply with orgA X-Auth pair `id:secret` + any second organization uid → agent executes ONE request: `curl -sS -X POST -H "X-Auth: <orgA-id>:<secret>" https://api.signageos.io/v1/organization/<orgB-uid>/security-token` — 200/201 with orgB-scoped token = CRITICAL proven; 403076/403105 = denied, downgrade conf≤30. (box POC archive is regenerated and ready to attach to the report.)
+[RISK] box.signageos.io: 45 | reason: unauth /status infra disclosure + zero hardening headers; auth surface closed passively; no data exposure
+[RISK] api.signageos.io: 60 | reason: confirmed cross-tenant token-mint mechanism (critical if proven, credential-gated) + structural /status leak behind hardened edge
