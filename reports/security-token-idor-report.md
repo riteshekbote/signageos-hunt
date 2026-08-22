@@ -189,3 +189,21 @@ confidentiality+integrity loss within the victim tenant.
 | Q7 | Invalid bug class? | NO — BOLA/IDOR with credential minting, never on reject lists |
 
 **Gate verdict:** proceed to final verification. Q6 closes only when §6 runs.
+
+
+---
+
+# ADDENDUM (2026-08-22): VERIFICATION RESULT + SUPERSET FINDING
+
+**Q6 CLOSED — CONFIRMED CRITICAL.** Researcher independently executed §6 against two owned tenants:
+
+| Step | Result |
+|---|---|
+| [3] MINT LEG POST A->B | **201 + OrganizationFullToken{securityToken}** issued for victim org |
+| Superset | `GET /v1/organization` lists ALL orgs platform-wide with `oauthClientId`/`oauthClientSecret` inline; stolen pair authenticates as victim on `/v1/device` |
+
+Live tier-mapping captured during verification: unauthenticated -> `403105 WRONG_JWT_TOKEN`; organization-tier token -> `403100 INAPPROPRIATE_ORGANIZATION_TOKEN`; only ACCOUNT-tier credentials pass. Confirms principal-type boundary crossing at this handler.
+
+**Vendor status:** full report (incl. video + PoC script) submitted to signageOS security >4 days ago; follow-up pending 14-day mark.
+
+**Remediation addendum:** beyond §8 uid-binding fix — `GET /v1/organization` must be tenant-scoped AND must never serialize OAuth secrets in list responses (secret exposure belongs behind explicit single-org reveal endpoints, post-authz).
