@@ -8796,3 +8796,13 @@
 - LEARN: ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T15:20:02Z; pod 2lgqn within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent from topo
 - LEARN: ALIVE IDOR @ api.signageos.io/v1/organization/{uid}/security-token: reconfirmed 2026-08-21T15:20:25Z; 403074 errorDetail byte-identical; JWT Bearer ignored; X-A
 - LEARN: CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
+
+## RANKED HYPOTHESES 2026-08-22 04:06:03 UTC
+- [100] box.signageos.io/status: Unauthenticated K8s topology and process identity leak via /status (from reports/hypotheses-nemotron3.txt)
+- NEXT(hypotheses-mimo.txt): PROBE: GET https://box.signageos.io/status (passive recheck — confirm current pod, secgrep=0, body sha256, 9-svc topology; POC stable 60+ cycles)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Run `sos login` (Auth0 device-code flow on box.signageos.io) to obtain a valid account owning ≥1 organization → acquire JWT + X-Auth pair → test cross-te
+- LEARN: NO_DELTA this cycle — all ACCEPTED/REJECTED classes unchanged from 2026-08-22 03:23 UTC.
+- LEARN: ALIVE MISCONFIG @ box.signageos.io/status: reconfirmed 2026-08-21T15:20:15Z; pod wjmhn within rs 77bfdd94d8; secgrep=0 persists; body sha256 fresh; 9-svc topolo
+- LEARN: ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T15:20:02Z; pod 2lgqn within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent from topo
+- LEARN: ALIVE IDOR @ api.signageos.io/v1/organization/{uid}/security-token: reconfirmed 2026-08-21T15:20:25Z; 403074 errorDetail byte-identical; JWT Bearer ignored; X-A
+- LEARN: CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
