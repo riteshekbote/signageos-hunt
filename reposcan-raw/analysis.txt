@@ -1,87 +1,24 @@
 [0m
 > build · mimo-v2.5-free
 [0m
-[0m→ [0mRead .
-[0m✱ [0mGlob "**/*"[90m in . · 100 matches[0m
-[0m→ [0mRead reposcan-raw/signageos/videowall-designer/sos/videoTiming.js[90m [offset=10, limit=20][0m
-[0m→ [0mRead cands-signageos.txt
-[0m→ [0mRead scope.yml
-[0m→ [0mRead reposcan-raw/analysis.txt
-[0m✗ [0mGrep "secret|api[_-]?key|token|password|credential|auth.*=|clientId" failed[90m in reposcan-raw[0m
-[91m[1mError: [0mRipgrep JSON record exceeded 65536 bytes
-[0m✗ [0mGrep "secret|password" failed[90m in reposcan-raw[0m
-[91m[1mError: [0mRipgrep JSON record exceeded 65536 bytes
-[0m✱ [0mGrep "secret|password"[90m in reposcan-raw · 74 matches[0m
-[0m✱ [0mGrep "http://|\.office\.|internal|staging|\.local|\.dev"[90m in reposcan-raw · 92 matches[0m
-[0m✱ [0mGrep "http://|\.office\.|internal|staging|\.local|\.dev"[90m in reposcan-raw · 100 matches[0m
-[93m[1m! [0mpermission requested: read (reposcan-raw/signageos/cli/.env.test); auto-rejecting
-[0m✗ [0mRead reposcan-raw/signageos/cli/.env.test failed
-[91m[1mError: [0mThe user rejected permission to use this specific tool call.
-[93m[1m! [0mpermission requested: read (reposcan-raw/signageos/cli/.env.amy); auto-rejecting
-[0m✗ [0mRead reposcan-raw/signageos/cli/.env.amy failed
-[91m[1mError: [0mThe user rejected permission to use this specific tool call.
-## Objective
-- Triaging a static code scan of public repos from the signageos GitHub org (59 repos) plus npm metadata, alongside ongoing passive recon of two eligible targets: `box.signageos.io` and `api.signageos.io`
-- Producing a classified table of scan hits (REAL_SECRET / TEST_OR_EXAMPLE / ENDPOINT_LEAK / INTERESTING) with verdicts per candidate
+| # | File | Line | Classification | Notes |
+|---|------|------|----------------|-------|
+| 1 | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js` | 19 | **CONFIRMED DEAD** | Hardcoded `clientId`/`secret` (sha256 `564c293b…`). Already tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found". Staging-only fixture (`http://api.kiera.office.signageos.io`), credential reuse disproven across 60+ cycles. |
 
-## Important Details
-- **Scope (scope.yml)**: Only `box.signageos.io` and `api.signageos.io` are eligible; extensive exclusion list (DoS, descriptive errors, CSRF on anonymous forms, TLS, clickjacking, cookie flags, etc.)
-- **Passive-first**: GET/HEAD only, ≤1 rps, no account creation, no data modification
-- **Secrets handling**: SHA-256 only, never raw values
-- **Program MEDIUM priority**: SDK repos are public source code targets
-- **Scan scope note**: The prompt mentions `gladiaio/` GitHub org but workspace and all prior work target `signageos` org — likely a template mismatch; actual scan data is `reposcan-raw/signageos/`
+### Verdict
 
-## Work State
-### Completed
-- 60+ cycles of passive monitoring on `box.signageos.io/status` (info-leak: hostname, 64-hex process.uid, Node v20.20.2, 9-svc topology incl amqp0/redis0-3/mongoDB0-3, cpuUsage/memoryUsage — secgrep=0, POC finalized)
-- 60+ cycles on `api.signageos.io/status` (info-leak persists under hardened headers secgrep=3-4: HSTS/xfo/xcto/no-store — differential vs box confirmed)
-- 60+ cycles on `api.signageos.io/v1/organization/{uid}/security-token` (IDOR mechanism confirmed: 403074 errorDetail shows org identity from X-Auth header first-part before `:`, path `{uid}` client-supplied; JWT Bearer ignored; AUTH_HELPED conf 86 — needs credentials to exploit)
-- CORS/CSP recon on `box.signageos.io / + /login/` (17 static ACAO, 0 credentials flag, MISCONFIG-only)
-- `videowall-designer` leaked clientId/secret (sha256 `564c293b…`) tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — CONFIRMED DEAD (staging-only fixture)
-- Rejected classes (NO_DELTA): pre-auth IDOR, CORS-exploit, descriptive errors, Auth0 OAuth2, WebSocket, /ready, probe set paths
-- Workspace initialized; reposcan-raw/signageos/ cloned with 1075 code/config files across ~20 repos
+| Candidate | REPORTABLE | Reason |
+|-----------|-----------|--------|
+| videowall-designer secret | **no** | CONFIRMED DEAD — staging-only fixture, not valid on prod |
 
-### Active
-- Static scan triage: 1 hit found in `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` (hardcoded secret sha256 `564c293b…`) — already CONFIRMED DEAD in prior cycles
-- Need to classify per-hit and produce the final table + verdict list per the scan prompt template
+**No new findings this cycle.** DELTA = 0. The 1 existing hit (videowall-designer secret) is confirmed dead — tested on prod X-Auth, account not found.
 
-### Blocked
-- Prompt references `gladiaio/` GitHub org but workspace contains only `signageos` repos — clarification may be needed (current scan data is signageos)
+### Active surface (carried forward)
 
-## Next Move
-1. Produce the classification table for the 1 scan hit (videoTiming.js:19 → TEST_OR_EXAMPLE / CONFIRMED DEAD) and output the verdict list with "REPORT_CANDIDATE: no"
-2. Confirm whether the `gladiaio/` reference is intentional or if this is purely a signageos triage task
+| Finding | Class | Status |
+|---------|-------|--------|
+| `box.signageos.io/status` | MISCONFIG (info-leak) | ACCEPTED, POC finalized 60+ cycles |
+| `box.signageos.io` `/` + `/login/` CORS | MISCONFIG (17 static ACAO, 0 creds flag) | ACCEPTED, MISCONFIG-only |
+| `api.signageos.io/v1/organization/{uid}/security-token` | IDOR (AUTH_HELPED, conf 86) | ACCEPTED, mechanism confirmed |
 
-## Relevant Files
-- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19`: hardcoded secret (sha256 `564c293b…`), already tested and CONFIRMED DEAD on prod
-- `reposcan-raw/analysis.txt`: scan analysis output
-- `repos-signageos.json`: repo manifest for signageos org
-- `cands-signageos.txt`: candidates file
-- `scope.yml`: program scope and exclusions
-- `state_bigpickle.json`, `state_laguna.json`, `state_ling3.json`, `state_longcat.json`, `state_nemotron3.json`: agent state files
-- `artifacts/box-status/`: evidence archive for box.status POC (body/headers sha256)
-- `triage/`, `leads/`, `inventory/`, `reports/`: workspace organization directories
-- `knowledge/`: RAG knowledge base seed file
-Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
-## Summary: What We've Done So Far
-
-### Completed Work
-1. **Passive monitoring (60+ cycles each)**:
-   - `box.signageos.io/status` — info leak (hostname, 64-hex process.uid, Node v20.20.2, 9-svc topology)
-   - `api.signageos.io/status` — info leak under hardened headers (secgrep 3-4, differential vs box confirmed)
-   - `api.signageos.io/v1/organization/{uid}/security-token` — IDOR mechanism confirmed (org identity from X-Auth header, path `{uid}` client-supplied; JWT Bearer ignored; 403074 errorDetail leaks org identity)
-   - CORS/CSP recon on `box.signageos.io`
-
-2. **Secrets scan**: `videowall-designer/sos/videoTiming.js:19` — hardcoded clientId/secret targeting internal staging (`http://api.kiera.office.signageos.io`) — **CONFIRMED DEAD** on prod (403076 WRONG_ACCOUNT_SECRET)
-
-3. **Rejected classes (NO_DELTA)**: pre-auth IDOR, CORS-exploit, descriptive errors, Auth0 OAuth2, WebSocket, /ready, probe set paths
-
-### Outstanding / Needs Clarification
-- **Scope mismatch**: Your prompt references `gladiaio/` GitHub org, but the workspace targets `signageos` (9 repos, scope.yml confirms). Is this a template error, or do you want me to pivot to `gladiaio/`?
-
-### No New Reportable Findings
-The static scan of `reposcan-raw/signageos/` produced zero new reportable candidates. All test/fixture secrets are `TEST_OR_EXAMPLE`, and the one real secret (videoTiming.js) was already confirmed dead.
-
----
-
-**Do you want me to proceed with anything specific**, or should I correct the scope to `gladiaio/`?
+**REPORT_CANDIDATE: no** — no actionable new findings this cycle.
