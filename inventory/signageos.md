@@ -2076,3 +2076,10 @@
 - CHANGED box.signageos.io/status intra-rs pod reschedule within rs 77bfdd94d8: wjmhn → 7ldcv; fresh body sha256 d087f8a6… (uptime 324s ⇒ fresh pod); secgrep=0 persists
 - CHANGED api.signageos.io/status pod rwhj7 / rs 75f6d7c5b7 unchanged since 17:11Z (uptime ~3.7h consistent); fresh body sha256 b34f77a4…; hardened header set secgrep=4 persists
 - CHANGED api.signageos.io/v1/organization/{uid}/security-token unauth GET reconfirms byte-stable 403074 errorDetail MISSING_ACCOUNT_ID_TO_AUTHENTICATE at 17:46Z; IDOR mechanism taxonomy intact
+
+## 2026-08-22 15:44:03 UTC
+- NEW api.signageos.io/status pod reschedule 2lgqn → rwhj7 within rs `75f6d7c5b7`; fresh GET 200, body sha256 `330ad9cb…`; leak schema + hardened headers (HSTS/XFO/XCTO/no-store) unchanged
+- NEW box.signageos.io/status pod wjmhn / rs `77bfdd94d8` stable since 15:20Z; fresh GET 200, body sha256 `00682ecd…` (uptime/cpu drift only); secgrep=0 persists
+- CHANGED box.signageos.io/status intra-rs pod reschedule within rs 77bfdd94d8: wjmhn → 7ldcv; fresh body sha256 d087f8a6… (uptime 324s ⇒ fresh pod); secgrep=0 persists
+- CHANGED api.signageos.io/status pod rwhj7 / rs 75f6d7c5b7 unchanged since 17:11Z (uptime ~3.7h consistent); fresh body sha256 b34f77a4…; hardened header set secgrep=4 persists
+- CHANGED api.signageos.io/v1/organization/{uid}/security-token unauth GET reconfirms byte-stable 403074 errorDetail MISSING_ACCOUNT_ID_TO_AUTHENTICATE at 17:46Z; IDOR mechanism taxonomy intact
