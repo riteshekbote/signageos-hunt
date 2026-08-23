@@ -23,3 +23,11 @@ UPGRADED TEST MATRIX (both orgs owned by tester; POST artifact named idor-poc, D
 
 IMPACT IF CONFIRMED: attacker with own valid X-Auth mints working API credentials inside arbitrary victim organization -> full device/applet/content API access as victim tenant -> Critical (CVSS ~9.1 AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:L equivalent class).
 SCOPE NOTE: errorDetail text previously excluded descriptive errors per scope.yml; this lead is NOT error-text based - it is behavior-based (token minting), in-scope asset api.signageos.io.
+
+
+---
+## FIX-STATUS VERIFICATION (2026-08-23, own-assets-only re-test)
+- GET /v1/organization: PARTIALLY FIXED — listing now scoped to own account's orgs (1 returned vs platform-wide before). NOTE: oauthClientId/oauthClientSecret still present in response fields.
+- GET /v1/organization/{victimUid}/security-token: STILL VULNERABLE — foreign account-tier X-Auth returns victim org's full token inventory (200).
+- PERSISTENCE CONFIRMED: credential minted during original PoC (bec343d38d…) authenticated 200 on /v1/device 10 days post-mint.
+- ACTION: include this matrix in day-7 nudge (~Aug 25/26): acknowledge partial fix, demand timeline for token-handler binding + revocation of PoC-minted tokens.
