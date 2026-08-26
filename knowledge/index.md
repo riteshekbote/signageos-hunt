@@ -1943,3 +1943,7 @@
 - 2026-08-25 ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T15:20:02Z; pod 2lgqn within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent from topology; body sha256 fresh
 - 2026-08-25 ALIVE IDOR @ api.signageos.io/v1/organization/{uid}/security-token: reconfirmed 2026-08-21T15:20:25Z; 403074 errorDetail byte-identical; JWT Bearer ignored; X-Auth/x-oauth-client_id gating intact; zero ACAO on 403; mechanism intact, zero auth drift across 8+ rs rotations
 - 2026-08-25 CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
+- 2026-08-26 ALIVE MISCONFIG @ box.signageos.io/status: reconfirmed 2026-08-21T15:20:15Z; pod wjmhn within rs 77bfdd94d8; secgrep=0 persists; body sha256 fresh; 9-svc topology incl mongoDB3 + cpu/mem leak unchanged
+- 2026-08-26 ALIVE MISCONFIG @ api.signageos.io/status: reconfirmed 2026-08-21T15:20:02Z; pod 2lgqn within rs 75f6d7c5b7; secgrep=4 persists; mongoDB3 still absent from topology; body sha256 fresh
+- 2026-08-26 ALIVE IDOR @ api.signageos.io/v1/organization/{uid}/security-token: reconfirmed 2026-08-21T15:20:25Z; 403074 errorDetail byte-identical; JWT Bearer ignored; X-Auth/x-oauth-client_id gating intact; zero ACAO on 403; mechanism intact, zero auth drift across 8+ rs rotations
+- 2026-08-26 CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
