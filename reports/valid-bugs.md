@@ -856,3 +856,9 @@
   - | Q4 Provable read-only? | **No** — requires AUTH_HELPED with valid account token + foreign org UID |
   - | Q4 Provable read-only? | **No** — requires AUTH_HELPED: valid org X-Auth (client-id:client-secret) + foreign device UID |
   - | **VALID** | 0 | — |
+
+- 4 lead(s) marked VALID at 2026-08-31 23:04:26 UTC
+  - | A | `box/status` infra leak | `leads/lead-laguna.md:15` `probe-results.md:5` | Y (`box` IN) | Y public anonymous `GET /status` 200 | Y Low-Medium recon pod/host+topology | Y `GET https://box.signage
+  - | B | `api/status` infra leak | `leads/lead-laguna.md:7` | Y (`api` IN) | Y public `GET /status` 200 | Y Low (hardened headers but pod leak persists) | Y | N duplicate | Y | Y | **VALID (Low) DUPLICAT
+  - | C | `box` CORS ACAO 18-origin | `leads/lead-laguna.md:23` | Y | Y public `GET /` `Origin: evil.test` => 302 with static ACAO | Y Low border (no `ACAC`) | Y `curl -sI -H 'Origin: https://evil.test' h
+  - | D | `box` CSP broad 40+ | `leads/lead-laguna.md:77` | Y | Y public `GET /login/%2F` CSP header | Y Info defense-depth | Y | N duplicate | Y | MARGINAL | **VALID (Info)** CVSS 3.1. |
