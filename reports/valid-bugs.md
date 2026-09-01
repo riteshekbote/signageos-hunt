@@ -892,3 +892,10 @@
   - | Q7 Triager accept? | **HOLD** pending auth — would be **VALID** if `AUTH_HELPED` 200 reproduced, but duplicate + requires creds |
   - **Verdict: HOLD (duplicate of human-confirmed valid; needs own-org AUTH_HELPED re-test, do not re-probe per `lead-human.md:6`)**
   - **Verdict: HOLD (VALID superset already submitted, partially fixed 2026-08-23: `GET /v1/organization` now scoped to own account `lead-human.md:30`, but `GET /v1/organization/{victim}/security-token` s
+
+- 5 lead(s) marked VALID at 2026-09-01 22:41:02 UTC
+  - | 1 | `box.signageos.io/status` infra leak `reports/valid-bugs.md:4` | Q1 Y, Q2 Y public, Q3 Y recon, Q4 Y GET, Q5 N duplicate, Q6 pass, Q7 Y | **VALID (Low, DUPLICATE)** — CVSS 3.1 4.3 `AV:N/AC:L/PR:
+  - | 2 | `api.signageos.io/status` `reports/valid-bugs.md:5` | Q1 Y, Q2 Y, Q3 Y, Q4 Y, Q5 N, Q6 pass, Q7 Y | **VALID (Low, DUPLICATE)** — CVSS 4.3 — `curl -s https://api.signageos.io/status` |
+  - | 3 | box CORS whitelist `reports/valid-bugs.md:6` | Q1 Y, Q2 Y, Q3 marginal, Q4 Y, Q5 N, Q6 border, Q7 marginal | **VALID (Low, border, DUPLICATE)** — CVSS 3.1 `AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N` —
+  - | 4 | box CSP 40+ origins `reports/valid-bugs.md:7` | Q1 Y, Q2 Y, Q3 info, Q4 Y, Q5 N, Q6 info, Q7 marginal | **VALID (Info, DUPLICATE)** — CVSS 3.1 |
+  - | 5-11 | `api /v1/organization/{uid}/security-token` cross-tenant mint + sibling IDORs `reports/valid-bugs.md:8-11`, `leads/lead-mimo.md:6-13` | Q1 Y, Q2 N (needs `X-Auth: <orgUid>:<secret>` low-priv)
