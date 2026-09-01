@@ -869,3 +869,8 @@
   - **Verdict: VALID (borderline Info) — CVSS 3.1: 3.1 `AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N`** — Proof: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/ | grep -i access-control-allow-or
   - **Verdict: VALID (Informational) — CVSS 3.1: 3.1 `AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N`** — Channel: `security@signageos.io`.
   - **Verdict: HOLD (VALID CRITICAL if re-proven, but DUPLICATE — DO NOT RE-REPORT) — One-line: credible BOLA with live 201 mint POC already submitted, needs program approval for AUTH_HELPED retest with t
+
+- 3 lead(s) marked VALID at 2026-09-01 07:54:41 UTC
+  - **Verdict: VALID (Low, DUPLICATE) — no new finding, reconfirmation only. Do not resubmit.**
+  - **Verdict: VALID (Low, DUPLICATE) — reconfirmation only.**
+  - Q1 YES. Q2 YES. Q3 Minimal — static whitelist `http://box.signageos.io` + `*.zdusercontent.com` + `api.signageos.io`, no `Allow-Credentials`, evil.test NOT reflected `inventory/signageos.md:156`. Q4 Y
