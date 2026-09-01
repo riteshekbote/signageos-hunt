@@ -879,3 +879,11 @@
   - **VALID — PASSIVE PoC STABLE (4 reconfirmations, `reports/valid-bugs.md:3`)**
   - |1| `box.signageos.io/status` infra leak `leads/lead-laguna.md:14` | Y `scope.yml:6` | Y unauth GET 200 `probe-results.md:3` | Y recon: pod `box-7c8c876945-*`, 40-hex `process.uid`, Node `v20.20.2`, `
   - |2| `api.signageos.io/status` infra leak `leads/lead-laguna.md:7` | Y `scope.yml:8` | Y unauth GET 200 `probe-results.md:314` | Y same class (Node `v24.19.0`, 8 svc `mongoDB3 absent`) | Y `GET https:/
+
+- 6 lead(s) marked VALID at 2026-09-01 17:30:08 UTC
+  - **Verdict: VALID (Low)** `DUPLICATE — reconfirmed`. CVSS3.1 `4.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` ( `5.3` if `secgrep=0` counts). Channel: `security@signageos.io` (per `reports/security-token-idor
+  - **Verdict: VALID (Low)** DUPLICATE reconfirmed. CVSS `4.3` same vector. PoC `curl -s https://api.signageos.io/status`.
+  - | Q2 reach | PARTIAL — requires valid account-tier `X-Auth` (low-priv free account) — not public unauth, but any authenticated attacker `lead-human.md:24` |
+  - **Verdict: HOLD → VALID (Critical) on AUTH_HELPED execution.** Under strict passive-first gate this cycle: **HOLD (AUTH_HELPED — needs 2 owned orgs)**. With `reports/security-token-idor-report.md:138-
+  - **Verdict: VALID (Info/Low borderline 3.1)** `AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N` — reconfirmed, do not re-report as new.
+  - **Verdict: VALID (Critical) — superset of C, already in vendor report, HOLD for re-test.**
