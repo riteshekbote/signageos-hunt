@@ -862,3 +862,10 @@
   - | B | `api/status` infra leak | `leads/lead-laguna.md:7` | Y (`api` IN) | Y public `GET /status` 200 | Y Low (hardened headers but pod leak persists) | Y | N duplicate | Y | Y | **VALID (Low) DUPLICAT
   - | C | `box` CORS ACAO 18-origin | `leads/lead-laguna.md:23` | Y | Y public `GET /` `Origin: evil.test` => 302 with static ACAO | Y Low border (no `ACAC`) | Y `curl -sI -H 'Origin: https://evil.test' h
   - | D | `box` CSP broad 40+ | `leads/lead-laguna.md:77` | Y | Y public `GET /login/%2F` CSP header | Y Info defense-depth | Y | N duplicate | Y | MARGINAL | **VALID (Info)** CVSS 3.1. |
+
+- 5 lead(s) marked VALID at 2026-09-01 01:54:46 UTC
+  - **Verdict: VALID (DUPLICATE reconfirmed) — Low**
+  - **Verdict: VALID (DUPLICATE reconfirmed) — Low**
+  - **Verdict: VALID (borderline Info) — CVSS 3.1: 3.1 `AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N`** — Proof: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/ | grep -i access-control-allow-or
+  - **Verdict: VALID (Informational) — CVSS 3.1: 3.1 `AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N`** — Channel: `security@signageos.io`.
+  - **Verdict: HOLD (VALID CRITICAL if re-proven, but DUPLICATE — DO NOT RE-REPORT) — One-line: credible BOLA with live 201 mint POC already submitted, needs program approval for AUTH_HELPED retest with t
