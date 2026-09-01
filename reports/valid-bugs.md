@@ -887,3 +887,8 @@
   - **Verdict: HOLD → VALID (Critical) on AUTH_HELPED execution.** Under strict passive-first gate this cycle: **HOLD (AUTH_HELPED — needs 2 owned orgs)**. With `reports/security-token-idor-report.md:138-
   - **Verdict: VALID (Info/Low borderline 3.1)** `AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N` — reconfirmed, do not re-report as new.
   - **Verdict: VALID (Critical) — superset of C, already in vendor report, HOLD for re-test.**
+
+- 3 lead(s) marked VALID at 2026-09-01 20:15:51 UTC
+  - | Q7 Triager accept? | **HOLD** pending auth — would be **VALID** if `AUTH_HELPED` 200 reproduced, but duplicate + requires creds |
+  - **Verdict: HOLD (duplicate of human-confirmed valid; needs own-org AUTH_HELPED re-test, do not re-probe per `lead-human.md:6`)**
+  - **Verdict: HOLD (VALID superset already submitted, partially fixed 2026-08-23: `GET /v1/organization` now scoped to own account `lead-human.md:30`, but `GET /v1/organization/{victim}/security-token` s
