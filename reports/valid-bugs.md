@@ -874,3 +874,8 @@
   - **Verdict: VALID (Low, DUPLICATE) — no new finding, reconfirmation only. Do not resubmit.**
   - **Verdict: VALID (Low, DUPLICATE) — reconfirmation only.**
   - Q1 YES. Q2 YES. Q3 Minimal — static whitelist `http://box.signageos.io` + `*.zdusercontent.com` + `api.signageos.io`, no `Allow-Credentials`, evil.test NOT reflected `inventory/signageos.md:156`. Q4 Y
+
+- 3 lead(s) marked VALID at 2026-09-01 13:35:34 UTC
+  - **VALID — PASSIVE PoC STABLE (4 reconfirmations, `reports/valid-bugs.md:3`)**
+  - |1| `box.signageos.io/status` infra leak `leads/lead-laguna.md:14` | Y `scope.yml:6` | Y unauth GET 200 `probe-results.md:3` | Y recon: pod `box-7c8c876945-*`, 40-hex `process.uid`, Node `v20.20.2`, `
+  - |2| `api.signageos.io/status` infra leak `leads/lead-laguna.md:7` | Y `scope.yml:8` | Y unauth GET 200 `probe-results.md:314` | Y same class (Node `v24.19.0`, 8 svc `mongoDB3 absent`) | Y `GET https:/
