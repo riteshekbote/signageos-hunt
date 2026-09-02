@@ -899,3 +899,11 @@
   - | 3 | box CORS whitelist `reports/valid-bugs.md:6` | Q1 Y, Q2 Y, Q3 marginal, Q4 Y, Q5 N, Q6 border, Q7 marginal | **VALID (Low, border, DUPLICATE)** — CVSS 3.1 `AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N` —
   - | 4 | box CSP 40+ origins `reports/valid-bugs.md:7` | Q1 Y, Q2 Y, Q3 info, Q4 Y, Q5 N, Q6 info, Q7 marginal | **VALID (Info, DUPLICATE)** — CVSS 3.1 |
   - | 5-11 | `api /v1/organization/{uid}/security-token` cross-tenant mint + sibling IDORs `reports/valid-bugs.md:8-11`, `leads/lead-mimo.md:6-13` | Q1 Y, Q2 N (needs `X-Auth: <orgUid>:<secret>` low-priv)
+
+- 6 lead(s) marked VALID at 2026-09-02 00:39:41 UTC
+  - |1| `box.signageos.io/status` infra leak `leads/lead-laguna.md:14` `GET /status` 200 JSON `hostname+uid+Node+topology` | YES In | YES unauth | YES recon (aids SSRF/targeting) | YES `curl -s https://bo
+  - |2| `api.signageos.io/status` infra leak `inventory/signageos.md:37` same | YES In | YES unauth | YES recon lower (hardened headers) | YES `curl -s https://api.signageos.io/status` 200 | NO duplicate 
+  - |3| `box CORS 17-18x ACAO` `http://box + *.zdusercontent.com + api` `leads/lead-laguna.md:23` `GET /` `Origin: evil.test` static, no `ACAC` | YES | YES unauth (read HTML only) | WEAK border - no creds
+  - |4| `box CSP 40+ origins` `reports/hypotheses-nemotron3.txt` triplicated Auth0 | YES | YES unauth | WEAK defense-in-depth needs XSS | YES `curl -sI https://box.signageos.io/login/%2F \| grep CSP` | NO
+  - |5| `api/v1/organization/{uid}/security-token` cross-tenant mint `leads/lead-mimo.md:6` `leads/lead-bigpickle.md:158` | YES | YES low-priv (free account `X-Auth`) | CRITICAL - mint victim `securityTok
+  - **VALID proofs (read-only):**
