@@ -918,3 +918,11 @@
   - | 3 | `box.signageos.io` CORS `inventory/signageos.md:39` | `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/` → static `17-18× ACAO` including `http://box.signageos.io` + `https://*.
   - | 4 | `box.signageos.io` CSP `inventory/signageos.md:40` | `curl -sI https://box.signageos.io/login/` → `content-security-policy: 40+ connect-src/frame-src` triplicated `Auth0 oauth/token` | CSP dilut
   - * `api.signageos.io/v1/organization/{uid}/security-token` POST cross-tenant mint (`reports/security-token-idor-report.md:21`), `GET /v1/organization/{uid}` OAuth secret disclosure, `v1/device/{uid}/pe
+
+- 6 lead(s) marked VALID at 2026-09-02 13:57:00 UTC
+  - | Q2 Reachable? | **YES** — low-priv attacker with own valid account `X-Auth` (box-minted via `box.signageos.io/settings`, obtainable via `sos login` Auth0 flow `inventory/signageos.md:23`) |
+  - **Verdict: HOLD — VALID class but IN-FLIGHT REPORT (one-line: confirmed critical BOLA, awaiting vendor dedup; do not re-probe POST without approval)**
+  - **Verdict: HOLD — VALID HIGH pending GET-only confirmation; do NOT `PUT` without written approval**
+  - | Q7 | **NO** — reasonable triager marks `Informative`/`Low`, not valid vuln; CVSS `3.1: 5.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)` or `2.7` depending on vendor, not bounty-eligible alone. Useful as c
+  - | Q2 | NO — requires valid JWT/X-Auth; unauth = blocked |
+  - | 1 security-token BOLA | **HOLD (VALID class, duplicate in-flight)** | **9.1** | End-to-end demonstrated, `POST` violates `no_data_modification`; read leg `GET` still `200` per `lead-human.md:31`; de
