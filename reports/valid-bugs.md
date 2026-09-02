@@ -911,3 +911,10 @@
 - 2 lead(s) marked VALID at 2026-09-02 05:14:35 UTC
   - * **Verdict: VALID (DUPLICATE RECONFIRMATION) — DO NOT RE-REPORT** One-line: already filed, passive leak reconfirmed 60+ cycles.
   - * **Verdict: VALID (DUPLICATE)** Same as above. CVSS 5.3/4.3 Low. Same channel.
+
+- 5 lead(s) marked VALID at 2026-09-02 09:46:02 UTC
+  - | 1 | `box.signageos.io/status` `inventory/signageos.md:36` | `curl -s https://box.signageos.io/status` → `200` leaks `hostname=box-8676fb5f57-*`, `process.uid`, `Node v20.20.2`, `succeededServices=[a
+  - | 2 | `api.signageos.io/status` `inventory/signageos.md:37` | `curl -s https://api.signageos.io/status` → `200` leaks same topology, `api-*-*`, `Node v24.19.0` | Infra recon | `4.3` | Same as #1, now 
+  - | 3 | `box.signageos.io` CORS `inventory/signageos.md:39` | `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/` → static `17-18× ACAO` including `http://box.signageos.io` + `https://*.
+  - | 4 | `box.signageos.io` CSP `inventory/signageos.md:40` | `curl -sI https://box.signageos.io/login/` → `content-security-policy: 40+ connect-src/frame-src` triplicated `Auth0 oauth/token` | CSP dilut
+  - * `api.signageos.io/v1/organization/{uid}/security-token` POST cross-tenant mint (`reports/security-token-idor-report.md:21`), `GET /v1/organization/{uid}` OAuth secret disclosure, `v1/device/{uid}/pe
