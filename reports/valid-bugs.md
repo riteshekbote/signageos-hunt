@@ -926,3 +926,6 @@
   - | Q7 | **NO** — reasonable triager marks `Informative`/`Low`, not valid vuln; CVSS `3.1: 5.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)` or `2.7` depending on vendor, not bounty-eligible alone. Useful as c
   - | Q2 | NO — requires valid JWT/X-Auth; unauth = blocked |
   - | 1 security-token BOLA | **HOLD (VALID class, duplicate in-flight)** | **9.1** | End-to-end demonstrated, `POST` violates `no_data_modification`; read leg `GET` still `200` per `lead-human.md:31`; de
+
+- 1 lead(s) marked VALID at 2026-09-02 17:58:50 UTC
+  - * **Verdict: VALID — DUPLICATE reconfirmation** (do not re-report, informational). Minimal read-only proof: `GET https://box.signageos.io/status` + `GET https://api.signageos.io/status` -> `200 JSON` 
