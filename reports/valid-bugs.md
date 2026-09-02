@@ -907,3 +907,7 @@
   - |4| `box CSP 40+ origins` `reports/hypotheses-nemotron3.txt` triplicated Auth0 | YES | YES unauth | WEAK defense-in-depth needs XSS | YES `curl -sI https://box.signageos.io/login/%2F \| grep CSP` | NO
   - |5| `api/v1/organization/{uid}/security-token` cross-tenant mint `leads/lead-mimo.md:6` `leads/lead-bigpickle.md:158` | YES | YES low-priv (free account `X-Auth`) | CRITICAL - mint victim `securityTok
   - **VALID proofs (read-only):**
+
+- 2 lead(s) marked VALID at 2026-09-02 05:14:35 UTC
+  - * **Verdict: VALID (DUPLICATE RECONFIRMATION) — DO NOT RE-REPORT** One-line: already filed, passive leak reconfirmed 60+ cycles.
+  - * **Verdict: VALID (DUPLICATE)** Same as above. CVSS 5.3/4.3 Low. Same channel.
