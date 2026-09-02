@@ -929,3 +929,10 @@
 
 - 1 lead(s) marked VALID at 2026-09-02 17:58:50 UTC
   - * **Verdict: VALID — DUPLICATE reconfirmation** (do not re-report, informational). Minimal read-only proof: `GET https://box.signageos.io/status` + `GET https://api.signageos.io/status` -> `200 JSON` 
+
+- 5 lead(s) marked VALID at 2026-09-02 23:26:26 UTC
+  - | 1 | `box.signageos.io/status` `leads/lead-mimo.md:15` | MISCONFIG infra leak | Y `scope.yml:6` | Y unauth `probe-results.md:31→200` | Y recon + version `inventory/signageos.md:36` | Y `GET /status` 
+  - | 2 | `api.signageos.io/status` `leads/lead-mimo.md:112` | MISCONFIG | Y `scope.yml:8` | Y unauth `probe-results.md:314→200` | Y | Y `GET /status` | N duplicate | Y | Y | **VALID (Low)** — DUPLICATE h
+  - | 3 | `box.signageos.io/ + /login/` CORS `inventory/signageos.md:39` | MISCONFIG | Y | Y unauth static ACAO `inventory/signageos.md:39` | N low — no `Access-Control-Allow-Credentials` `inventory/signa
+  - | 4 | `box.signageos.io` CSP 40+ origins `inventory/signageos.md:24,40` | MISCONFIG | Y | Y | N — needs co-located XSS | Y `GET /login` → CSP header | N duplicate | MARG best-practice | MARG | **VALID
+  - | 5 | `api.signageos.io/v1/organization/{uid}/security-token` `leads/lead-mimo.md:6` | IDOR/BOLA cross-tenant mint | Y | N — requires valid account-tier `X-Auth: clientId:secret` `probe-results.md:167
