@@ -952,3 +952,8 @@
 - 2 lead(s) marked VALID at 2026-09-03 15:26:57 UTC
   - | 1 | `box.signageos.io/status` | YES | YES unauth | YES recon aids SSRF | YES `GET /status` | NO duplicate | YES not rejected | YES | **VALID Low (reconfirmed)** | `curl -s https://box.signageos.io/s
   - | 2 | `api.signageos.io/status` | YES | YES unauth | YES same | YES `GET /status` | NO duplicate | YES | YES | **VALID Low** | `curl -s https://api.signageos.io/status` | `4.3` |
+
+- 3 lead(s) marked VALID at 2026-09-03 18:58:17 UTC
+  - - **Verdict: VALID (duplicate) — Low** `CVSS 5.3 CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` — POC stable, archived `/tmp/opencode/box-status/ sha256 bdd3778a/a222bcc5`. **Channel:** `security@signa
+  - - **Verdict: VALID (duplicate, borderline Info) — CVSS 3.1 CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N** — POC `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/|grep -i access-contro
+  - - **Verdict: HOLD → VALID with AUTH_HELPED proof** `CVSS 9.1 CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:N` (cross-tenant BOLA, account→org boundary). **Minimal read-only POC (requires operator creds, 
