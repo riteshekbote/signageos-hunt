@@ -948,3 +948,7 @@
 - 2 lead(s) marked VALID at 2026-09-03 06:44:38 UTC
   - | S1 | `box.signageos.io/status` `GET https://box.signageos.io/status` → `200 application/json len~1433-1442` vs `403` expected if gated. Body leaks `hostname:box-*-*` + `process.uid 40-50hex` + `Node
   - * `api.signageos.io/v1/organization/{uid}/security-token` IDOR/BOLA — `GET /v1/organization/{uid}/security-token` `403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE` unauth (`probe-results.md:48-49` `167-169`
+
+- 2 lead(s) marked VALID at 2026-09-03 15:26:57 UTC
+  - | 1 | `box.signageos.io/status` | YES | YES unauth | YES recon aids SSRF | YES `GET /status` | NO duplicate | YES not rejected | YES | **VALID Low (reconfirmed)** | `curl -s https://box.signageos.io/s
+  - | 2 | `api.signageos.io/status` | YES | YES unauth | YES same | YES `GET /status` | NO duplicate | YES | YES | **VALID Low** | `curl -s https://api.signageos.io/status` | `4.3` |
