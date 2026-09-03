@@ -957,3 +957,11 @@
   - - **Verdict: VALID (duplicate) — Low** `CVSS 5.3 CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` — POC stable, archived `/tmp/opencode/box-status/ sha256 bdd3778a/a222bcc5`. **Channel:** `security@signa
   - - **Verdict: VALID (duplicate, borderline Info) — CVSS 3.1 CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N** — POC `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/|grep -i access-contro
   - - **Verdict: HOLD → VALID with AUTH_HELPED proof** `CVSS 9.1 CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:N` (cross-tenant BOLA, account→org boundary). **Minimal read-only POC (requires operator creds, 
+
+- 6 lead(s) marked VALID at 2026-09-03 21:47:07 UTC
+  - **Verdict: VALID (Low) DUPLICATE** `CVSS3.1: AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N 5.3` Proof:`GET /status` -> `200 JSON hostname+uid+topology` + `curl -i` shows ONLY `x-powered-by: Express` + `CloudFro
+  - **Verdict: VALID (Low) DUPLICATE** `CVSS3.1 5.3 (4.3 if triager discounts hardened headers)` Proof:`GET https://api.signageos.io/status` `200`.
+  - **Verdict: VALID (Info/Low borderline) DUPLICATE** `CVSS3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N 3.1` Proof:`curl -sI -H "Origin: https://evil.test" https://box.signageos.io/ | grep -i acaon`.
+  - **Verdict: HOLD -> VALID (Critical) conditional on §6.** Strict passive gate: **HOLD (AUTH_HELPED - needs X-Auth pair + second owned orgUid, violates passive-only)**. With `reports/security-token-idor
+  - `leads/lead-human.md:4` `reports/security-token-idor-report.md:203` . Q1 YES. Q2 PR:L. Q3 YES High secrets in list. Q4 NO needs auth. Q5 YES. Q6 YES. Q7 YES if repro `GET /v1/organization H: X-Auth: .
+  - **LEAD G/I - `GET /v1/organization/{uid}` OAuth secret disclosure, `v1/device/{uid}/peer-recovery` cross-tenant** `reports/valid-bugs.md:6-7`. Same 7-gate as E: Q2 NO unauth (`403`), Q4 NO passive. **
