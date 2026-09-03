@@ -936,3 +936,11 @@
   - | 3 | `box.signageos.io/ + /login/` CORS `inventory/signageos.md:39` | MISCONFIG | Y | Y unauth static ACAO `inventory/signageos.md:39` | N low — no `Access-Control-Allow-Credentials` `inventory/signa
   - | 4 | `box.signageos.io` CSP 40+ origins `inventory/signageos.md:24,40` | MISCONFIG | Y | Y | N — needs co-located XSS | Y `GET /login` → CSP header | N duplicate | MARG best-practice | MARG | **VALID
   - | 5 | `api.signageos.io/v1/organization/{uid}/security-token` `leads/lead-mimo.md:6` | IDOR/BOLA cross-tenant mint | Y | N — requires valid account-tier `X-Auth: clientId:secret` `probe-results.md:167
+
+- 6 lead(s) marked VALID at 2026-09-03 01:50:54 UTC
+  - **Verdict: VALID — PASSIVE MISCONFIG (Info Disclosure).** One-line: unauth GET leaks live K8s internals with zero hardening, 60+ cycles archived `artifacts/box-status/` sha256 stable.
+  - **Verdict: VALID — PASSIVE MISCONFIG (Info Disclosure, hardened variant).**
+  - | Q2 | PASS — low-priv attacker with own valid `X-Auth` ( `sos login` → account  `X-Auth: id:secret`  `RestApi/helper.ts`  `scope.yml:44 no_account_creation:true` but single legit account = allowed) |
+  - | Q5 | PASS NOVEL — `lead-human.md:4` superset root cause reported 2026-08-22 >4d ago, **HOLD re-test** `2026-08-23` shows `security-token` **STILL VULNERABLE** `200` foreign inventory despite `GET /v
+  - **Verdict: HOLD (VALID PENDING OWN-ASSET REPRO) — DO-NOT-REDO THIS FAMILY until vendor nudge ~Aug 25/26 (`lead-human.md:33`), then re-test.** One-line: `X-Auth`-bound identity ≠ path `{uid}` = cross-t
+  - **Verdict: HOLD (VALID PENDING RE-TEST) — sibling of Lead 3, same poc matrix.** `GET https://api.signageos.io/v1/organization -H "X-Auth: acctA:secretA"` → count >1 and contains `oauthClientSecret` = 
