@@ -944,3 +944,7 @@
   - | Q5 | PASS NOVEL — `lead-human.md:4` superset root cause reported 2026-08-22 >4d ago, **HOLD re-test** `2026-08-23` shows `security-token` **STILL VULNERABLE** `200` foreign inventory despite `GET /v
   - **Verdict: HOLD (VALID PENDING OWN-ASSET REPRO) — DO-NOT-REDO THIS FAMILY until vendor nudge ~Aug 25/26 (`lead-human.md:33`), then re-test.** One-line: `X-Auth`-bound identity ≠ path `{uid}` = cross-t
   - **Verdict: HOLD (VALID PENDING RE-TEST) — sibling of Lead 3, same poc matrix.** `GET https://api.signageos.io/v1/organization -H "X-Auth: acctA:secretA"` → count >1 and contains `oauthClientSecret` = 
+
+- 2 lead(s) marked VALID at 2026-09-03 06:44:38 UTC
+  - | S1 | `box.signageos.io/status` `GET https://box.signageos.io/status` → `200 application/json len~1433-1442` vs `403` expected if gated. Body leaks `hostname:box-*-*` + `process.uid 40-50hex` + `Node
+  - * `api.signageos.io/v1/organization/{uid}/security-token` IDOR/BOLA — `GET /v1/organization/{uid}/security-token` `403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE` unauth (`probe-results.md:48-49` `167-169`
