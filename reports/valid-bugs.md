@@ -983,3 +983,17 @@
   - f.write(f"\n- {len(verdict_lines)} lead(s) marked VALID at {stamp}\n")
   - print('no VALID verdicts this cycle')
   - **VALID (Low) - Duplicates, passive POC stable - DO NOT re-report without NEW delta:**
+
+- 12 lead(s) marked VALID at 2026-09-04 21:07:50 UTC
+  - | **A box/status infra leak** `leads/lead-mimo.md:16` `leads/lead-laguna.md:14` `probe-results.md:3` `GET /status 200 len=1440 json` | YES `scope.yml:6` | YES public unauth | YES recon (pod hostname +
+  - | **B api/status infra leak** `probe-results.md:314` `GET /status 200 len=1328` | YES `scope.yml:8` | YES public unauth | YES same class, 8-9 svc topology, hardened `HSTS/xfo/xcto` but still leaks | Y
+  - | **C box CORS ACAO whitelist** `GET / 302` + `GET /login/ 200` 18× static `ACAO` incl `http://box.signageos.io` + `https://*.zdusercontent.com` wildcard, `vary:Origin` but NO `ACAC`, spoof `Origin:ht
+  - | **D box CSP `connect-src/frame-src` 40+ origins** triplicated `auth0` `oauth/token` + Sony/BroadSign/MoodMedia + 6× S3 + `qwfin...execute-api` + `api.signageos.io` | YES | YES public | YES defense-i
+  - | **E api `POST /v1/organization/{uid}/security-token` cross-tenant mint** `leads/lead-human.md:3` `reports/security-token-idor-report.md:28` `leads/lead-bigpickle.md:341` mechanism: `X-Auth: {orgUid}
+  - | **F api `GET /v1/organization/{uid}` OAuth secret disclosure** `leads/lead-bigpickle.md:335` `oauthClientSecret` in body | YES | YES low-priv account token | YES HIGH (direct credential) | NO needs 
+  - **VALID minimal read-only POC + CVSS + channel:**
+  - | A | `box.signageos.io/status` `GET /status 200 len~1440` `probe-results.md:3` `inventory/signageos.md:36` leaks `hostname box-*` `process.uid 40-64hex` `Node v20.20.2` `succeededServices amqp0/redis
+  - | B | `api.signageos.io/status` `GET /status 200 len~1328` `probe-results.md:314` same + `redis0-3` `mongoDB0-2` `Node v24.19.0` `HSTS max-age=31536000` `x-frame-options DENY` | YES `scope.yml:8` | YE
+  - | C | `box CORS` `GET / -H Origin:https://evil.test` `GET /login/ 200` 17-18 static `ACAO` `inventory/signageos.md:39` | YES | YES | YES trust-expansion (no `ACAC` → no cookie theft) `C:L` | YES `-i g
+  - | D | `box CSP` `GET /login/%2F` `content-security-policy` 40-59 `connect-src/frame-src` triplicated `oauth/token` + `*.sentry` `*.mapbox` S3 `execute-api` `inventory/signageos.md:24` | YES | YES | YE
+  - | E | `api POST /v1/organization/{uid}/security-token` BOLA `reports/security-token-idor-report.md:28` `X-Auth {orgUid}:{secret}` prefix != path `{uid}` | YES | YES `PR:L` low-priv account `X-Auth` | 
