@@ -977,3 +977,9 @@
   - | **E api `POST /v1/organization/{uid}/security-token` cross-tenant mint** `leads/lead-human.md:3` `reports/security-token-idor-report.md:28` `leads/lead-bigpickle.md:341` mechanism: `X-Auth: {orgUid}
   - | **F api `GET /v1/organization/{uid}` OAuth secret disclosure** `leads/lead-bigpickle.md:335` `oauthClientSecret` in body | YES | YES low-priv account token | YES HIGH (direct credential) | NO needs 
   - **VALID minimal read-only POC + CVSS + channel:**
+
+- 4 lead(s) marked VALID at 2026-09-04 15:36:45 UTC
+  - and re.search(r'verdict|^\||^\s*\*\*VALID|^\s*VALID', l, re.I)]
+  - f.write(f"\n- {len(verdict_lines)} lead(s) marked VALID at {stamp}\n")
+  - print('no VALID verdicts this cycle')
+  - **VALID (Low) - Duplicates, passive POC stable - DO NOT re-report without NEW delta:**
