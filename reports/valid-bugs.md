@@ -968,3 +968,12 @@
 
 - 1 lead(s) marked VALID at 2026-09-04 06:40:04 UTC
   - **Verdict this cycle:** 0 new VALID. 4 reconfirmed VALID duplicates (box/api /status, box CORS, box CSP). IDOR family remains HOLD pending own-asset AUTH_HELPED matrix; no new passive high-value chain
+
+- 7 lead(s) marked VALID at 2026-09-04 11:51:17 UTC
+  - | **A box/status infra leak** `leads/lead-mimo.md:16` `leads/lead-laguna.md:14` `probe-results.md:3` `GET /status 200 len=1440 json` | YES `scope.yml:6` | YES public unauth | YES recon (pod hostname +
+  - | **B api/status infra leak** `probe-results.md:314` `GET /status 200 len=1328` | YES `scope.yml:8` | YES public unauth | YES same class, 8-9 svc topology, hardened `HSTS/xfo/xcto` but still leaks | Y
+  - | **C box CORS ACAO whitelist** `GET / 302` + `GET /login/ 200` 18× static `ACAO` incl `http://box.signageos.io` + `https://*.zdusercontent.com` wildcard, `vary:Origin` but NO `ACAC`, spoof `Origin:ht
+  - | **D box CSP `connect-src/frame-src` 40+ origins** triplicated `auth0` `oauth/token` + Sony/BroadSign/MoodMedia + 6× S3 + `qwfin...execute-api` + `api.signageos.io` | YES | YES public | YES defense-i
+  - | **E api `POST /v1/organization/{uid}/security-token` cross-tenant mint** `leads/lead-human.md:3` `reports/security-token-idor-report.md:28` `leads/lead-bigpickle.md:341` mechanism: `X-Auth: {orgUid}
+  - | **F api `GET /v1/organization/{uid}` OAuth secret disclosure** `leads/lead-bigpickle.md:335` `oauthClientSecret` in body | YES | YES low-priv account token | YES HIGH (direct credential) | NO needs 
+  - **VALID minimal read-only POC + CVSS + channel:**
