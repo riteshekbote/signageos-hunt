@@ -965,3 +965,6 @@
   - **Verdict: HOLD -> VALID (Critical) conditional on §6.** Strict passive gate: **HOLD (AUTH_HELPED - needs X-Auth pair + second owned orgUid, violates passive-only)**. With `reports/security-token-idor
   - `leads/lead-human.md:4` `reports/security-token-idor-report.md:203` . Q1 YES. Q2 PR:L. Q3 YES High secrets in list. Q4 NO needs auth. Q5 YES. Q6 YES. Q7 YES if repro `GET /v1/organization H: X-Auth: .
   - **LEAD G/I - `GET /v1/organization/{uid}` OAuth secret disclosure, `v1/device/{uid}/peer-recovery` cross-tenant** `reports/valid-bugs.md:6-7`. Same 7-gate as E: Q2 NO unauth (`403`), Q4 NO passive. **
+
+- 1 lead(s) marked VALID at 2026-09-04 06:40:04 UTC
+  - **Verdict this cycle:** 0 new VALID. 4 reconfirmed VALID duplicates (box/api /status, box CORS, box CSP). IDOR family remains HOLD pending own-asset AUTH_HELPED matrix; no new passive high-value chain
