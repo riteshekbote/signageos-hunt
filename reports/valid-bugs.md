@@ -1021,3 +1021,9 @@
   - Verdict: VALID (DUPLICATE) — one-line: reconfirmed, do not re-report. Minimal proof: GET https://box.signageos.io/status → 200. Impact: infra recon. CVSS 3.1: 5.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
   - Verdict: VALID (DUPLICATE) — same as A, api variant. CVSS 3.1: 5.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
   - Verdict: HOLD (prior VALID-Critical, now DUPLICATE) — one-line: credible CRITICAL IDOR/BOLA but requires AUTH_HELPED POST and is already reported; do not re-probe invasively. Prior reporting channel s
+
+- 4 lead(s) marked VALID at 2026-09-05 20:48:18 UTC
+  - | infra leak | `GET https://box.signageos.io/status` | 302/404 | `200 application/json` hostname `box-8676fb5f57-*`, `process.uid` 40-hex, Node `v20.20.2`, `succeededServices=[amqp0,redis0-3,mongoDB0-
+  - | infra leak | `GET https://api.signageos.io/status` | 302/404 | `200 application/json` hostname `api-86db648db5-*`/`api-6cc9959bb4-*`, Node `v24.19.0`, `strict-transport-security`+`x-frame-options:DE
+  - | CORS | `GET https://box.signageos.io/ -H Origin:https://evil.test` | no ACAO / reflected | 17-18 static `access-control-allow-origin` incl `http://box.signageos.io`, `https://*.zdusercontent.com` li
+  - | CSP | `GET https://box.signageos.io/login/%2F` | narrow CSP | `content-security-policy` 33-40+ `connect-src`/`frame-src` origins: `sos-production.us.auth0.com`, `auth0.signageos.io` (`/oauth/token` 
