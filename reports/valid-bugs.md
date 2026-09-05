@@ -1016,3 +1016,8 @@
   - *   **Verdict: VALID (Low, DUPLICATE)** — CVSS 3.1 `AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` **5.3** (prior triage `4.3`). **Proof:** `curl -si https://box.signageos.io/status` → 200 JSON + `grep -i stric
   - *   **Verdict: VALID (Low, DUPLICATE)** CVSS 3.1 **4.3** (hardened lowers exploitability). **Proof:** `curl -si https://api.signageos.io/status`.
   - *   **Verdict: HOLD (AUTH_HELPED, PENDING VENDOR FIX)** — `reports/valid-bugs.md:5` carry. Minimal invasive proof (requires program approval): `(1) sos login → X-Auth pair, (2) GET /v1/organization/{o
+
+- 3 lead(s) marked VALID at 2026-09-05 18:30:06 UTC
+  - Verdict: VALID (DUPLICATE) — one-line: reconfirmed, do not re-report. Minimal proof: GET https://box.signageos.io/status → 200. Impact: infra recon. CVSS 3.1: 5.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - Verdict: VALID (DUPLICATE) — same as A, api variant. CVSS 3.1: 5.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - Verdict: HOLD (prior VALID-Critical, now DUPLICATE) — one-line: credible CRITICAL IDOR/BOLA but requires AUTH_HELPED POST and is already reported; do not re-probe invasively. Prior reporting channel s
