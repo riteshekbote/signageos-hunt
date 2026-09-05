@@ -1011,3 +1011,8 @@
   - | **C. `box.signageos.io/ + /login/ CORS+CSP`** `signageos.md:39,183-186` 18 static `access-control-allow-origin` inc `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard, 40+ 
   - | **D. `GET/POST https://api.signageos.io/v1/organization/{uid}/security-token`** IDOR cross-tenant mint `lead-mimo.md:6` `reports/security-token-idor-report.md:24-28` | YES api In | NO under passive 
   - | **E. `GET /v1/organization/{uid}` OAuth secret disclosure, `GET/PUT /v1/device/{uid}/peer-recovery`** etc `valid-bugs.md:9-10` | YES | NO — 403 gated | YES Critical if proven | NO — AUTH_HELPED + PU
+
+- 3 lead(s) marked VALID at 2026-09-05 16:22:08 UTC
+  - *   **Verdict: VALID (Low, DUPLICATE)** — CVSS 3.1 `AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` **5.3** (prior triage `4.3`). **Proof:** `curl -si https://box.signageos.io/status` → 200 JSON + `grep -i stric
+  - *   **Verdict: VALID (Low, DUPLICATE)** CVSS 3.1 **4.3** (hardened lowers exploitability). **Proof:** `curl -si https://api.signageos.io/status`.
+  - *   **Verdict: HOLD (AUTH_HELPED, PENDING VENDOR FIX)** — `reports/valid-bugs.md:5` carry. Minimal invasive proof (requires program approval): `(1) sos login → X-Auth pair, (2) GET /v1/organization/{o
