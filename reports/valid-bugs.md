@@ -1003,3 +1003,11 @@
   - **Verdict: VALID (LOW)** - same class, differential hardening `HSTS/xfo/xcto/no-store secgrep=4` vs box `0`. Proof: `GET https://api.signageos.io/status` `200`. CVSS **5.3** same vector. Channel same.
   - **Verdict: VALID (HIGH)** - Critical logic flaw. Minimal proof (read-only, own orgs only): `1 sos login -> X-Auth pair 2 GET https://api.signageos.io/v1/organization/<own>/security-token -H "X-Auth: .
   - **Verdict: VALID (CRITICAL)** - linked to Lead 4 but superset. Proof: `GET https://api.signageos.io/v1/organization/<foreign-uid> -H "X-Auth: <ownAcct>"` -> `200 {"oauthClientSecret":...}` vs expected
+
+- 6 lead(s) marked VALID at 2026-09-05 13:36:42 UTC
+  - | Lead (from `leads/lead-mimo.md:6-13` + `valid-bugs.md:4-20` + `lead-human.md:1-6`) | Q1 Scope | Q2 Reachable | Q3 Impact | Q4 Passive proof GET/HEAD | Q5 Novel | Q6 Not rejected | Q7 Triager accept 
+  - | **A. `GET https://box.signageos.io/status`** MISCONFIG infra leak `inventory/signageos.md:36-37` `lead-mimo.md:15-22` | YES `scope.yml:6` In | YES public unauth 200 `probe-results.md:3` | YES real (
+  - | **B. `GET https://api.signageos.io/status`** `signageos.md:37` `lead-mimo.md:111-118` | YES `scope.yml:8` In | YES public unauth 200 `probe-results.md:314` | YES same class, 8-svc (mongoDB3 absent `
+  - | **C. `box.signageos.io/ + /login/ CORS+CSP`** `signageos.md:39,183-186` 18 static `access-control-allow-origin` inc `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard, 40+ 
+  - | **D. `GET/POST https://api.signageos.io/v1/organization/{uid}/security-token`** IDOR cross-tenant mint `lead-mimo.md:6` `reports/security-token-idor-report.md:24-28` | YES api In | NO under passive 
+  - | **E. `GET /v1/organization/{uid}` OAuth secret disclosure, `GET/PUT /v1/device/{uid}/peer-recovery`** etc `valid-bugs.md:9-10` | YES | NO — 403 gated | YES Critical if proven | NO — AUTH_HELPED + PU
