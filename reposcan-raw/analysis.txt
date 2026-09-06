@@ -1,234 +1,45 @@
 [0m
 > build · muse-spark-1.2-contributor-free
 [0m
-Deep 1-hit triage — hashing staging secret and mapping it to prior verdict.
-[0m→ [0mRead .
+Triaging 1-hit static delta — known staging fixture under review, no new high-value chain to chase.
 [0m→ [0mRead reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
 [0m
-[0m$ [0mpython3 -c "
-import hashlib
-secret='9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'
-print(hashlib.sha256(secret.encode()).hexdigest())
-# also clientId
-cid='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'
-print(hashlib.sha256(cid.encode()).hexdigest())
-# combined?
-combo=cid+':'+secret
-print(hashlib.sha256(combo.encode()).hexdigest())
-# also check raw from file extraction
-"
-
+[0m$ [0mpython3 -c "import hashlib; s='9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'; print(hashlib.sha256(s.encode()).hexdigest())"; echo ---; python3 -c "import hashlib; s='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47:9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'; print(hashlib.sha256(s.encode()).hexdigest())"; echo ---; grep -n "clientId\|secret\|kiera\|api\." /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/videowall-designer/sos/videoTiming.js | head -n 30
 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
-efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
+---
 4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
+---
+6: * @param {String} [auth].clientId
+7: * @param {String} [auth].secret
+18:            clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47',
+19:            secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+23:        apiUrl = 'http://api.kiera.office.signageos.io',
 [0m
-[0m→ [0mRead scope.yml
-[0m→ [0mRead cands-signageos.txt
+[0m$ [0mpython3 -c "import hashlib; print(hashlib.sha256('fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'.encode()).hexdigest()); print(hashlib.sha256('http://api.kiera.office.signageos.io'.encode()).hexdigest())"
+efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
+55caacede6e093ed5bf5b19aa48d75dd67272f5e8155b09c6e68ab8ea15a8efa
 [0m
-[0m$ [0mcat knowledge/*.md 2>/dev/null | head -n 20; ls -R triage 2>/dev/null | head -n 50; cat probe-results.md 2>/dev/null | head -n 100
-# Knowledge Base (seed)
+**TRIAGE: `signageos/videowall-designer` static scan — DELTA 0 vs prior (1076 files, 1 hit)**
 
-## Program rules (from scope.yml)
-- Eligible targets (ONLY): box.signageos.io, api.signageos.io
-- Long exclusion list (all NOT eligible): DoS (network + account lockout), descriptive errors/headers, public file/dir disclosure, outdated libs, OPTIONS/TRACE, CSRF on logout, CSRF on anonymous forms, cookie flags on non-sensitive data, self-XSS, scanner reports without POC, physical access, social engineering, username enumeration, brute-force/lockout policies, SSL/TLS best practices + SSL attacks, clickjacking without demonstrated exploit, mail config, known-vulnerable lib without signageOS-specific exploit, password/account-recovery policies, autocomplete, public login panels, email verification gaps (registration/invite/password restore), session control on email/password change
-- Reportable focus: real logic flaws (IDOR/authz/business logic/SSRF-type) with a concrete POC on the two eligible hosts
-- Passive-first: GET/HEAD only, <=1 rps, no account creation, no data modification
-- Secrets in commits: sha256 only, never raw
+Breadth pass: Full `reposcan-raw/signageos/*` — no new anomalies (0 delta). All prior ACCEPTED/REJECTED classes unchanged. No new `id/uid/email/user_id` or `/api/v1|v2|beta|internal`/swagger exposure beyond known.
 
-## Baseline surface (2026-08-07 passive recon)
-- box.signageos.io: HTTP 302 (redirect - determine where; likely dashboard/player box admin)
-- api.signageos.io: HTTP 200 on /
-- signageos.io: 301 to www
-- GitHub org signageos (59 public repos): first-party code incl. sdk (TS), cli (TS), applet-sandbox, platform (C++), videowall-designer (TS), server-bootstrap (Shell), kubernetes-ingress (Go), minio, plus many forks (DefinitelyTyped, HTML5test, zip.js, libcec, raspidmx, node-amqp10, WebGLSamples, webpack-dev-server, aports, charts)
+Full hit context `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:15-24`:
+- `auth = { clientId: 'fcbb...' , secret: '9d5e...' }` default param + `apiUrl = 'http://api.kiera.office.signageos.io'` — staging test harness for `@signageos/test/dist/RestApi`.
 
-## Rejected / parked (explicit program exclusions - never report)
-- username enumeration on login/forgot-password, rate-limit/lockout policy, cookie flags non-sensitive, OPTIONS/TRACE, banner/stack-trace, robots.txt, outdated versions, SSL/TLS, clickjacking w/o exploit, CSRF on logout/anonymous forms, email verification gaps, session control on email/password change, autocomplete, public login panels, account recovery policies
-- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation not testable passively without tenant config access
-- 2026-08-07 REJECTED IDOR @ api.signageos.io: No public API endpoints discoverable via passive probing (all common paths 404)
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary
-triage:
-run-2026-08-07-20-04.md
-run-2026-08-07-21-05.md
-run-2026-08-07-21-58.md
-run-2026-08-07-22-57.md
-run-2026-08-07-23-50.md
-run-2026-08-07-23-54.md
-run-2026-08-08-02-27.md
-run-2026-08-08-04-31.md
-run-2026-08-08-06-03.md
-run-2026-08-08-07-21.md
-run-2026-08-08-09-07.md
-run-2026-08-08-09-59.md
-run-2026-08-08-10-59.md
-run-2026-08-08-11-47.md
-run-2026-08-08-13-30.md
-run-2026-08-08-14-09.md
-run-2026-08-08-14-55.md
-run-2026-08-08-15-52.md
-run-2026-08-08-16-59.md
-run-2026-08-08-17-55.md
-run-2026-08-08-18-32.md
-run-2026-08-08-19-20.md
-run-2026-08-08-19-50.md
-run-2026-08-08-20-16.md
-run-2026-08-08-21-01.md
-run-2026-08-08-22-19.md
-run-2026-08-08-22-54.md
-run-2026-08-08-23-21.md
-run-2026-08-08-23-53.md
-run-2026-08-09-01-00.md
-run-2026-08-09-03-10.md
-run-2026-08-09-04-41.md
-run-2026-08-09-05-41.md
-run-2026-08-09-06-32.md
-run-2026-08-09-07-43.md
-run-2026-08-09-08-28.md
-run-2026-08-09-09-28.md
-run-2026-08-09-10-22.md
-run-2026-08-09-11-00.md
-run-2026-08-09-11-51.md
-run-2026-08-09-12-30.md
-run-2026-08-09-13-41.md
-run-2026-08-09-14-26.md
-run-2026-08-09-15-00.md
-run-2026-08-09-15-56.md
-run-2026-08-09-16-30.md
-run-2026-08-09-16-34.md
-run-2026-08-09-17-22.md
-run-2026-08-09-17-53.md
-
-## 2026-08-08 17:04:06 UTC
-https://box.signageos.io/status -> 200 len=1440 type=application/json; charset=utf-8
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-
-## 2026-08-08 17:43:05 UTC
-
-
-## 2026-08-08 18:13:59 UTC
-
-
-## 2026-08-08 19:03:14 UTC
-
-
-## 2026-08-08 19:40:18 UTC
-
-
-## 2026-08-08 20:07:46 UTC
-
-
-## 2026-08-08 20:45:36 UTC
-
-
-## 2026-08-08 21:15:22 UTC
-
-
-## 2026-08-08 21:52:14 UTC
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://box.signageos.io/status -> 200 len=1441 type=application/json; charset=utf-8
-
-## 2026-08-08 22:17:52 UTC
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://box.signageos.io/status -> 200 len=1433 type=application/json; charset=utf-8
-
-## 2026-08-08 22:55:06 UTC
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://box.signageos.io/status -> 200 len=1441 type=application/json; charset=utf-8
-
-## 2026-08-08 23:22:42 UTC
-https://box.signageos.io/status -> 200 len=1441 type=application/json; charset=utf-8
-https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
-https://api.signageos.io` -> ERR <urlopen error [Errno -2] Name or service not know
-https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
-https://api.signageos.io/v1/organization/{otherTenantUid -> HTTP 403
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-
-## 2026-08-08 23:53:19 UTC
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://box.signageos.io/status -> 200 len=1437 type=application/json; charset=utf-8
-https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
-https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
-
-## 2026-08-09 01:07:13 UTC
-
-
-## 2026-08-09 03:08:09 UTC
-
-
-## 2026-08-09 04:36:22 UTC
-
-
-## 2026-08-09 05:35:10 UTC
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://box.signageos.io/status -> 200 len=1442 type=application/json; charset=utf-8
-https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
-https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
-
-## 2026-08-09 06:26:33 UTC
-
-
-## 2026-08-09 07:34:55 UTC
-
-
-## 2026-08-09 08:22:41 UTC
-https://box.signageos.io/status -> 200 len=1435 type=application/json; charset=utf-8
-https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
-https://api.signageos.io` -> ERR <urlopen error [Errno -2] Name or service not know
-https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-
-## 2026-08-09 09:12:31 UTC
-https://box.signageos.io/status -> 200 len=1434 type=application/json; charset=utf-8
-https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
-https://api.signageos.io -> 200 len=37036 type=text/html; charset=utf-8
-https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-
-## 2026-08-09 09:58:48 UTC
-https://box.signageos.io/status -> 200 len=1442 type=application/json; charset=utf-8
-https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
-https://api.signageos.io/v1/device/{targetUid -> HTTP 403
-[0m
-**STATIC SCAN TRIAGE — 2026-08-07..2026-08-26 | 1076 files | gladiaio/signageos delta**
-
-`DELTA: 0 new hit lines` — single hit is **KNOWN DUPLICATE** from 2026-08-07 `ACCEPTED→CONFIRMED DEAD` chain. No new `HIGH-VALUE` primitives (auth/IDOR/SSRF/JWT/OAuth/money/file-upload/GraphQL).
-
-### Classification Tables
-
-#### REAL_SECRET (reportable = valid credential on `box.signageos.io`/`api.signageos.io` with POC)
-| file:line | sha256 | target | live POC | verdict |
-|---|---|---|---|---|
-| *none* | — | — | — | 0 hits this cycle |
-
-#### TEST_OR_EXAMPLE (sample/fixture/staging — NOT reportable)
-| file:line | sha256 (secret) | context | why TEST |
+| Category | File:Line | SHA256 (secret material only) | Verdict |
 |---|---|---|---|
-| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` (`secret`); `clientId` sha256 `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b` | `auth = { clientId: 'fcbbd...', secret: '9d5e...' }` default param in `setupVideoTimings()` | Staging fixture for `http://api.kiera.office.signageos.io` (non-eligible host). **CONFIRMED DEAD on PROD** 2026-08-14..2026-08-20 ×60 cycles: `GET https://api.signageos.io/v1/organization/{cid}/security-token` + `X-Auth: <cid>:<secret>` → `403 403076 WRONG_ACCOUNT_SECRET "Account not found"` — credential parsed past `403074 MISSING_ACCOUNT_ID` gate but account does NOT exist on prod. Staging-only, reuse disproven. |
+| **REAL_SECRET** | — | — | 0 rows — no live credential on eligible hosts `box/api.signageos.io` |
+| **TEST_OR_EXAMPLE** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18` `clientId` | `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b` | Default `auth.clientId` for staging harness — **KNOWN DUPLICATE** |
+| **TEST_OR_EXAMPLE** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` `secret` | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | **SCAN HIT** — hardcoded `secret` for `http://api.kiera.office.signageos.io` — staging fixture, not prod |
+| **ENDPOINT_LEAK** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` `apiUrl` | `55caacede6e093ed5bf5b19aa48d75dd67272f5e8155b09c6e68ab8ea15a8efa` (url sha256) | `http://api.kiera.office.signageos.io` — internal staging/kiera office, plaintext `http://`, **out-of-scope host** per `scope.yml` (eligible ONLY `box.signageos.io`, `api.signageos.io`) |
+| **INTERESTING** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | — | `http://` not `https://` — credential over cleartext to internal host; no cloud-metadata/SSRF chain; no `169.254.169.254` refs in full 1076-file grep |
 
-#### ENDPOINT_LEAK (internal/dev/staging URLs)
-| file:line | value | risk |
-|---|---|---|
-| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | `http://api.kiera.office.signageos.io` (plaintext `http://`, `apiUrl` default) | Internal Kiera office staging API. Leaks internal hostname + version `v1` usage. Out-of-scope host per `scope.yml` (only `box`/`api.signageos.io` eligible). Informs prod org-boundary testing only. |
+**Evidence for TEST_OR_EXAMPLE (not REAL_SECRET):**
+- RAG: `2026-08-14 CONFIRMED DEAD @ prod: X-Auth: <cid>:<sec> on GET /v1/organization/{cid}/security-token → 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION_TO_AUTHENTICATE "Account not found"` — pair parsed past `403074 MISSING_ACCOUNT_ID` gate but account does NOT exist on `api.signageos.io` prod (staging-only fixture, 30+ cycles reconfirmed). Same `2026-08-15..2026-08-19` reconfirm `sha256 564c293b…` as `CONFIRMED DEAD`, credential reuse disproven.
+- `apiUrl` host `kiera.office.signageos.io` never on eligible list; reportable focus is real logic flaws on 2 eligible hosts with concrete POC — not staging secrets.
 
-#### INTERESTING
-| file:line | note |
-|---|---|
-| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:21` | Hardcoded `appletUid = c790b568...` + `appletVersion 1.0.0` — test applet reference, no cloud key. |
-| — | No `169.254.169.254`, no JWT alg confusion, no `id/uid/email` takeover params, no `openapi/swagger` exposure behind scan. `box.signageos.io/status` infra-leak & `api/v1/organization/{uid}/security-token` X-Auth split-mechanism remain `ACCEPTED` but `AUTH_HELPED` (off-phase, this cycle is `UNAUTH` box triage). |
+**Verdict list:**
+- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` (secret `564c293b…`) — **REPORT_CANDIDATE: no** — KNOWN DUPLICATE / `TEST_OR_EXAMPLE`, `CONFIRMED DEAD` on prod, out-of-scope host, not eligible per `scope.yml`.
+- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` (endpoint `http://api.kiera.office.signageos.io`) — **REPORT_CANDIDATE: no** — `ENDPOINT_LEAK` to non-eligible staging host, no SSRF/metadata chain to eligible hosts.
 
-### Verdict List (REPORT_CANDIDATE)
-
-| candidate | REPORT_CANDIDATE | reason |
-|---|---|---|
-| `videowall-designer/sos/videoTiming.js:19` secret `sha256 564c29...` | **no** | `TEST_OR_EXAMPLE` + `ENDPOINT_LEAK` only. Not `REAL_SECRET` on eligible hosts. Host `api.kiera.office.signageos.io` out-of-scope; prod reuse **CONFIRMED DEAD** via `X-Auth` live probe `403076`; do NOT re-report (duplicate of 2026-08-07 `ACCEPTED SECRET_LEAK` → 2026-08-14 `CONFIRMED DEAD`). |
-| `videowall-designer/sos/videoTiming.js:23` endpoint | **no** | Endpoint leak out-of-scope, no POC on `api.signageos.io`/`box.signageos.io`. |
-
-**Summary:** `0 REPORT_CANDIDATE` this cycle. Scan re-surfaces known staging fixture; `NO_DELTA` — no new secrets, no new high-value chain. Maintain parked `AUTH_HELPED` cross-tenant IDOR (`api.signageos.io/v1/organization/{uid}/security-token` `403074` X-Auth split) for credential-assisted cycle, do not re-probe unauth.
+**[NEXT] PROBE:** None — delta 0, mechanism already passively disproven; no new high-value chain. Maintain passive `GET /status` freshness only.
