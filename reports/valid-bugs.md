@@ -1030,3 +1030,11 @@
 
 - 1 lead(s) marked VALID at 2026-09-06 00:20:59 UTC
   - `GET https://api.signageos.io/v1/organization/<any-uid>/security-token` -> `403` `probe-results.md:167` `errorCode 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE` `inventory/signageos.md:511-512` errorDeta
+
+- 6 lead(s) marked VALID at 2026-09-06 04:56:28 UTC
+  - | **1** | `box.signageos.io/status` infra leak `inventory/signageos.md:16,36` | YES `scope.yml:6` In | YES unauth `200` `probe-results.md:3` | YES LOW recon (hostname, 40-hex uid, Node v20.20.2, 9-svc
+  - | **2** | `api.signageos.io/status` infra leak `inventory/signageos.md:37` | YES `scope.yml:8` In | YES unauth `200` `probe-results.md:314` | YES LOW (same + Node v24.19.0, 8-svc mongo3 absent) despit
+  - | **3** | `box.signageos.io` CORS 17-18 static ACAO `inventory/signageos.md:39` | YES | YES unauth `200` on `/`+`/login/` | MARGINAL Low — static whitelist incl `http://box.signageos.io`+`https://*.zd
+  - | **4** | `box.signageos.io` CSP 40-60 origins `inventory/signageos.md:39` | YES | YES | MARGINAL Info — 40+ connect/frame-src (Auth0×3, Mapbox, Sentry, S3, device APIs) widens XSS blast radius | YES 
+  - | **5** | `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant mint `lead-mimo.md:6` `lead-human.md:3` `reports/security-token-idor-report.md:24` | YES `scope.yml:8` | YES low-priv (fr
+  - **VALID reporting channel:** `scope.yml:4` TBD → actual `security@signageos.io` per `lead-human.md:4` + `reports/security-token-idor-report.md:206` (already submitted >4d, DO-NOT-REDO). POC must mask 
