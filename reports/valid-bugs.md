@@ -1065,3 +1065,9 @@
   - 1. **MISCONFIG `box|api /status` infra leak** — PASSIVE VALID reconfirmed low. `leads/lead-mimo.md:16-27` confidence 100. Impact: K8s pod identity + Node version + full backend topology for targeted S
   - 2. **IDOR `api.signageos.io/v1/organization/{uid}/security-token` + `GET /v1/organization/{uid}` oauthSecret leak** — HUMAN CONFIRMED CRITICAL, DO-NOT-REDO. `leads/lead-human.md:3-5` researcher execut
   - 3. **MISCONFIG `box.signageos.io` CORS/CSP trust-boundary expansion** — PASSIVE VALID-EXISTING borderline. `GET /` + `/login/` static 17-18 `access-control-allow-origin` incl `http://box.signageos.io`
+
+- 4 lead(s) marked VALID at 2026-09-06 22:57:34 UTC
+  - **Verdict: VALID (reconfirmed duplicate, Low)** — One-line: passive infra-info disclosure.
+  - **Verdict: VALID (reconfirmed duplicate, Low)** Proof: `GET https://api.signageos.io/status` -> 200 JSON + `strict-transport-security max-age=31536000, x-frame-options DENY, x-content-type-options nos
+  - **Verdict: VALID (Info/borderline, duplicate)** CVSS 3.1: 3.1 (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N) — defense-in-depth only. Channel as above.
+  - **Verdict: HOLD (AUTH_HELPED, plausible Critical IDOR, not passively provable)** — One-line: credible cross-tenant mint via path `{uid}` not bound to X-Auth identity, but unverified without valid cred
