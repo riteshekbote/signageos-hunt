@@ -1060,3 +1060,8 @@
   - | 5 | `api/v1/organization/{uid}/security-token` cross-tenant mint `reports/valid-bugs.md:9` | YES | NO – requires `X-Auth` or `Authorization: Bearer <JWT>`; all passive `probe-results.md:403-410` 403
   - | 6 | `api/v1/organization/{uid}` OAuth secret disclose `reports/valid-bugs.md:10` | YES | NO – 403 without JWT | YES-IF – IDOR PII/secret leak | NO – same AUTH_HELPED | N/A | YES | NO | **HOLD – AUTH
   - | 7 | `api/v1/device/{uid}/peer-recovery` cross-tenant `reports/valid-bugs.md:11` | YES | NO – needs org `X-Auth`; `PUT` invasive violates `no_data_modification` | YES-IF | NO – invasive + AUTH_HELPED
+
+- 3 lead(s) marked VALID at 2026-09-06 20:55:40 UTC
+  - 1. **MISCONFIG `box|api /status` infra leak** — PASSIVE VALID reconfirmed low. `leads/lead-mimo.md:16-27` confidence 100. Impact: K8s pod identity + Node version + full backend topology for targeted S
+  - 2. **IDOR `api.signageos.io/v1/organization/{uid}/security-token` + `GET /v1/organization/{uid}` oauthSecret leak** — HUMAN CONFIRMED CRITICAL, DO-NOT-REDO. `leads/lead-human.md:3-5` researcher execut
+  - 3. **MISCONFIG `box.signageos.io` CORS/CSP trust-boundary expansion** — PASSIVE VALID-EXISTING borderline. `GET /` + `/login/` static 17-18 `access-control-allow-origin` incl `http://box.signageos.io`
