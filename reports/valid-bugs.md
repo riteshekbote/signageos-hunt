@@ -1038,3 +1038,25 @@
   - | **4** | `box.signageos.io` CSP 40-60 origins `inventory/signageos.md:39` | YES | YES | MARGINAL Info — 40+ connect/frame-src (Auth0×3, Mapbox, Sentry, S3, device APIs) widens XSS blast radius | YES 
   - | **5** | `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant mint `lead-mimo.md:6` `lead-human.md:3` `reports/security-token-idor-report.md:24` | YES `scope.yml:8` | YES low-priv (fr
   - **VALID reporting channel:** `scope.yml:4` TBD → actual `security@signageos.io` per `lead-human.md:4` + `reports/security-token-idor-report.md:206` (already submitted >4d, DO-NOT-REDO). POC must mask 
+
+- 21 lead(s) marked VALID at 2026-09-06 16:22:19 UTC
+  - - **Verdict: VALID** — Unauthenticated JSON health endpoint disclosing internal infrastructure.
+  - - **Verdict: VALID** — Unauthenticated JSON health endpoint disclosing internal infrastructure.
+  - - **Verdict: VALID** (borderline) — Static ACAO whitelist includes HTTP variant + literal wildcard, expanding trust boundary.
+  - - **Verdict: VALID (Low)**
+  - - **Verdict: VALID** — Unauthenticated JSON health endpoint disclosing internal infrastructure topology.
+  - - **Verdict: VALID** — Unauthenticated JSON health endpoint disclosing internal infrastructure.
+  - - **Verdict: VALID (borderline)** — Static ACAO whitelist includes HTTP variant + literal wildcard, expanding trust boundary.
+  - - **Verdict: VALID (Low)**
+  - - **Verdict: VALID (Low)**
+  - - **Verdict: VALID (Low)**
+  - - **Verdict: VALID (Low)**
+  - - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant to prove. Code-verified via SDK/CLI (`getOrganization()` sends `GET /v1/organization/{uid}` with `X-Auth: <JWT>`, ret
+  - - 4. **Prior triage consistency:** LEADs 1-3 were previously marked VALID in `valid-bugs.md`. This triage confirms those verdicts with full 7-Question Gate analysis.
+  - | 1 | `box.signageos.io/status` infra leak `inventory/signageos.md:36` | YES – `box.signageos.io` `scope.yml:6` | YES – unauth GET 200 | YES – K8s host/UID/topology enables recon + SSRF pivot | YES – 
+  - | 2 | `api.signageos.io/status` infra leak `inventory/signageos.md:37` | YES – `api.signageos.io` `scope.yml:8` | YES – unauth GET 200 `api.signageos.io/status ->200 len=1333` `probe-results.md:820` |
+  - | 3 | box CORS ACAO `http://`+`*zdusercontent.com` `inventory/signageos.md:39` | YES | YES – unauth `GET /` `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/` | BORDERLINE – expands t
+  - | 4 | box CSP 40+ origins triplicated Auth0 `inventory/signageos.md:38` | YES | YES – `curl -sI https://box.signageos.io/login/` | LOW – widens XSS/postMessage origin | YES – `curl -sI https://box.sig
+  - | 5 | `api/v1/organization/{uid}/security-token` cross-tenant mint `reports/valid-bugs.md:9` | YES | NO – requires `X-Auth` or `Authorization: Bearer <JWT>`; all passive `probe-results.md:403-410` 403
+  - | 6 | `api/v1/organization/{uid}` OAuth secret disclose `reports/valid-bugs.md:10` | YES | NO – 403 without JWT | YES-IF – IDOR PII/secret leak | NO – same AUTH_HELPED | N/A | YES | NO | **HOLD – AUTH
+  - | 7 | `api/v1/device/{uid}/peer-recovery` cross-tenant `reports/valid-bugs.md:11` | YES | NO – needs org `X-Auth`; `PUT` invasive violates `no_data_modification` | YES-IF | NO – invasive + AUTH_HELPED
