@@ -1027,3 +1027,6 @@
   - | infra leak | `GET https://api.signageos.io/status` | 302/404 | `200 application/json` hostname `api-86db648db5-*`/`api-6cc9959bb4-*`, Node `v24.19.0`, `strict-transport-security`+`x-frame-options:DE
   - | CORS | `GET https://box.signageos.io/ -H Origin:https://evil.test` | no ACAO / reflected | 17-18 static `access-control-allow-origin` incl `http://box.signageos.io`, `https://*.zdusercontent.com` li
   - | CSP | `GET https://box.signageos.io/login/%2F` | narrow CSP | `content-security-policy` 33-40+ `connect-src`/`frame-src` origins: `sos-production.us.auth0.com`, `auth0.signageos.io` (`/oauth/token` 
+
+- 1 lead(s) marked VALID at 2026-09-06 00:20:59 UTC
+  - `GET https://api.signageos.io/v1/organization/<any-uid>/security-token` -> `403` `probe-results.md:167` `errorCode 403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE` `inventory/signageos.md:511-512` errorDeta
