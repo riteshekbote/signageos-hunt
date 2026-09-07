@@ -1077,3 +1077,10 @@
   - - **Verdict: VALID (Low) DUPLICATE** `CVSS3.1 5.3` Proof: `GET https://api.signageos.io/status` → `200` with `hostname:api-*`+ topology.
   - - **Verdict: VALID (Info/Low borderline) DUPLICATE** `CVSS3.1 3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N` Proof: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/ | grep -i access-contro
   - - **Verdict: VALID (Info borderline) DUPLICATE** `CVSS3.1 3.1`
+
+- 5 lead(s) marked VALID at 2026-09-07 06:16:25 UTC
+  - | 1 | `box.signageos.io/status` | MISCONFIG info disclosure | YES `box` In | YES unauth `GET /status` 200 json | YES K8s hostname + 40-64hex uid + Node v20.20.2 + 9svc amqp0/redis0-3/mongoDB0-3 + timi
+  - | 2 | `api.signageos.io/status` | MISCONFIG info disclosure | YES `api` In | YES unauth `GET /status` 200 json | YES same class | YES `curl -sD- https://api.signageos.io/status` | NO duplicate | YES |
+  - | 3 | `box.signageos.io/ + /login/` CORS | MISCONFIG ACAO whitelist | YES | YES unauth `GET / -H Origin:evil.test` | YES trust-boundary `http://` + `*.zdusercontent.com` wildcard + sibling — no ACAC l
+  - | 4 | `box.signageos.io/login/` CSP | MISCONFIG overly broad | YES | YES unauth `GET /login/%2F` | YES 40+ origins — expands postMessage trust if XSS | YES `curl -sI https://box.signageos.io/login/%2F
+  - | 5 | `api.signageos.io/v1/organization/{uid}/security-token` `GET/POST` | IDOR BOLA cross-tenant mint | YES | **NO** — probe-results.md 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` unauth; needs `X-Au
