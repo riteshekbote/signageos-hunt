@@ -1115,3 +1115,10 @@
   - | B | `GET api.signageos.io/status` same class `inventory/signageos.md:37` Node `v24.19.0` hardened `HSTS/xfo/xcto` | **VALID Low DUPLICATE** | Same as A, api in; Q4 `curl -s https://api.signageos.io/
   - | C | `box CORS` 17-18 static `ACA-Origin` incl `http://box.signageos.io` + `https://*.zdusercontent.com` wildcard, `evil.test` not reflected, no `allow-credentials` `inventory/signageos.md:39` | **VA
   - | D | `box CSP` 40+ `connect-src/frame-src` triplicated Auth0 `oauth/token` + Mapbox/Sentry/S3 `inventory/signageos.md:24` | **VALID Info/Border DUPLICATE** | Q1 YES, Q2 YES, Q3 LOW (defense-in-depth,
+
+- 5 lead(s) marked VALID at 2026-09-07 23:51:30 UTC
+  - | **L1 `box.signageos.io/status` unauth K8s leak** `inventory/signageos.md:36` | Q1 YES `scope.yml:6` In; Q2 YES public `GET /status` 200 `probe-results.md:3` no auth; Q3 YES Low recon; Q4 YES `GET ht
+  - | **L2 `api.signageos.io/status` unauth leak** `inventory/signageos.md:37` | Q1 YES `scope.yml:8`; Q2 YES `GET /status` 200 json `probe-results.md:314`; Q3 YES Low; Q4 YES `GET https://api.signageos.i
+  - | **L3 `api/v1/organization/{uid}/security-token` cross-tenant mint** `reports/security-token-idor-report.md:24` `leads/lead-human.md:8` IDOR/BOLA | Q1 YES `scope.yml:8`; Q2 **PARTIAL** requires low-p
+  - | **L5 `box/+/login/` CORS 17-18 static `ACA O`** `inventory/signageos.md:39` | Q1 YES; Q2 YES `curl -I -H Origin:https://evil.test https://box.signageos.io/` static whitelist not reflected; Q3 Low bo
+  - | **L6 `box` CSP 40+ origins** `inventory/signageos.md:40` | Q1 YES; Q2 YES; Q3 Info; Q4 YES; Q5 NO duplicate; Q6 YES; Q7 MARGINAL | **VALID (Info Duplicate)** `CVSS3.1 3.1`. Static broad `connect-src
