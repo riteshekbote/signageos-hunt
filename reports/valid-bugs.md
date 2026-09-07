@@ -1109,3 +1109,9 @@
   - | Q5 | **YES** — novel vs prior `valid-bugs.md` HOLDs; git history 2024-07..2025-10 shows zero binding fixes `reports/security-token-idor-report.md:55-57`; superset `GET /v1/organization` platform-wid
   - | Q7 | **HOLD pending live matrix; VALID if human POC accepted** — reasonable triager REJECTS scanner-only hypothesis without POC `scope.yml:47` `poc_required`. Researcher executed §6 on **own** two o
   - **Verdict: HOLD — AUTH_HELPED Critical IDOR (promote to VALID on independent §6 reproduction)** `reports/valid-bugs.md:5` `reports/security-token-idor-report.md:10`
+
+- 4 lead(s) marked VALID at 2026-09-07 21:38:10 UTC
+  - | A | `GET box.signageos.io/status` unauth K8s leak `inventory/signageos.md:36` — pod hostname, 40-hex `process.uid`, Node `v20.20.2`, `succeededServices: amqp0 redis0-3 mongoDB0-2` | **VALID Low DUPL
+  - | B | `GET api.signageos.io/status` same class `inventory/signageos.md:37` Node `v24.19.0` hardened `HSTS/xfo/xcto` | **VALID Low DUPLICATE** | Same as A, api in; Q4 `curl -s https://api.signageos.io/
+  - | C | `box CORS` 17-18 static `ACA-Origin` incl `http://box.signageos.io` + `https://*.zdusercontent.com` wildcard, `evil.test` not reflected, no `allow-credentials` `inventory/signageos.md:39` | **VA
+  - | D | `box CSP` 40+ `connect-src/frame-src` triplicated Auth0 `oauth/token` + Mapbox/Sentry/S3 `inventory/signageos.md:24` | **VALID Info/Border DUPLICATE** | Q1 YES, Q2 YES, Q3 LOW (defense-in-depth,
