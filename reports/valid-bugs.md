@@ -1084,3 +1084,10 @@
   - | 3 | `box.signageos.io/ + /login/` CORS | MISCONFIG ACAO whitelist | YES | YES unauth `GET / -H Origin:evil.test` | YES trust-boundary `http://` + `*.zdusercontent.com` wildcard + sibling — no ACAC l
   - | 4 | `box.signageos.io/login/` CSP | MISCONFIG overly broad | YES | YES unauth `GET /login/%2F` | YES 40+ origins — expands postMessage trust if XSS | YES `curl -sI https://box.signageos.io/login/%2F
   - | 5 | `api.signageos.io/v1/organization/{uid}/security-token` `GET/POST` | IDOR BOLA cross-tenant mint | YES | **NO** — probe-results.md 403074 `MISSING_ACCOUNT_ID_TO_AUTHENTICATE` unauth; needs `X-Au
+
+- 5 lead(s) marked VALID at 2026-09-07 12:50:53 UTC
+  - |1| `box.signageos.io/status` unauth K8s leak `GET /status 200 application/json` pod `box-8676fb5f57-*` / `rs 77bfdd94d8`, 64-hex `process.uid`, `Node v20.20.2`, 9-svc `amqp0/redis0-3/mongoDB0-3` + cp
+  - |2| `api.signageos.io/status` same class `GET /status 200` pod `api-86db648db5-*` / `6cc9959bb4`, `Node v24.19.0`, 8-svc (mongoDB3 absent), `secgrep=3` `HSTS max-age=31536000 + x-frame-options:DENY + 
+  - |3| `box.signageos.io CORS` `GET /` `GET /login/` 17-18× static `access-control-allow-origin` incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + `api.signageos.io`, `a
+  - |4| `box.signageos.io CSP` `connect-src/frame-src` 40-60 origins triplicated `auth0.signageos.io/oauth/token` + Mapbox/Sentry/S3/device APIs `inventory/signageos.md:24` | Y | Y | Y Info — overly broad
+  - |5| `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant mint **IDOR/BOLA** `GET|POST /v1/organization/{victimUid}/security-token` with `X-Auth: <attackerOrgId>:<secret>` / `x-oauth-cl
