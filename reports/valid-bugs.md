@@ -1071,3 +1071,9 @@
   - **Verdict: VALID (reconfirmed duplicate, Low)** Proof: `GET https://api.signageos.io/status` -> 200 JSON + `strict-transport-security max-age=31536000, x-frame-options DENY, x-content-type-options nos
   - **Verdict: VALID (Info/borderline, duplicate)** CVSS 3.1: 3.1 (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N) — defense-in-depth only. Channel as above.
   - **Verdict: HOLD (AUTH_HELPED, plausible Critical IDOR, not passively provable)** — One-line: credible cross-tenant mint via path `{uid}` not bound to X-Auth identity, but unverified without valid cred
+
+- 4 lead(s) marked VALID at 2026-09-07 01:10:02 UTC
+  - - **Verdict: VALID (Low) DUPLICATE** — do not re-report. Proof: `GET https://box.signageos.io/status` → `200 application/json` contains `"hostname":"box-..."` + `"succeededServices"`. Impact: internal
+  - - **Verdict: VALID (Low) DUPLICATE** `CVSS3.1 5.3` Proof: `GET https://api.signageos.io/status` → `200` with `hostname:api-*`+ topology.
+  - - **Verdict: VALID (Info/Low borderline) DUPLICATE** `CVSS3.1 3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N` Proof: `curl -sI -H "Origin: https://evil.test" https://box.signageos.io/ | grep -i access-contro
+  - - **Verdict: VALID (Info borderline) DUPLICATE** `CVSS3.1 3.1`
