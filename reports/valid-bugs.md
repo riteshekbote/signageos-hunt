@@ -1091,3 +1091,21 @@
   - |3| `box.signageos.io CORS` `GET /` `GET /login/` 17-18× static `access-control-allow-origin` incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + `api.signageos.io`, `a
   - |4| `box.signageos.io CSP` `connect-src/frame-src` 40-60 origins triplicated `auth0.signageos.io/oauth/token` + Mapbox/Sentry/S3/device APIs `inventory/signageos.md:24` | Y | Y | Y Info — overly broad
   - |5| `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant mint **IDOR/BOLA** `GET|POST /v1/organization/{victimUid}/security-token` with `X-Auth: <attackerOrgId>:<secret>` / `x-oauth-cl
+
+- 16 lead(s) marked VALID at 2026-09-07 18:01:25 UTC
+  - | Q5 Novel? | **NO** — duplicate. Already in `reports/valid-bugs.md:4` and `leads/lead-mimo.md:26`. 60+ reconfirmations. |
+  - | Q7 Triager accept? | **YES** — `MISCONFIG` Low, every prior triage VALID |
+  - **Verdict: VALID (Low) — DUPLICATE RECONFIRMATION** `reports/valid-bugs.md:4`
+  - | Q5 | **NO** — duplicate reconfirmed `reports/valid-bugs.md:5` |
+  - | Q7 | **YES** VALID Low (hardened `secgrep=4` `HSTS/xfo/xcto/no-store` lowers urgency but still info leak) |
+  - **Verdict: VALID (Low) — DUPLICATE RECONFIRMATION**
+  - | Q5 | **NO** duplicate `reports/valid-bugs.md:6` |
+  - | Q7 | **MARGINAL YES** — defense-in-depth; prior triages accept as VALID Low `CVSS 3.1: 3.1` `reports/valid-bugs.md:6` — reasonable triager may downgrade to Info |
+  - **Verdict: VALID (Low, borderline) — DUPLICATE**
+  - | Q3 | **YES** Info — triplicated `auth0` `oauth/token` + `*.amazonaws.com` + `s3` buckets `reports/valid-bugs.md:7` — broadens XSS blast radius |
+  - | Q7 | **MARGINAL** — best-practice-like; kept VALID Info per `reports/valid-bugs.md:7` |
+  - **Verdict: VALID (Info, borderline) — DUPLICATE** CVSS 3.1 **3.1** `AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N`
+  - | Q4 | **NO under passive-only** — `POST` is state-changing (violates `scope.yml:45` `no_data_modification` + `passive_first: true` `scope.yml:41`). `GET` list leg alone is read-only and would show `o
+  - | Q5 | **YES** — novel vs prior `valid-bugs.md` HOLDs; git history 2024-07..2025-10 shows zero binding fixes `reports/security-token-idor-report.md:55-57`; superset `GET /v1/organization` platform-wid
+  - | Q7 | **HOLD pending live matrix; VALID if human POC accepted** — reasonable triager REJECTS scanner-only hypothesis without POC `scope.yml:47` `poc_required`. Researcher executed §6 on **own** two o
+  - **Verdict: HOLD — AUTH_HELPED Critical IDOR (promote to VALID on independent §6 reproduction)** `reports/valid-bugs.md:5` `reports/security-token-idor-report.md:10`
