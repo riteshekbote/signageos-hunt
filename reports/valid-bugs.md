@@ -1122,3 +1122,6 @@
   - | **L3 `api/v1/organization/{uid}/security-token` cross-tenant mint** `reports/security-token-idor-report.md:24` `leads/lead-human.md:8` IDOR/BOLA | Q1 YES `scope.yml:8`; Q2 **PARTIAL** requires low-p
   - | **L5 `box/+/login/` CORS 17-18 static `ACA O`** `inventory/signageos.md:39` | Q1 YES; Q2 YES `curl -I -H Origin:https://evil.test https://box.signageos.io/` static whitelist not reflected; Q3 Low bo
   - | **L6 `box` CSP 40+ origins** `inventory/signageos.md:40` | Q1 YES; Q2 YES; Q3 Info; Q4 YES; Q5 NO duplicate; Q6 YES; Q7 MARGINAL | **VALID (Info Duplicate)** `CVSS3.1 3.1`. Static broad `connect-src
+
+- 1 lead(s) marked VALID at 2026-09-08 07:31:18 UTC
+  - - Verdict: **HOLD/VALID-LOW** (not HIGH-VALUE per MAX MODE). Minimal POC `GET /status` body+headers sha256. CVSS 3.1 `AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` **5.3**. Channel: `scope.yml:4` TBD → human s
