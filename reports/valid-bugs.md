@@ -1125,3 +1125,10 @@
 
 - 1 lead(s) marked VALID at 2026-09-08 07:31:18 UTC
   - - Verdict: **HOLD/VALID-LOW** (not HIGH-VALUE per MAX MODE). Minimal POC `GET /status` body+headers sha256. CVSS 3.1 `AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` **5.3**. Channel: `scope.yml:4` TBD → human s
+
+- 5 lead(s) marked VALID at 2026-09-08 12:22:20 UTC
+  - **Verdict: VALID (Low) — DUPLICATE reconfirmation, not a new report.** Reason: unauth infra topology leak, passively provable.
+  - **Verdict: VALID (Low) — DUPLICATE reconfirmation.** Reason: same class, hardened.
+  - **Verdict: VALID (Info/Low, borderline) — DUPLICATE.** **CVSS 3.1: 3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N.** Proof: `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/login/|grep -i AC
+  - **Verdict: VALID (Informational) — DUPLICATE.** **CVSS 3.1: 3.1 AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N.** Proof: `curl -sI https://box.signageos.io/login/|grep -i content-security`.
+  - **Verdict: HOLD — AUTH_HELPED hypothesis, high-value but not passively provable.** Reason: 403-gated, requires valid X-Auth + second org.
