@@ -1139,3 +1139,7 @@
   - - **Verdict: VALID (Low, border)** CVSS `3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N`
   - - **Verdict: VALID (Info, border)** CVSS `3.1`
   - - **Verdict: VALID (Critical)** CVSS 3.1 `9.8 AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:L` (`reports/security-token-idor-report.md:156`) / `9.1` equiv class `lead-human.md:24`. Minimal proof (own 2 tenants, `
+
+- 2 lead(s) marked VALID at 2026-09-08 19:39:32 UTC
+  - **Verdict: VALID - Critical, already submitted** `lead-human.md:6` DO-NOT-REDO, in-flight to `security@signageos.io` (note `scope.yml:4` disclosure_policy=TBD, human used security@). **Minimal read-on
+  - **Verdict: VALID - Low (MISCONFIG)** Minimal proof `GET https://box.signageos.io/status` -> `200` JSON. Impact: K8s topology recon aiding SSRF/logic probing. **CVSS 3.1: 3.7 `AV:N/AC:H/PR:N/UI:N/S:U/C
