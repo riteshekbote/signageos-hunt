@@ -1132,3 +1132,10 @@
   - **Verdict: VALID (Info/Low, borderline) — DUPLICATE.** **CVSS 3.1: 3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N.** Proof: `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/login/|grep -i AC
   - **Verdict: VALID (Informational) — DUPLICATE.** **CVSS 3.1: 3.1 AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N.** Proof: `curl -sI https://box.signageos.io/login/|grep -i content-security`.
   - **Verdict: HOLD — AUTH_HELPED hypothesis, high-value but not passively provable.** Reason: 403-gated, requires valid X-Auth + second org.
+
+- 5 lead(s) marked VALID at 2026-09-08 16:48:02 UTC
+  - - **Verdict: VALID (Low)** CVSS 3.1 `4.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` — proof step above — report via signageOS security channel (`security@signageos.io` per `reports/security-token-idor-repor
+  - - **Verdict: VALID (Low)** CVSS `4.3` same vector
+  - - **Verdict: VALID (Low, border)** CVSS `3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N`
+  - - **Verdict: VALID (Info, border)** CVSS `3.1`
+  - - **Verdict: VALID (Critical)** CVSS 3.1 `9.8 AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:L` (`reports/security-token-idor-report.md:156`) / `9.1` equiv class `lead-human.md:24`. Minimal proof (own 2 tenants, `
