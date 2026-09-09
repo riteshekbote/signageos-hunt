@@ -1163,3 +1163,8 @@
   - **VERDICT: HOLD — AUTH_HELPED ONLY** (credible, code-verified conf 72 leads/lead-bigpickle.md:398). Downgraded to superset of Lead 5 — if Lead 5 mint is fixed, this still leaks secrets via listing. Ne
   - **VERDICT: HOLD — AUTH_HELPED + INVASIVE** reports/valid-bugs.md:10
   - **VERDICT: HOLD — No passive evidence** reports/valid-bugs.md:12
+
+- 3 lead(s) marked VALID at 2026-09-09 09:57:05 UTC
+  - **Verdict: VALID (duplicate Low, reconfirmed). Proof:** `curl -s https://box.signageos.io/status | jq` -> hostname/uid/Node. **CVSS 3.1: 5.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N** (prior 4.3-5.3 varian
+  - **Verdict: HOLD (AUTH_HELPED) — credible IDOR hypothesis, unverifiable passively; needs valid account via `sos login` + second org uid, scope.yml `no_account_creation:true` blocks mass account test.**
+  - **Verdict: VALID (Low/Info borderline, duplicate). CVSS 3.1: 3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N (CORS) / 3.1 AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N (CSP).**
