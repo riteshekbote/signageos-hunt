@@ -1177,3 +1177,11 @@
   - | **E** | `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant credential mint **`leads/lead-human.md:1-6` CONFIRMED + `reports/security-token-idor-report.md:198-203` + `reports/signag
   - | **F** | `GET /v1/organization` platform-wide listing superset `lead-human.md:4` `security-token-idor-report.md:203` | Y — `api` | Y — account-tier `X-Auth` | Y — Critical (exfiltrates `oauthClientId
   - | **G** | `api /v1/device/{uid}/peer-recovery` `GET/PUT` cross-tenant `leads/lead-bigpickle.md:69-76` | Y | N — requires valid org `X-Auth` `clientId:secret` + victim deviceUid, `403083` without | Y —
+
+- 6 lead(s) marked VALID at 2026-09-09 18:07:27 UTC
+  - | **A1** | `box.signageos.io/status` infra disclosure `inventory/signageos.md:36` | YES `scope.yml:6` | YES public unauth `probe-results.md:3: 200 json` | YES recon `hostname`+`process.uid`+`Node v20.
+  - | **A2** | `api.signageos.io/status` `probe-results.md:314: 200 1328 json` | YES `scope.yml:8` | YES public unauth | YES same class, hardened `HSTS/xfo/xcto` | YES `GET https://api.signageos.io/status
+  - | **B** | `box.signageos.io` CORS `18× ACAO http:// + *.zdusercontent.com` `inventory/signageos.md:39` | YES | YES public | YES-Low trust expansion | YES `GET https://box.signageos.io/ -H 'Origin: htt
+  - | **C** | `box.signageos.io` CSP 40+ origins `triplicated Auth0 oauth/token` `inventory/signageos.md:24` | YES | YES | YES-Info | YES `GET https://box.signageos.io/login/%2F` → `content-security-polic
+  - | **D1** | `api /v1/organization/{uid}/security-token` cross-tenant mint `leads/lead-bigpickle.md:79-85` `reports/security-token-idor-report.md:24-28` | YES | **NO** under passive-first: `GET /v1/orga
+  - | **E** | `v2/* authz drift`, `box/settings over-scope`, `v1/device/* weaker auth`, `v1/account/security-token creds in query` `reports/valid-bugs.md:8-11` | YES | NO | YES if proven | NO — all `403/4
