@@ -1152,3 +1152,14 @@
   - - **Verdict: HOLD — AUTH_HELPED, credibly critical but unverifiable passively** — `reports/valid-bugs.md:9` same. Addendum claims independent invasive verification `201 OrganizationFullToken` with two
   - - **Verdict: HOLD — AUTH_HELPED** — `reports/valid-bugs.md:10`.
   - - **Verdict: HOLD — AUTH_HELPED, PUT invasive** — `reports/valid-bugs.md:11`.
+
+- 9 lead(s) marked VALID at 2026-09-09 05:02:27 UTC
+  - **VERDICT: VALID (Low) DUPLICATE RECONFIRMED**
+  - **VERDICT: VALID (Low) DUPLICATE RECONFIRMED** `reports/valid-bugs.md:5` CVSS 3.1 4.3-5.3
+  - **VERDICT: VALID (Low, border) DUPLICATE** reports/valid-bugs.md:6 CVSS 3.1 3.1 (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)
+  - **VERDICT: VALID (Info, border) DUPLICATE** reports/valid-bugs.md:7 CVSS 3.1 3.1
+  - **VERDICT: VALID (Critical) CONFIRMED — overrides prior HOLD** `leads/lead-human.md:1` `reports/security-token-idor-report.md:156`
+  - **VERDICT: VALID (Critical) CONFIRMED SUPERSET** — must tenant-scope listing AND stop serializing OAuth secrets in list.
+  - **VERDICT: HOLD — AUTH_HELPED ONLY** (credible, code-verified conf 72 leads/lead-bigpickle.md:398). Downgraded to superset of Lead 5 — if Lead 5 mint is fixed, this still leaks secrets via listing. Ne
+  - **VERDICT: HOLD — AUTH_HELPED + INVASIVE** reports/valid-bugs.md:10
+  - **VERDICT: HOLD — No passive evidence** reports/valid-bugs.md:12
