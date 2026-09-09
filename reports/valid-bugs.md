@@ -1168,3 +1168,12 @@
   - **Verdict: VALID (duplicate Low, reconfirmed). Proof:** `curl -s https://box.signageos.io/status | jq` -> hostname/uid/Node. **CVSS 3.1: 5.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N** (prior 4.3-5.3 varian
   - **Verdict: HOLD (AUTH_HELPED) — credible IDOR hypothesis, unverifiable passively; needs valid account via `sos login` + second org uid, scope.yml `no_account_creation:true` blocks mass account test.**
   - **Verdict: VALID (Low/Info borderline, duplicate). CVSS 3.1: 3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N (CORS) / 3.1 AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N (CSP).**
+
+- 7 lead(s) marked VALID at 2026-09-09 14:42:28 UTC
+  - | **A** | `box.signageos.io/status` K8s infra leak `inventory/signageos.md:36` `leads/lead-mimo.md:14-22` | Y — `scope.yml:6` `box` In | Y — `GET https://box.signageos.io/status` → `200 application/js
+  - | **B** | `api.signageos.io/status` same class `inventory/signageos.md:37` `leads/lead-mimo.md:111-119` | Y — `scope.yml:9` `api` In | Y — `GET https://api.signageos.io/status` → `200 json` unauth (ha
+  - | **C** | `box` CORS 17-18 static `ACAO` `inventory/signageos.md:39` `leads/lead-laguna.md:26-30` | Y — `box` | Y — `GET https://box.signageos.io/ -H 'Origin: https://evil.test'` → identical 17 `acces
+  - | **D** | `box` CSP 40-60 origins `inventory/signageos.md:40` `leads/lead-laguna.md:81-85` | Y — `box` | Y — `GET https://box.signageos.io/login/%2F` → `CSP connect-src/frame-src` ~60 origins triplica
+  - | **E** | `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant credential mint **`leads/lead-human.md:1-6` CONFIRMED + `reports/security-token-idor-report.md:198-203` + `reports/signag
+  - | **F** | `GET /v1/organization` platform-wide listing superset `lead-human.md:4` `security-token-idor-report.md:203` | Y — `api` | Y — account-tier `X-Auth` | Y — Critical (exfiltrates `oauthClientId
+  - | **G** | `api /v1/device/{uid}/peer-recovery` `GET/PUT` cross-tenant `leads/lead-bigpickle.md:69-76` | Y | N — requires valid org `X-Auth` `clientId:secret` + victim deviceUid, `403083` without | Y —
