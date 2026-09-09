@@ -1143,3 +1143,12 @@
 - 2 lead(s) marked VALID at 2026-09-08 19:39:32 UTC
   - **Verdict: VALID - Critical, already submitted** `lead-human.md:6` DO-NOT-REDO, in-flight to `security@signageos.io` (note `scope.yml:4` disclosure_policy=TBD, human used security@). **Minimal read-on
   - **Verdict: VALID - Low (MISCONFIG)** Minimal proof `GET https://box.signageos.io/status` -> `200` JSON. Impact: K8s topology recon aiding SSRF/logic probing. **CVSS 3.1: 3.7 `AV:N/AC:H/PR:N/UI:N/S:U/C
+
+- 7 lead(s) marked VALID at 2026-09-09 00:24:17 UTC
+  - - **Verdict: VALID (Low, DUPLICATE)** — CVSS 3.1 `4.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)` — no new report; reconfirmation only. Proof: `GET https://box.signageos.io/status` → `200 application/json`
+  - - **Verdict: VALID (Low, DUPLICATE)** — CVSS 3.1 `4.3` — `GET https://api.signageos.io/status`. Same channel. `reports/valid-bugs.md:5`.
+  - - **Verdict: VALID (Low, borderline, DUPLICATE)** — CVSS 3.1 `3.1 (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)` — `reports/valid-bugs.md:6`.
+  - - **Verdict: VALID (Informational, DUPLICATE)** — CVSS 3.1 `3.1 (AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N)`.
+  - - **Verdict: HOLD — AUTH_HELPED, credibly critical but unverifiable passively** — `reports/valid-bugs.md:9` same. Addendum claims independent invasive verification `201 OrganizationFullToken` with two
+  - - **Verdict: HOLD — AUTH_HELPED** — `reports/valid-bugs.md:10`.
+  - - **Verdict: HOLD — AUTH_HELPED, PUT invasive** — `reports/valid-bugs.md:11`.
