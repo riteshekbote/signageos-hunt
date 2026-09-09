@@ -1188,3 +1188,10 @@
 
 - 1 lead(s) marked VALID at 2026-09-09 21:03:03 UTC
   - Q1 YES, Q2 NO (requires valid `X-Auth clientId:secret` — all passive probes `403` `probe-results.md:47-50,579-592` `WRONG_JWT_TOKEN/403105`/`403074`), Q3 YES if confirmed (Critical — attacker mints vi
+
+- 5 lead(s) marked VALID at 2026-09-09 23:23:34 UTC
+  - **Verdict: VALID (reconfirmation) Low** `MISCONFIG` CVSS3.1 `CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` **5.3** Minimal proof: `curl -s https://box.signageos.io/status | jq .hostname,.process.uid,.
+  - **Verdict: VALID (reconfirmation) Low** CVSS3.1 `CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` **5.3 (3.7 with HSTS mitigation)**.
+  - **Verdict: VALID (Info/Low borderline) 3.1** `CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N`.
+  - **Verdict: VALID (Informational) 3.1** `CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N`. Both 3+4 already accepted `reports/valid-bugs.md:6,10`.
+  - **Verdict: HOLD (AUTH_HELPED — do not re-probe)** Reason: requires valid `X-Auth` + 2nd tenant + `POST` (invasive). Impact if confirmed CVSS3.1 `CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:L` **9.1 Cri
