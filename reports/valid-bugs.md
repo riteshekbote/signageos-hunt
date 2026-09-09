@@ -1185,3 +1185,6 @@
   - | **C** | `box.signageos.io` CSP 40+ origins `triplicated Auth0 oauth/token` `inventory/signageos.md:24` | YES | YES | YES-Info | YES `GET https://box.signageos.io/login/%2F` → `content-security-polic
   - | **D1** | `api /v1/organization/{uid}/security-token` cross-tenant mint `leads/lead-bigpickle.md:79-85` `reports/security-token-idor-report.md:24-28` | YES | **NO** under passive-first: `GET /v1/orga
   - | **E** | `v2/* authz drift`, `box/settings over-scope`, `v1/device/* weaker auth`, `v1/account/security-token creds in query` `reports/valid-bugs.md:8-11` | YES | NO | YES if proven | NO — all `403/4
+
+- 1 lead(s) marked VALID at 2026-09-09 21:03:03 UTC
+  - Q1 YES, Q2 NO (requires valid `X-Auth clientId:secret` — all passive probes `403` `probe-results.md:47-50,579-592` `WRONG_JWT_TOKEN/403105`/`403074`), Q3 YES if confirmed (Critical — attacker mints vi
