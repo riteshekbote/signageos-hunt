@@ -1234,3 +1234,13 @@
   - |Q7| **YES** marginal valid |
   - **Verdict: VALID (LOW) — DUPLICATE RECONFIRMATION** Hardened variant.
   - **Verdict: HOLD -> VALID (AUTH_HELPED) — DO-NOT-REDO, in-flight with vendor** One-line: proven cross-tenant credential minting, but requires authenticated POST and second tenant, violates pure passive
+
+- 8 lead(s) marked VALID at 2026-09-10 18:38:42 UTC
+  - | Q5 Novel | `reports/valid-bugs.md:4` duplicate reconfirmed 60+ cycles `inventory/signageos.md:312` | NO (already accepted) |
+  - | Q7 Triager | Accepted every cycle `reports/valid-bugs.md:23` | YES |
+  - **Verdict: VALID (Low, duplicate reconfirmation)**
+  - **Verdict: VALID (Low, duplicate)** CVSS 4.3 Proof identical, headers `strict-transport-security max-age=31536000 + x-frame-options:DENY + x-content-type-options:nosniff` present `inventory/signageos.
+  - Q1 YES Q2 YES (unauth `Origin: https://evil.test` -> static `access-control-allow-origin` 17 values `inventory/signageos.md:39` incl `http://box.signageos.io` + `https://*.zdusercontent.com` `inventor
+  - Q1 YES Q2 YES Q3 Info (triplicated Auth0 `oauth/token` + mapbox/sentry/S3 `inventory/signageos.md:24` 40-60 origins `inventory/signageos.md:320`) Q4 YES Q5 NO Q6 NO Q7 MARGINAL. **Verdict: VALID (Info
+  - | Q7 | Passive triager -> HOLD. With owned-tenant execution `leads/lead-human.md:3` 201 + `securityToken` minted for victimUid `9249538c`/`bec343d3` | HOLD -> VALID after verification |
+  - **Verdict: HOLD under passive-only gate; VALID CRITICAL after AUTH_HELPED own-assert verification `leads/lead-human.md:1` STATUS CONFIRMED END-TO-END + superset `GET /v1/organization` platform-wide se
