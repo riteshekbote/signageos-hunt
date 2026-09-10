@@ -1204,3 +1204,17 @@
   - **Verdict: VALID — Critical**
   - **Verdict: VALID — Critical (SUPERSET of Lead5)** `CVSS 9.8` same vector. *Status 2026-08-23:* partially fixed — listing now scoped to own orgs (1 vs platform-wide) but secrets still inline + security
   - **Verdict: HOLD — Credible BOLA but AUTH_HELPED-only, requires valid org X-Auth + 2nd tenant + invasive PUT; carry forward, do not report until `GET` cross-tenant read proven.**
+
+- 12 lead(s) marked VALID at 2026-09-10 06:12:10 UTC
+  - | Q5 Novel | **NO** duplicate — already `reports/valid-bugs.md:4` reconfirmed 15+ times, but still **live** |
+  - **Verdict: VALID (duplicate live) — one-line: unauth infra disclosure, passive GET provable.**
+  - | Q5 | **NO** duplicate live `valid-bugs.md:5` |
+  - | Q7 | **YES** but lower than box — triager accepts as VALID Info/Low (hardened) |
+  - **Verdict: VALID (duplicate live) Low.** Proof: `curl -s https://api.signageos.io/status` + `curl -sD- | grep -i strict` -> 3 headers present, body still leaks. CVSS 3.1 `AV:N/AC:L/PR:N/UI:N/S:U/C:L/I
+  - | Q5 | **NO** duplicate live `valid-bugs.md:6-7` |
+  - | Q7 | **MARGINAL** — reasonable triager accepts as **Info/Low borderline** or rejects as best-practice. Prior triage kept VALID 3.1 |
+  - **Verdict: VALID (borderline Info) 3.1** `CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N` CORS + `AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N` CSP. Same channel.
+  - | Q4 | **NO (passive)** — unauth `GET -> 403074` `probe-results.md:167,173`. Proof requires `AUTH_HELPED` valid `X-Auth` + 2nd `orgUid`. Cannot prove with `GET/HEAD` alone under `scope.yml:41 passive_
+  - | Q5 | **YES novel** — no public docs, no fix in `2024-07..2025-10` git history `reports/security-token-idor-report.md:16`, not previously reported as VALID (was `HOLD` `valid-bugs.md:8`) |
+  - **Verdict: HOLD (upgraded to VALID after human demo 2026-08-22 `lead-human.md:3` `reports/security-token-idor-report.md:198-205` — researcher `POST /v1/organization/{victimUid}/security-token` with `X
+  - **Verdict: HOLD -> VALID (confirmed same researcher, partially fixed 2026-08-23 `lead-human.md:30` — listing now own-org scoped but secrets still in fields, security-token IDOR persists).** CVSS same 
