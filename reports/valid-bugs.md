@@ -1195,3 +1195,12 @@
   - **Verdict: VALID (Info/Low borderline) 3.1** `CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N`.
   - **Verdict: VALID (Informational) 3.1** `CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N`. Both 3+4 already accepted `reports/valid-bugs.md:6,10`.
   - **Verdict: HOLD (AUTH_HELPED — do not re-probe)** Reason: requires valid `X-Auth` + 2nd tenant + `POST` (invasive). Impact if confirmed CVSS3.1 `CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:L` **9.1 Cri
+
+- 7 lead(s) marked VALID at 2026-09-10 01:20:25 UTC
+  - **Verdict: VALID (Duplicate Reconfirmed) — Low** `CVSS3.1: 4.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` or `5.3` with missing HSTS/xfo/xcto. Proof: `GET /status` unauth, observe `hostname`+`succeededServi
+  - **Verdict: VALID (Duplicate Reconfirmed) — Low** `CVSS 3.1: 4.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` Proof: `GET /status` same as Lead1. Channel: same.
+  - **Verdict: VALID (Info/Low-borderline)** `CVSS 3.1: 3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N` Proof: above. Impact: trust-boundary expansion only. Channel: same (informational).
+  - **Verdict: VALID (Informational, borderline)** `CVSS 3.1: 3.1 AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N` Channel: same.
+  - **Verdict: VALID — Critical**
+  - **Verdict: VALID — Critical (SUPERSET of Lead5)** `CVSS 9.8` same vector. *Status 2026-08-23:* partially fixed — listing now scoped to own orgs (1 vs platform-wide) but secrets still inline + security
+  - **Verdict: HOLD — Credible BOLA but AUTH_HELPED-only, requires valid org X-Auth + 2nd tenant + invasive PUT; carry forward, do not report until `GET` cross-tenant read proven.**
