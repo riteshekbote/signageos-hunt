@@ -1251,3 +1251,11 @@
   - | **3** | `box CORS ACAO whitelist` — `GET /` + `/login/` 18 static ACAO incl `http://` + `*.zdusercontent.com` `leads/lead-laguna.md:9` | Y | Y unauth (any Origin) | Y trust-boundary expansion (no cr
   - | **4** | `box CSP overly broad` — `GET /login/%2F` 40-59 origins `inventory/signageos.md:38` | Y | Y unauth | Y defense-in-depth (needs co-located XSS) → Info | Y `curl -sI https://box.signageos.io/l
   - | **5** | `api /v1/organization/{uid}/security-token` cross-tenant MINT `leads/lead-mimo.md:12` `POST /v1/organization/{victimUid}/security-token` X-Auth=`<attackerId>:<secret>` | Y `api.signageos.io`
+
+- 6 lead(s) marked VALID at 2026-09-10 23:17:20 UTC
+  - |1| `box.signageos.io/status` K8s infra leak `GET /status →200 application/json {hostname, process.uid, Node v20.20.2, succeededServices:[amqp0,redis0-3,mongoDB0-3]}` (`lead-laguna.md:62-65`, `probe-r
+  - |2| `api.signageos.io/status` same class hardened `GET /status →200` + `HSTS/xfo/xcto` (`lead-laguna.md:7`, `inventory/signageos.md:91`) | Y `scope.yml:8` | Y unauthenticated | Y recon | Y `curl -s ht
+  - |3| `box.signageos.io CORS` 18 static ACAO `GET / -H Origin:evil.test → 18 ACAO incl http://box, *.zdusercontent.com` no `ACAC` (`lead-laguna.md:24-30`) | Y | Y | Low trust-boundary expansion, no cred
+  - |4| `box.signageos.io CSP` 40+ `connect-src/frame-src` triplicated Auth0 (`lead-laguna.md:81-84`) | Y | Y | Low-Med (needs XSS) | Y | N | Y | Marginal | **VALID (Info, border)** |
+  - |5| `POST /v1/organization/{victimUid}/security-token` + `GET` list cross-tenant mint — account-tier `X-Auth: {orgUid}:{secret}` vs client-supplied `{uid}` path (`reports/security-token-idor-report.md
+  - **VALID detail — only new/changed this cycle:**
