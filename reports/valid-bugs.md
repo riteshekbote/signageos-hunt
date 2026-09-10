@@ -1226,3 +1226,11 @@
   - Q1 YES. Q2 YES `GET / 200` `GET /login/ 200` `probe-results.md:382,387` with `Origin:https://evil.test` still returns static `17-18 ACAO` (not reflected) `leads/lead-mimo.md:28`. Q3 **BORDERLINE** — t
   - Q1 YES. Q2 YES `GET /login/ 200` `probe-results.md:387`. Q3 Info — `connect-src/frame-src` 40-59 origins `mapbox,sentry,sony/broadSign/moodMedia,S3,api.signageos.io` `inventory/signageos.md:39` — broa
   - Q1 **YES** `api.signageos.io` In. Q2 **NO under `passive_first:true`** — all passive probes `GET /v1/organization/<own-org-uid>` `403` `probe-results.md:555,569`, `GET /v1/organization/test/security-t
+
+- 6 lead(s) marked VALID at 2026-09-10 15:24:25 UTC
+  - |Q5 Novel?| **NO** — duplicate reconfirmed `reports/valid-bugs.md:4` already accepted 50+ times, but still alive |
+  - **Verdict: VALID (LOW) — DUPLICATE RECONFIRMATION** One-line: unauth infra disclosure, not critical.
+  - |Q5| **NO** duplicate `reports/valid-bugs.md:5` |
+  - |Q7| **YES** marginal valid |
+  - **Verdict: VALID (LOW) — DUPLICATE RECONFIRMATION** Hardened variant.
+  - **Verdict: HOLD -> VALID (AUTH_HELPED) — DO-NOT-REDO, in-flight with vendor** One-line: proven cross-tenant credential minting, but requires authenticated POST and second tenant, violates pure passive
