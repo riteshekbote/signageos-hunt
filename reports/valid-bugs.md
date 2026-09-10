@@ -1218,3 +1218,11 @@
   - | Q5 | **YES novel** — no public docs, no fix in `2024-07..2025-10` git history `reports/security-token-idor-report.md:16`, not previously reported as VALID (was `HOLD` `valid-bugs.md:8`) |
   - **Verdict: HOLD (upgraded to VALID after human demo 2026-08-22 `lead-human.md:3` `reports/security-token-idor-report.md:198-205` — researcher `POST /v1/organization/{victimUid}/security-token` with `X
   - **Verdict: HOLD -> VALID (confirmed same researcher, partially fixed 2026-08-23 `lead-human.md:30` — listing now own-org scoped but secrets still in fields, security-token IDOR persists).** CVSS same 
+
+- 6 lead(s) marked VALID at 2026-09-10 11:35:11 UTC
+  - | A4 | `GET https://api.signageos.io/v2/device/x` `probe-results.md:498` `403` vs `GET /v2/organization`/`/v2/account` `404` `inventory/signageos.md:91` + `GET http://api.kiera.office.signageos.io` in
+  - Q1 **YES** `scope.yml:6` `box.signageos.io` In. Q2 **YES** public unauth `GET /status 200` `probe-results.md:373` (60+ rotations, 8 rs). Q3 **YES** `pod hostname rs 77bfdd94d8/8676fb5f57`, `64-hex pro
+  - Q1 YES `api.signageos.io` In. Q2 YES unauth `GET /status 200 len=1323` `probe-results.md:351`. Q3 YES same topology leak (8-svc mongoDB3 absent, `Node v24.19.0`, pod `86db648db5/7676fc7c89/6cc9959bb4`
+  - Q1 YES. Q2 YES `GET / 200` `GET /login/ 200` `probe-results.md:382,387` with `Origin:https://evil.test` still returns static `17-18 ACAO` (not reflected) `leads/lead-mimo.md:28`. Q3 **BORDERLINE** — t
+  - Q1 YES. Q2 YES `GET /login/ 200` `probe-results.md:387`. Q3 Info — `connect-src/frame-src` 40-59 origins `mapbox,sentry,sony/broadSign/moodMedia,S3,api.signageos.io` `inventory/signageos.md:39` — broa
+  - Q1 **YES** `api.signageos.io` In. Q2 **NO under `passive_first:true`** — all passive probes `GET /v1/organization/<own-org-uid>` `403` `probe-results.md:555,569`, `GET /v1/organization/test/security-t
