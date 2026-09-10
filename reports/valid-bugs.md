@@ -1244,3 +1244,10 @@
   - Q1 YES Q2 YES Q3 Info (triplicated Auth0 `oauth/token` + mapbox/sentry/S3 `inventory/signageos.md:24` 40-60 origins `inventory/signageos.md:320`) Q4 YES Q5 NO Q6 NO Q7 MARGINAL. **Verdict: VALID (Info
   - | Q7 | Passive triager -> HOLD. With owned-tenant execution `leads/lead-human.md:3` 201 + `securityToken` minted for victimUid `9249538c`/`bec343d3` | HOLD -> VALID after verification |
   - **Verdict: HOLD under passive-only gate; VALID CRITICAL after AUTH_HELPED own-assert verification `leads/lead-human.md:1` STATUS CONFIRMED END-TO-END + superset `GET /v1/organization` platform-wide se
+
+- 5 lead(s) marked VALID at 2026-09-10 21:18:00 UTC
+  - | **1** | `box.signageos.io/status` infra leak — `GET /status 200 json` | Y `scope.yml:6` | Y unauth `probe-results.md:30` | Y recon + infra targeting (pod/uid/Node/topology) `inventory/signageos.md:3
+  - | **2** | `api.signageos.io/status` infra leak — `GET /status 200 json` | Y `scope.yml:8` | Y unauth 200 `inventory/signageos.md:37` | Y same class (less severe, hardened HSTS/xfo/xcto) | Y `GET https
+  - | **3** | `box CORS ACAO whitelist` — `GET /` + `/login/` 18 static ACAO incl `http://` + `*.zdusercontent.com` `leads/lead-laguna.md:9` | Y | Y unauth (any Origin) | Y trust-boundary expansion (no cr
+  - | **4** | `box CSP overly broad` — `GET /login/%2F` 40-59 origins `inventory/signageos.md:38` | Y | Y unauth | Y defense-in-depth (needs co-located XSS) → Info | Y `curl -sI https://box.signageos.io/l
+  - | **5** | `api /v1/organization/{uid}/security-token` cross-tenant MINT `leads/lead-mimo.md:12` `POST /v1/organization/{victimUid}/security-token` X-Auth=`<attackerId>:<secret>` | Y `api.signageos.io`
