@@ -1266,3 +1266,6 @@
   - | L3 | `box /+ /login/` CORS 18× static `ACAO` `inventory/signageos.md:39` | YES | YES: `GET / -H Origin:https://evil.test` →18 static `ACAO: http://box.signageos.io, https://*.zdusercontent.com…` `pr
   - | L4 | `box /login/` CSP 40+ `connect-src/frame-src` `inventory/signageos.md:40` | YES | YES passive header | LOW: needs co-located XSS to exfil to `mapbox/sentry/S3/api.signageos.io` | YES | NO dup |
   - | L5 | `api/v1/organization/{uid}/security-token` IDOR token mint `lead-human.md:3-5` `lead-mimo.md:6-13` | YES | **CONDITIONAL**: `GET/POST /v1/organization/{victimUid}/security-token -H X-Auth:<atta
+
+- 1 lead(s) marked VALID at 2026-09-11 18:50:23 UTC
+  - - `GET/POST /v1/organization/{uid}/security-token`, `GET /v1/organization/{uid}` (oauthSecret), `GET/PUT /v1/device/{uid}/peer-recovery` — all `probe-results.md` 403 gated (`403074/403105`). 7-Gate: Q
