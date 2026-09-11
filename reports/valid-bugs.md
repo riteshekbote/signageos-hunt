@@ -1259,3 +1259,10 @@
   - |4| `box.signageos.io CSP` 40+ `connect-src/frame-src` triplicated Auth0 (`lead-laguna.md:81-84`) | Y | Y | Low-Med (needs XSS) | Y | N | Y | Marginal | **VALID (Info, border)** |
   - |5| `POST /v1/organization/{victimUid}/security-token` + `GET` list cross-tenant mint — account-tier `X-Auth: {orgUid}:{secret}` vs client-supplied `{uid}` path (`reports/security-token-idor-report.md
   - **VALID detail — only new/changed this cycle:**
+
+- 5 lead(s) marked VALID at 2026-09-11 06:12:44 UTC
+  - | L1 | `box.signageos.io/status` MISCONFIG `leads/lead-mimo.md:15-22` | YES `scope.yml:6` | YES: `GET https://box.signageos.io/status` unauth →200 `probe-results.md:3` | YES: K8s pod `box-7c8c876945-*
+  - | L2 | `api.signageos.io/status` same class | YES `scope.yml:8` | YES: `GET https://api.signageos.io/status` →200 `1323-1334B` `probe-results.md:314-351` | YES same but 8 svc (mongoDB3 absent) | YES |
+  - | L3 | `box /+ /login/` CORS 18× static `ACAO` `inventory/signageos.md:39` | YES | YES: `GET / -H Origin:https://evil.test` →18 static `ACAO: http://box.signageos.io, https://*.zdusercontent.com…` `pr
+  - | L4 | `box /login/` CSP 40+ `connect-src/frame-src` `inventory/signageos.md:40` | YES | YES passive header | LOW: needs co-located XSS to exfil to `mapbox/sentry/S3/api.signageos.io` | YES | NO dup |
+  - | L5 | `api/v1/organization/{uid}/security-token` IDOR token mint `lead-human.md:3-5` `lead-mimo.md:6-13` | YES | **CONDITIONAL**: `GET/POST /v1/organization/{victimUid}/security-token -H X-Auth:<atta
