@@ -1275,3 +1275,11 @@
   - | 1 | `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant mint `reports/security-token-idor-report.md:11-20` | Q1 YES (`api.signageos.io:8`), Q2 NO unauth (all probes `403` `probe-res
   - | 2 | `box+api /status` unauth infra leak | Q1 YES, Q2 YES `AV:N/PR:N` `probe-results.md:3`, Q3 Low (recon `pod/uid/Node/topology`, no PII/money), Q4 YES `GET /status`, Q5 NO (duplicate 80+ cycles), Q
   - | 3 | `box CORS 17-18 ACAO` `http://`+`*.zdusercontent.com` | Q1 YES, Q2 YES (any Origin), Q3 Info/Low (no `allow-credentials`, only unauth HTML readable), Q4 YES `curl -sI -H 'Origin: https://evil.te
+
+- 6 lead(s) marked VALID at 2026-09-11 23:39:04 UTC
+  - | L1 | `box.signageos.io/status` `inventory/signageos.md:36` `leads/lead-mimo.md:15` | YES `scope.yml:6` | YES public anon | YES infra recon, pod/UID/Node/topology `reports/valid-bugs.md:4` | YES `cur
+  - | L2 | `api.signageos.io/status` `inventory/signageos.md:37` | YES `scope.yml:8` | YES public anon | YES same class | YES `curl -s https://api.signageos.io/status` →200 JSON | NO duplicate `reports/va
+  - | L3 | `box CORS ACAO http:// + *.zdusercontent.com` `inventory/signageos.md:39` | YES | YES public anon | **WEAK** static 17 ACAO, **no `Access-Control-Allow-Credentials`** `reports/valid-bugs.md:6` 
+  - | L4 | `box CSP 40+ origins` `inventory/signageos.md:24` | YES | YES public anon | WEAK defense-in-depth, no direct theft without XSS `reports/valid-bugs.md:7` | YES `curl -sI https://box.signageos.io
+  - | L5 | `api /v1/organization/{uid}/security-token` IDOR mint `reports/security-token-idor-report.md:11` `leads/lead-mimo.md:6` | YES api.signageos.io | **YES low-priv** free account `X-Auth: orgA:secr
+  - | L6 | `GET /v1/organization` platform-wide list + `oauthClientSecret` exposure `reports/security-token-idor-report.md:198` | YES | YES low-priv account tier only (org-tier → `403100 INAPPROPRIATE_ORG
