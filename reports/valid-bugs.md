@@ -1269,3 +1269,9 @@
 
 - 1 lead(s) marked VALID at 2026-09-11 18:50:23 UTC
   - - `GET/POST /v1/organization/{uid}/security-token`, `GET /v1/organization/{uid}` (oauthSecret), `GET/PUT /v1/device/{uid}/peer-recovery` — all `probe-results.md` 403 gated (`403074/403105`). 7-Gate: Q
+
+- 4 lead(s) marked VALID at 2026-09-11 21:29:26 UTC
+  - | Q5 novel | NO — duplicate parked `2026-08-07 ACCEPTED → 2026-08-18 CONFIRMED DEAD` `reports/valid-bugs.md:104` |
+  - | 1 | `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant mint `reports/security-token-idor-report.md:11-20` | Q1 YES (`api.signageos.io:8`), Q2 NO unauth (all probes `403` `probe-res
+  - | 2 | `box+api /status` unauth infra leak | Q1 YES, Q2 YES `AV:N/PR:N` `probe-results.md:3`, Q3 Low (recon `pod/uid/Node/topology`, no PII/money), Q4 YES `GET /status`, Q5 NO (duplicate 80+ cycles), Q
+  - | 3 | `box CORS 17-18 ACAO` `http://`+`*.zdusercontent.com` | Q1 YES, Q2 YES (any Origin), Q3 Info/Low (no `allow-credentials`, only unauth HTML readable), Q4 YES `curl -sI -H 'Origin: https://evil.te
