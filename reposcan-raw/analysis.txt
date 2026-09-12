@@ -1,505 +1,69 @@
 [0m
 > build · muse-spark-1.2-contributor-free
 [0m
-Deep triage of signageos public source scan — verifying staged secret against production before classification.
+Delta shows single staging fixture vs 60+ cycles of PROD dead — classifying leak and endpoint now.
 [0m→ [0mRead .
-[0m→ [0mRead scope.yml
 [0m→ [0mRead reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
-[0m
-[0m$ [0mls -R reposcan-raw/signageos/videowall-designer/sos/ 2>&1 | head -n 100; echo "---"; cat reposcan-raw/signageos/videowall-designer/sos/videoTiming.js 2>&1 | head -n 100
-reposcan-raw/signageos/videowall-designer/sos/:
-package-lock.json
-package.json
-videoTiming.js
----
-const RestApi = require('@signageos/test/dist/RestApi/RestApi').default;
-
-/**
- * @param {Array.<{ index: Number, deviceUid: String, uri: String }>} videos
- * @param {Object} [auth]
- * @param {String} [auth].clientId
- * @param {String} [auth].secret
- * @param {String} [appletUid]
- * @param {String} [appletVersion]
- * @param {String} [apiUrl]
- * @param {String} [syncGroup]
- * @param {String} [syncServer]
- */
-module.exports = exports = {
-    async setupVideoTimings(
-        videos,
-        auth = {
-            clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47',
-            secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
-        },
-        appletUid = 'c790b56805154b80e12309453ee2c387511179106563165848',
-        appletVersion = '1.0.0',
-        apiUrl = 'http://api.kiera.office.signageos.io',
-        syncGroup = 'video-' + Math.random(),
-        syncServer,
-    ) {
-        const sos = new RestApi({
-            url: apiUrl,
-            version: 'v1',
-            auth,
-        });
-        const nowDate = new Date();
-        for (const video of videos) {
-            await sos.timing.create({
-                deviceUid: video.deviceUid,
-                appletUid,
-                appletVersion,
-                configuration: {
-                    identification: 'video-' + video.index,
-                    sync_server: syncServer,
-                    sync_group: syncGroup,
-                    video_uri: video.uri,
-                },
-                startsAt: nowDate,
-                endsAt: nowDate,
-                finishEvent: {
-                    type: 'DURATION',
-                    data: null,
-                },
-                position: 1,
-            })
-        }
-    },
-};
-[0m
-[0m→ [0mRead cands-signageos.txt
 [0m
 [0m$ [0mpython3 -c "
 import hashlib
 secret='9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'
+print('secret sha256:', hashlib.sha256(secret.encode()).hexdigest())
 clientId='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'
-print('secret sha256', hashlib.sha256(secret.encode()).hexdigest())
-print('clientId sha256', hashlib.sha256(clientId.encode()).hexdigest())
-print('pair sha256', hashlib.sha256((clientId+':'+secret).encode()).hexdigest())
-# also check known hash from knowledge base
-print('known secret hash 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e matches?', hashlib.sha256(secret.encode()).hexdigest() == '564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e')
-# alternative maybe hash is of clientId:secret ?
-# try also check knowledge's other hash
-import pathlib
+print('clientId sha256:', hashlib.sha256(clientId.encode()).hexdigest())
+combined=f'{clientId}:{secret}'
+print('combined sha256:', hashlib.sha256(combined.encode()).hexdigest())
+
+# verify knowledge base sha for secret
+# knowledge lists 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
 "
-# also check probe results for this secret test
-cat probe-results.md | head -n 200
 
-secret sha256 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
-clientId sha256 efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
-pair sha256 4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
-known secret hash 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e matches? True
-
-## 2026-08-08 17:04:06 UTC
-https://box.signageos.io/status -> 200 len=1440 type=application/json; charset=utf-8
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-
-## 2026-08-08 17:43:05 UTC
-
-
-## 2026-08-08 18:13:59 UTC
-
-
-## 2026-08-08 19:03:14 UTC
-
-
-## 2026-08-08 19:40:18 UTC
-
-
-## 2026-08-08 20:07:46 UTC
-
-
-## 2026-08-08 20:45:36 UTC
-
-
-## 2026-08-08 21:15:22 UTC
-
-
-## 2026-08-08 21:52:14 UTC
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://box.signageos.io/status -> 200 len=1441 type=application/json; charset=utf-8
-
-## 2026-08-08 22:17:52 UTC
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://box.signageos.io/status -> 200 len=1433 type=application/json; charset=utf-8
-
-## 2026-08-08 22:55:06 UTC
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://box.signageos.io/status -> 200 len=1441 type=application/json; charset=utf-8
-
-## 2026-08-08 23:22:42 UTC
-https://box.signageos.io/status -> 200 len=1441 type=application/json; charset=utf-8
-https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
-https://api.signageos.io` -> ERR <urlopen error [Errno -2] Name or service not know
-https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
-https://api.signageos.io/v1/organization/{otherTenantUid -> HTTP 403
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-
-## 2026-08-08 23:53:19 UTC
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://box.signageos.io/status -> 200 len=1437 type=application/json; charset=utf-8
-https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
-https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
-
-## 2026-08-09 01:07:13 UTC
-
-
-## 2026-08-09 03:08:09 UTC
-
-
-## 2026-08-09 04:36:22 UTC
-
-
-## 2026-08-09 05:35:10 UTC
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://box.signageos.io/status -> 200 len=1442 type=application/json; charset=utf-8
-https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
-https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
-
-## 2026-08-09 06:26:33 UTC
-
-
-## 2026-08-09 07:34:55 UTC
-
-
-## 2026-08-09 08:22:41 UTC
-https://box.signageos.io/status -> 200 len=1435 type=application/json; charset=utf-8
-https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
-https://api.signageos.io` -> ERR <urlopen error [Errno -2] Name or service not know
-https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-
-## 2026-08-09 09:12:31 UTC
-https://box.signageos.io/status -> 200 len=1434 type=application/json; charset=utf-8
-https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
-https://api.signageos.io -> 200 len=37036 type=text/html; charset=utf-8
-https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-
-## 2026-08-09 09:58:48 UTC
-https://box.signageos.io/status -> 200 len=1442 type=application/json; charset=utf-8
-https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
-https://api.signageos.io/v1/device/{targetUid -> HTTP 403
-https://box.signageos.io/status` -> 200 len=104078 type=text/html; charset=utf-8
-https://api.signageos.io` -> ERR <urlopen error [Errno -2] Name or service not know
-https://box.signageos.io/login/%2F` -> 200 len=104078 type=text/html; charset=utf-8
-
-## 2026-08-09 10:42:56 UTC
-
-
-## 2026-08-09 11:14:29 UTC
-
-
-## 2026-08-09 11:49:28 UTC
-https://box.signageos.io/status -> 200 len=1437 type=application/json; charset=utf-8
-https://api.signageos.io/v1/organization/<own-uid>` -> HTTP 403
-https://api.signageos.io/v1/device` -> HTTP 404
-
-## 2026-08-09 12:20:33 UTC
-
-
-## 2026-08-09 13:32:51 UTC
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://api.signageos.io/v1/organization/<own-uid>` -> HTTP 403
-https://api.signageos.io/v1/device` -> HTTP 404
-https://box.signageos.io/status -> 200 len=1449 type=application/json; charset=utf-8
-https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
-https://box.signageos.io/status` -> 200 len=104078 type=text/html; charset=utf-8
-https://api.signageos.io` -> ERR <urlopen error [Errno -2] Name or service not know
-https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
-
-## 2026-08-09 14:10:34 UTC
-
-
-## 2026-08-09 14:54:59 UTC
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://box.signageos.io/status -> 200 len=1442 type=application/json; charset=utf-8
-https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
-https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
-
-## 2026-08-09 15:30:42 UTC
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://box.signageos.io/status -> 200 len=1437 type=application/json; charset=utf-8
-https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
-https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
-
-## 2026-08-09 16:03:34 UTC
-https://api.signageos.io/v1/organization/<own-uid>` -> HTTP 403
-https://api.signageos.io/v1/device` -> HTTP 404
-https://box.signageos.io/status -> 200 len=1437 type=application/json; charset=utf-8
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
-https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
-
-## 2026-08-09 16:51:39 UTC
-https://api.signageos.io/v1/device` -> HTTP 404
-https://api.signageos.io/v1/organization/<own-uid>` -> HTTP 403
-https://box.signageos.io/status -> 200 len=1439 type=application/json; charset=utf-8
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://box.signageos.io/ -> 200 len=104078 type=text/html; charset=utf-8
-https://box.signageos.io/login/ -> 200 len=104078 type=text/html; charset=utf-8
-
-## 2026-08-09 17:21:12 UTC
-https://api.signageos.io/v1/organization/<own-uid>` -> HTTP 403
-https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-https://box.signageos.io/status -> 200 len=1442 type=application/json; charset=utf-8
-
-## 2026-08-09 17:55:20 UTC
-https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-
-## 2026-08-09 18:38:34 UTC
-
-
-## 2026-08-09 19:22:10 UTC
-https://box.signageos.io/status -> 200 len=1437 type=application/json; charset=utf-8
-https://api.signageos.io/v1/device -> HTTP 403
-https://api.signageos.io/v1/organization/<own-uid>` -> HTTP 403
-https://api.signageos.io/v1/device` -> HTTP 404
-https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-
-## 2026-08-09 19:55:34 UTC
-https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
-
-## 2026-08-09 20:32:46 UTC
-https://api.signageos.io/v1/device` -> HTTP 404
-https://api.signageos.io/v1/organization/<own-uid>` -> HTTP 403
-https://box.signageos.io/status -> 200 len=1442 type=application/json; charset=utf-8
-https://api.signageos.io/v1/organization/<own-org-uid>/security-token -> HTTP 403
-https://api.signageos.io/v1/device -> HTTP 403
-https://api.signageos.io/v1/organization/<own-org-uid -> HTTP 403
+secret sha256: 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
+clientId sha256: efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
+combined sha256: 4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
 [0m
-[0m→ [0mRead knowledge
-[0m
-[0m$ [0mgrep -r "gladia" /home/runner/work/signageos-hunt/signageos-hunt/ 2>&1 | head -n 20; echo "---"; cat inventory/*.md 2>&1 | head -n 100; echo "---"; ls -la triage/ 2>&1 | head -n 50
-/home/runner/work/signageos-hunt/signageos-hunt/triage/run-2026-09-07-12-50.md:            echo "=== INVENTORY gladia ==="
-/home/runner/work/signageos-hunt/signageos-hunt/triage/run-2026-09-04-21-07.md:**Static Triage — 1076 files, 1 hit, DELTA 0 vs last scan (NO_NEW_PROOF). Scan org = `signageos` (59 repos per `scope.yml:37-38`), not `gladiaio` — no `@gladiaio/sdk` hits in this inventory.**
-/home/runner/work/signageos-hunt/signageos-hunt/triage/run-2026-09-04-21-07.md:| npm `@gladiaio/sdk` | No hits in this 1076-file `signageos` scan inventory — nothing to triage this cycle. |
-/home/runner/work/signageos-hunt/signageos-hunt/scan-prompt.txt:You are triaging a static scan of public repos from the gladiaio/ GitHub
-/home/runner/work/signageos-hunt/signageos-hunt/scan-prompt.txt:scope as public source code) plus npm package metadata for @gladiaio/sdk.
-/home/runner/work/signageos-hunt/signageos-hunt/scan-prompt.txt:=== INVENTORY gladia ===
-/home/runner/work/signageos-hunt/signageos-hunt/scan-prompt.txt:  references to non-*.gladia.io services, outdated/misleading SDK
-/home/runner/work/signageos-hunt/signageos-hunt/reports/analyst-longcat.log:NO_DELTA. CloudFront fronting (box + api) and all known accepted/rejected classes remain stable across the last 8 gladia cycles. No new surface items.
-grep: /home/runner/work/signageos-hunt/signageos-hunt/reports/analyst-laguna.log: binary file matches
-/home/runner/work/signageos-hunt/signageos-hunt/reports/analyst-bigpickle.log:=== INVENTORY gladia ===
-/home/runner/work/signageos-hunt/signageos-hunt/reports/analyst-bigpickle.log:=== INVENTORY gladia ===
-/home/runner/work/signageos-hunt/signageos-hunt/reports/analyst-bigpickle.log:Based on the scan results and knowledge base, this is a **known finding** already documented in the RAG base. The single hit is in a signageos repo (not gladiaio), and matches the previously classified `ACCEPTED SECRET_LEAK`.
-/home/runner/work/signageos-hunt/signageos-hunt/reports/analyst-bigpickle.log:**Note:** The scan references `signageos` org/repos, not `gladiaio`. The knowledge base contains no gladiaio-related findings. If you intended to scan a different org, please clarify.
-/home/runner/work/signageos-hunt/signageos-hunt/reports/analyst-bigpickle.log:Based on the scan results and knowledge base, this is a **known finding** already documented in the RAG base. The single hit is in a signageos repo (not gladiaio), and matches the previously classified `ACCEPTED SECRET_LEAK`.
-/home/runner/work/signageos-hunt/signageos-hunt/reports/analyst-bigpickle.log:**Note:** The scan references `signageos` org/repos, not `gladiaio`. The knowledge base contains no gladiaio-related findings. If you intended to scan a different org, please clarify.
-/home/runner/work/signageos-hunt/signageos-hunt/reports/analyst-bigpickle.log:- **Current agent**: `bigpickle`, running on `gladia` inventory
-/home/runner/work/signageos-hunt/signageos-hunt/reports/analyst-bigpickle.log:- Inventory tracker ("gladia") logging intra-rs pod reschedules: box `wjmhn→zfqwm` (rs `77bfdd94d8`), api `5hw9c→2lgqn` (rs `75f6d7c5b7`) with fresh body sha256s each cycle.
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-09-05-22-52.md:### Triage: `gladiaio/` scan request vs `signageos` inventory - DELTA 0
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-09-05-22-52.md:`1076 files scanned, 1 hits` - hit is `signageos/videowall-designer` duplicate, not `gladiaio`. `gladiaio` org / `@gladiaio/sdk` npm not present in `reposcan-raw/` - no new surface to hunt. Breadth pass for anomalies (id/uid/email, /api/v1|v2|beta, ssrf/169.254.169.254, jwt, oauth, upload, graphql) on this inventory = NO_NEW_PROOF, 0 new hits.
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-09-02-18-49.md:**Static Triage — 1076 files, 1 hit, DELTA 0 vs last scan (NO_NEW_PROOF). Scan org = `signageos` (59 repos per `scope.yml:37-38`), not `gladiaio` — no `@gladiaio/sdk` hits in this inventory.**
----
-# Inventory: signageos
+[0m→ [0mRead scope.yml
+[0m→ [0mRead cands-signageos.txt
+Scan triage `signageos` (prompt says `gladiaio` but `scope.yml:2` + inventory + `reposcan-raw` are `signageos` - 0 `gladiaio` hits in this delta): 1076 files, 1 total hit, **DELTA 0** vs previous - no new primitives. All high-value chains (IDOR/BOLA, SSRF 169.254.169.254, JWT, OAuth) remain AUTH_HELPED-only per knowledge base - no new unauth surface.
 
-## Seed 2026-08-07 (passive recon)
+Hit: `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19`
 
-### Hosts (in scope - ONLY these two)
-- box.signageos.io — 302 (redirect target TBD; box = player/dashboard?)
-- api.signageos.io — 200 on /
+```js
+reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18-19
+  clientId: 'fcbbd71...' / secret: '9d5e257...' -> auth fixture
+reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23
+  apiUrl = 'http://api.kiera.office.signageos.io'
+```
 
-### Excluded / not eligible (do NOT report, see scope.yml)
-- All the program's exclusion list (DoS, enumeration, TLS, CSRF-on-anonymous, clickjacking-no-exploit, email-verification, etc.)
+Verified sha256 (do not print raw):
+- `secret` sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` matches KB `2026-08-07 ACCEPTED SECRET_LEAK`
+- `clientId` sha256 `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b`
 
-### Code surface (github.com/signageos, 59 repos)
-- First-party: sdk (TS), cli (TS), applet-sandbox, platform (C++), videowall-designer (TS), server-bootstrap (Shell), kubernetes-ingress (Go), minio
-- Mostly forks: DefinitelyTyped, HTML5test, zip.js, libcec, raspidmx, WebGLSamples, node-amqp10, webpack-dev-server, aports, charts
+#### REAL_SECRET — hardcoded credential with prod signs-of-life
+| File | Line | sha256 | Target host | Live on `api/box.signageos.io`? |
+|---|---|---|---|---|
+| *none* | - | - | - | - |
 
-### Open questions
-- Where box.signageos.io redirects to (auth model, session cookies)
-- API auth model of api.signageos.io (key? OAuth? JWT?)
-- Relationship of sdk/cli repos to api.signageos.io endpoints
+*Empty: sole hit is CONFIRMED DEAD on prod (see below).*
 
-## 2026-08-07 18:32:56 UTC
-- NEW api.signageos.io: Root (/) serves static HTML landing page (37KB), not API JSON — no public API surface exposed (404 on /v1, /v2, /health, /docs, /api, /swagger.json, /openapi.json)
-- NEW box.signageos.io: 302 → /login/%2F with Auth0 OAuth2 flow (sos-production.us.auth0.com, auth0.signageos.io in CSP connect-src) — confirms Auth0 as IdP
-- NEW box.signageos.io CSP reveals extensive 3rd-party integrations: Mapbox, Sentry, MoodMedia/BroadSign/Sony device APIs, remote-desktop.signageos.io, upload.signageos.io, platform.signageos.io, license.si
-- CHANGED api.signageos.io auth model unknown — no public docs, no swagger, no obvious auth headers on root; SDK/cli repos (signageos org, 59 repos) likely contain actual endpoint mappings and auth schemes
+#### TEST_OR_EXAMPLE — fixture/sample, not reportable
+| File | Line | sha256 | Context | Reuse test |
+|---|---|---|---|---|
+| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` | 18-19 | `secret` `564c293b...774e`, `clientId` `efdf6c4c...49b` | `auth = {clientId, secret}` default param for `setupVideoTimings()` - `@signageos/test` fixture, with `appletUid` `c790b568...` `appletVersion:1.0.0` | `X-Auth: <clientId>:<secret>` on `GET https://api.signageos.io/v1/organization/{cid}/security-token` -> `403 403076 WRONG_ACCOUNT_SECRET "Account not found"` on prod rs `77955558bc/7c5fdc9777/77bfdd94d8` etc (>60 cycles). Past `403074->403076` gate = parsed but account absent. Staging-only fixture, reuse disproven `2026-08-14..2026-08-21 CONFIRMED DEAD`. Out-of-scope host per `scope.yml:7` eligible ONLY `box/api.signageos.io`. |
 
-## 2026-08-07 18:56:31 UTC
-
-## 2026-08-07 19:26:08 UTC
-- NEW api.signageos.io: Returns static HTML (37KB, text/html, etag W/"90ac-...") even with `Accept: application/json`, `Authorization: Bearer null`, `x-api-key: test` — no JSON API surface exposed
-- NEW remote-desktop.signageos.io & upload.signageos.io: Serve IDENTICAL Express HTML (same etag W/"90ac-...", same 37036 bytes, black background with base64 PNG) — confirms shared infrastructure
-- NEW platform.signageos.io: Returns HTTP 503 (service unavailable)
-- CHANGED license.signageos.io: No response / connection timeout
-
-## 2026-08-07 20:15:16 UTC
-- NEW box.signageos.io/status: unauthenticated JSON (HTTP 200, application/json) leaking K8s pod hostname (`box-7c8c876945-gkzcp`), process UID (40-hex), Node v20.20.2, uptime, CPU/memory, and internal serv
-- NEW api.signageos.io/status: unauthenticated JSON (HTTP 200, application/json) leaking K8s pod hostname (`api-6f69db97d5-9szk2`), process UID, Node v24.19.0, service topology (redis0-3, mongoDB0-2, amqp0)
-- NEW api.signageos.io: real REST endpoints at `/v1/{device,organization,account,license,content-guard/item,location,company,bulk-operation,export/device,device/screenshot,device/telemetry/latest,...}` + `/
-- NEW box.signageos.io: 18× static `access-control-allow-origin` header values on `/` (302) and `/login/` (200) — including `http://box.signageos.io` (HTTP/plaintext variant), `https://*.zdusercontent.com` 
-- CHANGED box.signageos.io CSP: `connect-src`/`frame-src` enlarged vs seed (additional S3 buckets + triplicated Auth0 `oauth/token` entries); CSP still ACCEPTED from seed
-
-## 2026-08-07 21:04:45 UTC
-
-## 2026-08-07 21:34:19 UTC
-
-## 2026-08-07 22:07:31 UTC
-- NEW Hardcoded clientId/secret in `videowall-designer/sos/videoTiming.js` (line 18-19) authenticating against internal staging API `http://api.kiera.office.signageos.io` over HTTP — REAL_SECRET + ENDPOINT_
-
-## 2026-08-07 22:51:50 UTC
-
-## 2026-08-07 23:28:25 UTC
-
-## 2026-08-07 23:54:39 UTC
-- NEW api.signageos.io Node version upgraded to v24.19.0 (was v24.19.0 on some pods, v20.20.2 on others — mixed fleet confirmed)
-- NEW box.signageos.io pod hostname rotated to `box-7c8c876945-52dpt` (Node v20.20.2); api.signageos.io pod hostname rotated to `api-6f69db97d5-97fjw` (Node v24.19.0) — K8s rolling deploy confirmed
-- CHANGED api.signageos.io/v2/device now returns 403 JWT-gated (previously 404) — v2 migration advancing
-
-## 2026-08-08 00:49:27 UTC
-- NEW api.signageos.io Node version upgraded to v24.19.0 (mixed fleet: v24.19.0 + v20.20.2 pods confirmed)
-- NEW box.signageos.io pod hostname rotated to `box-7c8c876945-52dpt` (Node v20.20.2); api.signageos.io pod hostname rotated to `api-6f69db97d5-97fjw` (Node v24.19.0) — K8s rolling deploy confirmed
-- CHANGED api.signageos.io/v2/device now returns 403 JWT-gated (previously 404) — v2 migration advancing
-- NEW api.signageos.io Node version upgraded to v24.19.0 (mixed fleet: v24.19.0 + v20.20.2 pods confirmed)
-- NEW box.signageos.io pod hostname rotated to `box-7c8c876945-52dpt` (Node v20.20.2); api.signageos.io pod hostname rotated to `api-6f69db97d5-97fjw` (Node v24.19.0) — K8s rolling deploy confirmed
-- CHANGED api.signageos.io/v2/device now returns 403 JWT-gated (previously 404) — v2 migration advancing
-
-## 2026-08-08 02:38:01 UTC
-- CHANGED api.signageos.io/v2/device: now returns 403 JWT-gated (was 404) — v2 migration advancing; supports AUTH hypothesis on v2 endpoints
-
-## 2026-08-08 03:56:22 UTC
-- NEW api.signageos.io/v2/device: now returns 403 JWT-gated (was 404) — v2 migration advancing
-
-## 2026-08-08 04:47:05 UTC
-
-## 2026-08-08 05:31:29 UTC
-
-## 2026-08-08 06:07:19 UTC
-- CHANGED box.signageos.io/status pod hostname rotated to box-7c8c876945-gkzcp (Node v20.20.2) — known rolling-deploy churn, no functional change
-- CHANGED api.signageos.io/status pod hostname rotated to api-6f69db97d5-st6zq (Node v24.19.0) — known rolling-deploy churn, no functional change
-
-## 2026-08-08 07:09:50 UTC
-- CHANGED box.signageos.io/status: pod hostname rotated to `box-7c8c876945-9v4gf` (Node v20.20.2) — K8s rolling deploy churn, no functional change
-- CHANGED api.signageos.io/status: pod hostname rotated to `api-6f69db97d5-9kg9l` (Node v24.19.0) — K8s rolling deploy churn, no functional change
-
-## 2026-08-08 07:58:45 UTC
-- CHANGED box.signageos.io/status: pod hostname rotated to `box-7c8c876945-xmdhm` (Node v20.20.2) — K8s rolling deploy churn, no functional change
-- CHANGED api.signageos.io/status: pod hostname rotated to `api-6f69db97d5-jnncr` (Node v24.19.0) — K8s rolling deploy churn, no functional change
-
-## 2026-08-08 08:30:39 UTC
-- NEW None — latest cycle (2026-08-08 07:58) shows only K8s pod hostname rotation on `/status` endpoints (box-7c8c876945-xmdhm, api-6f69db97d5-jnncr), no functional surface change
-- CHANGED box.signageos.io/status: pod hostname rotated to `box-7c8c876945-52dpt` (Node v20.20.2) — rolling-deploy churn, no functional change. Headers confirmed absent: no HSTS / x-frame-options / x-content-ty
-- CHANGED api.signageos.io/status: pod hostname rotated to `api-6f69db97d5-22g8d` (Node v24.19.0) — rolling-deploy churn. Unlike box, api.status now carries `strict-transport-security`, `x-frame-options: DENY`,
-- CHANGED api.signageos.io/v2/device: confirmed 403 JWT-gated (was 404) — v2 migration advance confirmed via passive probe.
-
-## 2026-08-08 09:12:47 UTC
-- NEW api.signageos.io/status now carries proper security headers: `strict-transport-security: max-age=31536000`, `x-frame-options: DENY`, `x-content-type-options: nosniff` — previously absent
-- CHANGED api.signageos.io/v2/device confirmed 403 JWT-gated (was 404) — v2 migration advancing; carries same security headers as /status
-- CHANGED box.signageos.io/status pod hostname rotated to `box-7c8c876945-r5fm9` (Node v20.20.2) — still missing HSTS/xfo/xcto
-- CHANGED api.signageos.io/status pod hostname rotated to `api-6f69db97d5-9kg9l` (Node v24.19.0) — now hardened with security headers
-
-## 2026-08-08 09:54:23 UTC
----
-total 5020
-drwxr-xr-x  2 runner runner  32768 Sep 11 22:51 .
-drwxr-xr-x 11 runner runner   4096 Sep 11 22:51 ..
--rw-r--r--  1 runner runner   9404 Sep 11 22:51 run-2026-08-07-20-04.md
--rw-r--r--  1 runner runner  19469 Sep 11 22:51 run-2026-08-07-21-05.md
--rw-r--r--  1 runner runner    821 Sep 11 22:51 run-2026-08-07-21-58.md
--rw-r--r--  1 runner runner    315 Sep 11 22:51 run-2026-08-07-22-57.md
--rw-r--r--  1 runner runner  10680 Sep 11 22:51 run-2026-08-07-23-50.md
--rw-r--r--  1 runner runner   8209 Sep 11 22:51 run-2026-08-07-23-54.md
--rw-r--r--  1 runner runner  14208 Sep 11 22:51 run-2026-08-08-02-27.md
--rw-r--r--  1 runner runner    274 Sep 11 22:51 run-2026-08-08-04-31.md
--rw-r--r--  1 runner runner  29931 Sep 11 22:51 run-2026-08-08-06-03.md
--rw-r--r--  1 runner runner  16365 Sep 11 22:51 run-2026-08-08-07-21.md
--rw-r--r--  1 runner runner  14058 Sep 11 22:51 run-2026-08-08-09-07.md
--rw-r--r--  1 runner runner  25049 Sep 11 22:51 run-2026-08-08-09-59.md
--rw-r--r--  1 runner runner  30333 Sep 11 22:51 run-2026-08-08-10-59.md
--rw-r--r--  1 runner runner  10676 Sep 11 22:51 run-2026-08-08-11-47.md
--rw-r--r--  1 runner runner    247 Sep 11 22:51 run-2026-08-08-13-30.md
--rw-r--r--  1 runner runner   2219 Sep 11 22:51 run-2026-08-08-14-09.md
--rw-r--r--  1 runner runner   6719 Sep 11 22:51 run-2026-08-08-14-55.md
--rw-r--r--  1 runner runner   2432 Sep 11 22:51 run-2026-08-08-15-52.md
--rw-r--r--  1 runner runner   6550 Sep 11 22:51 run-2026-08-08-16-59.md
--rw-r--r--  1 runner runner   6764 Sep 11 22:51 run-2026-08-08-17-55.md
--rw-r--r--  1 runner runner  10604 Sep 11 22:51 run-2026-08-08-18-32.md
--rw-r--r--  1 runner runner   5088 Sep 11 22:51 run-2026-08-08-19-20.md
--rw-r--r--  1 runner runner  15294 Sep 11 22:51 run-2026-08-08-19-50.md
--rw-r--r--  1 runner runner  23074 Sep 11 22:51 run-2026-08-08-20-16.md
--rw-r--r--  1 runner runner  20038 Sep 11 22:51 run-2026-08-08-21-01.md
--rw-r--r--  1 runner runner  26405 Sep 11 22:51 run-2026-08-08-22-19.md
--rw-r--r--  1 runner runner  15410 Sep 11 22:51 run-2026-08-08-22-54.md
--rw-r--r--  1 runner runner    258 Sep 11 22:51 run-2026-08-08-23-21.md
--rw-r--r--  1 runner runner  13791 Sep 11 22:51 run-2026-08-08-23-53.md
--rw-r--r--  1 runner runner  28996 Sep 11 22:51 run-2026-08-09-01-00.md
--rw-r--r--  1 runner runner    303 Sep 11 22:51 run-2026-08-09-03-10.md
--rw-r--r--  1 runner runner    383 Sep 11 22:51 run-2026-08-09-04-41.md
--rw-r--r--  1 runner runner  30960 Sep 11 22:51 run-2026-08-09-05-41.md
--rw-r--r--  1 runner runner    302 Sep 11 22:51 run-2026-08-09-06-32.md
--rw-r--r--  1 runner runner   3567 Sep 11 22:51 run-2026-08-09-07-43.md
--rw-r--r--  1 runner runner  37175 Sep 11 22:51 run-2026-08-09-08-28.md
--rw-r--r--  1 runner runner  13446 Sep 11 22:51 run-2026-08-09-09-28.md
--rw-r--r--  1 runner runner  17283 Sep 11 22:51 run-2026-08-09-10-22.md
--rw-r--r--  1 runner runner    912 Sep 11 22:51 run-2026-08-09-11-00.md
--rw-r--r--  1 runner runner    291 Sep 11 22:51 run-2026-08-09-11-51.md
--rw-r--r--  1 runner runner   1025 Sep 11 22:51 run-2026-08-09-12-30.md
--rw-r--r--  1 runner runner  15090 Sep 11 22:51 run-2026-08-09-13-41.md
--rw-r--r--  1 runner runner   3628 Sep 11 22:51 run-2026-08-09-14-26.md
--rw-r--r--  1 runner runner   6687 Sep 11 22:51 run-2026-08-09-15-00.md
--rw-r--r--  1 runner runner  33466 Sep 11 22:51 run-2026-08-09-15-56.md
--rw-r--r--  1 runner runner  16471 Sep 11 22:51 run-2026-08-09-16-30.md
--rw-r--r--  1 runner runner  45070 Sep 11 22:51 run-2026-08-09-16-34.md
-[0m
-[0m→ [0mRead triage/run-2026-09-04-21-07.md
-**Static Triage — `signageos` 1076 files, 1 hit, DELTA 0 vs last scan (NO_NEW_PROOF). Scan request `gladiaio` vs inventory `signageos` (scope.yml:37-38, 59 repos) — mismatch, no `gladiaio` hits.**
-
-File verified `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:14-24`:
-- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18` clientId
-- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` secret (scan hit)
-- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` apiUrl `http://api.kiera.office.signageos.io`
-- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:21` appletUid
-
-### REAL_SECRET — reportable on eligible `box.signageos.io`/`api.signageos.io` (scope.yml:7-9)
-| File:line | sha256(secret material) | Signs of life on eligible host | Verdict |
+#### ENDPOINT_LEAK — internal/staging URL
+| File | Line | Value | Eligible? |
 |---|---|---|---|
-| *none* | — | — | — |
-| Hit below excluded — see TEST_OR_EXAMPLE/ENDPOINT_LEAK. Prior `ACCEPTED SECRET_LEAK` 2026-08-07 reclassified DEAD on prod 2026-08-14. |
+| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | 23 | `http://api.kiera.office.signageos.io` (`apiUrl` default) | **No** - `kiera.office.signageos.io` != `api/box.signageos.io`; HTTP plaintext dev/staging. Already known `2026-08-07 ACCEPTED` but not reportable. No `169.254.169.254`/cloud-metadata. |
 
-### TEST_OR_EXAMPLE — not reportable
-| File:line | sha256 | Context | Reuse test on prod |
-|---|---|---|---|
-| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18` | `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b` (clientId) | default param `auth={clientId,secret}` for test helper `setupVideoTimings()` — staging fixture | `GET https://api.signageos.io/v1/organization/{cid}/security-token` + `X-Auth: <cid>:<sec>` / `x-oauth-client_id`+`x-oauth-client_secret` → `403 403076 WRONG_ACCOUNT_SECRET "Account not found"` — parsed past missing-header gate `403074→403076`, account **does not exist on prod**. CONFIRMED DEAD 60+ cycles 2026-08-14→2026-08-21 rs `6cc9959bb4→77955558bc→7c5fdc9777→c877d9cc8→77bfdd94d8`, zero auth drift. |
-| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` (secret) | same, paired — scan hit | same probe — `JWT Bearer test` ignored on endpoint `403074` same as no-header, `X-Auth/x-oauth` exclusive gating confirmed. |
-
-### ENDPOINT_LEAK — out-of-scope host, informs prod boundary
-| File:line | Value (redacted) | Host scope |
+#### INTERESTING — anomalous but not secret
+| File | Line | Note |
 |---|---|---|
-| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | `http://api.kiera.office.signageos.io` | **OUT-OF-SCOPE** per scope.yml:5-9 (only `box.signageos.io`, `api.signageos.io` eligible). Plain `http`, internal `kiera.office` staging. |
+| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | 23 | HTTP (not HTTPS) for `apiUrl` - insecure transport on staging fixture only; no prod impact |
+| (npm) `@gladiaio/sdk` | - | No metadata/hits in this `reposcan-raw` dump - cannot triage SDK supply-chain here |
 
-### INTERESTING
-| File:line | Note |
-|---|---|
-| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | `http` not `https` — flag if reused on prod, disproven. |
-| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:21` | static `appletUid` test fixture, no auth value. |
-| npm `@gladiaio/sdk` | 0 hits in this 1076-file `signageos` inventory — nothing to triage. |
+#### Verdict — REPORT_CANDIDATE
+- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` `secret` sha256 `564c293b...` + paired `clientId` `efdf6c4c...` -> **REPORT_CANDIDATE: no** - TEST_OR_EXAMPLE, CONFIRMED DEAD on prod (403076), out-of-scope staging host, duplicate of 2026-08-07 hit, DELTA 0
+- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` `http://api.kiera.office.signageos.io` -> **REPORT_CANDIDATE: no** - ENDPOINT_LEAK, out-of-scope host, no SSRF/PII chain
 
-### Verdict list
-- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18-19` clientId `efdf6c...` + secret `564c29...` + `http://api.kiera.office.signageos.io:23` — **REPORT_CANDIDATE: no**. Reason: known duplicate DELTA 0, staging-only test fixture on out-of-scope host, **CONFIRMED DEAD on prod** (`403076` on `api.signageos.io` live 60+ cycles), `scope.yml:47` `poc_required:true` not met on eligible hosts (`box/api /status` leaks already ACCEPTED separately, all `api v1/v2` `403` gated). Descriptive-error `403076` excluded per scope.yml:13.
-- `gladiaio/@gladiaio/sdk` — **REPORT_CANDIDATE: no** — no hits in inventory, no surface.
-
-No HIGH-VALUE chainable primitives in this delta (no IDOR/SSRF/JWT/OAuth/file-upload/GraphQL). No `[NEXT] PROBE` — surface exhaustively closed 60+ cycles (box non-`/status` → `302` login catch-all, api `v1/v2` → `403` gated, box/api `/status` infra-leak already ACCEPTED).
+No [NEXT] PROBE warranted this cycle - surface stable `NO_DELTA` (box `c877d9cc8/77bfdd94d8` secgrep=0 leak, api `7c5fdc9777` hardened, security-token `403074` mechanism intact AUTH_HELPED).
