@@ -1291,3 +1291,10 @@
   - **Verdict: VALID (Info, border) — DUPLICATE. CVSS 3.1 AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N.**
   - **Verdict: HOLD under passive-only rules → VALID (Critical) with AUTH_HELPED proof (already executed).** Per `reports/valid-bugs.md:8` carried as HOLD because `probe-results.md` unauth always 403; `le
   - **Verdict: VALID (Critical) — superset of LEAD 5, already reported to `security@signageos.io`, partially fixed 2026-08-23 (scoped list, secrets still present). CVSS 9.1-9.8 same vector. Do not re-prob
+
+- 5 lead(s) marked VALID at 2026-09-12 11:40:32 UTC
+  - | A | `box /status` infra leak `reports/valid-bugs.md:4` | Y (box) | Y (unauth 200) | Y (recon) | Y `curl -s https://box.signageos.io/status` | N duplicate | Y | Y | **VALID Low (duplicate reconfirmed
+  - | B | `api /status` infra leak `reports/valid-bugs.md:5` | Y (api) | Y | Y (lower) | Y `curl -s https://api.signageos.io/status` | N | Y | Y | **VALID Low (duplicate, hardened)** | 4.3 |
+  - | C | `box CORS` ACAO whitelist `reports/valid-bugs.md:6` | Y | Y | marginal | Y `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/` | N | Y | marginal | **VALID Low border / Info** | 
+  - | D | `box CSP` broad `reports/valid-bugs.md:7` | Y | Y | marginal | Y `curl -sI https://box.signageos.io/login/` | N | Y | marginal | **VALID Info border** | 3.1 |
+  - | E-H | `api /v1/organization/{uid}/security-token` IDOR mint + `/v1/organization/{uid}` OAuth secret disclosure + `/v1/device/{uid}/peer-recovery` + `/v1/account/security-token` etc `reports/valid-bu
