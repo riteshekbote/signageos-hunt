@@ -1304,3 +1304,9 @@
   - | 2 | `api.signageos.io` `GET /status` - same leak Node v24.19.0 8 svc `probe-results.md:314` 200 | YES `scope.yml:8` | YES public unauth 200 | YES Low | YES `curl -s https://api.signageos.io/status` 
   - | 3 | `api.signageos.io` `GET/POST /v1/organization/{uid}/security-token` IDOR cross-tenant mint `leads/lead-mimo.md:6-13` `leads/lead-human.md:3-5` | YES | CONDITIONAL - low-priv authenticated `X-Aut
   - **Verdict Summary This Cycle:** 0 new VALID. 2 VALID reconfirmations (duplicate, no filing). 1 high-value IDOR HOLD pending auth-helped verification + vendor response.
+
+- 4 lead(s) marked VALID at 2026-09-12 17:30:53 UTC
+  - ### Current Cycle Verdict: NO NEW LEADS -> NO NEW VALID
+  - Q1 In scope? YES (`box.signageos.io` `scope.yml:6`). Q2 Reachable? YES unauthenticated GET `200`. Q3 Impact? YES — K8s pod identity + Node + full topology aids targeted infra attack (not `info disclos
+  - Q1 YES, Q2 YES (`GET /` + `GET /login/` under `Origin: https://evil.test` -> static `access-control-allow-origin` incl `http://box.signageos.io` + `https://*.zdusercontent.com` + `api.signageos.io`, `
+  - Q1 YES (`api.signageos.io`), Q2 NO under `passive_first: true` — all probes `403` without `X-Auth: id:secret` or valid JWT (`probe-results.md:30,49,167`). Requires low-priv `X-Auth` (any `sos login` a
