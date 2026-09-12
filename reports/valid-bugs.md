@@ -1324,3 +1324,11 @@
   - **Verdict: VALID** — Same proof `GET https://api.signageos.io/status`. Impact: same. CVSS `AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N 5.3 Low`. Channel same. Note differential is reportable but duplicate cla
   - **Verdict: VALID (HOLD as duplicate)** — Minimal read-only proof (own two test orgs only): 1) `sos login` -> extract `X-Auth: <acctId>:<token>` 2) `GET /v1/organization/<ownUid>/security-token -H X-Au
   - **Verdict: VALID (duplicate, now PARTIALLY FIXED)** — Include in day-7 nudge `lead-human.md:33` proof that `oauthClientSecret` remains in own-org response; demand binding + revocation.
+
+- 6 lead(s) marked VALID at 2026-09-12 23:32:04 UTC
+  - | **L1 `box.signageos.io/status` infra leak** `inventory/signageos.md:36` `GET /status →200 JSON {hostname, process.uid 40-hex, Node v20.20.2, succeededServices: amqp0/redis0-3/mongoDB0-3, cpu/memory}
+  - | **L2 `api.signageos.io/status` infra leak** `inventory/signageos.md:37` | YES | YES unauth `200` | YES same class, hardened headers lower value | YES `curl -s https://api.signageos.io/status` | NO D
+  - | **L3 `box CORS 17-18× static ACAO`** `inventory/signageos.md:39` `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + `api.signageos.io`, no `Allow-Credentials`, `Origin: h
+  - | **L4 `box CSP 40-60 origins`** `inventory/signageos.md:23` `connect-src/frame-src` triplicated `oauth/token` + S3 + device APIs | YES | YES | MARGINAL requires co-located XSS | YES `curl -sI https:/
+  - | **L5-7 IDOR family `api/v1/organization/{uid}/security-token` + `{uid}` OAuth secret disclosure + `device/{uid}/peer-recovery`** `reports/security-token-idor-report.md:1` | YES `api` | YES low-priv 
+  - **Verdict:** Under pure passive GET/HEAD: **HOLD** — credible code-verified (SDK `OrganizationTokenManagement.ts:8-33` `sosControlHelper.ts:130`, `helper.ts: x-auth: clientId:secret`), but requires au
