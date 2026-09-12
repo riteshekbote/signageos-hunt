@@ -1318,3 +1318,9 @@
   - - **Verdict: VALID (Info, borderline)** `CVSS 3.1: 3.1 AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N` — channel same.
   - - **Verdict: VALID (Critical)** — one-line: account-tier X-Auth mints victim-org securityToken via client-supplied path uid (BOLA).
   - - **Verdict: VALID (Critical, superset of E)** — do not re-report separately; include as addendum to E. CVSS same 9.8. Same channel.
+
+- 4 lead(s) marked VALID at 2026-09-12 21:47:54 UTC
+  - **Verdict: VALID** — Minimal proof: `curl -sD /tmp/h.txt -o /tmp/b.txt https://box.signageos.io/status && cat /tmp/b.txt | jq .hostname,.process` expect `200` with topology. Impact: infra mapping for 
+  - **Verdict: VALID** — Same proof `GET https://api.signageos.io/status`. Impact: same. CVSS `AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N 5.3 Low`. Channel same. Note differential is reportable but duplicate cla
+  - **Verdict: VALID (HOLD as duplicate)** — Minimal read-only proof (own two test orgs only): 1) `sos login` -> extract `X-Auth: <acctId>:<token>` 2) `GET /v1/organization/<ownUid>/security-token -H X-Au
+  - **Verdict: VALID (duplicate, now PARTIALLY FIXED)** — Include in day-7 nudge `lead-human.md:33` proof that `oauthClientSecret` remains in own-org response; demand binding + revocation.
