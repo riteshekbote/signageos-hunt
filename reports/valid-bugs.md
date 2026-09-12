@@ -1283,3 +1283,11 @@
   - | L4 | `box CSP 40+ origins` `inventory/signageos.md:24` | YES | YES public anon | WEAK defense-in-depth, no direct theft without XSS `reports/valid-bugs.md:7` | YES `curl -sI https://box.signageos.io
   - | L5 | `api /v1/organization/{uid}/security-token` IDOR mint `reports/security-token-idor-report.md:11` `leads/lead-mimo.md:6` | YES api.signageos.io | **YES low-priv** free account `X-Auth: orgA:secr
   - | L6 | `GET /v1/organization` platform-wide list + `oauthClientSecret` exposure `reports/security-token-idor-report.md:198` | YES | YES low-priv account tier only (org-tier → `403100 INAPPROPRIATE_ORG
+
+- 6 lead(s) marked VALID at 2026-09-12 01:55:18 UTC
+  - **Verdict: VALID (Low) — DUPLICATE reconfirmation. Proof:** `curl -s https://box.signageos.io/status | jq` → 200. Impact: internal K8s de-anon. **CVSS 3.1 5.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N** Cha
+  - **Verdict: VALID (Low) — DUPLICATE reconfirmation. CVSS 5.3 (4.3 with hardening)** Proof: `curl -s https://api.signageos.io/status`.
+  - **Verdict: VALID (Low, border) — DUPLICATE. CVSS 3.1 3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N.** Chain need: XSS on whitelisted `*.zdusercontent.com` → read `box` response.
+  - **Verdict: VALID (Info, border) — DUPLICATE. CVSS 3.1 AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N.**
+  - **Verdict: HOLD under passive-only rules → VALID (Critical) with AUTH_HELPED proof (already executed).** Per `reports/valid-bugs.md:8` carried as HOLD because `probe-results.md` unauth always 403; `le
+  - **Verdict: VALID (Critical) — superset of LEAD 5, already reported to `security@signageos.io`, partially fixed 2026-08-23 (scoped list, secrets still present). CVSS 9.1-9.8 same vector. Do not re-prob
