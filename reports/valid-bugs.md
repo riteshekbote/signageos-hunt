@@ -1310,3 +1310,11 @@
   - Q1 In scope? YES (`box.signageos.io` `scope.yml:6`). Q2 Reachable? YES unauthenticated GET `200`. Q3 Impact? YES — K8s pod identity + Node + full topology aids targeted infra attack (not `info disclos
   - Q1 YES, Q2 YES (`GET /` + `GET /login/` under `Origin: https://evil.test` -> static `access-control-allow-origin` incl `http://box.signageos.io` + `https://*.zdusercontent.com` + `api.signageos.io`, `
   - Q1 YES (`api.signageos.io`), Q2 NO under `passive_first: true` — all probes `403` without `X-Auth: id:secret` or valid JWT (`probe-results.md:30,49,167`). Requires low-priv `X-Auth` (any `sos login` a
+
+- 6 lead(s) marked VALID at 2026-09-12 19:48:44 UTC
+  - - **Verdict: VALID (DUPLICATE reconfirmed, Low)** — one-line: unauthenticated K8s topology leak, passive POC stable.
+  - - **Verdict: VALID (DUPLICATE, Low)** `CVSS 3.1: 4.3-5.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` — same channel.
+  - - **Verdict: VALID (Low, borderline, defense-in-depth)** `CVSS 3.1: 3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N` — channel same, previously accepted.
+  - - **Verdict: VALID (Info, borderline)** `CVSS 3.1: 3.1 AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N` — channel same.
+  - - **Verdict: VALID (Critical)** — one-line: account-tier X-Auth mints victim-org securityToken via client-supplied path uid (BOLA).
+  - - **Verdict: VALID (Critical, superset of E)** — do not re-report separately; include as addendum to E. CVSS same 9.8. Same channel.
