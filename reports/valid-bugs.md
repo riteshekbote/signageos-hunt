@@ -1298,3 +1298,9 @@
   - | C | `box CORS` ACAO whitelist `reports/valid-bugs.md:6` | Y | Y | marginal | Y `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/` | N | Y | marginal | **VALID Low border / Info** | 
   - | D | `box CSP` broad `reports/valid-bugs.md:7` | Y | Y | marginal | Y `curl -sI https://box.signageos.io/login/` | N | Y | marginal | **VALID Info border** | 3.1 |
   - | E-H | `api /v1/organization/{uid}/security-token` IDOR mint + `/v1/organization/{uid}` OAuth secret disclosure + `/v1/device/{uid}/peer-recovery` + `/v1/account/security-token` etc `reports/valid-bu
+
+- 4 lead(s) marked VALID at 2026-09-12 14:32:37 UTC
+  - | 1 | `box.signageos.io` `GET /status` - K8s topology leak (`probe-results.md:3` 200 `application/json` hostname+uid+Node v20.20.2 + amqp0/redis0-3/mongoDB0-3) | YES `scope.yml:6` | YES public unauth 
+  - | 2 | `api.signageos.io` `GET /status` - same leak Node v24.19.0 8 svc `probe-results.md:314` 200 | YES `scope.yml:8` | YES public unauth 200 | YES Low | YES `curl -s https://api.signageos.io/status` 
+  - | 3 | `api.signageos.io` `GET/POST /v1/organization/{uid}/security-token` IDOR cross-tenant mint `leads/lead-mimo.md:6-13` `leads/lead-human.md:3-5` | YES | CONDITIONAL - low-priv authenticated `X-Aut
+  - **Verdict Summary This Cycle:** 0 new VALID. 2 VALID reconfirmations (duplicate, no filing). 1 high-value IDOR HOLD pending auth-helped verification + vendor response.
