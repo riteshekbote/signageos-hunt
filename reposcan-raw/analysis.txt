@@ -1,58 +1,55 @@
 [0m
 > build · muse-spark-1.2-contributor-free
 [0m
-Deep triage of your Gladia scan — classifying the single hit against eligible scope.
+Deep-triage of your Gladia scan delta — classifying the lone hit and hunting chained primitives.
 [0m→ [0mRead .
-[0m→ [0mRead scan-prompt.txt
 [0m→ [0mRead scope.yml
-[0m→ [0mRead cands-signageos.txt
+[0m→ [0mRead knowledge
 [0m→ [0mRead reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
+[0m→ [0mRead knowledge/index.md
 [0m
-[0m$ [0mpython3 -c "
-import hashlib
-secret='9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'
-print(hashlib.sha256(secret.encode()).hexdigest())
-clientId='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'
-print(hashlib.sha256(clientId.encode()).hexdigest())
-# also combined
-combo=f'{clientId}:{secret}'
-print(hashlib.sha256(combo.encode()).hexdigest())
-# The earlier RAG had sha256 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e which matches combo?
-import hashlib as h
-print(h.sha256(combo.encode()).hexdigest())
-"
-
+[0m$ [0mpython3 -c "import hashlib; s='9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'; print(hashlib.sha256(s.encode()).hexdigest()); s2='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'; print(hashlib.sha256(s2.encode()).hexdigest())"
 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
 efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
-4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
-4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
 [0m
-[0m→ [0mRead inventory
-[0m→ [0mRead repos-signageos.json
-**Triage: signageos-hunt | Scan 1076 files, 1 hit | DELTA: 0 new vs previous**
+[0m✱ [0mGlob "**/*.md"[90m 100 matches[0m
+[0m→ [0mRead probe-results.md
+[0m→ [0mRead cands-signageos.txt
+`signageos-hunt` triage — delta 0 vs last scan (1076 files, 1 hit). Scope `scope.yml:5` = `box/api.signageos.io` only; `github_orgs: signageos` — `gladiaio/` org + `@gladiaio/sdk` npm not in this inventory (no hits to triage).
 
-> Note: Prompt template says `gladiaio/` + `@gladiaio/sdk` but workspace `scope.yml:2` + `reposcan-raw/` + `inventory/` are `signageos` org (59 repos) and eligible targets are **only** `box.signageos.io` / `api.signageos.io`. Triaging as `signageos` per local evidence. No `gladiaio` npm metadata present in workspace.
+File inspected `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:14-24`:
 
-Verified locally `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18-23`:
-```js
-auth = { clientId: 'fcbbd714...', secret: '9d5e257e...' } // `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18` + `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19`
-apiUrl = 'http://api.kiera.office.signageos.io' // `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23`
-```
-SHA256 (never raw): `clientId:secret` combo = `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` (matches `scope.yml:48` redact rule; secret alone `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b`)
+### REAL_SECRET
 
-### Classification
+| File | Line | Param | SHA256 | Signs-of-life | Reportable |
+|------|------|-------|--------|---------------|------------|
+| _empty_ | — | — | — | — | — |
 
-| Category | File:Line | SHA256 | Verdict | Reason |
-|---|---|---|---|---|
-| **REAL_SECRET** | — | — | **0 hits** | No prod-authenticating credential found in 1076-file scan |
-| **TEST_OR_EXAMPLE** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18` (clientId) / `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` (secret) | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` (combo) | **1 hit** | Default arg of helper `setupVideoTimings()` – test fixture for videowall sync-group, not sourced from env/vault, paired with `appletUid = c790...`, `apiUrl = http://api.kiera.office.signageos.io` (HTTP staging). Pattern matches `TEST_OR_EXAMPLE` |
-| **ENDPOINT_LEAK** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | — | **1 hit** | `http://api.kiera.office.signageos.io` – internal staging URL (`kiera.office.signageos.io`), plaintext HTTP. Out-of-scope host per `scope.yml:7` (only `box`/`api` eligible). Informs prod testing but not reportable |
-| **INTERESTING** | — | — | **0 hits** | No debug flags, cloud metadata (`169.254.169.254`), GraphQL mutations, JWT alg, or `*.gladia.io` refs in this hit; broader SDK surface (sdk, cli, applet-sandbox) had 0 hits this cycle |
+0 rows. Single hit does NOT meet `REAL_SECRET`.
 
-### Verdict List
+### TEST_OR_EXAMPLE
 
-| Candidate | REPORT_CANDIDATE | Justification |
-|---|---|---|
-| `videowall-designer/sos/videoTiming.js:19` secret (`sha256 564c293b...`) + `videoTiming.js:18` clientId targeting `http://api.kiera.office.signageos.io` | **no** | **KNOWN DUPLICATE – CONFIRMED DEAD**. Already `ACCEPTED SECRET_LEAK 2026-08-07` and `CONFIRMED DEAD 2026-08-14` → `2026-08-19` (60+ cycles). Live probe `GET https://api.signageos.io/v1/organization/{uid}/security-token` with `X-Auth: fcbbd714...:9d5e257e...` (also `x-oauth-client_id` variant) → `403 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION "Account not found"` – account does NOT exist on prod `api.signageos.io`. Staging-only fixture, out-of-scope host (`kiera.office...` ≠ `box`/`api`), credential reuse disproven. Not eligible per `scope.yml:5-6` (eligible ONLY `box/api`) and `poc_required`. Retain `sha256` only, do not re-report. DELTA 0 confirms no new exposure. |
+| File | Line | Context | SHA256 | Reason |
+|------|------|---------|--------|--------|
+| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18` | `auth.clientId` default | `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b` | `setupVideoTimings(videos, auth={clientId,secret}, appletUid, apiUrl, syncGroup='video-'+Math.random(), syncServer)` `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:1` imports `@signageos/test/dist/RestApi/RestApi` — test helper, random `syncGroup` `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:24`, hardcoded `appletUid` + `1.0.0` fixture |
+| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` | `auth.secret` default | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | Same — staged-test fixture, not prod credential |
 
-No `[NEXT] PROBE` – surface exhaustively closed, mechanism intact, zero auth drift across RS rotations `6cc9959bb4→77955558bc→7c5fdc9777→box-8676fb5f57→box-54846c877b→c877d9cc8→77bfdd94d8`; no passive bypass to verify.
+Knowledge: `knowledge/index.md:41` initially `ACCEPTED SECRET_LEAK` for reuse risk, then `CONFIRMED DEAD` from `2026-08-14` onward (`knowledge/index.md` 60+ entries: `X-Auth: <clientId:secret> -> 403076 WRONG_ACCOUNT_SECRET "Account not found"` on `api.signageos.io`). Prod reuse disproven — staging-only fixture. Excluded per `scope.yml:11` descriptive errors; out-of-scope host.
+
+### ENDPOINT_LEAK
+
+| File | Line | URL | Scope |
+|------|------|-----|-------|
+| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | `apiUrl = 'http://api.kiera.office.signageos.io'` | `http` (plaintext) internal office staging — not `box/api.signageos.io` | Informative for org-boundary, not reportable prod endpoint. No `gladia.io`/`@gladia` ref. |
+
+### INTERESTING
+
+| File | Line | Flag |
+|------|------|------|
+| _empty_ | — | `DELTA: 0 new hits` confirms hygiene stable; 1075 other files clean; no cloud-metadata `169.254.169.254`, no JWT alg confusion, no versioned `/api/v1|v2|beta|internal` anomaly beyond known `api.signageos.io/v1/*` (all `403` JWT-gated). |
+
+### Verdict list
+
+* `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` (`secret` sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` + `clientId` line 18 sha256 `efdf6c4c...`) — **REPORT_CANDIDATE: no** — `TEST_OR_EXAMPLE` + `ENDPOINT_LEAK` (staging `http://api.kiera.office.signageos.io`). `CONFIRMED DEAD` via live `GET https://api.signageos.io/v1/organization/{uid}/security-token` with `X-Auth: <id:secret>` → `403076` across 60+ cycles / RS rotations `6cc9959bb4→77955558bc→7c5fdc9777→c877d9cc8` — credential does not exist on prod. Do not re-report; carry forward as parked.
+
+No `NEXT PROBE` — mechanism already passively confirmed dead. Breadth pass for `gladiaio/` SDK chain primitives not applicable to this `signageos` inventory; no new high-value chain (SSRF/IDOR/JWT/OAuth/mass-assign/file-upload/GraphQL) surfaced in delta.
