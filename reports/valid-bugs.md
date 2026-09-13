@@ -1340,3 +1340,10 @@
   - | **4** | `box CSP` 40+ `connect-src` triplicated Auth0 `inventory/signageos.md:40` | YES box In | YES public | YES overly broad trust boundary 40+ origins incl device APIs/S3 `leads/lead-laguna.md:80
   - | **5** | `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant mint `leads/lead-mimo.md:6` `reports/security-token-idor-report.md:1` | YES api In | NO under `scope.yml:41` `passive_fir
   - | **6** | `api/v1/organization/{uid}` OAuth secret disclosure `leads/lead-bigpickle.md:152` | YES | NO requires account JWT `403` passive | YES `oauthClientSecret` leak → org `X-Auth` impersonation `r
+
+- 5 lead(s) marked VALID at 2026-09-13 06:55:28 UTC
+  - | — | (no intake) | — | — | **NO NEW VALID** | `new-leads.txt` empty |
+  - | A | `box/status` leak | `box.signageos.io/status:200` | MISCONFIG | **VALID Low reconfirmed** (CVSS 3.1: 5.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N — 4.3 per prior `valid-bugs.md:4`) | `GET https://box
+  - | B | `api/status` leak | `api.signageos.io/status:200` | MISCONFIG | **VALID Low reconfirmed** (CVSS 3.1: 4.3) | `GET https://api.signageos.io/status` → same + hardened headers |
+  - | C | `box` CORS `http:// + *.zdusercontent.com` | `box.signageos.io/:200` | MISCONFIG | **VALID Low-border reconfirmed** (CVSS 3.1: 3.1) | `GET -H Origin:https://evil.test https://box.signageos.io/` 
+  - | D | `box` CSP 40+ origins | `box.signageos.io/login/:200` | MISCONFIG | **VALID Info-border reconfirmed** (CVSS 3.1: 3.1) | `GET https://box.signageos.io/login/%2F` → CSP 40-60 `connect-src/frame-sr
