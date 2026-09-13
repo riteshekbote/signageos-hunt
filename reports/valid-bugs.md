@@ -1347,3 +1347,7 @@
   - | B | `api/status` leak | `api.signageos.io/status:200` | MISCONFIG | **VALID Low reconfirmed** (CVSS 3.1: 4.3) | `GET https://api.signageos.io/status` → same + hardened headers |
   - | C | `box` CORS `http:// + *.zdusercontent.com` | `box.signageos.io/:200` | MISCONFIG | **VALID Low-border reconfirmed** (CVSS 3.1: 3.1) | `GET -H Origin:https://evil.test https://box.signageos.io/` 
   - | D | `box` CSP 40+ origins | `box.signageos.io/login/:200` | MISCONFIG | **VALID Info-border reconfirmed** (CVSS 3.1: 3.1) | `GET https://box.signageos.io/login/%2F` → CSP 40-60 `connect-src/frame-sr
+
+- 2 lead(s) marked VALID at 2026-09-13 12:48:25 UTC
+  - **Standing verdicts** (last strict `reports/valid-bugs.md:1` 2026-08-11 12:30, reconfirmed `probe-results.md:750` 60+ cycles):
+  - **VALID Duplicates (reconfirmed PASSIVE, GET only):**
