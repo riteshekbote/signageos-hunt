@@ -1369,3 +1369,13 @@
   - | `api.signageos.io/status` `lead-laguna.md:7` | Y | Y | Y | Y `GET /status` 200 | N | Y | Y | **VALID Low — DUPLICATE** |
   - | `box CORS` `lead-laguna.md:9` 18×ACAO incl `http://` + `*.zdusercontent.com` | Y | Y | N (no creds flag, static) | Y `GET / -H Origin: evil` ACAO unchanged | N | Y | MARGINAL | **VALID Low/border — 
   - | `box CSP` `lead-laguna.md:81` 40+ origins | Y | Y | N (needs XSS) | Y `GET /login/` CSP header | N | Y | MARGINAL | **VALID Info — DUPLICATE** |
+
+- 8 lead(s) marked VALID at 2026-09-13 23:45:00 UTC
+  - |Q5 Novel?|**NO (duplicate)** — `reports/valid-bugs.md:4-5` already VALID, 60+ cycles reconfirmed. Duplicate reconfirmation.|
+  - |Q7 Triager accept?|**YES (Low/Info)** — every prior triage `VALID (Low)` CVSS 4.3|
+  - **Verdict: VALID (duplicate reconfirmation) — Low** `CVSS3.1 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N 4.3` — Minimal proof `curl -s https://box.signageos.io/status|jq .hostname,.process.version,.succeededS
+  - |Q5|**NO duplicate** — `reports/valid-bugs.md:6` VALID reconfirmed|
+  - **Verdict: VALID (Info, border) duplicate** `CVSS3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N 3.1`
+  - **Verdict: VALID (Info) duplicate** `CVSS3.1 AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N 3.1`
+  - |Q5|**YES novel, now CONFIRMED** — `reports/security-token-idor-report.md:198` `Q6 CLOSED — CONFIRMED CRITICAL` `201+OrganizationFullToken`; `git history 2024-07..2025-10` no binding fix `reports/secu
+  - **Verdict: VALID — Critical — UPGRADED from HOLD (2026-08-22 live verification)**
