@@ -1351,3 +1351,9 @@
 - 2 lead(s) marked VALID at 2026-09-13 12:48:25 UTC
   - **Standing verdicts** (last strict `reports/valid-bugs.md:1` 2026-08-11 12:30, reconfirmed `probe-results.md:750` 60+ cycles):
   - **VALID Duplicates (reconfirmed PASSIVE, GET only):**
+
+- 4 lead(s) marked VALID at 2026-09-13 16:43:40 UTC
+  - | **A box.signageos.io/status MISCONFIG** `inventory/signageos.md:36` | YES `box.signageos.io:In` | YES `GET /status` 200 unauth | YES K8s pod hostname/Node `20.20.2`/process.uid/amqp0,redis0-3,mongoD
+  - | **B api.signageos.io/status MISCONFIG** | YES `api.signageos.io:In` | YES `GET /status` 200 unauth | YES same class, 8 svc (mongoDB3 absent) Node `24.19.0` `secgrep=4` (HSTS/xfo/xcto) | YES `GET htt
+  - | **C box CORS 18-origin static ACAO** `inventory/signageos.md:39` | YES `box` | YES `GET /` 200 + `Origin: https://evil.test` → static `ACAO: http://box.signageos.io`, `https://*.zdusercontent.com` w
+  - | **D box CSP 40+ origins** | YES | YES `GET /login/` CSP `connect-src` Auth0×3 + S3 + device APIs | Marginal defense-in-depth | YES | NO | YES | MARGINAL | **VALID Info** 3.1 |
