@@ -1357,3 +1357,9 @@
   - | **B api.signageos.io/status MISCONFIG** | YES `api.signageos.io:In` | YES `GET /status` 200 unauth | YES same class, 8 svc (mongoDB3 absent) Node `24.19.0` `secgrep=4` (HSTS/xfo/xcto) | YES `GET htt
   - | **C box CORS 18-origin static ACAO** `inventory/signageos.md:39` | YES `box` | YES `GET /` 200 + `Origin: https://evil.test` → static `ACAO: http://box.signageos.io`, `https://*.zdusercontent.com` w
   - | **D box CSP 40+ origins** | YES | YES `GET /login/` CSP `connect-src` Auth0×3 + S3 + device APIs | Marginal defense-in-depth | YES | NO | YES | MARGINAL | **VALID Info** 3.1 |
+
+- 4 lead(s) marked VALID at 2026-09-13 19:04:37 UTC
+  - Q1 In scope? YES `scope.yml:6` box. Q2 Reachable? YES unauth low-priv `GET` 200x60+ cycles. Q3 Impact? YES Low-Med recon (pod/topology/Node/uid enables SSRF/logic targeting) not just weirdness. Q4 Pas
+  - Q1 YES `scope.yml:8` api. Q2 YES unauth 200. Q3 YES same class (despite HSTS/xfo/xcto). Q4 YES `GET /status` passive. Q5 NO duplicate. Q6 YES. Q7 YES Low. **Verdict: VALID (duplicate reconfirmation)**
+  - Q1 YES box. Q2 YES public 302/200. Q3 YES trust-boundary expansion (http variant + wildcard) but `ACAO-Credentials` absent limits to unauth HTML — Low borderline. Q4 YES `curl -sI -H Origin:https://ev
+  - Q1 YES api. Q2 **NO** under `passive_first` — requires valid `X-Auth: <orgA-id>:<token>` (`x-oauth-client_id`/`x-auth`) + 2nd tenant uid; all passive probes `probe-results.md:167-932` → `403074`. Low-
