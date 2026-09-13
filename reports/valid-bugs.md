@@ -1332,3 +1332,11 @@
   - | **L4 `box CSP 40-60 origins`** `inventory/signageos.md:23` `connect-src/frame-src` triplicated `oauth/token` + S3 + device APIs | YES | YES | MARGINAL requires co-located XSS | YES `curl -sI https:/
   - | **L5-7 IDOR family `api/v1/organization/{uid}/security-token` + `{uid}` OAuth secret disclosure + `device/{uid}/peer-recovery`** `reports/security-token-idor-report.md:1` | YES `api` | YES low-priv 
   - **Verdict:** Under pure passive GET/HEAD: **HOLD** — credible code-verified (SDK `OrganizationTokenManagement.ts:8-33` `sosControlHelper.ts:130`, `helper.ts: x-auth: clientId:secret`), but requires au
+
+- 6 lead(s) marked VALID at 2026-09-13 01:47:41 UTC
+  - | **1** | `box.signageos.io/status` unauth K8s topology leak `leads/lead-mimo.md:15` `inventory/signageos.md:36` | YES `scope.yml:6` In | YES public unauth 200 `probe-results.md:3` | YES infra recon p
+  - | **2** | `api.signageos.io/status` same class hardened `leads/lead-mimo.md:29` `inventory/signageos.md:37` | YES `scope.yml:8` In | YES public unauth 200 `probe-results.md:314` | YES same topology 8s
+  - | **3** | `box CORS` 17x static ACAO `http://`+`*.zdusercontent.com` wildcard `inventory/signageos.md:39` | YES box In | YES public unauth `GET /` 302/`/login/`200 with ACAO | YES trust-boundary expan
+  - | **4** | `box CSP` 40+ `connect-src` triplicated Auth0 `inventory/signageos.md:40` | YES box In | YES public | YES overly broad trust boundary 40+ origins incl device APIs/S3 `leads/lead-laguna.md:80
+  - | **5** | `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant mint `leads/lead-mimo.md:6` `reports/security-token-idor-report.md:1` | YES api In | NO under `scope.yml:41` `passive_fir
+  - | **6** | `api/v1/organization/{uid}` OAuth secret disclosure `leads/lead-bigpickle.md:152` | YES | NO requires account JWT `403` passive | YES `oauthClientSecret` leak → org `X-Auth` impersonation `r
