@@ -1363,3 +1363,9 @@
   - Q1 YES `scope.yml:8` api. Q2 YES unauth 200. Q3 YES same class (despite HSTS/xfo/xcto). Q4 YES `GET /status` passive. Q5 NO duplicate. Q6 YES. Q7 YES Low. **Verdict: VALID (duplicate reconfirmation)**
   - Q1 YES box. Q2 YES public 302/200. Q3 YES trust-boundary expansion (http variant + wildcard) but `ACAO-Credentials` absent limits to unauth HTML — Low borderline. Q4 YES `curl -sI -H Origin:https://ev
   - Q1 YES api. Q2 **NO** under `passive_first` — requires valid `X-Auth: <orgA-id>:<token>` (`x-oauth-client_id`/`x-auth`) + 2nd tenant uid; all passive probes `probe-results.md:167-932` → `403074`. Low-
+
+- 4 lead(s) marked VALID at 2026-09-13 21:30:47 UTC
+  - | `box.signageos.io/status` `leads/lead-laguna.md:14` + `probe-results.md:3` | Y (in) | Y (unauth) | Y (infra recon) | Y `GET /status` 200 | N (duplicate, 60+ cycles) | Y (not in `scope.yml:11-36`) | 
+  - | `api.signageos.io/status` `lead-laguna.md:7` | Y | Y | Y | Y `GET /status` 200 | N | Y | Y | **VALID Low — DUPLICATE** |
+  - | `box CORS` `lead-laguna.md:9` 18×ACAO incl `http://` + `*.zdusercontent.com` | Y | Y | N (no creds flag, static) | Y `GET / -H Origin: evil` ACAO unchanged | N | Y | MARGINAL | **VALID Low/border — 
+  - | `box CSP` `lead-laguna.md:81` 40+ origins | Y | Y | N (needs XSS) | Y `GET /login/` CSP header | N | Y | MARGINAL | **VALID Info — DUPLICATE** |
