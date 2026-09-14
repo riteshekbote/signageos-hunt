@@ -1394,3 +1394,6 @@
   - **Verdict: VALID (reconfirmation) Low** - `GET https://api.signageos.io/status` → `200 JSON {hostname, uid, Node v24.19.0, 8-svc}` with `HSTS/xfo/xcto` present (hardened vs box differential). CVSS `4.
   - **Verdict: VALID (reconfirmation) Low-border Info** `CVSS3.1 3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N` (needs victim interaction). Proof: `GET https://box.signageos.io/ -H 'Origin: https://evil.test'` 
   - **Verdict: VALID (reconfirmation) Info-border** `CVSS3.1 3.1 AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N`. Same proof/ channel.
+
+- 1 lead(s) marked VALID at 2026-09-14 15:07:42 UTC
+  - * **VERDICT: HOLD (VALID if re-proved with own assets, else HOLD)** - Current unauth probes `probe-results.md:930-932` still `403` = no passive bypass. Historical valid POC already submitted to `secur
