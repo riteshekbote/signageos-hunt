@@ -1379,3 +1379,12 @@
   - **Verdict: VALID (Info) duplicate** `CVSS3.1 AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N 3.1`
   - |Q5|**YES novel, now CONFIRMED** — `reports/security-token-idor-report.md:198` `Q6 CLOSED — CONFIRMED CRITICAL` `201+OrganizationFullToken`; `git history 2024-07..2025-10` no binding fix `reports/secu
   - **Verdict: VALID — Critical — UPGRADED from HOLD (2026-08-22 live verification)**
+
+- 7 lead(s) marked VALID at 2026-09-14 02:04:58 UTC
+  - Validated `scope.yml:5-9` (`box.signageos.io`, `api.signageos.io` In) vs `scope.yml:11-36` exclusions; `probe-results.md:1-932` passive GET/HEAD only; `inventory/signageos.md:36-38`, `reports/valid-bu
+  - **Verdict: VALID (duplicate reconfirmation) — Low** — proof: `GET https://box.signageos.io/status`; CVSS3.1 `AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N 5.3`; channel `security@signageos.io` per `reports/secu
+  - **Verdict: VALID (duplicate) — Low** CVSS 4.3 same vector; proof `GET https://api.signageos.io/status`.
+  - **Verdict: VALID (Info/Low, border)** CVSS 3.1 `AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N 3.1`
+  - **Verdict: VALID (Informational) 3.1** — defense-in-depth only.
+  - **Verdict: HOLD (prior `reports/valid-bugs.md:9`) → UPGRADED to VALID per `leads/lead-human.md:1-6` human execution: `POST /v1/organization/{victimUid}/security-token` with `AUTH_A` returned `201 + to
+  - **Verdict: HOLD — AUTH_HELPED** — now superset confirmed `leads/lead-human.md:4` `GET /v1/organization` lists ALL orgs platform-wide with secrets (broader fix needed `reports/security-token-idor-repor
