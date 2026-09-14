@@ -1388,3 +1388,9 @@
   - **Verdict: VALID (Informational) 3.1** — defense-in-depth only.
   - **Verdict: HOLD (prior `reports/valid-bugs.md:9`) → UPGRADED to VALID per `leads/lead-human.md:1-6` human execution: `POST /v1/organization/{victimUid}/security-token` with `AUTH_A` returned `201 + to
   - **Verdict: HOLD — AUTH_HELPED** — now superset confirmed `leads/lead-human.md:4` `GET /v1/organization` lists ALL orgs platform-wide with secrets (broader fix needed `reports/security-token-idor-repor
+
+- 4 lead(s) marked VALID at 2026-09-14 07:59:48 UTC
+  - **Verdict: VALID (reconfirmation) Low** - one-line: passive infra info disclosure. **Proof:** `GET https://box.signageos.io/status` → `200 JSON {hostname, succeededServices[9], process.uid, nodeVersio
+  - **Verdict: VALID (reconfirmation) Low** - `GET https://api.signageos.io/status` → `200 JSON {hostname, uid, Node v24.19.0, 8-svc}` with `HSTS/xfo/xcto` present (hardened vs box differential). CVSS `4.
+  - **Verdict: VALID (reconfirmation) Low-border Info** `CVSS3.1 3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N` (needs victim interaction). Proof: `GET https://box.signageos.io/ -H 'Origin: https://evil.test'` 
+  - **Verdict: VALID (reconfirmation) Info-border** `CVSS3.1 3.1 AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N`. Same proof/ channel.
