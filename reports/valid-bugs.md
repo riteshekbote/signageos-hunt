@@ -1397,3 +1397,17 @@
 
 - 1 lead(s) marked VALID at 2026-09-14 15:07:42 UTC
   - * **VERDICT: HOLD (VALID if re-proved with own assets, else HOLD)** - Current unauth probes `probe-results.md:930-932` still `403` = no passive bypass. Historical valid POC already submitted to `secur
+
+- 12 lead(s) marked VALID at 2026-09-14 19:53:49 UTC
+  - |Q5 novel| **NO** duplicate but still open — 60+ cycles reconfirmed, `reports/valid-bugs.md:4` already VALID |
+  - **VERDICT: VALID (Low, duplicate reconfirmation)** — Minimal POC: `GET https://box.signageos.io/status` -> `200` body `hostname`/`process.uid`/`version`/`succeededServices`; headers `x-powered-by: Exp
+  - |Q5|NO duplicate — `reports/valid-bugs.md:5`|
+  - **VERDICT: VALID (Low, duplicate)** — POC `GET https://api.signageos.io/status`. CVSS `5.3` (same vector, hardened headers lower exploitability but C:L). Channel: signageOS security.
+  - |Q5|NO duplicate `reports/valid-bugs.md:6`|
+  - |Q7|MARGINAL — prior `VALID (Low, border) 3.1` but many triagers reject as defense-in-depth|
+  - **VERDICT: VALID (Info, border, reconfirmation)** — POC `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/ | grep -i ACAO` count 17-18. CVSS `3.1 (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)`
+  - **VERDICT: VALID (Info, border)** — POC `curl -sI https://box.signageos.io/login/%2F | grep -i content-security-policy`. CVSS `3.1 (AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N)`. Channel: signageOS security.
+  - |Q2|PARTIAL — requires `PR:L` valid `X-Auth: <ownOrgId>:<secret>` (free self-serve account `scope.yml:44 no_account_creation:true` — but owned-tenant PoC used researcher's own orgs). Unauth `403074`. 
+  - **VERDICT: VALID (Critical) — UPGRADED from HOLD — confirmed 2026-08-22 against two researcher-owned orgs** `leads/lead-human.md:3` **POST 201 + usable secret** `bec343d38d9123cd8d53` verified `200` o
+  - **VERDICT: VALID (Critical, superset of [5]) — PARTIALLY FIXED 2026-08-23** — now `GET /v1/organization` returns only own orgs (`1` vs platform-wide) but still leaks `oauthClientId/secret` in response
+  - **VERDICT: HOLD (AUTH_HELPED, not passively provable)** — One-line: `403083`-gated, path `{uid}` not proven bound without valid creds+foreign device.
