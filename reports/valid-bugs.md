@@ -1411,3 +1411,12 @@
   - **VERDICT: VALID (Critical) — UPGRADED from HOLD — confirmed 2026-08-22 against two researcher-owned orgs** `leads/lead-human.md:3` **POST 201 + usable secret** `bec343d38d9123cd8d53` verified `200` o
   - **VERDICT: VALID (Critical, superset of [5]) — PARTIALLY FIXED 2026-08-23** — now `GET /v1/organization` returns only own orgs (`1` vs platform-wide) but still leaks `oauthClientId/secret` in response
   - **VERDICT: HOLD (AUTH_HELPED, not passively provable)** — One-line: `403083`-gated, path `{uid}` not proven bound without valid creds+foreign device.
+
+- 7 lead(s) marked VALID at 2026-09-14 22:59:15 UTC
+  - |Q1 `scope.yml:6`|YES `box.signageos.io` In|Q2|YES `GET /status` no auth `200` all cycles `probe-results.md:3,760`|Q3|YES pod hostname `box-7c8c876945-*`+40hex uid+`Node v20.20.2`+`succeededServices[a
+  - **VERDICT: VALID (Low, duplicate reconfirmation)** POC `GET https://box.signageos.io/status` -> `hostname`/`process.uid`/`version`/`succeededServices`. CVSS 3.1 `5.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:
+  - **VERDICT: VALID (Low, duplicate)** CVSS `5.3` Channel: signageOS security.
+  - **VERDICT: VALID (Info, border, reconfirmation)** CVSS `3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N`
+  - **VERDICT: VALID (Info, border)** CVSS `3.1`
+  - **VERDICT: VALID (Critical) — UPGRADED from HOLD, confirmed 2026-08-22 two owned orgs POST 201 `bec343d38d9123cd8d53` verified `200` on `GET /v1/device` 10d later.** Minimal read-only proof (after aut
+  - **VERDICT: VALID (Critical, superset of [5]) — PARTIALLY FIXED 2026-08-23** now returns only own orgs but still leaks `oauthClientId/secret`. CVSS `9.1`. Channel: same vendor thread.
