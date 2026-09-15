@@ -1452,3 +1452,11 @@
   - | **C `box.signageos.io` CORS static ACAO whitelist** `inventory/signageos.md:39` | YES | YES — `GET https://box.signageos.io/`+ `GET https://box.signageos.io/login/` `200 len~103953` with 17-18 stati
   - | **D `box.signageos.io` CSP overly broad 40+ origins** `inventory/signageos.md:40` | YES | YES — `GET https://box.signageos.io/login/` CSP `connect-src/frame-src` 40-59 origins Auth0×3+Mapbox+Sentry+
   - | **E `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant mint IDOR** `leads/lead-mimo.md:6` | YES | PARTIAL — NO unauth (all probes `403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE` `probe
+
+- 6 lead(s) marked VALID at 2026-09-15 23:04:10 UTC
+  - ### Verdict Table — Re-validation of carried leads (`reports/valid-bugs.md:2-21`, `leads/lead-mimo.md:2-27`, `leads/lead-human.md:1-6`)
+  - | 1 | `box.signageos.io/status` infra leak `lead-mimo.md:14-22` | Y IN | Y unauth `GET /status →200 JSON` | Y recon aid (pod/hostname/uid/Node/topology) | Y `curl -s https://box.signageos.io/status` |
+  - | 2 | `api.signageos.io/status` infra leak `lead-mimo.md:112-118` | Y IN | Y unauth `GET /status →200` | Y recon aid | Y `GET https://api.signageos.io/status` | N DUPLICATE | Y | Y (marginal hardened 
+  - | 3 | `box / + /login/ CORS ACAO 18-origin whitelist` | Y IN | Y unauth `GET / -H Origin: evil.test → static ACAO` | Low trust-boundary expansion | Y `curl -sI -H 'Origin: https://evil.test' https://b
+  - | 4 | `box /login/ CSP 40+ orig broad` | Y IN | Y | Info/Low | Y `curl -sI https://box.signageos.io/login/` | N DUPLICATE | Y | MARGINAL | **VALID (Info, border) DUPLICATE** CVSS `3.1`. |
+  - | 5 | `api /v1/organization/{uid}/security-token` cross-tenant mint `lead-mimo.md:6-13` `lead-human.md:3` | Y IN | N AUTH_HELPED `X-Auth: orgId:secret` required (all unauth `403074` `probe-results.md:
