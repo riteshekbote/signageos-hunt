@@ -1420,3 +1420,12 @@
   - **VERDICT: VALID (Info, border)** CVSS `3.1`
   - **VERDICT: VALID (Critical) — UPGRADED from HOLD, confirmed 2026-08-22 two owned orgs POST 201 `bec343d38d9123cd8d53` verified `200` on `GET /v1/device` 10d later.** Minimal read-only proof (after aut
   - **VERDICT: VALID (Critical, superset of [5]) — PARTIALLY FIXED 2026-08-23** now returns only own orgs but still leaks `oauthClientId/secret`. CVSS `9.1`. Channel: same vendor thread.
+
+- 7 lead(s) marked VALID at 2026-09-15 01:37:32 UTC
+  - **Verdict: VALID (Low) — DUPLICATE reconfirmed**
+  - **Verdict: VALID (Low) — DUPLICATE reconfirmed** — same PoC on `api`
+  - **Verdict: VALID (Info/Low, border) — DUPLICATE reconfirmed**
+  - **Verdict: VALID (Info) — DUPLICATE reconfirmed** CVSS 3.1 **3.1**
+  - **Verdict: VALID (Critical) — CONFIRMED 2026-08-22, superset root cause**
+  - **Verdict: VALID (Critical) — MERGE INTO E as superset** — do not file separately; mention in E's addendum
+  - **Verdict: HOLD (AUTH_HELPED logic flaw, plausible but unproven)** — needs owned-device cross-org `GET /v1/device/<foreignUid>/peer-recovery -H "X-Auth: <ownOrgCred>"` → 200 = valid
