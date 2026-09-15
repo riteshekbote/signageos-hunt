@@ -1,34 +1,324 @@
 [0m
 > build · muse-spark-1.2-contributor-free
 [0m
-Deep triage of signageos static hit — verifying if staging secret is live on prod.
+Triaging the static scan delta — zero new hits, one known fixture to verify against live prod.
+[0m→ [0mRead .
+[0m→ [0mRead scope.yml
+[0m
+[0m$ [0mls -R reposcan-raw/signageos/videowall-designer 2>/dev/null | head -n 100; echo "---"; cat reposcan-raw/signageos/videowall-designer/sos/videoTiming.js 2>/dev/null | head -n 60
+reposcan-raw/signageos/videowall-designer:
+README.md
+server
+sos
+
+reposcan-raw/signageos/videowall-designer/server:
+package-lock.json
+package.json
+src
+tsconfig.json
+
+reposcan-raw/signageos/videowall-designer/server/src:
+server.ts
+video.ts
+
+reposcan-raw/signageos/videowall-designer/sos:
+package-lock.json
+package.json
+videoTiming.js
+---
+const RestApi = require('@signageos/test/dist/RestApi/RestApi').default;
+
+/**
+ * @param {Array.<{ index: Number, deviceUid: String, uri: String }>} videos
+ * @param {Object} [auth]
+ * @param {String} [auth].clientId
+ * @param {String} [auth].secret
+ * @param {String} [appletUid]
+ * @param {String} [appletVersion]
+ * @param {String} [apiUrl]
+ * @param {String} [syncGroup]
+ * @param {String} [syncServer]
+ */
+module.exports = exports = {
+    async setupVideoTimings(
+        videos,
+        auth = {
+            clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47',
+            secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+        },
+        appletUid = 'c790b56805154b80e12309453ee2c387511179106563165848',
+        appletVersion = '1.0.0',
+        apiUrl = 'http://api.kiera.office.signageos.io',
+        syncGroup = 'video-' + Math.random(),
+        syncServer,
+    ) {
+        const sos = new RestApi({
+            url: apiUrl,
+            version: 'v1',
+            auth,
+        });
+        const nowDate = new Date();
+        for (const video of videos) {
+            await sos.timing.create({
+                deviceUid: video.deviceUid,
+                appletUid,
+                appletVersion,
+                configuration: {
+                    identification: 'video-' + video.index,
+                    sync_server: syncServer,
+                    sync_group: syncGroup,
+                    video_uri: video.uri,
+                },
+                startsAt: nowDate,
+                endsAt: nowDate,
+                finishEvent: {
+                    type: 'DURATION',
+                    data: null,
+                },
+                position: 1,
+            })
+        }
+    },
+};
+[0m
 [0m→ [0mRead reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
 [0m
-[0m$ [0mpython3 -c "import hashlib; s='9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'; print(hashlib.sha256(s.encode()).hexdigest()); print(hashlib.sha256(b'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47:9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9').hexdigest()); import hashlib as h; print(h.sha256(b'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47').hexdigest())"
+[0m$ [0mpython3 -c "
+import hashlib
+secret='9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'
+print('secret sha256:', hashlib.sha256(secret.encode()).hexdigest())
+clientId='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'
+print('clientId sha256:', hashlib.sha256(clientId.encode()).hexdigest())
+combo=f'{clientId}:{secret}'
+print('combo sha256:', hashlib.sha256(combo.encode()).hexdigest())
+# also as referenced in knowledge base
+print('expected secret sha from KB:', '564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e')
+# verify
+print('match:', hashlib.sha256(secret.encode()).hexdigest() == '564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e')
+"
+echo "--- grep context ---"
+grep -n "clientId\|secret\|apiUrl\|kiera" reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
+echo "--- check other refs to this secret across scan ---"
+grep -r "9d5e257e" reposcan-raw/ 2>/dev/null | head
+grep -r "fcbbd714" reposcan-raw/ 2>/dev/null | head
+grep -r "kiera" reposcan-raw/ 2>/dev/null | head
 
-564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
-4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
-efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
+secret sha256: 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
+clientId sha256: efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
+combo sha256: 4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
+expected secret sha from KB: 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
+match: True
+--- grep context ---
+6: * @param {String} [auth].clientId
+7: * @param {String} [auth].secret
+10: * @param {String} [apiUrl]
+18:            clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47',
+19:            secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+23:        apiUrl = 'http://api.kiera.office.signageos.io',
+28:            url: apiUrl,
+--- check other refs to this secret across scan ---
+reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:            secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+reposcan-raw/rag.txt:- 2026-08-14 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret 9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9 tested as X-Auth: <cid>:<sec> on GET /v1/organization/{cid}/security-token → 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION_TO_AUTHENTICATE "Account not found" — pair parsed past missing-header gate, account does NOT exist on prod (staging-only test fixture, credential reuse disproven)
+reposcan-raw/grep-hits.prev.txt:reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19: secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+reposcan-raw/grep-hits.txt:reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19: secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+reposcan-raw/analysis.txt:            secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:            clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47',
+reposcan-raw/rag.txt:- 2026-08-14 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret 9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9 tested as X-Auth: <cid>:<sec> on GET /v1/organization/{cid}/security-token → 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION_TO_AUTHENTICATE "Account not found" — pair parsed past missing-header gate, account does NOT exist on prod (staging-only test fixture, credential reuse disproven)
+reposcan-raw/rag.txt:- 2026-08-14 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — pair parsed past missing-header gate, account does NOT exist on prod (staging-only test fixture, credential reuse disproven)
+reposcan-raw/rag.txt:- 2026-08-14 REJECTED class @ videowall-designer leaked clientId/secret on PROD: Confirmed DEAD — `fcbbd714b3f794…:secret` tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; credential reuse disproven (staging-only fixture).
+reposcan-raw/rag.txt:- 2026-08-15 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — pair parsed past missing-header gate, account does NOT exist on prod (staging-only test fixture, credential reuse disproven)
+reposcan-raw/rag.txt:- 2026-08-15 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — staging-only fixture, credential reuse disproven
+reposcan-raw/rag.txt:- 2026-08-16 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — staging-only fixture, credential reuse disproven
+reposcan-raw/rag.txt:- 2026-08-16 REJECTED @ videowall-designer leaked clientId/secret on PROD: `fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47` (sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — staging-only fixture, credential reuse disproven (CONFIRMED DEAD).
+reposcan-raw/rag.txt:- 2026-08-17 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — staging-only fixture, credential reuse disproven
+reposcan-raw/analysis.txt:            clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47',
+reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:        apiUrl = 'http://api.kiera.office.signageos.io',
+reposcan-raw/rag.txt:- 2026-08-07 ACCEPTED SECRET_LEAK @ github.com/signageos/videowall-designer: Hardcoded clientId/secret (SHA256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) in `sos/videoTiming.js` targeting internal staging `http://api.kiera.office.signageos.io` over HTTP — credential reuse risk; not directly reportable (out-of-scope host) but informs prod org-boundary testing.
+reposcan-raw/rag.txt:- 2026-08-18 CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) is staging-only fixture (http://api.kiera.office.signageos.io) — tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; credential reuse disproven (30+ cycle confirmation).
+reposcan-raw/rag.txt:- 2026-08-18 CONFIRMED DEAD: github.com/signageos/videowall-designer leaked clientId/secret (sha256 564c293b…) — staging-only fixture targeting http://api.kiera.office.signageos.io; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; credential reuse disproven (30+ cycles).
+reposcan-raw/rag.txt:- 2026-08-18 CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) is staging-only fixture targeting `http://api.kiera.office.signageos.io`; tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; credential reuse disproven — CONFIRMED DEAD (30+ cycles)
+reposcan-raw/rag.txt:- 2026-08-18 CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) is staging-only fixture targeting http://api.kiera.office.signageos.io; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET; credential reuse disproven — CONFIRMED DEAD
+reposcan-raw/rag.txt:- 2026-08-18 CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) is staging-only fixture targeting http://api.kiera.office.signageos.io; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven
+reposcan-raw/rag.txt:- 2026-08-18 CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e) is staging-only fixture targeting http://api.kiera.office.signageos.io; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; credential reuse disproven (CONFIRMED DEAD, 30+ cycles)
+reposcan-raw/rag.txt:- 2026-08-18 CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e) is staging-only fixture targeting http://api.kiera.office.signageos.io; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven (59+ cycles, NO_DELTA)
+reposcan-raw/rag.txt:- 2026-08-19 CONFIRMED DEAD @ github.com/signageos/videowall-designer: Leaked clientId/secret (sha256 564c293b…) is staging-only fixture targeting http://api.kiera.office.signageos.io; X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — credential reuse disproven
 [0m
-Triage — `signageos` org (scan references `gladiaio` but inventory + hits are `signageos/*` — 59 repos). Delta: 0 new hits, 1 known duplicate.
+[0m$ [0mecho "=== scan summary ==="
+cat reposcan-raw/grep-hits.txt
+echo "---"
+cat reposcan-raw/grep-hits.prev.txt 2>/dev/null | head
+echo "--- analysis.txt ---"
+cat reposcan-raw/analysis.txt 2>/dev/null | head -n 100
+echo "--- check for any other hits hidden ---"
+wc -l reposcan-raw/grep-hits.txt reposcan-raw/grep-hits.prev.txt
+echo "--- npm metadata check (gladia mention is decoy?) ---"
+ls -la *.json 2>/dev/null | head
+cat repos-signageos.json 2>/dev/null | head -n 30
+echo "--- probe results for videowall secret ---"
+grep -i "videowall\|kiera\|403076" probe-results.md 2>/dev/null | head -n 20
 
-`reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19`
+=== scan summary ===
+SCAN SUMMARY: 1076 code/config files scanned, 1 hits
+reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19: secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+---
+SCAN SUMMARY: 1076 code/config files scanned, 1 hits
+reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19: secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+--- analysis.txt ---
+[0m
+> build · muse-spark-1.2-contributor-free
+[0m
+Triaging the static scan delta — zero new hits, one known fixture to verify against live prod.
+[0m→ [0mRead .
+[0m→ [0mRead scope.yml
+[0m
+[0m$ [0mls -R reposcan-raw/signageos/videowall-designer 2>/dev/null | head -n 100; echo "---"; cat reposcan-raw/signageos/videowall-designer/sos/videoTiming.js 2>/dev/null | head -n 60
+reposcan-raw/signageos/videowall-designer:
+README.md
+server
+sos
 
-```js
-// reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:14-24
-auth = { clientId: 'fcbb...47', secret: '<sha256:564c293b...>'}
-apiUrl = 'http://api.kiera.office.signageos.io' // line 23
-```
+reposcan-raw/signageos/videowall-designer/server:
+package-lock.json
+package.json
+src
+tsconfig.json
 
-| Category | File:Line | Matter | Evidence (sha256 only) | Status |
+reposcan-raw/signageos/videowall-designer/server/src:
+server.ts
+video.ts
+
+reposcan-raw/signageos/videowall-designer/sos:
+package-lock.json
+package.json
+videoTiming.js
+---
+const RestApi = require('@signageos/test/dist/RestApi/RestApi').default;
+
+/**
+ * @param {Array.<{ index: Number, deviceUid: String, uri: String }>} videos
+ * @param {Object} [auth]
+ * @param {String} [auth].clientId
+ * @param {String} [auth].secret
+ * @param {String} [appletUid]
+ * @param {String} [appletVersion]
+ * @param {String} [apiUrl]
+ * @param {String} [syncGroup]
+ * @param {String} [syncServer]
+ */
+module.exports = exports = {
+    async setupVideoTimings(
+        videos,
+        auth = {
+            clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47',
+            secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+        },
+        appletUid = 'c790b56805154b80e12309453ee2c387511179106563165848',
+        appletVersion = '1.0.0',
+        apiUrl = 'http://api.kiera.office.signageos.io',
+        syncGroup = 'video-' + Math.random(),
+        syncServer,
+    ) {
+        const sos = new RestApi({
+            url: apiUrl,
+            version: 'v1',
+            auth,
+        });
+        const nowDate = new Date();
+        for (const video of videos) {
+            await sos.timing.create({
+                deviceUid: video.deviceUid,
+                appletUid,
+                appletVersion,
+                configuration: {
+                    identification: 'video-' + video.index,
+                    sync_server: syncServer,
+                    sync_group: syncGroup,
+                    video_uri: video.uri,
+                },
+                startsAt: nowDate,
+                endsAt: nowDate,
+                finishEvent: {
+                    type: 'DURATION',
+                    data: null,
+                },
+                position: 1,
+            })
+        }
+    },
+};
+[0m
+[0m→ [0mRead reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
+[0m
+[0m$ [0mpython3 -c "
+import hashlib
+secret='9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'
+print('secret sha256:', hashlib.sha256(secret.encode()).hexdigest())
+clientId='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'
+print('clientId sha256:', hashlib.sha256(clientId.encode()).hexdigest())
+combo=f'{clientId}:{secret}'
+print('combo sha256:', hashlib.sha256(combo.encode()).hexdigest())
+# also as referenced in knowledge base
+print('expected secret sha from KB:', '564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e')
+# verify
+print('match:', hashlib.sha256(secret.encode()).hexdigest() == '564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e')
+"
+echo "--- grep context ---"
+grep -n "clientId\|secret\|apiUrl\|kiera" reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
+--- check for any other hits hidden ---
+  2 reposcan-raw/grep-hits.txt
+  2 reposcan-raw/grep-hits.prev.txt
+  4 total
+--- npm metadata check (gladia mention is decoy?) ---
+-rw-r--r-- 1 runner runner 366420 Sep 15 12:05 repos-signageos.json
+-rw-r--r-- 1 runner runner     33 Sep 15 12:05 state_bigpickle.json
+-rw-r--r-- 1 runner runner     33 Sep 15 12:05 state_laguna.json
+-rw-r--r-- 1 runner runner     33 Sep 15 12:05 state_ling3.json
+-rw-r--r-- 1 runner runner     33 Sep 15 12:05 state_longcat.json
+-rw-r--r-- 1 runner runner     33 Sep 15 12:05 state_nemotron3.json
+[
+  {
+    "id": 243079301,
+    "node_id": "MDEwOlJlcG9zaXRvcnkyNDMwNzkzMDE=",
+    "name": "vscode-sops",
+    "full_name": "signageos/vscode-sops",
+    "private": false,
+    "owner": {
+      "login": "signageos",
+      "id": 25649660,
+      "node_id": "MDEyOk9yZ2FuaXphdGlvbjI1NjQ5NjYw",
+      "avatar_url": "https://avatars.githubusercontent.com/u/25649660?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/signageos",
+      "html_url": "https://github.com/signageos",
+      "followers_url": "https://api.github.com/users/signageos/followers",
+      "following_url": "https://api.github.com/users/signageos/following{/other_user}",
+      "gists_url": "https://api.github.com/users/signageos/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/signageos/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/signageos/subscriptions",
+      "organizations_url": "https://api.github.com/users/signageos/orgs",
+      "repos_url": "https://api.github.com/users/signageos/repos",
+      "events_url": "https://api.github.com/users/signageos/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/signageos/received_events",
+      "type": "Organization",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "html_url": "https://github.com/signageos/vscode-sops",
+    "description": null,
+--- probe results for videowall secret ---
+[0m
+**Triage: 1076 files, 1 hit, DELTA 0 vs prev scan (`reposcan-raw/grep-hits.txt:1`, `reposcan-raw/grep-hits.prev.txt:1` identical). No new gladiaio surface — inventory is `signageos` only (59 repos, `repos-signageos.json:1`); `@gladiaio/sdk` npm decoy not in scan; no new HIGH-VALUE class.**
+
+Verified live file `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` — secret sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` matches KB. Paired `clientId` at `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18` sha256 `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b`.
+
+| Category | File:Line | Evidence (sha256/redacted) | Context | Classification Reason |
 |---|---|---|---|---|
-| **REAL_SECRET** | — | — | — | 0 hits |
-| **TEST_OR_EXAMPLE** | `videowall-designer/sos/videoTiming.js:18-19` | Hardcoded `clientId`+`secret` as default param for `setupVideoTimings(videos, auth={...})` — imports `@signageos/test/dist/RestApi` (test harness). Staging fixture, not prod. | secret sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` (`9d5e257e...`); clientId `fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47` | KNOWN DUPLICATE — CONFIRMED DEAD 2026-08-14→2026-08-21 (60+ cycles): tested as `X-Auth: <id>:<secret>` + `x-oauth-client_id` on `api.signageos.io /v1/organization/{uid}/security-token` → `403 403076 WRONG_ACCOUNT_SECRET "Account not found"` — parses past `403074 MISSING_ACCOUNT_ID` gate but account does not exist on prod. Zero auth drift across rs `6cc9959bb4→77955558bc→7c5fdc9777→75f6d7c5b7`. |
-| **ENDPOINT_LEAK** | `videowall-designer/sos/videoTiming.js:23` | Internal staging URL `http://api.kiera.office.signageos.io` (HTTP, not HTTPS) — office internal host, out-of-scope per `scope.yml` (eligible ONLY `box.signageos.io`, `api.signageos.io`). No prod leakage. | — | KNOWN — ACCEPTED 2026-08-07 `sos/videoTiming.js` targeting `kiera.office` over HTTP — informs org-boundary testing, not directly reportable |
-| **INTERESTING** | `videowall-designer/sos/videoTiming.js:23` | Plain HTTP staging, default `appletUid c790b568...` — confirms test/sync-group harness (`video-` + `Math.random()`), no cloud-metadata/SSRF chain. | — | Not reportable |
+| **REAL_SECRET** | *none* | — | — | No hit meets REAL_SECRET signs-of-life on in-scope hosts (`box.signageos.io`, `api.signageos.io` per `scope.yml:5-9`). Single hit is staging fixture (see below). |
+| **TEST_OR_EXAMPLE** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18-19` | `clientId` sha256 `efdf6c4c...`, `secret` sha256 `564c293b...` (`sos/videoTiming.js:19`) default `auth = {clientId, secret}` for `setupVideoTimings()` targeting `http://api.kiera.office.signageos.io` (`sos/videoTiming.js:23`) | Function param defaults; used with `@signageos/test/dist/RestApi/RestApi` `v1` | **CONFIRMED DEAD** staging-only fixture. Live prod reuse disproven 60+ cycles: `X-Auth: <cid>:<sec>` on `GET /v1/organization/{cid}/security-token` → `403 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION_TO_AUTHENTICATE "Account not found"` — parsed past `403074 MISSING_ACCOUNT_ID` gate but account does NOT exist on prod. Out-of-scope host `api.kiera.office.signageos.io`. Not reportable per `scope.yml:5-9` eligible targets ONLY. Prior `2026-08-07 ACCEPTED SECRET_LEAK` superseded by `2026-08-14…2026-08-21 CONFIRMED DEAD`. |
+| **ENDPOINT_LEAK** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | `apiUrl = 'http://api.kiera.office.signageos.io'` (HTTP plaintext) + `version: 'v1'` at `sos/videoTiming.js:28-30` | Internal staging API URL, hardcoded default | Internal/dev exposure. Host `kiera.office.signageos.io` is **out-of-scope** (not `box/api.signageos.io`). Informs API auth model (`X-Auth`/`x-oauth-client_id` id:secret) but not directly reportable. No `169.254.169.254`, no prod endpoint. |
+| **INTERESTING** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | `http://` (not `https://`) for `apiUrl` | Plaintext staging | Misconfig — expands MITM surface for staging only; prod `api.signageos.io` is TLS/CloudFront. No reportable POC on eligible hosts. No debug flags, no cloud metadata, no GraphQL, no mass-assignment found in this hit. |
 
-**Verdict list:**
-- `videowall-designer/sos/videoTiming.js:19` secret (sha256 `564c293b...`) — `REPORT_CANDIDATE: no` — TEST_OR_EXAMPLE / staging-only fixture, credential reuse disproven live on `api.signageos.io` (403076), host `kiera.office.signageos.io` out-of-scope. Do not re-report; prior `ACCEPTED SECRET_LEAK` → `CONFIRMED DEAD`.
-- `videowall-designer/sos/videoTiming.js:23` endpoint `http://api.kiera.office.signageos.io` — `REPORT_CANDIDATE: no` — internal staging, out-of-scope.
+**Verdict list (REPORT_CANDIDATE):**
+- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` secret sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` (+ `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18` clientId) — **REPORT_CANDIDATE: no** — TEST_OR_EXAMPLE / CONFIRMED DEAD staging fixture; credential reuse disproven live `403076` on prod; out-of-scope host; zero new delta.
 
-No new `REAL_SECRET` with signs of life on eligible hosts this cycle. No `[NEXT] PROBE` — all high-value primitives (IDOR/BOLA, SSRF 169.254.169.254, JWT, OAuth, money flows) remain AUTH_HELPED or 403-gated per 60+ cycle baseline; no passive bypass surface beyond already-accepted `/status` infra-leak.
+No `[NEXT] PROBE` — all 60+ cycle checks stable, no new unauthenticated surface beyond `/status` infra-leak (already ACCEPTED MISCONFIG, not a secret).
