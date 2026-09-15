@@ -1429,3 +1429,11 @@
   - **Verdict: VALID (Critical) — CONFIRMED 2026-08-22, superset root cause**
   - **Verdict: VALID (Critical) — MERGE INTO E as superset** — do not file separately; mention in E's addendum
   - **Verdict: HOLD (AUTH_HELPED logic flaw, plausible but unproven)** — needs owned-device cross-org `GET /v1/device/<foreignUid>/peer-recovery -H "X-Auth: <ownOrgCred>"` → 200 = valid
+
+- 6 lead(s) marked VALID at 2026-09-15 12:46:35 UTC
+  - ### Triage verdicts (latest state from `reports/valid-bugs.md:3-21` + `leads/lead-human.md:1-33`)
+  - | **1** | `box.signageos.io/status` `GET` leak `hostname+process.uid+Node v20.20.2+amqp0/redis0-3/mongoDB0-3` | Y `scope.yml:7` IN | Y `PR:N` unauth `200` `probe-results.md:3` | Y infra recon, chainin
+  - | **2** | `api.signageos.io/status` `GET` same class `Node v24.19.0+redis0-3/mongo0-2/amqp0` | Y `scope.yml:8` IN | Y unauth `200` | Y | Y `curl -s https://api.signageos.io/status` | N duplicate | Y |
+  - | **3** | `box.signageos.io` CORS `18× static ACAO` on `/` `302` + `/login/` `200` incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + `api.signageos.io`, `evil.test` N
+  - | **4** | `box.signageos.io` CSP overly broad `40+ connect-src/frame-src` triplicated `Auth0/oauth/token` | Y | Y | Y defense-in-depth | Y `curl -sI https://box.signageos.io/login/%2F` | N duplicate |
+  - | **5** | `api/v1/organization/{uid}/security-token` cross-tenant mint `GET/POST` IDOR `leads/lead-bigpickle.md:79-85` `leads/lead-human.md:8-25` | Y api IN | **N passive — Y low-priv `X-Auth: id:secr
