@@ -1445,3 +1445,10 @@
   - | **D `box CSP 40+ origins` `inventory/signageos.md:24`** | Y | Y | Y defense-in-depth | Y `curl -I https://box.signageos.io/login/` | N duplicate | Y | MARGINAL | **VALID Info borderline** |
   - | **E `api/v1/organization/{uid}/security-token` cross-tenant mint** `lead-human.md:3` `lead-mimo.md:7` `reports/security-token-idor-report.md:1` | Y `api` in | Y low-priv `X-Auth: id:secret` (free se
   - | **F `GET /v1/organization` superset leak of `oauthClientId/Secret` for ALL orgs** `lead-human.md:4` `reports/security-token-idor-report.md:202` | Y | Y low-priv account token | Y stolen pair auths a
+
+- 5 lead(s) marked VALID at 2026-09-15 20:23:24 UTC
+  - | **A `box.signageos.io/status` MISCONFIG — unauth K8s topology leak** `inventory/signageos.md:37` | YES `scope.yml:6` In | YES — `GET https://box.signageos.io/status` → `200 len~1437 application/json
+  - | **B `api.signageos.io/status` MISCONFIG** | YES `scope.yml:8` In | YES — `GET https://api.signageos.io/status` → `200 len~1326-1334 application/json` `probe-results.md:314` | YES but lower — same le
+  - | **C `box.signageos.io` CORS static ACAO whitelist** `inventory/signageos.md:39` | YES | YES — `GET https://box.signageos.io/`+ `GET https://box.signageos.io/login/` `200 len~103953` with 17-18 stati
+  - | **D `box.signageos.io` CSP overly broad 40+ origins** `inventory/signageos.md:40` | YES | YES — `GET https://box.signageos.io/login/` CSP `connect-src/frame-src` 40-59 origins Auth0×3+Mapbox+Sentry+
+  - | **E `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant mint IDOR** `leads/lead-mimo.md:6` | YES | PARTIAL — NO unauth (all probes `403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE` `probe
