@@ -1437,3 +1437,11 @@
   - | **3** | `box.signageos.io` CORS `18× static ACAO` on `/` `302` + `/login/` `200` incl `http://box.signageos.io` plaintext + `https://*.zdusercontent.com` wildcard + `api.signageos.io`, `evil.test` N
   - | **4** | `box.signageos.io` CSP overly broad `40+ connect-src/frame-src` triplicated `Auth0/oauth/token` | Y | Y | Y defense-in-depth | Y `curl -sI https://box.signageos.io/login/%2F` | N duplicate |
   - | **5** | `api/v1/organization/{uid}/security-token` cross-tenant mint `GET/POST` IDOR `leads/lead-bigpickle.md:79-85` `leads/lead-human.md:8-25` | Y api IN | **N passive — Y low-priv `X-Auth: id:secr
+
+- 6 lead(s) marked VALID at 2026-09-15 17:23:53 UTC
+  - | **A `box.signageos.io/status` K8s topology leak** `inventory/signageos.md:36` | Y `box` in | Y `GET /status 200` public unauth `probe-results.md:3` | Y infra recon aids chain `lead-mimo.md:19` | Y `
+  - | **B `api.signageos.io/status` K8s leak** `inventory/signageos.md:37` | Y `api` in | Y `GET /status 200` `probe-results.md:314` | Y | Y `GET https://api.signageos.io/status` | N duplicate | Y | Y | *
+  - | **C `box CORS 17-18 static ACAO` `inventory/signageos.md:39`** | Y | Y public `GET / 302` with `Origin:https://evil.test` → static ACAO `http://box.signageos.io + https://*.zdusercontent.com` `lead-
+  - | **D `box CSP 40+ origins` `inventory/signageos.md:24`** | Y | Y | Y defense-in-depth | Y `curl -I https://box.signageos.io/login/` | N duplicate | Y | MARGINAL | **VALID Info borderline** |
+  - | **E `api/v1/organization/{uid}/security-token` cross-tenant mint** `lead-human.md:3` `lead-mimo.md:7` `reports/security-token-idor-report.md:1` | Y `api` in | Y low-priv `X-Auth: id:secret` (free se
+  - | **F `GET /v1/organization` superset leak of `oauthClientId/Secret` for ALL orgs** `lead-human.md:4` `reports/security-token-idor-report.md:202` | Y | Y low-priv account token | Y stolen pair auths a
