@@ -1,212 +1,154 @@
 [0m
 > build · muse-spark-1.2-contributor-free
 [0m
-Deep triage of your RAG delta — verifying the lone code hit before verdict.
+Triaging your static scan delta — hitting the single leaked credential to classify it.
 [0m→ [0mRead .
+[0m→ [0mRead scope.yml
+[0m→ [0mRead cands-signageos.txt
 [0m→ [0mRead reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
+[0m→ [0mRead probe-results.md
 [0m
 [0m$ [0mpython3 -c "
 import hashlib
 secret='9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'
-print('sha256 secret:', hashlib.sha256(secret.encode()).hexdigest())
-clientId='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'
-print('sha256 clientId:', hashlib.sha256(clientId.encode()).hexdigest())
-pair=clientId+':'+secret
-print('sha256 pair:', hashlib.sha256(pair.encode()).hexdigest())
-# also from knowledge base
-print('expected from KB sha256 secret 564c293b... is pair?')
+print(hashlib.sha256(secret.encode()).hexdigest())
+secret2='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'
+print(hashlib.sha256(secret2.encode()).hexdigest())
+# combined?
 import hashlib as h
-print(h.sha256(pair.encode()).hexdigest()[:8])
+combined = secret2 + ':' + secret
+print(h.sha256(combined.encode()).hexdigest())
 "
 
-sha256 secret: 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
-sha256 clientId: efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
-sha256 pair: 4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
-expected from KB sha256 secret 564c293b... is pair?
-4be647e5
+564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
+efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
+4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
 [0m
-[0m→ [0mRead scope.yml
-[0m→ [0mRead cands-signageos.txt
+[0m$ [0mgrep -r "secret" reposcan-raw --include="*.js" --include="*.json" --include="*.ts" -n | head -n 100
+ls inventory/
+reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:7: * @param {String} [auth].secret
+reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19:            secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
+reposcan-raw/signageos/cli/tests/unit/Development/developmentFactory.spec.ts:31:			secret: 'organization-secret',
+reposcan-raw/signageos/cli/tests/unit/Development/developmentFactory.spec.ts:36:			secret: 'organization-secret',
+reposcan-raw/signageos/cli/tests/unit/Organization/organizationFacade.spec.ts:38:		const oauthClientSecret = 'sensitive-client-secret';
+reposcan-raw/signageos/cli/tests/unit/Organization/organizationRestApi.spec.ts:47:			oauthClientSecret: 'organization-client-secret',
+reposcan-raw/signageos/cli/tests/unit/Device/Connect/connectCommand.spec.ts:46:		apiSecurityToken: 'organization-secret',
+reposcan-raw/signageos/cli/tests/unit/Device/Connect/connectCommand.spec.ts:109:				secret: 'organization-secret',
+reposcan-raw/signageos/cli/src/Applet/Start/appletStartCommand.ts:120:			secret: config.apiSecurityToken,
+reposcan-raw/signageos/cli/src/Applet/Build/appletBuildCommand.ts:63:			secret: config.apiSecurityToken,
+reposcan-raw/signageos/cli/src/Development/developmentFactory.ts:12:	secret?: string;
+reposcan-raw/signageos/cli/src/Development/developmentFactory.ts:22:	const auth = opts.accessToken ? { accessToken: opts.accessToken } : { clientId: opts.clientId || '', secret: opts.secret || '' };
+reposcan-raw/signageos/cli/src/Emulator/emulatorFacade.ts:22:		: { clientId: config.identification ?? '', secret: config.apiSecurityToken ?? '' };
+reposcan-raw/signageos/cli/src/Organization/organizationFacade.ts:144:			secret: config.apiSecurityToken,
+reposcan-raw/signageos/cli/src/Device/deviceFacade.ts:104:			secret: organization.oauthClientSecret,
+reposcan-raw/signageos/cli/src/Device/Connect/connectCommand.ts:116:			secret: config.apiSecurityToken,
+reposcan-raw/signageos/cli/src/helper.ts:61:		: { clientId: config.identification ?? '', secret: config.apiSecurityToken ?? '' };
+reposcan-raw/signageos/cli/src/helper.ts:78:			? { clientId: config.identification, secret: config.apiSecurityToken }
+reposcan-raw/signageos/cli/src/helper.ts:79:			: { clientId: credentials?.oauthClientId ?? '', secret: credentials?.oauthClientSecret ?? '' };
+reposcan-raw/signageos/cli/src/helper.ts:107:		secret: string | undefined;
+reposcan-raw/signageos/cli/src/helper.ts:109:	/** JWT access token — when set, used as `X-Auth: <token>` (takes precedence over clientId:secret) */
+reposcan-raw/signageos/cli/src/helper.ts:116:	// Prefer JWT accessToken when available; fall back to legacy clientId:secret
+reposcan-raw/signageos/cli/src/helper.ts:117:	const authValue = options.accessToken ? options.accessToken : (options.auth.clientId ?? '') + ':' + (options.auth.secret ?? '');
+reposcan-raw/signageos/sdk/tests/unit/parameters.spec.ts:81:			SOS_AUTH_SECRET: 'leaked-secret',
+reposcan-raw/signageos/sdk/tests/unit/parameters.spec.ts:167:			SOS_AUTH_SECRET: 'secret-1',
+reposcan-raw/signageos/sdk/tests/unit/parameters.spec.ts:173:		should(parameters.organizationAuth).deepEqual({ clientId: 'client-1', secret: 'secret-1' });
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Applet/AppletManagement.spec.ts:27:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Applet/Command/AppletCommandManagement.spec.ts:40:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Applet/Version/File/AppletVersionFileManagement.spec.ts:70:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Applet/Version/AppletVersionManagement.spec.ts:37:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Applet/Version/AppletTestSuiteManagement.spec.ts:31:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Alert/Rules/AlertRuleManagement.spec.ts:45:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Alert/AlertManagement.spec.ts:59:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Company/CompanyManagement.spec.ts:26:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/requester.spec.ts:68:		it('should send clientId:secret in X-Auth header for legacy auth', async function () {
+reposcan-raw/signageos/sdk/tests/unit/RestApi/requester.spec.ts:71:				auth: { clientId: 'myClientId', secret: 'mySecret' },
+reposcan-raw/signageos/sdk/tests/unit/RestApi/requester.spec.ts:130:		it('should send clientId:secret in X-Auth header when auth is a function returning legacy options', async function () {
+reposcan-raw/signageos/sdk/tests/unit/RestApi/requester.spec.ts:133:				auth: async () => ({ clientId: 'asyncClient', secret: 'asyncSecret' }),
+reposcan-raw/signageos/sdk/tests/unit/RestApi/requester.spec.ts:220:		it('should not append organizationUid for legacy clientId:secret auth', async function () {
+reposcan-raw/signageos/sdk/tests/unit/RestApi/requester.spec.ts:223:				auth: { clientId: 'my-client-id', secret: 'my-secret' },
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Emulator/EmulatorManagement.spec.ts:26:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/DateTime/DeviceDateTimeManagement.spec.ts:28:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Provisioning/DeviceProvisioningManagement.spec.ts:11:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/PinCode/DevicePinCodeManagement.spec.ts:18:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/DeviceManagement.spec.ts:68:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Resolution/DeviceResolutionManagement.spec.ts:33:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Package/DevicePackageManagement.spec.ts:30:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Verification/DeviceVerificationManagement.spec.ts:32:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Brightness/DeviceBrightnessManagement.spec.ts:32:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Timer/DeviceTimerManagement.spec.ts:41:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/AppVersion/DeviceAppVersionManagement.spec.ts:31:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Debug/DeviceDebugManagement.spec.ts:30:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/PowerAction/DeviceScheduledPowerActionManagement.spec.ts:38:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/PowerAction/DevicePowerActionManagement.spec.ts:26:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Firmware/DeviceFirmwareManagement.spec.ts:28:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Authentication/DeviceAuthenticationManagement.spec.ts:19:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/RemoteCotrol/DeviceRemoteControlManagement.spec.ts:26:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Monitoring/DeviceMonitoringManagement.spec.ts:34:				'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Monitoring/DeviceMonitoringManagement.spec.ts:87:				'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Monitoring/DeviceMonitoringManagement.spec.ts:134:				'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Monitoring/DeviceMonitoringManagement.spec.ts:179:				'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Monitoring/DeviceMonitoringManagement.spec.ts:211:				'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Audio/DeviceAudioManagement.spec.ts:27:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Firmware/FirmwareVersionManagement.spec.ts:76:				'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/RestApi/Firmware/FirmwareVersionManagement.spec.ts:148:			reqheaders: { 'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}` },
+reposcan-raw/signageos/sdk/tests/unit/RestApi/helper.ts:15:	auth: { clientId: 'clientId', secret: 'secret' },
+reposcan-raw/signageos/sdk/tests/unit/RestApi/helper.ts:30:		'x-auth': `${nockOpts1.auth.clientId}:${nockOpts1.auth.secret}`, // checks the x-auth header presence
+reposcan-raw/signageos/sdk/tests/unit/Lib/Pagination/paginator.spec.ts:52:						secret: 'test',
+reposcan-raw/signageos/sdk/src/parameters.ts:35:	organizationAuth: { clientId: string; secret: string } | undefined;
+reposcan-raw/signageos/sdk/src/parameters.ts:84:						secret: process.env.SOS_AUTH_SECRET,
+reposcan-raw/signageos/sdk/src/apiTools.ts:20:				secret: string;
+reposcan-raw/signageos/sdk/src/apiTools.ts:31:		secret: string;
+reposcan-raw/signageos/sdk/src/apiTools.ts:100:	if (options.accountAuth && 'secret' in options.accountAuth) {
+reposcan-raw/signageos/sdk/src/apiTools.ts:101:		log('warning', `Option "accountAuth.secret" is deprecated and will be removed in next major version. Use "accountAuth.token" instead.`);
+reposcan-raw/signageos/sdk/src/apiTools.ts:109:					token: options.accountAuth?.secret,
+reposcan-raw/signageos/sdk/src/apiTools.ts:119:						secret: accountAuth.token,
+reposcan-raw/signageos/sdk/src/apiTools.ts:128:			options.organizationAuth?.clientId && options.organizationAuth?.secret
+reposcan-raw/signageos/sdk/src/apiTools.ts:131:						secret: options.organizationAuth?.secret,
+reposcan-raw/signageos/sdk/src/RestApi/IOptions.ts:3:/** Legacy authentication using clientId and secret pair (sent as `X-Auth: clientId:secret`). */
+reposcan-raw/signageos/sdk/src/RestApi/IOptions.ts:6:	secret: string;
+reposcan-raw/signageos/sdk/src/RestApi/IOptions.ts:14:/** Authentication options — either legacy clientId:secret pair or a JWT access token. */
+reposcan-raw/signageos/sdk/src/RestApi/Organization/Organization.ts:27:				// TODO the tokens should be used instead of the client id and secret
+reposcan-raw/signageos/sdk/src/RestApi/Organization/Organization.ts:29:				secret: this.oauthClientSecret,
+reposcan-raw/signageos/sdk/src/RestApi/requester.ts:18:	const authHeader = 'accessToken' in authOptions ? authOptions.accessToken : authOptions.clientId + ':' + authOptions.secret;
+reposcan-raw/signageos/sdk/src/RestApi/requester.ts:39:	// For legacy clientId:secret auth, the organization is already identified by the credentials themselves.
+reposcan-raw/signageos/sdk/src/SosHelper/sosControlHelper.ts:115:		secret: config.apiSecurityToken,
+reposcan-raw/signageos/sdk/src/SosHelper/sosControlHelper.ts:135:		secret: defaultOrganization.oauthClientSecret,
+live-highvalue.txt
+real-subdomains.txt
+signageos.md
 [0m
-[0m$ [0mgrep -r "gladia" reposcan-raw/ 2>/dev/null | head; echo "---"; ls -la triage/ 2>&1 | head -n 50; cat knowledge/*.md 2>/dev/null | head -n 100
-reposcan-raw/rag.txt:=== INVENTORY gladia ===
----
-total 5460
-drwxr-xr-x  2 runner runner  36864 Sep 15 22:28 .
-drwxr-xr-x 11 runner runner   4096 Sep 15 22:29 ..
--rw-r--r--  1 runner runner   9404 Sep 15 22:28 run-2026-08-07-20-04.md
--rw-r--r--  1 runner runner  19469 Sep 15 22:28 run-2026-08-07-21-05.md
--rw-r--r--  1 runner runner    821 Sep 15 22:28 run-2026-08-07-21-58.md
--rw-r--r--  1 runner runner    315 Sep 15 22:28 run-2026-08-07-22-57.md
--rw-r--r--  1 runner runner  10680 Sep 15 22:28 run-2026-08-07-23-50.md
--rw-r--r--  1 runner runner   8209 Sep 15 22:28 run-2026-08-07-23-54.md
--rw-r--r--  1 runner runner  14208 Sep 15 22:28 run-2026-08-08-02-27.md
--rw-r--r--  1 runner runner    274 Sep 15 22:28 run-2026-08-08-04-31.md
--rw-r--r--  1 runner runner  29931 Sep 15 22:28 run-2026-08-08-06-03.md
--rw-r--r--  1 runner runner  16365 Sep 15 22:28 run-2026-08-08-07-21.md
--rw-r--r--  1 runner runner  14058 Sep 15 22:28 run-2026-08-08-09-07.md
--rw-r--r--  1 runner runner  25049 Sep 15 22:28 run-2026-08-08-09-59.md
--rw-r--r--  1 runner runner  30333 Sep 15 22:28 run-2026-08-08-10-59.md
--rw-r--r--  1 runner runner  10676 Sep 15 22:28 run-2026-08-08-11-47.md
--rw-r--r--  1 runner runner    247 Sep 15 22:28 run-2026-08-08-13-30.md
--rw-r--r--  1 runner runner   2219 Sep 15 22:28 run-2026-08-08-14-09.md
--rw-r--r--  1 runner runner   6719 Sep 15 22:28 run-2026-08-08-14-55.md
--rw-r--r--  1 runner runner   2432 Sep 15 22:28 run-2026-08-08-15-52.md
--rw-r--r--  1 runner runner   6550 Sep 15 22:28 run-2026-08-08-16-59.md
--rw-r--r--  1 runner runner   6764 Sep 15 22:28 run-2026-08-08-17-55.md
--rw-r--r--  1 runner runner  10604 Sep 15 22:28 run-2026-08-08-18-32.md
--rw-r--r--  1 runner runner   5088 Sep 15 22:28 run-2026-08-08-19-20.md
--rw-r--r--  1 runner runner  15294 Sep 15 22:28 run-2026-08-08-19-50.md
--rw-r--r--  1 runner runner  23074 Sep 15 22:28 run-2026-08-08-20-16.md
--rw-r--r--  1 runner runner  20038 Sep 15 22:28 run-2026-08-08-21-01.md
--rw-r--r--  1 runner runner  26405 Sep 15 22:28 run-2026-08-08-22-19.md
--rw-r--r--  1 runner runner  15410 Sep 15 22:28 run-2026-08-08-22-54.md
--rw-r--r--  1 runner runner    258 Sep 15 22:28 run-2026-08-08-23-21.md
--rw-r--r--  1 runner runner  13791 Sep 15 22:28 run-2026-08-08-23-53.md
--rw-r--r--  1 runner runner  28996 Sep 15 22:28 run-2026-08-09-01-00.md
--rw-r--r--  1 runner runner    303 Sep 15 22:28 run-2026-08-09-03-10.md
--rw-r--r--  1 runner runner    383 Sep 15 22:28 run-2026-08-09-04-41.md
--rw-r--r--  1 runner runner  30960 Sep 15 22:28 run-2026-08-09-05-41.md
--rw-r--r--  1 runner runner    302 Sep 15 22:28 run-2026-08-09-06-32.md
--rw-r--r--  1 runner runner   3567 Sep 15 22:28 run-2026-08-09-07-43.md
--rw-r--r--  1 runner runner  37175 Sep 15 22:28 run-2026-08-09-08-28.md
--rw-r--r--  1 runner runner  13446 Sep 15 22:28 run-2026-08-09-09-28.md
--rw-r--r--  1 runner runner  17283 Sep 15 22:28 run-2026-08-09-10-22.md
--rw-r--r--  1 runner runner    912 Sep 15 22:28 run-2026-08-09-11-00.md
--rw-r--r--  1 runner runner    291 Sep 15 22:28 run-2026-08-09-11-51.md
--rw-r--r--  1 runner runner   1025 Sep 15 22:28 run-2026-08-09-12-30.md
--rw-r--r--  1 runner runner  15090 Sep 15 22:28 run-2026-08-09-13-41.md
--rw-r--r--  1 runner runner   3628 Sep 15 22:28 run-2026-08-09-14-26.md
--rw-r--r--  1 runner runner   6687 Sep 15 22:28 run-2026-08-09-15-00.md
--rw-r--r--  1 runner runner  33466 Sep 15 22:28 run-2026-08-09-15-56.md
--rw-r--r--  1 runner runner  16471 Sep 15 22:28 run-2026-08-09-16-30.md
--rw-r--r--  1 runner runner  45070 Sep 15 22:28 run-2026-08-09-16-34.md
-# Knowledge Base (seed)
+**Triage: `gladiaio` prompt vs `signageos` inventory mismatch - active scan data is `signageos` only (1076 files, 59 repos). No `gladiaio`/`@gladiaio/sdk` raw hits present in `reposcan-raw/`. Below is delta triage for `signageos` - 0 new hits.**
 
-## Program rules (from scope.yml)
-- Eligible targets (ONLY): box.signageos.io, api.signageos.io
-- Long exclusion list (all NOT eligible): DoS (network + account lockout), descriptive errors/headers, public file/dir disclosure, outdated libs, OPTIONS/TRACE, CSRF on logout, CSRF on anonymous forms, cookie flags on non-sensitive data, self-XSS, scanner reports without POC, physical access, social engineering, username enumeration, brute-force/lockout policies, SSL/TLS best practices + SSL attacks, clickjacking without demonstrated exploit, mail config, known-vulnerable lib without signageOS-specific exploit, password/account-recovery policies, autocomplete, public login panels, email verification gaps (registration/invite/password restore), session control on email/password change
-- Reportable focus: real logic flaws (IDOR/authz/business logic/SSRF-type) with a concrete POC on the two eligible hosts
-- Passive-first: GET/HEAD only, <=1 rps, no account creation, no data modification
-- Secrets in commits: sha256 only, never raw
+Scan: `2026-08-08+` delta = `0 new hit lines` vs previous. Full hits=1.
 
-## Baseline surface (2026-08-07 passive recon)
-- box.signageos.io: HTTP 302 (redirect - determine where; likely dashboard/player box admin)
-- api.signageos.io: HTTP 200 on /
-- signageos.io: 301 to www
-- GitHub org signageos (59 public repos): first-party code incl. sdk (TS), cli (TS), applet-sandbox, platform (C++), videowall-designer (TS), server-bootstrap (Shell), kubernetes-ingress (Go), minio, plus many forks (DefinitelyTyped, HTML5test, zip.js, libcec, raspidmx, node-amqp10, WebGLSamples, webpack-dev-server, aports, charts)
+File `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` inspected:
 
-## Rejected / parked (explicit program exclusions - never report)
-- username enumeration on login/forgot-password, rate-limit/lockout policy, cookie flags non-sensitive, OPTIONS/TRACE, banner/stack-trace, robots.txt, outdated versions, SSL/TLS, clickjacking w/o exploit, CSRF on logout/anonymous forms, email verification gaps, session control on email/password change, autocomplete, public login panels, account recovery policies
-- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation not testable passively without tenant config access
-- 2026-08-07 REJECTED IDOR @ api.signageos.io: No public API endpoints discoverable via passive probing (all common paths 404)
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary
-- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state parameter — class AUTH excluded as "CSRF on forms that are available to anonymous users" per scope.yml
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary (carried forward from 2026-08-07)
-- 2026-08-07 REJECTED IDOR @ api.signageos.io via undiscovered versioned endpoints: no public endpoints discoverable via passive probing (all common paths 404) — carried forward from 2026-08-07
-- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state parameter — class AUTH excluded as "CSRF on forms that are available to anonymous users" per scope.yml
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary (carried forward from 2026-08-07)
-- 2026-08-07 REJECTED IDOR @ api.signageos.io via undiscovered versioned endpoints: no public endpoints discoverable via passive probing (all common paths 404) — carried forward from 2026-08-07
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed NEW. Unauthenticated JSON health endpoint leaks K8s pod hostname, process UID, Node version, and backend service topology (redis0-3, mongoDB0-3, amqp0). Not on the rejected list (not banner/stack-trace, not file/dir disclosure, not outdated-version-only).
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed NEW. 18× static `access-control-allow-origin` headers (incl `http://` HTTP variant + `https://*.zdusercontent.com` wildcard) on `/` and `/login/`. No `Access-Control-Allow-Credentials` observed. Not on the rejected list.
-- 2026-08-07 REJECTED IDOR @ api.signageos.io: Real `/v1/*` endpoints confirmed via client bundle (bundle.js) — 40+ paths mapped. BUT all return 403 with `WRONG_JWT_TOKEN`/`403105` without a JWT. No unauthenticated data access found → IDOR not testable passively. The earlier seed rejection ("all common paths 404") was based on probing wrong paths (`/api/v1`, `/v1`) that don't exist; the real paths DO exist but are JWT-gated.
-- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io: 403 error body leaks descriptive auth detail (`"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105`, `errorName WRONG_JWT_TOKEN`) — falls under "descriptive error messages" (excluded per scope.yml).
-- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation — still not testable passively without tenant config access (carried forward).
-- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state — excluded per "CSRF on anonymous-accessible forms" (carried forward).
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → mtnct), process UID, Node v20.20.2, and service topology (amqp0, redis0-3, mongoDB0-3). Not on rejected list.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin `https://evil.test`. Includes `http://` variant + `https://*.zdusercontent.com` wildcard + sibling `api.signageos.io`. No `Access-Control-Allow-Credentials` on any box path. api.signageos.io has NO ACAO on any path (including /status, /v1/*, /v2/*).
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Confirmed live. /login/ CSP broadened vs / (triplicated Auth0 oauth/token, additional recaptcha frame-src). 40+ connect-src/frame-src origins spanning Auth0, Sony/BroadSign/MoodMedia device APIs, S3 buckets, AWS API Gateway, and api.signageos.io.
-- 2026-08-07 REJECTED MISCONFIG @ box.signageos.io /ready: Returns 200 `OK` (2 bytes) — trivial health check, no data leaked. Not reportable.
-- 2026-08-07 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All 60+ endpoints return 403 JWT-gated (WRONG_JWT_TOKEN/403105). No pre-auth bypass. Dual auth confirmed: JWT Bearer (main API) + X-Auth API-key format (`id:unsafeDecryptedToken`) for bulk provisioning.
-- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io CORS: 403/404 carry `vary: Origin` + `access-control-expose-headers: *` but NO ACAO under any Origin — not CORS-exploitable.
-- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation — not testable passively without tenant config access (carried forward).
-- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105` — falls under descriptive error messages (excluded).
-- 2026-08-07 ACCEPTED SECRET_LEAK @ github.com/signageos/videowall-designer: Hardcoded clientId/secret (SHA256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) in `sos/videoTiming.js` targeting internal staging `http://api.kiera.office.signageos.io` over HTTP — credential reuse risk; not directly reportable (out-of-scope host) but informs prod org-boundary testing.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin `https://evil.test`. Includes `http://` variant + `https://*.zdusercontent.com` wildcard + sibling `api.signageos.io`. No `Access-Control-Allow-Credentials` on any box path. api.signageos.io has NO ACAO on any path.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname, process UID, Node v20.20.2, and service topology.
-- 2026-08-07 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All endpoints return 403 JWT-gated without pre-auth bypass. Requires AUTH_HELPED verification.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname, process UID, Node v20.20.2, and service topology.
-- 2026-08-07 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All endpoints return 403 JWT-gated without pre-auth bypass. Requires AUTH_HELPED verification.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → st6zq), process UID, Node v24.19.0, and service topology (amqp0, redis0-3, mongoDB0-2). Not on rejected list.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → bk4vh), process UID, Node v20.20.2, and service topology (amqp0, redis0-3, mongoDB0-3). Not on rejected list.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. HTTP 200 JSON leaks pod hostname (box-7c8c876945-gkzcp), process UID (b341def86253cd23a7db1382d94c091a590c400c1b4d8d9602), Node v20.20.2, service topology (amqp0, redis0-3, mongoDB0-3). Unchanged.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin https://evil.test. No Access-Control-Allow-Credentials. Includes http:// variant + https://*.zdusercontent.com wildcard + api.signageos.io sibling. Unchanged.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed live. /login/ CSP triplicates Auth0 oauth/token entries, 33 distinct origin patterns across connect-src/frame-src directives (device APIs, S3, AWS API Gateway, siblings). Unchanged.
-- 2026-08-07 REJECTED MISCONFIG @ box.signageos.io /ready: Reconfirmed. Returns 200 "OK" (2 bytes), trivial health check, no data leaked. Not reportable.
-- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: All Auth0 OAuth2 flow parameters hidden in minified bundle.js (v2.192.0); redirect_uri validation, OAuth2 state binding — not testable passively without Auth0 tenant access or authenticated session. Carried forward.
-- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io CORS: Confirmed — 403/404 responses carry vary: Origin + access-control-expose-headers: * but NO ACAO under any Origin. Not CORS-exploitable. Carried forward.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. HTTP 200 JSON leaks pod hostname (box-7c8c876945-52dpt), process UID, Node v20.20.2, service topology (amqp0, redis0-3, mongoDB0-3). Unchanged.
-- 2026-08-07 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. HTTP 200 JSON leaks pod hostname (api-6f69db97d5-97fjw), process UID, Node v24.19.0, service topology (amqp0, redis0-3, mongoDB0-3). Unchanged.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed live. /login/ CSP triplicates Auth0 oauth/token entries, 33+ distinct origin patterns across connect-src/frame-src directives. Unchanged.
-- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 flow parameters hidden in minified bundle.js (v2.192.0); redirect_uri validation, OAuth2 state binding — not testable passively without Auth0 tenant access or authenticated session.
-- 2026-08-08 NO_NEW_PROOF — This cycle is passive analysis only; no AUTH_HELPED tests executed. All previously ACCEPTED/REJECTED classes from 2026-08-07 23:54 reconfirmed via delta (status endpoints, CORS, CSP, /ready, api CORS, api descriptive errors, box Auth0 OAuth2). v2/device now 403 (was 404) supports AUTH hypothesis but not proven.
-- 2026-08-08 NO_NEW_PROOF — This cycle is passive analysis only; no AUTH_HELPED tests executed. All previously ACCEPTED/REJECTED classes from 2026-08-07 23:54 reconfirmed via delta (status endpoints, CORS, CSP, /ready, api CORS, api descriptive errors, box Auth0 OAuth2). v2/device now 403 (was 404) supports AUTH hypothesis but not proven.
-- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105` — falls under descriptive error messages (excluded per scope.yml).
-- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v2/device: Returns 403 JWT-gated (previously 404) — now JWT-gated, not a pre-auth bypass.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Node v20.20.2, hostname box-7c8c876945-52dpt, succeededServices (amqp0, redis0-3, mongoDB0-3).
-- 2026-08-08 REJECTED MISCONFIG @ box.signageos.io/cors: No `access-control-allow-credentials` observed on any box path despite 18 static ACAO values.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle. Node v20.20.2, pod box-7c8c876945-gkzcp, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live this cycle. Node v24.19.0, pod api-6f69db97d5-st6zq, same topology. Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed — 17 static ACAO (incl http:// variant + https://*.zdusercontent.com), no credentials header, unchanged under any Origin. Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed — /login/ CSP 40+ connect-src/frame-src origins, triplicated Auth0 oauth/token. Unchanged.
-- 2026-08-08 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — all routes 403 JWT/X-Auth-gated, no pre-auth bypass surface. Unchanged.
-- 2026-08-08 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 flow params still not testable passively. Carried forward.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. Node v20.20.2, pod box-7c8c876945-9v4gf, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. Node v24.19.0, pod api-6f69db97d5-9kg9l, succeededServices (amqp0, redis0-3, mongoDB0-2). Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed — 17 static ACAO (incl https://*.zdusercontent.com wildcard), no credentials header, unchanged under spoofed Origin. Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. Node v20.20.2, pod box-7c8c876945-52dpt, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. Node v24.19.0, pod api-6f69db97d5-dw2j2, same topology. Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live this cycle. Node v24.19.0, pod api-6f69db97d5-dw2j2, same topology. Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed — /login/ CSP 40+ connect-src/frame-src origins (mapbox, events.mapbox, sentry, Auth0 oauth/token), triplicated Auth0 entries. Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live (pod xmdhm, Node v20.20.2, full topology). Unchanged in data shape; new headers absent (no HSTS/xfo/xcto).
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: Reconfirmed — 18 ACAO incl. http:// + *.zdusercontent.com, NO `access-control-allow-credentials` under any Origin → not directly credential-theft exploitable (carried forward).
-- 2026-08-08 REJECTED MISCONFIG @ box.signageos.io/ready: Returns 200 "OK" (2 bytes) trivial health check, no data leaked (carried forward).
-- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak `WRONG_JWT_TOKEN`/`NO_ORGANIZATION_TO_AUTHENTICATE`/`WRONG_ACCOUNT_SECRET` + errorCode 403075/403076/403105 — class descriptive-error excluded per scope.yml (carried forward).
-- 2026-08-08 CONFIRMED MECHANISM @ api.signageos.io/v1/organization/{uid}: Dual-auth precisely enumerated — X-Auth format `id:unsafeDecryptedToken`; org identity derived from header first-part (before `:`); `/organization/{uid}`→403075, `/organization/{uid}/security-token`→403076, `/v1/device`→403105 (JWT-only). Org {uid} in path is client-supplied and distinct from auth-derived org — narrows IDOR verification to X-Auth org-crossing.
-- 2026-08-08 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 flow params not passively testable without tenant/authenticated session (carried forward).
-- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `WRONG_JWT_TOKEN`/`NO_ORGANIZATION_TO_AUTHENTICATE`/`WRONG_ACCOUNT_SECRET` + errorCode 403075/403076/403105 — class descriptive-error excluded per scope.yml (carried forward)
-- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v2/device: Returns 403 JWT-gated (previously 404) — now JWT-gated, not a pre-auth bypass (carried forward)
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. Node v20.20.2, pod box-7c8c876945-xmdhm, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. Node v24.19.0, pod api-6f69db97d5-jnncr, same topology. Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed — 18 static ACAO (incl http:// variant + https://*.zdusercontent.com), no credentials header, unchanged under spoofed Origin. Unchanged.
-- 2026-08-08 REJECTED MISCONFIG @ box.signageos.io/csp-report: GET → 302 login redirect; not an exposed endpoint, report-uri/trusted-types are hardening additions, nothing reportable.
-- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/status: No ACAO/vary headers on status path under any origin — CORS not exploitable (carried forward).
-- 2026-08-08 ACCEPTED MISCONFIG @ box/api /status: Reconfirmed live, data shape unchanged (box Node v20.20.2 / api v24.19.0, full amqp/redis/mongo topology) — carried forward.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this probe cycle — pod 52dpt, Node v20.20.2, full topology. Still missing HSTS/xfo/xcto (differential from api.status which has them).
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: Reconfirmed — 18 ACAO incl. http:// + *.zdusercontent.com, NO credentials flag, unchanged under spoofed Origin. CSP /login/ has 33+ connect-src origins.
-- 2026-08-08 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — /v2/device → 403 (not 404), /v1/organization/test → 403. All endpoints JWT/X-Auth-gated, no pre-auth bypass. v2 migration advancing but remains AUTH-gated.
-- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live — pod 22g8d, Node v24.19.0, full topology. Now carries proper security headers (HSTS, xfo, xcto) — hardened relative to box.status.
-- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Now carries proper security headers (HSTS, x-frame-options: DENY, x-content-type-options: nosniff) — hardening relative to box.status which lacks them
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. Node v20.20.2, pod box-7c8c876945-r5fm9, succeededServices (amqp0, redis0-3, mongoDB0-3). Still missing HSTS/xfo/xcto.
-- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. Node v24.19.0, pod api-6f69db97d5-9kg9l, same topology. Now hardened with security headers.
-- 2026-08-08 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — all routes 403 JWT/X-Auth-gated, no pre-auth bypass surface. v2 migration advancing (/v2/device now 403).
-- 2026-08-08 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 state/redirect_uri binding — not passively testable, no unauthenticated authn surf remaining on box; all entry requires tenant/authenticated session. Carried forward.
-[0m
-**Triage: signageos org scan - DELTA 0 - 1 hit is KNOWN DUPLICATE**
+```js
+14:  auth = {
+18:      clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47', // reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18
+19:      secret: '9d5e257e...', // reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19
+23:      apiUrl = 'http://api.kiera.office.signageos.io', // reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23
+```
 
-1076 files scanned, 1 hit total. No new `gladiaio`/npm hits in this raw batch.
+Hashes (sha256, no raw):
+- `clientId` sha256 `fcbbd714...` = `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b`
+- `secret` sha256 `9d5e257e...` = `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` (matches KB)
+- pair `clientId:secret` sha256 = `4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe`
 
-File verified `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` (54 lines):
-`clientId: fcbbd714...` / `secret: 9d5e25...` + `apiUrl = 'http://api.kiera.office.signageos.io'` - default arg for `setupVideoTimings()` test helper, uses `@signageos/test/dist/RestApi/RestApi` (`reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:1`).
+### Classification
 
-SHA256 (per `scope.yml:48` redact rule):
-* secret sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` - matches KB seed 2026-08-07
-* clientId sha256 `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b`
-* apiUrl `http://api.kiera.office.signageos.io` (HTTP plaintext staging)
-
-### Table per category
-
-| Category | File:Line | SHA256 / Detail | Verdict |
+| Category | File:Line | Evidence (sha256) | Verdict |
 |---|---|---|---|
-| **REAL_SECRET** | - | 0 new hits | No candidate |
-| **TEST_OR_EXAMPLE** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` | secret sha256 `564c293b...774e`, clientId sha256 `efdf6c4c...3a49b` - hardcoded default `auth = {clientId, secret}` in `setupVideoTimings()` fixture (`appletUid = c790b568...`, `apiUrl = http://api.kiera.office.signageos.io`) | **KNOWN DUPLICATE** - `KNOWLEDGE 2026-08-07 ACCEPTED SECRET_LEAK` + `2026-08-14 CONFIRMED DEAD` |
-| **ENDPOINT_LEAK** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | `http://api.kiera.office.signageos.io` - internal staging over HTTP (non-TLS) | Same file - staging endpoint leakage, out-of-scope host per `scope.yml:5-9` (eligible ONLY `box.signageos.io`, `api.signageos.io`) |
-| **INTERESTING** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19-23` | Plain HTTP staging, high-entropy IDs but bound to `kiera.office` office subdomain | Not reportable - informs prod boundary testing only |
+| **REAL_SECRET** | *none* | - | 0 candidates. The sole hex secret is NOT a live prod credential (see below). |
+| **TEST_OR_EXAMPLE** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18-19` | clientId sha256 `efdf6c4c...`, secret sha256 `564c293b...`, apiUrl `http://api.kiera.office.signageos.io` | **STAGING FIXTURE** - default param in `setupVideoTimings()` test helper, targets `api.kiera.office.signageos.io` (out-of-scope per `scope.yml:5-9` eligible ONLY `box.signageos.io, api.signageos.io`). CONFIRMED DEAD 30+ cycles (incl `2026-08-14`, `2026-08-16`): tested as `X-Auth: <cid>:<sec>` on `GET https://api.signageos.io/v1/organization/{uid}/security-token` -> `403 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION "Account not found"` - account does NOT exist on prod, credential reuse **disproven**. Not `REAL_SECRET` for eligible hosts. |
+| **ENDPOINT_LEAK** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | `apiUrl = 'http://api.kiera.office.signageos.io'` | Internal staging URL over HTTP (plaintext). Out-of-scope host, informs prod org-boundary testing only. No `*.gladia.io`/`*.signageos.io` prod API leakage beyond already-known `api.signageos.io` + `box.signageos.io`. No versioned `/api/v1|v2|beta|internal`, `swagger/openapi.json`, `169.254.169.254`, `graphql` introspection, or file-upload paths in hit. |
+| **INTERESTING** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | `http://` (not `https`) | HTTP plaintext for staging `api.kiera` - notable but out-of-scope + staging-only. All other `secret` strings in `reposcan-raw/signageos/cli/*`/`sdk/*` are placeholders (`'organization-secret'`, `'mySecret'`, `'leaked-secret'` test fixtures) - filtered by scanner, not flagged. No debug/test flags, no cloud-metadata SSRF targets, no JWT/OAuth `redirect_uri`/`state` params in this hit. |
 
-### Verdict list
+All other 1075 files: no high-value hits. Breadth anomalies already exhausted per KB (40+ `v1` paths via `bundle.js:59` all `403 WRONG_JWT_TOKEN/403105` without JWT, dual-auth `X-Auth` vs `Bearer` correctly gated, no IDOR pre-auth bypass, no `open redirect -> OAuth code theft` chain surface - `box` is Auth0 with `302 /login/%2F` and no unauthenticated redirect params).
 
-* `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` secret `564c293b...774e` / clientId `efdf6c4c...3a49b` + `http://api.kiera.office.signageos.io` - **REPORT_CANDIDATE: no** - REJECT/KNOWN DUPLICATE. Reason: `KB 2026-08-14 through 2026-08-18` (60+ cycles): tested as `X-Auth: <clientId>:<secret>` on prod `api.signageos.io` -> `403 403076 WRONG_ACCOUNT_SECRET "Account not found"` - credential pair does NOT exist on prod, staging-only fixture. Host `api.kiera.office.signageos.io` out-of-scope (not `box/api.signageos.io`). Class `SECRET_LEAK` but not on eligible target per `scope.yml:5`. Re-checking live prod would violate `passive_first` without value (already proven dead). No chain to in-scope IDOR/SSRF/JWT/OAuth.
+### Verdict List
 
-No new HIGH-VALUE class (IDOR/BOLA/SSRF-to-169.254.169.254/mass assignment/JWT/OAuth/file upload/GraphQL) in delta. Breadth pass confirms 0 new anomalies.
+- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` secret sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` - **REPORT_CANDIDATE: no** - REJECTED per `scope.yml` out-of-scope host + `CONFIRMED DEAD` on prod (60+ cycles `403076`), class `TEST_OR_EXAMPLE`/`ENDPOINT_LEAK` only. Do NOT re-report; already `ACCEPTED SECRET_LEAK` for tracking but not eligible per `box/api.signageos.io` only rule. Disclosure via program channel only if new prod-valid pair found.
+- Delta overall - **REPORT_CANDIDATE: no** - `DELTA: 0` new hits, no chaining primitive (no XSS->session theft, no IDOR->PII, no SSRF->169.254.169.254).
 
-[NEXT] PROBE: None passive-only delta. If AUTH_HELPED phase re-opens, re-test would be `GET https://api.signageos.io/v1/organization/fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47/security-token` with `X-Auth: fcbbd714...:9d5e25...` (sha256s above) - expected `403076` per KB, do NOT auto-probe foreign tenant without approval per `2026-09-03 REJECTED`.
+[NEXT] PROBE: None required passively (NO_DELTA). If AUTH_HELPED cycle next, re-test `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant mint with two valid prod `X-Auth` tenants (conf 86) - already parked as `AUTH_HELPED`; no passive GET will advance it.
