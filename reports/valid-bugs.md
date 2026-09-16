@@ -1460,3 +1460,11 @@
   - | 3 | `box / + /login/ CORS ACAO 18-origin whitelist` | Y IN | Y unauth `GET / -H Origin: evil.test → static ACAO` | Low trust-boundary expansion | Y `curl -sI -H 'Origin: https://evil.test' https://b
   - | 4 | `box /login/ CSP 40+ orig broad` | Y IN | Y | Info/Low | Y `curl -sI https://box.signageos.io/login/` | N DUPLICATE | Y | MARGINAL | **VALID (Info, border) DUPLICATE** CVSS `3.1`. |
   - | 5 | `api /v1/organization/{uid}/security-token` cross-tenant mint `lead-mimo.md:6-13` `lead-human.md:3` | Y IN | N AUTH_HELPED `X-Auth: orgId:secret` required (all unauth `403074` `probe-results.md:
+
+- 6 lead(s) marked VALID at 2026-09-16 01:37:57 UTC
+  - | 1 | `box.signageos.io/status` infra leak `leads/lead-laguna.md:15` `lead-mimo.md:15` | Y api:8? box:6 IN | Y PR:N unauth `probe-results.md:44` 200 | Y recon + K8s topology/pod UID/Node 20.20.2/amqp0
+  - | 2 | `api.signageos.io/status` infra leak `leads/lead-mimo.md:113` | Y `scope.yml:8` IN | Y PR:N unauth `probe-results.md:92` 200 | Y same class, 8 svc (mongoDB3 absent) Node 24.19.0 | Y `GET /status
+  - | 3 | `box CORS ACAO 18 static` `leads/lead-laguna.md:23` | Y box:6 IN | Y PR:N static list readable unauth `inventory/signageos.md:154` | Y Low - trust boundary expansion, but `ACAC` absent blocks cr
+  - | 4 | `box CSP 40+ origins` `leads/lead-laguna.md:77` | Y box IN | Y PR:N | Y Info - requires co-located XSS to exploit | Y `GET /login/` CSP header contains 40+ origins | Y reconfirm | Y not rejected
+  - | 5 | `api v1/organization/{uid}/security-token` cross-tenant mint `leads/lead-bigpickle.md:40` `lead-mimo.md:6` `leads/lead-human.md:8` | Y api IN | **N passive** → **Y AUTH_HELPED** PR:L (free self-
+  - | 6 | `api v1/organization/{uid}` oauth client-secret disclosure `leads/lead-bigpickle.md:152` | Y api IN | N passive → Y AUTH_HELPED PR:L | Y Critical - leaks `oauthClientId`+`oauthClientSecret` → im
