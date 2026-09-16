@@ -1952,3 +1952,4 @@
 - 2026-08-27 ALIVE IDOR @ api.signageos.io/v1/organization/{uid}/security-token: reconfirmed 2026-08-21T15:20:25Z; 403074 errorDetail byte-identical; JWT Bearer ignored; X-Auth/x-oauth-client_id gating intact; zero ACAO on 403; mechanism intact, zero auth drift across 8+ rs rotations
 - 2026-08-27 CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
 - 2026-09-03 REJECTED class @ lead: provided `X-Auth` — do not auto-probe foreign tenant without approval.
+- 2026-09-16 REJECTED class @ lead: security-token-idor-poc.sh` before escalating to VALID Critical; do not re-probe with `POST` without program written approval.

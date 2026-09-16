@@ -1477,3 +1477,9 @@
   - **Verdict: VALID (Low borderline 3.1) DUPLICATE** `CVSS3.1: 3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N` (CORS) / `AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N` (CSP). Proof: `curl -sI -H 'Origin: https://evil.tes
   - | Q5 | **YES** novel vs `valid-bugs.md:9` HOLD |
   - **Verdict: HOLD (AUTH_HELPED)** — credible, mechanism verified: `errorDetail "first part (before char :) of x-auth header"` (`lead-mimo.md:10`) + SDK `OrganizationTokenManagement.ts:29` path `{uid}` c
+
+- 4 lead(s) marked VALID at 2026-09-16 12:41:33 UTC
+  - * **Verdict: VALID (duplicate reconfirmed) - DO NOT RESUBMIT** - `HOLD` for counting. CVSS 3.1 `AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N 5.3` (prior `4.3` mis-scored - scope unchanged, confidentiality low)
+  - * **Verdict: VALID (duplicate reconfirmed)** CVSS `AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N 5.3`. Proof: `curl -s https://api.signageos.io/status | jq` → `200` vs expected `401`.
+  - * **Verdict: VALID (duplicate, Low borderline)** CVSS `AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N 3.1`.
+  - * **Verdict: HOLD (AUTH_HELPED - credible CRITICAL, pending execution of `reports/security-token-idor-report.md:96-136` matrix)** - one-line: needs 2 owned tenants + valid X-Auth to prove `POST A->B →
