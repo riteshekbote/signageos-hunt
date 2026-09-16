@@ -1468,3 +1468,12 @@
   - | 4 | `box CSP 40+ origins` `leads/lead-laguna.md:77` | Y box IN | Y PR:N | Y Info - requires co-located XSS to exploit | Y `GET /login/` CSP header contains 40+ origins | Y reconfirm | Y not rejected
   - | 5 | `api v1/organization/{uid}/security-token` cross-tenant mint `leads/lead-bigpickle.md:40` `lead-mimo.md:6` `leads/lead-human.md:8` | Y api IN | **N passive** → **Y AUTH_HELPED** PR:L (free self-
   - | 6 | `api v1/organization/{uid}` oauth client-secret disclosure `leads/lead-bigpickle.md:152` | Y api IN | N passive → Y AUTH_HELPED PR:L | Y Critical - leaks `oauthClientId`+`oauthClientSecret` → im
+
+- 7 lead(s) marked VALID at 2026-09-16 06:57:26 UTC
+  - | Q5 novel | **NO** duplicate reconfirmed since `2026-08-07` — already `reports/valid-bugs.md:4` but still VALID re-confirmation |
+  - **Verdict: VALID (Low) DUPLICATE RECONFIRMATION** `CVSS3.1: 5.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` **Proof:** `curl -s https://box.signageos.io/status | jq .hostname,.process.version,.succeededServi
+  - **Verdict: VALID (Low) DUPLICATE** `CVSS3.1: 5.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` (or 4.3 with hardening discount). Proof: `curl -sD- https://api.signageos.io/status | grep -iE 'hostname|strict-tr
+  - | Q7 | **MARGINAL** triager may accept Informational — kept as VALID borderline per consensus |
+  - **Verdict: VALID (Low borderline 3.1) DUPLICATE** `CVSS3.1: 3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N` (CORS) / `AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N` (CSP). Proof: `curl -sI -H 'Origin: https://evil.tes
+  - | Q5 | **YES** novel vs `valid-bugs.md:9` HOLD |
+  - **Verdict: HOLD (AUTH_HELPED)** — credible, mechanism verified: `errorDetail "first part (before char :) of x-auth header"` (`lead-mimo.md:10`) + SDK `OrganizationTokenManagement.ts:29` path `{uid}` c
