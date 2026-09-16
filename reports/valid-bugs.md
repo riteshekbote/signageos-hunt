@@ -1501,3 +1501,12 @@
   - | 2 | api/status | **VALID Low 4.3** | Same class hardened headers |
   - | 3 | box CORS ACAO | **VALID Low border 3.1** | Static http+wildcard no-creds |
   - | 4 | box CSP 40+ | **VALID Info border 3.1** | Overly broad trust boundary |
+
+- 7 lead(s) marked VALID at 2026-09-16 23:07:24 UTC
+  - | 1 | `box.signageos.io/status` unauth K8s infra leak | YES `scope.yml:6` box In | YES unauth `probe-results.md:3` 200 | YES recon + targeted infra attack (pod hostname, process 40-hex UID, Node v20.2
+  - | 2 | `api.signageos.io/status` unauth K8s leak | YES `scope.yml:8` api In | YES unauth 200 `probe-results.md:314` | YES same class, lower (hardened) | YES `curl -s https://api.signageos.io/status` | 
+  - | 3 | `box.signageos.io / + /login/` CORS 17× static ACAO `http://`+`*.zdusercontent.com` | YES | YES unauth 200 HTML, `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/ \| grep -i acc
+  - | 4 | `box.signageos.io/login/` CSP 40+ origins triplicated Auth0 | YES | YES unauth `curl -sI https://box.signageos.io/login/ \| grep -i content-security-policy` | YES defense-in-depth (40-59 connect
+  - | 5 | `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant **mint** `POST {name}` → `201 {securityToken}` | YES api In | YES low-priv **AUTH_HELPED** any free account `X-Auth: orgUid:s
+  - | 6 | `api.signageos.io/v1/organization` **superset** `GET` lists **ALL orgs platform-wide** with `oauthClientId`+`oauthClientSecret` inline | YES | YES low-priv AUTH_HELPED `GET /v1/organization` wit
+  - **VALID reporting package**
