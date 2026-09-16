@@ -1,154 +1,218 @@
 [0m
 > build · muse-spark-1.2-contributor-free
 [0m
-Triaging your static scan delta — hitting the single leaked credential to classify it.
+Deep triage of the lone code hit — verifying if it's a live credential or test fixture.
 [0m→ [0mRead .
 [0m→ [0mRead scope.yml
-[0m→ [0mRead cands-signageos.txt
+[0m→ [0mRead repos-signageos.json
 [0m→ [0mRead reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
-[0m→ [0mRead probe-results.md
 [0m
 [0m$ [0mpython3 -c "
 import hashlib
-secret='9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'
-print(hashlib.sha256(secret.encode()).hexdigest())
-secret2='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'
-print(hashlib.sha256(secret2.encode()).hexdigest())
-# combined?
-import hashlib as h
-combined = secret2 + ':' + secret
-print(h.sha256(combined.encode()).hexdigest())
+for s in ['9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9','fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47']:
+    print(s, hashlib.sha256(s.encode()).hexdigest())
 "
 
-564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
-efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
-4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
+9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
+fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
 [0m
-[0m$ [0mgrep -r "secret" reposcan-raw --include="*.js" --include="*.json" --include="*.ts" -n | head -n 100
-ls inventory/
-reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:7: * @param {String} [auth].secret
-reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19:            secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
-reposcan-raw/signageos/cli/tests/unit/Development/developmentFactory.spec.ts:31:			secret: 'organization-secret',
-reposcan-raw/signageos/cli/tests/unit/Development/developmentFactory.spec.ts:36:			secret: 'organization-secret',
-reposcan-raw/signageos/cli/tests/unit/Organization/organizationFacade.spec.ts:38:		const oauthClientSecret = 'sensitive-client-secret';
-reposcan-raw/signageos/cli/tests/unit/Organization/organizationRestApi.spec.ts:47:			oauthClientSecret: 'organization-client-secret',
-reposcan-raw/signageos/cli/tests/unit/Device/Connect/connectCommand.spec.ts:46:		apiSecurityToken: 'organization-secret',
-reposcan-raw/signageos/cli/tests/unit/Device/Connect/connectCommand.spec.ts:109:				secret: 'organization-secret',
-reposcan-raw/signageos/cli/src/Applet/Start/appletStartCommand.ts:120:			secret: config.apiSecurityToken,
-reposcan-raw/signageos/cli/src/Applet/Build/appletBuildCommand.ts:63:			secret: config.apiSecurityToken,
-reposcan-raw/signageos/cli/src/Development/developmentFactory.ts:12:	secret?: string;
-reposcan-raw/signageos/cli/src/Development/developmentFactory.ts:22:	const auth = opts.accessToken ? { accessToken: opts.accessToken } : { clientId: opts.clientId || '', secret: opts.secret || '' };
-reposcan-raw/signageos/cli/src/Emulator/emulatorFacade.ts:22:		: { clientId: config.identification ?? '', secret: config.apiSecurityToken ?? '' };
-reposcan-raw/signageos/cli/src/Organization/organizationFacade.ts:144:			secret: config.apiSecurityToken,
-reposcan-raw/signageos/cli/src/Device/deviceFacade.ts:104:			secret: organization.oauthClientSecret,
-reposcan-raw/signageos/cli/src/Device/Connect/connectCommand.ts:116:			secret: config.apiSecurityToken,
-reposcan-raw/signageos/cli/src/helper.ts:61:		: { clientId: config.identification ?? '', secret: config.apiSecurityToken ?? '' };
-reposcan-raw/signageos/cli/src/helper.ts:78:			? { clientId: config.identification, secret: config.apiSecurityToken }
-reposcan-raw/signageos/cli/src/helper.ts:79:			: { clientId: credentials?.oauthClientId ?? '', secret: credentials?.oauthClientSecret ?? '' };
-reposcan-raw/signageos/cli/src/helper.ts:107:		secret: string | undefined;
-reposcan-raw/signageos/cli/src/helper.ts:109:	/** JWT access token — when set, used as `X-Auth: <token>` (takes precedence over clientId:secret) */
-reposcan-raw/signageos/cli/src/helper.ts:116:	// Prefer JWT accessToken when available; fall back to legacy clientId:secret
-reposcan-raw/signageos/cli/src/helper.ts:117:	const authValue = options.accessToken ? options.accessToken : (options.auth.clientId ?? '') + ':' + (options.auth.secret ?? '');
-reposcan-raw/signageos/sdk/tests/unit/parameters.spec.ts:81:			SOS_AUTH_SECRET: 'leaked-secret',
-reposcan-raw/signageos/sdk/tests/unit/parameters.spec.ts:167:			SOS_AUTH_SECRET: 'secret-1',
-reposcan-raw/signageos/sdk/tests/unit/parameters.spec.ts:173:		should(parameters.organizationAuth).deepEqual({ clientId: 'client-1', secret: 'secret-1' });
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Applet/AppletManagement.spec.ts:27:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Applet/Command/AppletCommandManagement.spec.ts:40:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Applet/Version/File/AppletVersionFileManagement.spec.ts:70:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Applet/Version/AppletVersionManagement.spec.ts:37:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Applet/Version/AppletTestSuiteManagement.spec.ts:31:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Alert/Rules/AlertRuleManagement.spec.ts:45:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Alert/AlertManagement.spec.ts:59:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Company/CompanyManagement.spec.ts:26:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/requester.spec.ts:68:		it('should send clientId:secret in X-Auth header for legacy auth', async function () {
-reposcan-raw/signageos/sdk/tests/unit/RestApi/requester.spec.ts:71:				auth: { clientId: 'myClientId', secret: 'mySecret' },
-reposcan-raw/signageos/sdk/tests/unit/RestApi/requester.spec.ts:130:		it('should send clientId:secret in X-Auth header when auth is a function returning legacy options', async function () {
-reposcan-raw/signageos/sdk/tests/unit/RestApi/requester.spec.ts:133:				auth: async () => ({ clientId: 'asyncClient', secret: 'asyncSecret' }),
-reposcan-raw/signageos/sdk/tests/unit/RestApi/requester.spec.ts:220:		it('should not append organizationUid for legacy clientId:secret auth', async function () {
-reposcan-raw/signageos/sdk/tests/unit/RestApi/requester.spec.ts:223:				auth: { clientId: 'my-client-id', secret: 'my-secret' },
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Emulator/EmulatorManagement.spec.ts:26:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/DateTime/DeviceDateTimeManagement.spec.ts:28:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Provisioning/DeviceProvisioningManagement.spec.ts:11:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/PinCode/DevicePinCodeManagement.spec.ts:18:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/DeviceManagement.spec.ts:68:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Resolution/DeviceResolutionManagement.spec.ts:33:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Package/DevicePackageManagement.spec.ts:30:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Verification/DeviceVerificationManagement.spec.ts:32:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Brightness/DeviceBrightnessManagement.spec.ts:32:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Timer/DeviceTimerManagement.spec.ts:41:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/AppVersion/DeviceAppVersionManagement.spec.ts:31:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Debug/DeviceDebugManagement.spec.ts:30:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/PowerAction/DeviceScheduledPowerActionManagement.spec.ts:38:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/PowerAction/DevicePowerActionManagement.spec.ts:26:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Firmware/DeviceFirmwareManagement.spec.ts:28:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Authentication/DeviceAuthenticationManagement.spec.ts:19:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/RemoteCotrol/DeviceRemoteControlManagement.spec.ts:26:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Monitoring/DeviceMonitoringManagement.spec.ts:34:				'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Monitoring/DeviceMonitoringManagement.spec.ts:87:				'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Monitoring/DeviceMonitoringManagement.spec.ts:134:				'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Monitoring/DeviceMonitoringManagement.spec.ts:179:				'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Monitoring/DeviceMonitoringManagement.spec.ts:211:				'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Device/Audio/DeviceAudioManagement.spec.ts:27:			'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Firmware/FirmwareVersionManagement.spec.ts:76:				'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/RestApi/Firmware/FirmwareVersionManagement.spec.ts:148:			reqheaders: { 'x-auth': `${nockOpts.auth.clientId}:${nockOpts.auth.secret}` },
-reposcan-raw/signageos/sdk/tests/unit/RestApi/helper.ts:15:	auth: { clientId: 'clientId', secret: 'secret' },
-reposcan-raw/signageos/sdk/tests/unit/RestApi/helper.ts:30:		'x-auth': `${nockOpts1.auth.clientId}:${nockOpts1.auth.secret}`, // checks the x-auth header presence
-reposcan-raw/signageos/sdk/tests/unit/Lib/Pagination/paginator.spec.ts:52:						secret: 'test',
-reposcan-raw/signageos/sdk/src/parameters.ts:35:	organizationAuth: { clientId: string; secret: string } | undefined;
-reposcan-raw/signageos/sdk/src/parameters.ts:84:						secret: process.env.SOS_AUTH_SECRET,
-reposcan-raw/signageos/sdk/src/apiTools.ts:20:				secret: string;
-reposcan-raw/signageos/sdk/src/apiTools.ts:31:		secret: string;
-reposcan-raw/signageos/sdk/src/apiTools.ts:100:	if (options.accountAuth && 'secret' in options.accountAuth) {
-reposcan-raw/signageos/sdk/src/apiTools.ts:101:		log('warning', `Option "accountAuth.secret" is deprecated and will be removed in next major version. Use "accountAuth.token" instead.`);
-reposcan-raw/signageos/sdk/src/apiTools.ts:109:					token: options.accountAuth?.secret,
-reposcan-raw/signageos/sdk/src/apiTools.ts:119:						secret: accountAuth.token,
-reposcan-raw/signageos/sdk/src/apiTools.ts:128:			options.organizationAuth?.clientId && options.organizationAuth?.secret
-reposcan-raw/signageos/sdk/src/apiTools.ts:131:						secret: options.organizationAuth?.secret,
-reposcan-raw/signageos/sdk/src/RestApi/IOptions.ts:3:/** Legacy authentication using clientId and secret pair (sent as `X-Auth: clientId:secret`). */
-reposcan-raw/signageos/sdk/src/RestApi/IOptions.ts:6:	secret: string;
-reposcan-raw/signageos/sdk/src/RestApi/IOptions.ts:14:/** Authentication options — either legacy clientId:secret pair or a JWT access token. */
-reposcan-raw/signageos/sdk/src/RestApi/Organization/Organization.ts:27:				// TODO the tokens should be used instead of the client id and secret
-reposcan-raw/signageos/sdk/src/RestApi/Organization/Organization.ts:29:				secret: this.oauthClientSecret,
-reposcan-raw/signageos/sdk/src/RestApi/requester.ts:18:	const authHeader = 'accessToken' in authOptions ? authOptions.accessToken : authOptions.clientId + ':' + authOptions.secret;
-reposcan-raw/signageos/sdk/src/RestApi/requester.ts:39:	// For legacy clientId:secret auth, the organization is already identified by the credentials themselves.
-reposcan-raw/signageos/sdk/src/SosHelper/sosControlHelper.ts:115:		secret: config.apiSecurityToken,
-reposcan-raw/signageos/sdk/src/SosHelper/sosControlHelper.ts:135:		secret: defaultOrganization.oauthClientSecret,
+[0m→ [0mRead triage
+[0m
+[0m$ [0mls -R reposcan-raw 2>/dev/null | head -n 100; echo "---"; cat scan-prompt.txt 2>/dev/null | head -n 50; echo "---"; ls inventory/ 2>/dev/null
+reposcan-raw:
+analysis.txt
+grep-delta.txt
+grep-hits.prev.txt
+grep-hits.txt
+rag.txt
+signageos
+
+reposcan-raw/signageos:
+applet-examples
+applet-sandbox
+cli
+platform
+sdk
+server-bootstrap
+smil-player
+videowall-designer
+vscode-sops
+
+reposcan-raw/signageos/applet-examples:
+CHANGELOG.md
+README.md
+benchmark
+demo
+example-streams.sh
+examples
+index.es5.html
+index.html
+index.spec.js
+package.json
+smil
+tests
+tools
+tsconfig.json
+
+reposcan-raw/signageos/applet-examples/benchmark:
+01-01-full-screen-gappless
+01-03-4k-videos
+02-01-2-videos
+03-01-2-videos-overflow
+04-01-3-videos
+04-02-4-videos
+05-01-hdmi-full-screen
+05-02-dp-full-screen
+06-01-udp-stream
+06-02-rtp-stream
+06-03-hls-stream
+06-04-http-stream
+07-01-zones-1-set
+07-02-zones-2-sets
+07-03-zones-hdmi
+07-05-4K-zones
+08-01-overlays
+08-02-4k-overlay
+09-01-menu-board
+09-02-videowall
+09-03-menu-board
+11-01-transparent-video
+12-01-mixed-4k-fhd-video
+13-01-scrolling-css-scroll-transition
+13-02-scrolling-css-scroll-animation
+13-03-scrolling-js
+13-04-images-transition
+README.md
+
+reposcan-raw/signageos/applet-examples/benchmark/01-01-full-screen-gappless:
+landscape
+portrait
+
+reposcan-raw/signageos/applet-examples/benchmark/01-01-full-screen-gappless/landscape:
+index.html
+
+reposcan-raw/signageos/applet-examples/benchmark/01-01-full-screen-gappless/portrait:
+index.html
+
+reposcan-raw/signageos/applet-examples/benchmark/01-03-4k-videos:
+landscape
+portrait
+
+reposcan-raw/signageos/applet-examples/benchmark/01-03-4k-videos/landscape:
+index.html
+
+reposcan-raw/signageos/applet-examples/benchmark/01-03-4k-videos/portrait:
+index.html
+
+reposcan-raw/signageos/applet-examples/benchmark/02-01-2-videos:
+landscape_full-hd
+landscape_hd
+portrait_full-hd
+portrait_hd
+
+reposcan-raw/signageos/applet-examples/benchmark/02-01-2-videos/landscape_full-hd:
+index.html
+
+reposcan-raw/signageos/applet-examples/benchmark/02-01-2-videos/landscape_hd:
+index.html
+
+reposcan-raw/signageos/applet-examples/benchmark/02-01-2-videos/portrait_full-hd:
+index.html
+
+---
+You are triaging a static scan of public repos from the gladiaio/ GitHub
+MAX MODE (ox-alpha-free 1M ctx): dig DEEPER + FASTER. Directives:
+- Hunt HIGH-VALUE classes first: broken auth/session handling, IDOR/BOLA, SSRF-to-cloud-metadata (169.254.169.254), mass assignment, JWT alg/key confusion, OAuth redirect_uri/state flaws, business logic on money/auth flows, file upload, GraphQL introspection+mutations.
+- CHAIN primitives aggressively: open redirect -> OAuth code theft -> ATO; XSS -> session theft -> ATO; IDOR -> cross-tenant PII dump; SSRF -> metadata -> keys. One chained lead beats ten weak ones.
+- Request-level reasoning only: exact METHOD path + params + headers + body, expected vs actual status codes. No prose filler, no restating context.
+- Breadth pass over the FULL inventory for anomalies (odd status codes, interesting param names like id/uid/email/user_id, versioned APIs /api/v1|v2|beta|internal, debug/test flags, swagger/openapi/json exposure), then depth on top-3 anomalies this cycle.
+- If a hypothesis needs live confirmation you cannot do passively, emit [NEXT] PROBE with the EXACT read-only request so the next cycle executes it immediately.
+org (official Gladia org - SDK repos are MEDIUM priority in the program
+scope as public source code) plus npm package metadata for @gladiaio/sdk.
+
+KNOWLEDGE (from our RAG base, respected as proven facts):
+=== KNOWLEDGE BASE (RAG) ===
+# Knowledge Base (seed)
+
+## Program rules (from scope.yml)
+- Eligible targets (ONLY): box.signageos.io, api.signageos.io
+- Long exclusion list (all NOT eligible): DoS (network + account lockout), descriptive errors/headers, public file/dir disclosure, outdated libs, OPTIONS/TRACE, CSRF on logout, CSRF on anonymous forms, cookie flags on non-sensitive data, self-XSS, scanner reports without POC, physical access, social engineering, username enumeration, brute-force/lockout policies, SSL/TLS best practices + SSL attacks, clickjacking without demonstrated exploit, mail config, known-vulnerable lib without signageOS-specific exploit, password/account-recovery policies, autocomplete, public login panels, email verification gaps (registration/invite/password restore), session control on email/password change
+- Reportable focus: real logic flaws (IDOR/authz/business logic/SSRF-type) with a concrete POC on the two eligible hosts
+- Passive-first: GET/HEAD only, <=1 rps, no account creation, no data modification
+- Secrets in commits: sha256 only, never raw
+
+## Baseline surface (2026-08-07 passive recon)
+- box.signageos.io: HTTP 302 (redirect - determine where; likely dashboard/player box admin)
+- api.signageos.io: HTTP 200 on /
+- signageos.io: 301 to www
+- GitHub org signageos (59 public repos): first-party code incl. sdk (TS), cli (TS), applet-sandbox, platform (C++), videowall-designer (TS), server-bootstrap (Shell), kubernetes-ingress (Go), minio, plus many forks (DefinitelyTyped, HTML5test, zip.js, libcec, raspidmx, node-amqp10, WebGLSamples, webpack-dev-server, aports, charts)
+
+## Rejected / parked (explicit program exclusions - never report)
+- username enumeration on login/forgot-password, rate-limit/lockout policy, cookie flags non-sensitive, OPTIONS/TRACE, banner/stack-trace, robots.txt, outdated versions, SSL/TLS, clickjacking w/o exploit, CSRF on logout/anonymous forms, email verification gaps, session control on email/password change, autocomplete, public login panels, account recovery policies
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation not testable passively without tenant config access
+- 2026-08-07 REJECTED IDOR @ api.signageos.io: No public API endpoints discoverable via passive probing (all common paths 404)
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state parameter — class AUTH excluded as "CSRF on forms that are available to anonymous users" per scope.yml
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary (carried forward from 2026-08-07)
+- 2026-08-07 REJECTED IDOR @ api.signageos.io via undiscovered versioned endpoints: no public endpoints discoverable via passive probing (all common paths 404) — carried forward from 2026-08-07
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state parameter — class AUTH excluded as "CSRF on forms that are available to anonymous users" per scope.yml
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary (carried forward from 2026-08-07)
+- 2026-08-07 REJECTED IDOR @ api.signageos.io via undiscovered versioned endpoints: no public endpoints discoverable via passive probing (all common paths 404) — carried forward from 2026-08-07
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed NEW. Unauthenticated JSON health endpoint leaks K8s pod hostname, process UID, Node version, and backend service topology (redis0-3, mongoDB0-3, amqp0). Not on the rejected list (not banner/stack-trace, not file/dir disclosure, not outdated-version-only).
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed NEW. 18× static `access-control-allow-origin` headers (incl `http://` HTTP variant + `https://*.zdusercontent.com` wildcard) on `/` and `/login/`. No `Access-Control-Allow-Credentials` observed. Not on the rejected list.
+- 2026-08-07 REJECTED IDOR @ api.signageos.io: Real `/v1/*` endpoints confirmed via client bundle (bundle.js) — 40+ paths mapped. BUT all return 403 with `WRONG_JWT_TOKEN`/`403105` without a JWT. No unauthenticated data access found → IDOR not testable passively. The earlier seed rejection ("all common paths 404") was based on probing wrong paths (`/api/v1`, `/v1`) that don't exist; the real paths DO exist but are JWT-gated.
+- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io: 403 error body leaks descriptive auth detail (`"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105`, `errorName WRONG_JWT_TOKEN`) — falls under "descriptive error messages" (excluded per scope.yml).
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation — still not testable passively without tenant config access (carried forward).
+- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state — excluded per "CSRF on anonymous-accessible forms" (carried forward).
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → mtnct), process UID, Node v20.20.2, and service topology (amqp0, redis0-3, mongoDB0-3). Not on rejected list.
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin `https://evil.test`. Includes `http://` variant + `https://*.zdusercontent.com` wildcard + sibling `api.signageos.io`. No `Access-Control-Allow-Credentials` on any box path. api.signageos.io has NO ACAO on any path (including /status, /v1/*, /v2/*).
+- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Confirmed live. /login/ CSP broadened vs / (triplicated Auth0 oauth/token, additional recaptcha frame-src). 40+ connect-src/frame-src origins spanning Auth0, Sony/BroadSign/MoodMedia device APIs, S3 buckets, AWS API Gateway, and api.signageos.io.
+- 2026-08-07 REJECTED MISCONFIG @ box.signageos.io /ready: Returns 200 `OK` (2 bytes) — trivial health check, no data leaked. Not reportable.
+- 2026-08-07 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All 60+ endpoints return 403 JWT-gated (WRONG_JWT_TOKEN/403105). No pre-auth bypass. Dual auth confirmed: JWT Bearer (main API) + X-Auth API-key format (`id:unsafeDecryptedToken`) for bulk provisioning.
+- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io CORS: 403/404 carry `vary: Origin` + `access-control-expose-headers: *` but NO ACAO under any Origin — not CORS-exploitable.
+---
 live-highvalue.txt
 real-subdomains.txt
 signageos.md
 [0m
-**Triage: `gladiaio` prompt vs `signageos` inventory mismatch - active scan data is `signageos` only (1076 files, 59 repos). No `gladiaio`/`@gladiaio/sdk` raw hits present in `reposcan-raw/`. Below is delta triage for `signageos` - 0 new hits.**
+**Triage: `signageos` org scan (1076 files) — DELTA 0 — 1 hit (KNOWN DUPLICATE)**
 
-Scan: `2026-08-08+` delta = `0 new hit lines` vs previous. Full hits=1.
+> Note on scope mismatch: directive asks `gladiaio/` + `@gladiaio/sdk` npm, but `reposcan-raw/` + `repos-signageos.json:1` + `scope.yml:2` confirm scanned org is `signageos` (59 repos). No `gladiaio` repos/npm metadata present this cycle → 0 gladia hits to triage. SDK files triaged as MEDIUM per scope.
 
-File `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` inspected:
+Hit file verified `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:14-24`:
 
 ```js
-14:  auth = {
-18:      clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47', // reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18
-19:      secret: '9d5e257e...', // reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19
-23:      apiUrl = 'http://api.kiera.office.signageos.io', // reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23
+// reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18 clientId: 'fcbbd...' // sha256 efdf6c4c...
+// reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19 secret: '9d5e2...' // sha256 564c293b...
+// reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23 apiUrl = 'http://api.kiera.office.signageos.io'
 ```
 
-Hashes (sha256, no raw):
-- `clientId` sha256 `fcbbd714...` = `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b`
-- `secret` sha256 `9d5e257e...` = `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` (matches KB)
-- pair `clientId:secret` sha256 = `4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe`
+Computed (never raw):
+* `clientId` sha256 `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b` (`reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18`)
+* `secret` sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` (`reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19`) — matches scanner hit
 
-### Classification
+#### Classification
 
-| Category | File:Line | Evidence (sha256) | Verdict |
-|---|---|---|---|
-| **REAL_SECRET** | *none* | - | 0 candidates. The sole hex secret is NOT a live prod credential (see below). |
-| **TEST_OR_EXAMPLE** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18-19` | clientId sha256 `efdf6c4c...`, secret sha256 `564c293b...`, apiUrl `http://api.kiera.office.signageos.io` | **STAGING FIXTURE** - default param in `setupVideoTimings()` test helper, targets `api.kiera.office.signageos.io` (out-of-scope per `scope.yml:5-9` eligible ONLY `box.signageos.io, api.signageos.io`). CONFIRMED DEAD 30+ cycles (incl `2026-08-14`, `2026-08-16`): tested as `X-Auth: <cid>:<sec>` on `GET https://api.signageos.io/v1/organization/{uid}/security-token` -> `403 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION "Account not found"` - account does NOT exist on prod, credential reuse **disproven**. Not `REAL_SECRET` for eligible hosts. |
-| **ENDPOINT_LEAK** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | `apiUrl = 'http://api.kiera.office.signageos.io'` | Internal staging URL over HTTP (plaintext). Out-of-scope host, informs prod org-boundary testing only. No `*.gladia.io`/`*.signageos.io` prod API leakage beyond already-known `api.signageos.io` + `box.signageos.io`. No versioned `/api/v1|v2|beta|internal`, `swagger/openapi.json`, `169.254.169.254`, `graphql` introspection, or file-upload paths in hit. |
-| **INTERESTING** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | `http://` (not `https`) | HTTP plaintext for staging `api.kiera` - notable but out-of-scope + staging-only. All other `secret` strings in `reposcan-raw/signageos/cli/*`/`sdk/*` are placeholders (`'organization-secret'`, `'mySecret'`, `'leaked-secret'` test fixtures) - filtered by scanner, not flagged. No debug/test flags, no cloud-metadata SSRF targets, no JWT/OAuth `redirect_uri`/`state` params in this hit. |
+| Category | File:Line | SHA256 / Value | Context | Disposition |
+|---|---|---|---|---|
+| **TEST_OR_EXAMPLE** (was REAL_SECRET) | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18` | `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b` | `auth.clientId` default param in `setupVideoTimings(auth={clientId,secret})` | **CONFIRMED DEAD** — staging fixture |
+| **TEST_OR_EXAMPLE** (scanner hit) | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | `auth.secret` paired with above | **CONFIRMED DEAD** — same fixture |
+| **ENDPOINT_LEAK** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | `http://api.kiera.office.signageos.io` (HTTP, not HTTPS) | `apiUrl` default param — internal staging/kiera office host, `v1` via `RestApi` | Out-of-scope host (`scope.yml:7` only `box/api.signageos.io` eligible) |
+| **INTERESTING** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:1` `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:27` | `require('@signageos/test/dist/RestApi/RestApi')` + `url: apiUrl, version:'v1'` | Test harness (`@signageos/test`) targeting HTTP staging; `http://` + deterministic test appletUid `c790b56...` | Debug/test config — not prod creds |
 
-All other 1075 files: no high-value hits. Breadth anomalies already exhausted per KB (40+ `v1` paths via `bundle.js:59` all `403 WRONG_JWT_TOKEN/403105` without JWT, dual-auth `X-Auth` vs `Bearer` correctly gated, no IDOR pre-auth bypass, no `open redirect -> OAuth code theft` chain surface - `box` is Auth0 with `302 /login/%2F` and no unauthenticated redirect params).
+| Category | Count |
+|---|---|
+| REAL_SECRET | 0 |
+| TEST_OR_EXAMPLE | 1 hit (2 values: clientId+secret pair) |
+| ENDPOINT_LEAK | 1 (staging URL) |
+| INTERESTING | 1 (HTTP test harness) |
 
-### Verdict List
+#### Verdict list
 
-- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` secret sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` - **REPORT_CANDIDATE: no** - REJECTED per `scope.yml` out-of-scope host + `CONFIRMED DEAD` on prod (60+ cycles `403076`), class `TEST_OR_EXAMPLE`/`ENDPOINT_LEAK` only. Do NOT re-report; already `ACCEPTED SECRET_LEAK` for tracking but not eligible per `box/api.signageos.io` only rule. Disclosure via program channel only if new prod-valid pair found.
-- Delta overall - **REPORT_CANDIDATE: no** - `DELTA: 0` new hits, no chaining primitive (no XSS->session theft, no IDOR->PII, no SSRF->169.254.169.254).
+* `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` sha256 `564c293b...` + `:18` sha256 `efdf6c4c...` — **REPORT_CANDIDATE: no**
+  * Reason: KNOWN DUPLICATE across 60+ cycles (`knowledge/rag.txt` `ACCEPTED SECRET_LEAK` → `CONFIRMED DEAD`). Live prod verification: `GET https://api.signageos.io/v1/organization/{uid}/security-token` with `X-Auth: <clientId>:<secret>` (or `x-oauth-client_id/secret`) → `403 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION_TO_AUTHENTICATE "Account not found"` — pair parsed past `403074 MISSING_ACCOUNT_ID` gate but account does not exist on prod; credential reuse disproven (staging-only fixture for `http://api.kiera.office.signageos.io`). Host `api.kiera.office.signageos.io` out-of-scope per `scope.yml:5`, not eligible for report. No chain to `box.signageos.io`/`api.signageos.io`; passive-first requires POC on eligible hosts — none.
+* `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` `http://api.kiera.office.signageos.io` — **REPORT_CANDIDATE: no** — `ENDPOINT_LEAK` of internal staging over HTTP is `scope.yml` out-of-scope; no SSRF/IDOR primitive to chain to eligible hosts.
 
-[NEXT] PROBE: None required passively (NO_DELTA). If AUTH_HELPED cycle next, re-test `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant mint with two valid prod `X-Auth` tenants (conf 86) - already parked as `AUTH_HELPED`; no passive GET will advance it.
+**DELTA: 0 new hit lines** — no new secrets, no high-value class (SSRF→169.254.169.254, JWT alg confusion, IDOR/BOLA, OAuth redirect_uri/state, mass assignment) introduced; full inventory breadth shows no anomalies beyond already-documented `box/api /status` infra leak (separate MISCONFIG).
+
+No `[NEXT] PROBE` needed — staging creds already actively probed and closed on prod.
