@@ -1953,3 +1953,4 @@
 - 2026-08-27 CONFIRMED DEAD: none new this cycle (surface exhaustively closed; videowall-designer secret reuse already disproven on prod)
 - 2026-09-03 REJECTED class @ lead: provided `X-Auth` — do not auto-probe foreign tenant without approval.
 - 2026-09-16 REJECTED class @ lead: security-token-idor-poc.sh` before escalating to VALID Critical; do not re-probe with `POST` without program written approval.
+- 2026-09-16 REJECTED class @ lead: **do not re-probe unauth** — awaiting AUTH_HELPED owned-tenant execution `reports/security-token-idor-report.md:100` (both orgs owned, token named `idor-poc` DELETE after). Vendor submission in flight `leads/lead-human.m

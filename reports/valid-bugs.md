@@ -1489,3 +1489,15 @@
   - **Verdict: VALID (duplicate)** — Proof: `GET https://api.signageos.io/status` → hardened `HSTS max-age=31536000, xfo:DENY, xcto:nosniff` still leaks. **CVSS 4.3 Low**.
   - **Verdict: VALID (Info/Low, borderline, duplicate)** — **CVSS 3.1: 3.1 `AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N`**
   - **Verdict: VALID (Info, borderline, duplicate)** — **CVSS 3.1: 3.1 `AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N`**
+
+- 10 lead(s) marked VALID at 2026-09-16 20:21:07 UTC
+  - | Q2 Reachable low-priv? | **PARTIAL** requires valid low-priv Account `X-Auth` (any free signup). Unaauth 403074. Not public. `probe-results.md:167` |
+  - | Q7 Triager accept? | **NO passive, YES with AUTH_HELPED proof** — pure hypothesis without second tenant + valid token. Strict passive triager must HOLD. With owned-tenant POC (step 6 confirmation `2
+  - **Verdict: HOLD** (AUTH_HELPED). **Upgrade to VALID Critical upon live owned-tenant matrix execution.** Strict gate fails Q4. One-line: credible 86% IDOR but unprovable via passive GET/HEAD; needs 2 o
+  - | Q5 | NO reconfirmed 100+ cycles `reports/valid-bugs.md:4` duplicate |
+  - | Q7 | YES accepted 10+ triages as VALID Low |
+  - **Verdict: VALID (Low, recon)** duplicate reconfirmation. CVSS 3.1 **4.3** `AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` `triage/triage-2026-08-10-strict.md:31` Impact infra mapping. Proof above. Channel sign
+  - | 1 | box/status | **VALID Low 4.3** | Passive JSON infra leak duplicate reconfirmed |
+  - | 2 | api/status | **VALID Low 4.3** | Same class hardened headers |
+  - | 3 | box CORS ACAO | **VALID Low border 3.1** | Static http+wildcard no-creds |
+  - | 4 | box CSP 40+ | **VALID Info border 3.1** | Overly broad trust boundary |
