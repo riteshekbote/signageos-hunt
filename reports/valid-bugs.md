@@ -1483,3 +1483,9 @@
   - * **Verdict: VALID (duplicate reconfirmed)** CVSS `AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N 5.3`. Proof: `curl -s https://api.signageos.io/status | jq` → `200` vs expected `401`.
   - * **Verdict: VALID (duplicate, Low borderline)** CVSS `AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N 3.1`.
   - * **Verdict: HOLD (AUTH_HELPED - credible CRITICAL, pending execution of `reports/security-token-idor-report.md:96-136` matrix)** - one-line: needs 2 owned tenants + valid X-Auth to prove `POST A->B →
+
+- 4 lead(s) marked VALID at 2026-09-16 17:22:39 UTC
+  - **Verdict: VALID (duplicate reconfirmation)** — Minimal proof: `curl -s https://box.signageos.io/status | jq .hostname,.process.uid` + `curl -sD- https://box.signageos.io/status | grep -icE 'strict-tr
+  - **Verdict: VALID (duplicate)** — Proof: `GET https://api.signageos.io/status` → hardened `HSTS max-age=31536000, xfo:DENY, xcto:nosniff` still leaks. **CVSS 4.3 Low**.
+  - **Verdict: VALID (Info/Low, borderline, duplicate)** — **CVSS 3.1: 3.1 `AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N`**
+  - **Verdict: VALID (Info, borderline, duplicate)** — **CVSS 3.1: 3.1 `AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N`**
