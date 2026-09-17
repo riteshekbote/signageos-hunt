@@ -1526,3 +1526,13 @@
 - 2 lead(s) marked VALID at 2026-09-17 20:28:43 UTC
   - |5| `api /v1/organization/{uid}` OAuth `secret` disclosure |IDOR|`**HOLD**`|`AUTH_HELPED — 403-gated needs JWT+2nd tenant` `reports/valid-bugs.md:9`|
   - |10| `api /v1/device/*` weaker auth|AUTH|`**HOLD**`|No passive evidence `reports/valid-bugs.md:14`|
+
+- 8 lead(s) marked VALID at 2026-09-17 23:12:43 UTC
+  - |Q5 Novel|NO duplicate but **VALID reconfirmation** — accepted in `reports/valid-bugs.md:4` still valid|
+  - **Verdict: VALID (Low-Medium, duplicate reconfirmation).** Proof: `GET https://box.signageos.io/status` → `200` JSON. Impact: K8s pod identity + Node version + 9-svc topology leak. **CVSS 3.1: 5.3 AV:
+  - **Verdict: VALID (Low, duplicate reconfirmation, differential).** CVSS 3.1 5.3 / 4.3. Proof `GET https://api.signageos.io/status`.
+  - |Q1|YES In|Q2 YES public but impact gated|Q3 YES trust-boundary expansion (no creds theft)|Q4 YES passive|Q5 NO duplicate|Q6 YES not rejected (not best-practice-only, concrete ACAO)|Q7 MARGINAL→ VALID
+  - **Verdict: VALID (Info/Low border, 3.1 CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N).** Proof above. Previously accepted `reports/valid-bugs.md:6`.
+  - **Verdict: VALID (Informational, 3.1).** Same gate as LEAD-3; defense-in-depth.
+  - **Verdict: VALID-CRITICAL (upgraded from HOLD).** Prior `reports/valid-bugs.md:5` HOLD `AUTH_HELPED` was correct per `passive_first:true` — **now VALID after live proof** `leads/lead-human.md:1-6` + `
+  - **Verdict: VALID-HIGH (upgraded from HOLD, superset of LEAD-5).** Proof: `GET /v1/organization -H "X-Auth: <ownId>:<ownSecret>"` → verify `oauthClientSecret` present; `GET /v1/organization/<victimUid>
