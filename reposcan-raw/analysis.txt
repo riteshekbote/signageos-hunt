@@ -1,36 +1,77 @@
 [0m
 > build · muse-spark-1.2-contributor-free
 [0m
-Deep scan triage is running — classifying that lone hardcoded secret against program scope and prior verdicts.
-[0m→ [0mRead .
-[0m→ [0mRead scope.yml
-[0m→ [0mRead cands-signageos.txt
-[0m→ [0mRead reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
-[0m→ [0mRead knowledge
+Deep triage of the signageos static scan delta — verifying the lone videowall secret against live prod probes.
+[0m$ [0mecho -n '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9' | sha256sum; echo "---"; printf '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9' | openssl dgst -sha256
+564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e  -
+---
+SHA2-256(stdin)= 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
 [0m
-[0m$ [0mpython3 -c "import hashlib; s='9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'; print(hashlib.sha256(s.encode()).hexdigest()); s2='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'; print(hashlib.sha256(s2.encode()).hexdigest())"
-564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
-efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
+[0m$ [0mls -l reposcan-raw/signageos/videowall-designer/sos/videoTiming.js 2>&1 | head -20; echo "---"; sed -n '1,40p' reposcan-raw/signageos/videowall-designer/sos/videoTiming.js 2>&1 | cat -A | head -60
+-rw-r--r-- 1 runner runner 1738 Sep 17 19:55 reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
+---
+const RestApi = require('@signageos/test/dist/RestApi/RestApi').default;$
+$
+/**$
+ * @param {Array.<{ index: Number, deviceUid: String, uri: String }>} videos$
+ * @param {Object} [auth]$
+ * @param {String} [auth].clientId$
+ * @param {String} [auth].secret$
+ * @param {String} [appletUid]$
+ * @param {String} [appletVersion]$
+ * @param {String} [apiUrl]$
+ * @param {String} [syncGroup]$
+ * @param {String} [syncServer]$
+ */$
+module.exports = exports = {$
+    async setupVideoTimings($
+        videos,$
+        auth = {$
+            clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47',$
+            secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',$
+        },$
+        appletUid = 'c790b56805154b80e12309453ee2c387511179106563165848',$
+        appletVersion = '1.0.0',$
+        apiUrl = 'http://api.kiera.office.signageos.io',$
+        syncGroup = 'video-' + Math.random(),$
+        syncServer,$
+    ) {$
+        const sos = new RestApi({$
+            url: apiUrl,$
+            version: 'v1',$
+            auth,$
+        });$
+        const nowDate = new Date();$
+        for (const video of videos) {$
+            await sos.timing.create({$
+                deviceUid: video.deviceUid,$
+                appletUid,$
+                appletVersion,$
+                configuration: {$
+                    identification: 'video-' + video.index,$
+                    sync_server: syncServer,$
 [0m
-[0m✱ [0mGlob "triage/**/*"[90m 100 matches[0m
-[0m→ [0mRead probe-results.md
-[0m→ [0mRead triage/run-2026-09-16-06-57.md
-**TRIAGE: signageos static scan `1076` files, `1` hits, `DELTA 0` — duplicate stale hit**
+[0m$ [0mecho -n 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47' | sha256sum
+echo -n 'http://api.kiera.office.signageos.io' | sha256sum
+efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b  -
+55caacede6e093ed5bf5b19aa48d75dd67272f5e8155b09c6e68ab8ea15a8efa  -
+[0m
+Triage: `1076` files, `1` hit, `DELTA: 0` new vs previous - known duplicate only. Scope per `scope.yml:1` eligible ONLY `box.signageos.io` + `api.signageos.io` - `gladiaio/` references in directive are out-of-scope (MEDIUM priority public source, not eligible host).
 
-Breadth anomaly scan (full inventory): no new `id/uid/email/user_id` params, no new `/api/v1|v2|beta|internal` versioned paths, no `debug/test` flags, no `swagger/openapi.json` exposure (already 302 catch-all), odd status `200` on `box/status` and `api/status` (known), `18x` ACAO on `box/` (known). Depth top-3 anomalies unchanged vs 2026-08-08+ reconfirmed cycles.
+Verified `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18-22`:
+- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` secret sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` matches KB seed 2026-08-07
+- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18` clientId `fcbbd714b3f794...` sha256 `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b`
+- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:22` `apiUrl = 'http://api.kiera.office.signageos.io'` sha256 `55caacede6e093ed5bf5b19aa48d75dd67272f5e8155b09c6e68ab8ea15a8efa`
 
-### Hit `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` — duplicate
+| Category | File:Line | Evidence (sha256 only) | Class |
+|---|---|---|---|
+| **REAL_SECRET** | - | - | `0` reportable prod secrets. Live prod test `GET /v1/organization/{cid}/security-token` with `X-Auth: <cid>:<secret>` -> `403 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION "Account not found"` on `api.signageos.io` (30+ cycles, `rs 77955558bc->7c5fdc9777`) disproves prod credential reuse. Not `REAL_SECRET` for eligible host. |
+| **TEST_OR_EXAMPLE** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` | secret sha256 `564c293ba...a774e` default param in `setupVideoTimings(auth=...)` test helper | Staging/test fixture for out-of-scope host `http://api.kiera.office.signageos.io`. KB: 2026-08-07 ACCEPTED SECRET_LEAK -> 2026-08-14..2026-08-21 CONFIRMED DEAD `403076` staging-only. |
+| **ENDPOINT_LEAK** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:22` | `http://api.kiera.office.signageos.io` (plain HTTP, internal staging) sha256 `55caaced...15a8efa` | Internal/dev staging URL, not `*.signageos.io` prod eligible host. Not banner/stack-trace, not CSP/CORS - informational. Out-of-scope per `scope.yml:2`. |
+| **INTERESTING** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18` | clientId sha256 `efdf6c4c...3a49b` paired with above secret, `appletUid` default at `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:20` | Plain HTTP + hardcoded test auth pattern informs `X-Auth`/`x-oauth-client_id` org-boundary hypothesis (AUTH_HELPED conf 86) but no pre-auth bypass - `api.signageos.io` all `60+` routes `403 JWT/X-Auth` gated, `0 ACAO` under `evil.test`. |
 
-| Category | File:Line | sha256 | Detail | Verdict |
-|---|---|---|---|---|
-| REAL_SECRET | - | - | _empty this cycle_ — no prod credential with signs of life | - |
-| TEST_OR_EXAMPLE | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` / `:18` | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` (`secret` `9d5e…`) / `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b` (`clientId` `fcbb…`) | `auth = {clientId, secret}` default param + `appletUid c790…` `apiUrl http://api.kiera.office.signageos.io` — test fixture imported via `require('@signageos/test/dist/RestApi/RestApi')` `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:1`, used in `setupVideoTimings()` with `syncGroup = 'video-' + Math.random()` `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:14` | **TEST_FIXTURE** — staging-only, not prod `box/api.signageos.io` |
-| ENDPOINT_LEAK | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | - | `apiUrl = 'http://api.kiera.office.signageos.io'` internal staging over `http://` (not `https://api.signageos.io`), office sub-domain | Internal/dev host leak — out-of-scope per `scope.yml:6` |
-| INTERESTING | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:1` | - | `@signageos/test` dependency + `http://` staging URL suggests non-prod test harness; no `169.254.169.254`, no `*.gladia.io`, no private npm `@gladiaio/sdk` mutation | No cloud-metadata SSRF, no mass-assign, no JWT alg confusion |
+**Verdict list (REPORT_CANDIDATE):**
+- `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` (secret `564c293b...`) - **REPORT_CANDIDATE: no** - duplicate of KB 2026-08-07 `564c293b...`, staging-only fixture `http://api.kiera.office.signageos.io`, prod reuse NEGATIVE via `403076`, host out-of-scope, descriptive error class excluded per `scope.yml:2`. Do not re-report; mechanism evidence retained only for `api.signageos.io/v1/organization/{uid}/security-token` AUTH_HELPED IDOR (conf 86, no active mint per `no_account_creation`/`no_data_modification`).
+- No other hits - **REPORT_CANDIDATE: no** - `DELTA 0`, `NO_DELTA` confirmed 60+ cycles, no SSRF `169.254.169.254`, no IDOR/BOLA pre-auth, no JWT alg confusion, no OAuth `redirect_uri/state` passively testable on `box.signageos.io/login` (Auth0 tenant gated).
 
-### Verdict list
-
-- `videowall-designer/sos/videoTiming.js:19` `sha256 564c293b…` — **REPORT_CANDIDATE: no** — `ONE` `TEST_OR_EXAMPLE` duplicate, target `http://api.kiera.office.signageos.io` out-of-scope (`scope.yml:6` ONLY `box/api.signageos.io` eligible). **CONFIRMED DEAD on prod** `2026-08-14`→`2026-08-20` `60+` cycles: tested as `X-Auth: <cid>:<secret>` on `GET /v1/organization/{uid}/security-token` → `403 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION "Account not found"` byte-identical (`knowledge` `ACCEPTED SECRET_LEAK` → `CONFIRMED DEAD`). Credential reuse disproven, staging-only fixture. Do not re-report per `scope.yml:13` (descriptive error) + `poc_required` + `redact_secrets_in_commits` — sha256 only.
-- `ENDPOINT_LEAK http://api.kiera.office.signageos.io` — **REPORT_CANDIDATE: no** — internal staging disclosure, not `box/api.signageos.io`, `http://` transport noted but host not eligible.
-
-No new `REAL_SECRET`候补. No `[NEXT] PROBE` needed for this lead (already AUTH_HELPED verified dead). Next passive stability probes remain `GET https://box.signageos.io/status` `GET https://api.signageos.io/status` `GET https://box.signageos.io/` `Origin: evil.test` `GET /v1/organization/test/security-token` (403074 check) — unchanged.
+Passive-first only: no `>GET/HEAD`, no `>1rps`, no `[NEXT] PROBE` emitted this cycle (AUTH_HELPED `security-token` cross-tenant mint requires owned-tenant approval, blocked per `leads/lead-human.m`).
