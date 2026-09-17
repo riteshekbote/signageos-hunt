@@ -1954,3 +1954,4 @@
 - 2026-09-03 REJECTED class @ lead: provided `X-Auth` — do not auto-probe foreign tenant without approval.
 - 2026-09-16 REJECTED class @ lead: security-token-idor-poc.sh` before escalating to VALID Critical; do not re-probe with `POST` without program written approval.
 - 2026-09-16 REJECTED class @ lead: **do not re-probe unauth** — awaiting AUTH_HELPED owned-tenant execution `reports/security-token-idor-report.md:100` (both orgs owned, token named `idor-poc` DELETE after). Vendor submission in flight `leads/lead-human.m
+- 2026-09-17 REJECTED class @ lead: 43-44` violation `no_account_creation`/`no_data_modification` to mint `sos login` JWT + 2nd tenant): `api/v1/organization/{uid}/security-token` cross-tenant mint, `api/v1/organization/{uid}` OAuth secret disclosure, `api

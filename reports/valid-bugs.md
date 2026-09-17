@@ -1519,3 +1519,6 @@
   - **Verdict: VALID (Low, borderline, DUPLICATE reconfirmed).** Proof: `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/ | grep -i access-control-allow-origin`.
   - **Verdict: VALID (Info, DUPLICATE reconfirmed).**
   - | Q2 | **NO under passive-first** — requires valid account-tier `X-Auth: id:secret` ( `scope.yml:41` `passive_first:true`, `scope.yml:44` `no_account_creation:true` ). All passive probes `probe-result
+
+- 1 lead(s) marked VALID at 2026-09-17 12:25:16 UTC
+  - **NO LEADS TO VERDICT** — hunt slate empty `2026-08-08 17:04` → `2026-08-13 21:58` all probes `200` status leak or `403` JWT-gated — no new finding meets Q1-Q7. Prior `17 leads triaged 2026-08-11 12:3
