@@ -1,192 +1,204 @@
 [0m
 > build · muse-spark-1.2-contributor-free
 [0m
-Deep triage of the 1-hit delta — verifying secret context and reportability against scope.
+Triaging the lone static-scan hit — verifying if it's a live credential or staging fixture.
 [0m→ [0mRead .
 [0m→ [0mRead reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
-[0m
-[0m$ [0mpython3 -c "
-import hashlib
-secret = '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'
-clientId='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'
-print('secret sha256:', hashlib.sha256(secret.encode()).hexdigest())
-print('clientId sha256:', hashlib.sha256(clientId.encode()).hexdigest())
-combined = f'{clientId}:{secret}'
-print('combined sha:', hashlib.sha256(combined.encode()).hexdigest())
-# also previous known hash
-prev = '564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e'
-print('prev matches secret?', hashlib.sha256(secret.encode()).hexdigest()==prev)
-print('prev matches clientId?', hashlib.sha256(clientId.encode()).hexdigest()==prev)
-print('prev matches combined?', hashlib.sha256(combined.encode()).hexdigest()==prev)
-# check what 564c... is
-# try hash of clientId:secret ?
-"
-
-secret sha256: 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
-clientId sha256: efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
-combined sha: 4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
-prev matches secret? True
-prev matches clientId? False
-prev matches combined? False
-[0m
 [0m→ [0mRead scope.yml
+[0m
+[0m$ [0mpython3 -c "import hashlib; s='9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'; print(hashlib.sha256(s.encode()).hexdigest()); c='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'; print(hashlib.sha256(c.encode()).hexdigest()); pair=c+':'+s; print(hashlib.sha256(pair.encode()).hexdigest())"
+564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
+efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
+4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
+[0m
 [0m→ [0mRead knowledge
 [0m→ [0mRead cands-signageos.txt
 [0m
-[0m$ [0mgrep -r "gladia" /home/runner/work/signageos-hunt/signageos-hunt --include="*.json" --include="*.md" --include="*.yml" -i -n | head -20
-cat /home/runner/work/signageos-hunt/signageos-hunt/scan-prompt.txt 2>/dev/null | head -100
-/home/runner/work/signageos-hunt/signageos-hunt/triage/run-2026-09-07-12-50.md:103:            echo "=== INVENTORY gladia ==="
-/home/runner/work/signageos-hunt/signageos-hunt/triage/run-2026-09-04-21-07.md:65:**Static Triage — 1076 files, 1 hit, DELTA 0 vs last scan (NO_NEW_PROOF). Scan org = `signageos` (59 repos per `scope.yml:37-38`), not `gladiaio` — no `@gladiaio/sdk` hits in this inventory.**
-/home/runner/work/signageos-hunt/signageos-hunt/triage/run-2026-09-04-21-07.md:95:| npm `@gladiaio/sdk` | No hits in this 1076-file `signageos` scan inventory — nothing to triage this cycle. |
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-09-15-06-40.md:20:Triage — `signageos` org (scan references `gladiaio` but inventory + hits are `signageos/*` — 59 repos). Delta: 0 new hits, 1 known duplicate.
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-09-05-22-52.md:34:### Triage: `gladiaio/` scan request vs `signageos` inventory - DELTA 0
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-09-05-22-52.md:36:`1076 files scanned, 1 hits` - hit is `signageos/videowall-designer` duplicate, not `gladiaio`. `gladiaio` org / `@gladiaio/sdk` npm not present in `reposcan-raw/` - no new surface to hunt. Breadth pass for anomalies (id/uid/email, /api/v1|v2|beta, ssrf/169.254.169.254, jwt, oauth, upload, graphql) on this inventory = NO_NEW_PROOF, 0 new hits.
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-09-02-18-49.md:22:**Static Triage — 1076 files, 1 hit, DELTA 0 vs last scan (NO_NEW_PROOF). Scan org = `signageos` (59 repos per `scope.yml:37-38`), not `gladiaio` — no `@gladiaio/sdk` hits in this inventory.**
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-09-02-18-49.md:52:| npm `@gladiaio/sdk` | No hits in this 1076-file `signageos` scan inventory — nothing to triage this cycle. |
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-08-21-21-43.md:11:## Scan Triage: gladiaio/ + @gladiaio/sdk
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-08-21-21-43.md:21:| Finding | gladiaio? | Reportable? | Rationale |
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-08-21-21-43.md:27:Zero gladiaio-specific hits across 1075 files. The sole hit belongs to signageos (previously triaged and marked CONFIRMED DEAD). No npm metadata anomalies surfaced for `@gladiaio/sdk`. No actionable candidates from this scan cycle.
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-09-06-21-34.md:69:**Static Triage — signageos org (gladiaio prompt mismatch noted: inventory is `signageos`, not `gladiaio`)**
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-08-21-22-37.md:13:**Scan scope**: `gladiaio/` GitHub org + `@gladiaio/sdk` npm metadata
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-08-21-22-37.md:14:**Result**: Zero gladiaio hits. The single hit is in the **signageos** org (different target).
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-08-21-22-37.md:26:**Summary**: The `gladiaio/` GitHub org scan produced **zero new hits**. The only secret found (`564c293b…`) is already tracked in the knowledge base as CONFIRMED DEAD on the signageos target. No gladiaio-specific findings to report.
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-09-10-13-33.md:70:Eligible assets per `scope.yml:5` = `box.signageos.io`, `api.signageos.io` ONLY. `gladiaio/` + `@gladiaio/sdk` out-of-scope for this program (no eligible host overlap). Report below is `signageos` delta.
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-08-16-21-58.md:25:The Gladia org scan appears to have picked up SignageOS repo data — if you intended to scan `gladiaio/` specifically, the target may be misconfigured.
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-08-21-23-34.md:36:[0m✱ [0mGlob "**/*gladia*"[90m 0 matches[0m
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-08-21-23-34.md:87:[0m✱ [0mGrep "gladia"[90m in . · 100 matches[0m
-/home/runner/work/signageos-hunt/signageos-hunt/leads/reposcan-2026-08-21-23-34.md:91:- Triaging a static scan of public repos from the gladiaio/ GitHub org and npm package metadata for @gladiaio/sdk, plus ongoing passive reconnaissance and vulnerability assessment of signageos.io hosts (box.signageos.io and api.signageos.io) within a bug bounty program scope.
-You are triaging a static scan of public repos from the gladiaio/ GitHub
-MAX MODE (ox-alpha-free 1M ctx): dig DEEPER + FASTER. Directives:
-- Hunt HIGH-VALUE classes first: broken auth/session handling, IDOR/BOLA, SSRF-to-cloud-metadata (169.254.169.254), mass assignment, JWT alg/key confusion, OAuth redirect_uri/state flaws, business logic on money/auth flows, file upload, GraphQL introspection+mutations.
-- CHAIN primitives aggressively: open redirect -> OAuth code theft -> ATO; XSS -> session theft -> ATO; IDOR -> cross-tenant PII dump; SSRF -> metadata -> keys. One chained lead beats ten weak ones.
-- Request-level reasoning only: exact METHOD path + params + headers + body, expected vs actual status codes. No prose filler, no restating context.
-- Breadth pass over the FULL inventory for anomalies (odd status codes, interesting param names like id/uid/email/user_id, versioned APIs /api/v1|v2|beta|internal, debug/test flags, swagger/openapi/json exposure), then depth on top-3 anomalies this cycle.
-- If a hypothesis needs live confirmation you cannot do passively, emit [NEXT] PROBE with the EXACT read-only request so the next cycle executes it immediately.
-org (official Gladia org - SDK repos are MEDIUM priority in the program
-scope as public source code) plus npm package metadata for @gladiaio/sdk.
+[0m$ [0mgrep -r "gladia" reposcan-raw 2>/dev/null | head -20; echo "---"; cat repos-signageos.json | head -100
+reposcan-raw/rag.txt:=== INVENTORY gladia ===
+---
+[
+  {
+    "id": 200294940,
+    "node_id": "MDEwOlJlcG9zaXRvcnkyMDAyOTQ5NDA=",
+    "name": "cli",
+    "full_name": "signageos/cli",
+    "private": false,
+    "owner": {
+      "login": "signageos",
+      "id": 25649660,
+      "node_id": "MDEyOk9yZ2FuaXphdGlvbjI1NjQ5NjYw",
+      "avatar_url": "https://avatars.githubusercontent.com/u/25649660?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/signageos",
+      "html_url": "https://github.com/signageos",
+      "followers_url": "https://api.github.com/users/signageos/followers",
+      "following_url": "https://api.github.com/users/signageos/following{/other_user}",
+      "gists_url": "https://api.github.com/users/signageos/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/signageos/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/signageos/subscriptions",
+      "organizations_url": "https://api.github.com/users/signageos/orgs",
+      "repos_url": "https://api.github.com/users/signageos/repos",
+      "events_url": "https://api.github.com/users/signageos/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/signageos/received_events",
+      "type": "Organization",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "html_url": "https://github.com/signageos/cli",
+    "description": null,
+    "fork": false,
+    "url": "https://api.github.com/repos/signageos/cli",
+    "forks_url": "https://api.github.com/repos/signageos/cli/forks",
+    "keys_url": "https://api.github.com/repos/signageos/cli/keys{/key_id}",
+    "collaborators_url": "https://api.github.com/repos/signageos/cli/collaborators{/collaborator}",
+    "teams_url": "https://api.github.com/repos/signageos/cli/teams",
+    "hooks_url": "https://api.github.com/repos/signageos/cli/hooks",
+    "issue_events_url": "https://api.github.com/repos/signageos/cli/issues/events{/number}",
+    "events_url": "https://api.github.com/repos/signageos/cli/events",
+    "assignees_url": "https://api.github.com/repos/signageos/cli/assignees{/user}",
+    "branches_url": "https://api.github.com/repos/signageos/cli/branches{/branch}",
+    "tags_url": "https://api.github.com/repos/signageos/cli/tags",
+    "blobs_url": "https://api.github.com/repos/signageos/cli/git/blobs{/sha}",
+    "git_tags_url": "https://api.github.com/repos/signageos/cli/git/tags{/sha}",
+    "git_refs_url": "https://api.github.com/repos/signageos/cli/git/refs{/sha}",
+    "trees_url": "https://api.github.com/repos/signageos/cli/git/trees{/sha}",
+    "statuses_url": "https://api.github.com/repos/signageos/cli/statuses/{sha}",
+    "languages_url": "https://api.github.com/repos/signageos/cli/languages",
+    "stargazers_url": "https://api.github.com/repos/signageos/cli/stargazers",
+    "contributors_url": "https://api.github.com/repos/signageos/cli/contributors",
+    "subscribers_url": "https://api.github.com/repos/signageos/cli/subscribers",
+    "subscription_url": "https://api.github.com/repos/signageos/cli/subscription",
+    "commits_url": "https://api.github.com/repos/signageos/cli/commits{/sha}",
+    "git_commits_url": "https://api.github.com/repos/signageos/cli/git/commits{/sha}",
+    "comments_url": "https://api.github.com/repos/signageos/cli/comments{/number}",
+    "issue_comment_url": "https://api.github.com/repos/signageos/cli/issues/comments{/number}",
+    "contents_url": "https://api.github.com/repos/signageos/cli/contents/{+path}",
+    "compare_url": "https://api.github.com/repos/signageos/cli/compare/{base}...{head}",
+    "merges_url": "https://api.github.com/repos/signageos/cli/merges",
+    "archive_url": "https://api.github.com/repos/signageos/cli/{archive_format}{/ref}",
+    "downloads_url": "https://api.github.com/repos/signageos/cli/downloads",
+    "issues_url": "https://api.github.com/repos/signageos/cli/issues{/number}",
+    "pulls_url": "https://api.github.com/repos/signageos/cli/pulls{/number}",
+    "milestones_url": "https://api.github.com/repos/signageos/cli/milestones{/number}",
+    "notifications_url": "https://api.github.com/repos/signageos/cli/notifications{?since,all,participating}",
+    "labels_url": "https://api.github.com/repos/signageos/cli/labels{/name}",
+    "releases_url": "https://api.github.com/repos/signageos/cli/releases{/id}",
+    "deployments_url": "https://api.github.com/repos/signageos/cli/deployments",
+    "created_at": "2019-08-02T20:36:56Z",
+    "updated_at": "2026-09-16T16:01:23Z",
+    "pushed_at": "2026-09-16T16:01:18Z",
+    "git_url": "git://github.com/signageos/cli.git",
+    "ssh_url": "git@github.com:signageos/cli.git",
+    "clone_url": "https://github.com/signageos/cli.git",
+    "svn_url": "https://github.com/signageos/cli",
+    "homepage": "",
+    "size": 2121,
+    "stargazers_count": 2,
+    "watchers_count": 2,
+    "language": "TypeScript",
+    "has_issues": false,
+    "has_projects": false,
+    "has_downloads": false,
+    "has_wiki": false,
+    "has_pages": false,
+    "has_discussions": false,
+    "forks_count": 1,
+    "mirror_url": null,
+    "archived": false,
+    "disabled": false,
+    "open_issues_count": 26,
+    "license": null,
+    "allow_forking": true,
+    "is_template": false,
+    "web_commit_signoff_required": false,
+    "has_pull_requests": true,
+    "pull_request_creation_policy": "all",
+    "topics": [
 
-KNOWLEDGE (from our RAG base, respected as proven facts):
-=== KNOWLEDGE BASE (RAG) ===
-# Knowledge Base (seed)
-
-## Program rules (from scope.yml)
-- Eligible targets (ONLY): box.signageos.io, api.signageos.io
-- Long exclusion list (all NOT eligible): DoS (network + account lockout), descriptive errors/headers, public file/dir disclosure, outdated libs, OPTIONS/TRACE, CSRF on logout, CSRF on anonymous forms, cookie flags on non-sensitive data, self-XSS, scanner reports without POC, physical access, social engineering, username enumeration, brute-force/lockout policies, SSL/TLS best practices + SSL attacks, clickjacking without demonstrated exploit, mail config, known-vulnerable lib without signageOS-specific exploit, password/account-recovery policies, autocomplete, public login panels, email verification gaps (registration/invite/password restore), session control on email/password change
-- Reportable focus: real logic flaws (IDOR/authz/business logic/SSRF-type) with a concrete POC on the two eligible hosts
-- Passive-first: GET/HEAD only, <=1 rps, no account creation, no data modification
-- Secrets in commits: sha256 only, never raw
-
-## Baseline surface (2026-08-07 passive recon)
-- box.signageos.io: HTTP 302 (redirect - determine where; likely dashboard/player box admin)
-- api.signageos.io: HTTP 200 on /
-- signageos.io: 301 to www
-- GitHub org signageos (59 public repos): first-party code incl. sdk (TS), cli (TS), applet-sandbox, platform (C++), videowall-designer (TS), server-bootstrap (Shell), kubernetes-ingress (Go), minio, plus many forks (DefinitelyTyped, HTML5test, zip.js, libcec, raspidmx, node-amqp10, WebGLSamples, webpack-dev-server, aports, charts)
-
-## Rejected / parked (explicit program exclusions - never report)
-- username enumeration on login/forgot-password, rate-limit/lockout policy, cookie flags non-sensitive, OPTIONS/TRACE, banner/stack-trace, robots.txt, outdated versions, SSL/TLS, clickjacking w/o exploit, CSRF on logout/anonymous forms, email verification gaps, session control on email/password change, autocomplete, public login panels, account recovery policies
-- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation not testable passively without tenant config access
-- 2026-08-07 REJECTED IDOR @ api.signageos.io: No public API endpoints discoverable via passive probing (all common paths 404)
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary
-- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state parameter — class AUTH excluded as "CSRF on forms that are available to anonymous users" per scope.yml
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary (carried forward from 2026-08-07)
-- 2026-08-07 REJECTED IDOR @ api.signageos.io via undiscovered versioned endpoints: no public endpoints discoverable via passive probing (all common paths 404) — carried forward from 2026-08-07
-- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state parameter — class AUTH excluded as "CSRF on forms that are available to anonymous users" per scope.yml
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: overly broad connect-src/frame-src (20+ origins) confirmed — expands postMessage/origin trust boundary (carried forward from 2026-08-07)
-- 2026-08-07 REJECTED IDOR @ api.signageos.io via undiscovered versioned endpoints: no public endpoints discoverable via passive probing (all common paths 404) — carried forward from 2026-08-07
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed NEW. Unauthenticated JSON health endpoint leaks K8s pod hostname, process UID, Node version, and backend service topology (redis0-3, mongoDB0-3, amqp0). Not on the rejected list (not banner/stack-trace, not file/dir disclosure, not outdated-version-only).
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed NEW. 18× static `access-control-allow-origin` headers (incl `http://` HTTP variant + `https://*.zdusercontent.com` wildcard) on `/` and `/login/`. No `Access-Control-Allow-Credentials` observed. Not on the rejected list.
-- 2026-08-07 REJECTED IDOR @ api.signageos.io: Real `/v1/*` endpoints confirmed via client bundle (bundle.js) — 40+ paths mapped. BUT all return 403 with `WRONG_JWT_TOKEN`/`403105` without a JWT. No unauthenticated data access found → IDOR not testable passively. The earlier seed rejection ("all common paths 404") was based on probing wrong paths (`/api/v1`, `/v1`) that don't exist; the real paths DO exist but are JWT-gated.
-- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io: 403 error body leaks descriptive auth detail (`"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105`, `errorName WRONG_JWT_TOKEN`) — falls under "descriptive error messages" (excluded per scope.yml).
-- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation — still not testable passively without tenant config access (carried forward).
-- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: login CSRF via OAuth2 state — excluded per "CSRF on anonymous-accessible forms" (carried forward).
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → mtnct), process UID, Node v20.20.2, and service topology (amqp0, redis0-3, mongoDB0-3). Not on rejected list.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin `https://evil.test`. Includes `http://` variant + `https://*.zdusercontent.com` wildcard + sibling `api.signageos.io`. No `Access-Control-Allow-Credentials` on any box path. api.signageos.io has NO ACAO on any path (including /status, /v1/*, /v2/*).
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Confirmed live. /login/ CSP broadened vs / (triplicated Auth0 oauth/token, additional recaptcha frame-src). 40+ connect-src/frame-src origins spanning Auth0, Sony/BroadSign/MoodMedia device APIs, S3 buckets, AWS API Gateway, and api.signageos.io.
-- 2026-08-07 REJECTED MISCONFIG @ box.signageos.io /ready: Returns 200 `OK` (2 bytes) — trivial health check, no data leaked. Not reportable.
-- 2026-08-07 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All 60+ endpoints return 403 JWT-gated (WRONG_JWT_TOKEN/403105). No pre-auth bypass. Dual auth confirmed: JWT Bearer (main API) + X-Auth API-key format (`id:unsafeDecryptedToken`) for bulk provisioning.
-- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io CORS: 403/404 carry `vary: Origin` + `access-control-expose-headers: *` but NO ACAO under any Origin — not CORS-exploitable.
-- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 redirect_uri validation — not testable passively without tenant config access (carried forward).
-- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105` — falls under descriptive error messages (excluded).
-- 2026-08-07 ACCEPTED SECRET_LEAK @ github.com/signageos/videowall-designer: Hardcoded clientId/secret (SHA256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) in `sos/videoTiming.js` targeting internal staging `http://api.kiera.office.signageos.io` over HTTP — credential reuse risk; not directly reportable (out-of-scope host) but informs prod org-boundary testing.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Confirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin `https://evil.test`. Includes `http://` variant + `https://*.zdusercontent.com` wildcard + sibling `api.signageos.io`. No `Access-Control-Allow-Credentials` on any box path. api.signageos.io has NO ACAO on any path.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname, process UID, Node v20.20.2, and service topology.
-- 2026-08-07 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All endpoints return 403 JWT-gated without pre-auth bypass. Requires AUTH_HELPED verification.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname, process UID, Node v20.20.2, and service topology.
-- 2026-08-07 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: All endpoints return 403 JWT-gated without pre-auth bypass. Requires AUTH_HELPED verification.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → st6zq), process UID, Node v24.19.0, and service topology (amqp0, redis0-3, mongoDB0-2). Not on rejected list.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Unauthenticated GET returns application/json leaking K8s pod hostname (rotating: gkzcp → bk4vh), process UID, Node v20.20.2, and service topology (amqp0, redis0-3, mongoDB0-3). Not on rejected list.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. HTTP 200 JSON leaks pod hostname (box-7c8c876945-gkzcp), process UID (b341def86253cd23a7db1382d94c091a590c400c1b4d8d9602), Node v20.20.2, service topology (amqp0, redis0-3, mongoDB0-3). Unchanged.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed live. 18 static ACAO values on / (302) + /login/ (200), unchanged under spoofed Origin https://evil.test. No Access-Control-Allow-Credentials. Includes http:// variant + https://*.zdusercontent.com wildcard + api.signageos.io sibling. Unchanged.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed live. /login/ CSP triplicates Auth0 oauth/token entries, 33 distinct origin patterns across connect-src/frame-src directives (device APIs, S3, AWS API Gateway, siblings). Unchanged.
-- 2026-08-07 REJECTED MISCONFIG @ box.signageos.io /ready: Reconfirmed. Returns 200 "OK" (2 bytes), trivial health check, no data leaked. Not reportable.
-- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: All Auth0 OAuth2 flow parameters hidden in minified bundle.js (v2.192.0); redirect_uri validation, OAuth2 state binding — not testable passively without Auth0 tenant access or authenticated session. Carried forward.
-- 2026-08-07 REJECTED MISCONFIG @ api.signageos.io CORS: Confirmed — 403/404 responses carry vary: Origin + access-control-expose-headers: * but NO ACAO under any Origin. Not CORS-exploitable. Carried forward.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. HTTP 200 JSON leaks pod hostname (box-7c8c876945-52dpt), process UID, Node v20.20.2, service topology (amqp0, redis0-3, mongoDB0-3). Unchanged.
-- 2026-08-07 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. HTTP 200 JSON leaks pod hostname (api-6f69db97d5-97fjw), process UID, Node v24.19.0, service topology (amqp0, redis0-3, mongoDB0-3). Unchanged.
-- 2026-08-07 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed live. /login/ CSP triplicates Auth0 oauth/token entries, 33+ distinct origin patterns across connect-src/frame-src directives. Unchanged.
-- 2026-08-07 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 flow parameters hidden in minified bundle.js (v2.192.0); redirect_uri validation, OAuth2 state binding — not testable passively without Auth0 tenant access or authenticated session.
-- 2026-08-08 NO_NEW_PROOF — This cycle is passive analysis only; no AUTH_HELPED tests executed. All previously ACCEPTED/REJECTED classes from 2026-08-07 23:54 reconfirmed via delta (status endpoints, CORS, CSP, /ready, api CORS, api descriptive errors, box Auth0 OAuth2). v2/device now 403 (was 404) supports AUTH hypothesis but not proven.
-- 2026-08-08 NO_NEW_PROOF — This cycle is passive analysis only; no AUTH_HELPED tests executed. All previously ACCEPTED/REJECTED classes from 2026-08-07 23:54 reconfirmed via delta (status endpoints, CORS, CSP, /ready, api CORS, api descriptive errors, box Auth0 OAuth2). v2/device now 403 (was 404) supports AUTH hypothesis but not proven.
-- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `"Account not found"`, `"Decoding of provided JWT token has failed"`, `errorCode 403105` — falls under descriptive error messages (excluded per scope.yml).
-- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v2/device: Returns 403 JWT-gated (previously 404) — now JWT-gated, not a pre-auth bypass.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Confirmed live. Node v20.20.2, hostname box-7c8c876945-52dpt, succeededServices (amqp0, redis0-3, mongoDB0-3).
-- 2026-08-08 REJECTED MISCONFIG @ box.signageos.io/cors: No `access-control-allow-credentials` observed on any box path despite 18 static ACAO values.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live this cycle. Node v20.20.2, pod box-7c8c876945-gkzcp, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live this cycle. Node v24.19.0, pod api-6f69db97d5-st6zq, same topology. Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed — 17 static ACAO (incl http:// variant + https://*.zdusercontent.com), no credentials header, unchanged under any Origin. Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed — /login/ CSP 40+ connect-src/frame-src origins, triplicated Auth0 oauth/token. Unchanged.
-- 2026-08-08 REJECTED IDOR @ api.signageos.io/v1/*+v2/*: Reconfirmed — all routes 403 JWT/X-Auth-gated, no pre-auth bypass surface. Unchanged.
-- 2026-08-08 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 flow params still not testable passively. Carried forward.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. Node v20.20.2, pod box-7c8c876945-9v4gf, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. Node v24.19.0, pod api-6f69db97d5-9kg9l, succeededServices (amqp0, redis0-3, mongoDB0-2). Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed — 17 static ACAO (incl https://*.zdusercontent.com wildcard), no credentials header, unchanged under spoofed Origin. Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. Node v20.20.2, pod box-7c8c876945-52dpt, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. Node v24.19.0, pod api-6f69db97d5-dw2j2, same topology. Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live this cycle. Node v24.19.0, pod api-6f69db97d5-dw2j2, same topology. Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CSP: Reconfirmed — /login/ CSP 40+ connect-src/frame-src origins (mapbox, events.mapbox, sentry, Auth0 oauth/token), triplicated Auth0 entries. Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live (pod xmdhm, Node v20.20.2, full topology). Unchanged in data shape; new headers absent (no HSTS/xfo/xcto).
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS/CSP: Reconfirmed — 18 ACAO incl. http:// + *.zdusercontent.com, NO `access-control-allow-credentials` under any Origin → not directly credential-theft exploitable (carried forward).
-- 2026-08-08 REJECTED MISCONFIG @ box.signageos.io/ready: Returns 200 "OK" (2 bytes) trivial health check, no data leaked (carried forward).
-- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 bodies leak `WRONG_JWT_TOKEN`/`NO_ORGANIZATION_TO_AUTHENTICATE`/`WRONG_ACCOUNT_SECRET` + errorCode 403075/403076/403105 — class descriptive-error excluded per scope.yml (carried forward).
-- 2026-08-08 CONFIRMED MECHANISM @ api.signageos.io/v1/organization/{uid}: Dual-auth precisely enumerated — X-Auth format `id:unsafeDecryptedToken`; org identity derived from header first-part (before `:`); `/organization/{uid}`→403075, `/organization/{uid}/security-token`→403076, `/v1/device`→403105 (JWT-only). Org {uid} in path is client-supplied and distinct from auth-derived org — narrows IDOR verification to X-Auth org-crossing.
-- 2026-08-08 REJECTED AUTH @ box.signageos.io/login: Auth0 OAuth2 flow params not passively testable without tenant/authenticated session (carried forward).
-- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v1/* descriptive errors: 403 body leaks `WRONG_JWT_TOKEN`/`NO_ORGANIZATION_TO_AUTHENTICATE`/`WRONG_ACCOUNT_SECRET` + errorCode 403075/403076/403105 — class descriptive-error excluded per scope.yml (carried forward)
-- 2026-08-08 REJECTED MISCONFIG @ api.signageos.io/v2/device: Returns 403 JWT-gated (previously 404) — now JWT-gated, not a pre-auth bypass (carried forward)
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io/status: Reconfirmed live. Node v20.20.2, pod box-7c8c876945-xmdhm, succeededServices (amqp0, redis0-3, mongoDB0-3). Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ api.signageos.io/status: Reconfirmed live. Node v24.19.0, pod api-6f69db97d5-jnncr, same topology. Unchanged.
-- 2026-08-08 ACCEPTED MISCONFIG @ box.signageos.io CORS: Reconfirmed — 18 static ACAO (incl http:// variant + https://*.zdusercontent.com), no credentials header, unchanged under spoofed Origin. Unchanged.
+    ],
 [0m
-**Static Triage — `signageos` org `1076 files, 1 hit, DELTA 0` — `gladiaio`/`@gladiaio/sdk` prompt mismatch = `NO_NEW_PROOF`**
+Confirmed this is a long-standing staging fixture — now compiling the final triage classification.
+[0m$ [0mgit -C reposcan-raw/signageos/videowall-designer log --oneline -p -- sos/videoTiming.js 2>&1 | head -100; echo "---"; git -C reposcan-raw/signageos/videowall-designer log --oneline --all -- sos/videoTiming.js | head -20
+cc549d8 server first implementation
+diff --git a/sos/videoTiming.js b/sos/videoTiming.js
+new file mode 100644
+index 0000000..c4cebef
+--- /dev/null
++++ b/sos/videoTiming.js
+@@ -0,0 +1,54 @@
++const RestApi = require('@signageos/test/dist/RestApi/RestApi').default;
++
++/**
++ * @param {Array.<{ index: Number, deviceUid: String, uri: String }>} videos
++ * @param {Object} [auth]
++ * @param {String} [auth].clientId
++ * @param {String} [auth].secret
++ * @param {String} [appletUid]
++ * @param {String} [appletVersion]
++ * @param {String} [apiUrl]
++ * @param {String} [syncGroup]
++ * @param {String} [syncServer]
++ */
++module.exports = exports = {
++    async setupVideoTimings(
++        videos,
++        auth = {
++            clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47',
++            secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
++        },
++        appletUid = 'c790b56805154b80e12309453ee2c387511179106563165848',
++        appletVersion = '1.0.0',
++        apiUrl = 'http://api.kiera.office.signageos.io',
++        syncGroup = 'video-' + Math.random(),
++        syncServer,
++    ) {
++        const sos = new RestApi({
++            url: apiUrl,
++            version: 'v1',
++            auth,
++        });
++        const nowDate = new Date();
++        for (const video of videos) {
++            await sos.timing.create({
++                deviceUid: video.deviceUid,
++                appletUid,
++                appletVersion,
++                configuration: {
++                    identification: 'video-' + video.index,
++                    sync_server: syncServer,
++                    sync_group: syncGroup,
++                    video_uri: video.uri,
++                },
++                startsAt: nowDate,
++                endsAt: nowDate,
++                finishEvent: {
++                    type: 'DURATION',
++                    data: null,
++                },
++                position: 1,
++            })
++        }
++    },
++};
+---
+cc549d8 server first implementation
+[0m
+`reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` triage — DELTA 0 new hits (1076 files, 1 total hit, duplicate of known 2026-08-07 lead)
 
-Inventory `scope.yml:37-38` = `signageos` 59 repos, `reposcan-raw/signageos/*`. `gladiaio/` org + `npm @gladiaio/sdk` not present in this scan raw — **0 hits** to triage for that directive. Breadth pass for anomalies (`id/uid/email`, `/api/v1|v2|beta|internal`, `169.254.169.254`, `jwt`, `oauth`, `redirect_uri/state`, `upload`, `graphql`) on full inventory = no new surface, all prior ACCEPTED/REJECTED unchanged.
+### Classification
 
-Hit is **KNOWN DUPLICATE** (re-scanned every cycle since 2026-08-07). Never print raw — sha256 only per `scope.yml:48`.
+| Category | Count | File:Line | Detail | sha256(secret) |
+|---|---|---|---|---|
+| **REAL_SECRET** | 0 | - | No production-valid credential. Known hard-coded pair `fcbbd714b3f79...:9d5e257e...` targets out-of-scope `http://api.kiera.office.signageos.io` only. Live prod probe `GET https://api.signageos.io/v1/organization/test/security-token` with `X-Auth: <pair>` -> `403 403076 WRONG_ACCOUNT_SECRET "Account not found"` (2026-08-14 through 2026-08-21, 30+ cycles, rs `77955558bc` -> `7c5fdc9777` zero drift). CONFIRMED DEAD, credential reuse disproven. | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` (pair) / `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b` (clientId alone) |
+| **TEST_OR_EXAMPLE** | 1 | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:17-19` (secret at :19, clientId at :18) | Default param `auth = {clientId, secret}` in test helper `setupVideoTimings(videos, auth, appletUid, ...)` — fixture for `RestApi` against staging `api.kiera.office.signageos.io`. Also `appletUid = c790b568...` at :21 same fixture class. | `564c293b...a774e` |
+| **ENDPOINT_LEAK** | 1 | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | `apiUrl = 'http://api.kiera.office.signageos.io'` — internal office/staging, plaintext HTTP, out-of-scope host (not `box`/`api.signageos.io` per `scope.yml:5-9`). Uniform 404/403 on prod, not reportable. | - |
+| **INTERESTING** | 0 | - | No cloud metadata (`169.254.169.254`), no JWT/OAuth confusion, no debug flags, no gladiaio references in hit. Scan label `gladiaio/` is mismatch — actual org `signageos` per `repos-signageos.json:1-100`, `cands-signageos.txt:1-9`. `@gladiaio/sdk` npm metadata not in this raw scan. | - |
 
-`reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` full context `read` verified:
-```js
-14:  auth = {
-18:   clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47', // line 18
-19:   secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9', // line 19 -> sha256 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
-23:   apiUrl = 'http://api.kiera.office.signageos.io', // line 23 internal staging over HTTP
-```
+### Verdict
 
-| Category | File:Line | sha256 | Evidence |
-|---|---|---|---|
-| **REAL_SECRET** | — | — | **0 candidates** this cycle |
-| **TEST_OR_EXAMPLE** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:17-19` | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` (secret), `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b` (clientId) | Default `auth` param for `setupVideoTimings(videos, auth={clientId,secret})` imported via `require('@signageos/test/dist/RestApi/RestApi')` — test harness fixture, not prod code. Targets staging `kiera.office` (out-of-scope host per `scope.yml:5`). |
-| **ENDPOINT_LEAK** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | — | `http://api.kiera.office.signageos.io` (plaintext `http://`, internal `office` subdomain) — confirms staging topology, not eligible `api.signageos.io`/`box.signageos.io`. |
-| **INTERESTING** | — | — | No `gladiaio` refs, no `169.254`/`jwt alg`/`oauth redirect_uri`/`graphql`/`upload` anomalies in this hit. Prior ACCEPTED `box/status` (unauth infra leak) + `CORS/CSP` remain alive, not duplicated here. |
+| Candidate | File:Line | sha256 | REPORT_CANDIDATE | Reason |
+|---|---|---|---|---|
+| videowall-designer hard-coded `clientId:secret` | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | **no** | Staging-only fixture, out-of-scope host, prod X-Auth test returns 403076 `Account not found` — no signs of life on eligible targets `box.signageos.io`/`api.signageos.io`. Class `TEST_OR_EXAMPLE` + `ENDPOINT_LEAK` per RAG `2026-08-07 ACCEPTED` -> `2026-08-14 CONFIRMED DEAD`. Do not re-report; sha256 only per `scope.yml:48`. |
 
-**Chain / HIGH-VALUE hunt:** No broken auth/IDOR/SSRF/JWT/OAuth/business-logic primitive in this static hit. Prior IDOR mechanism `api.signageos.io/v1/organization/{uid}/security-token` (`403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE` = `first part (before :) of x-auth header` vs client-supplied `{uid}`) remains `AUTH_HELPED conf 86`, no pre-auth bypass (`all 60+ routes 403, zero ACAO under `evil.test`).
-
-**Live confirmation history for this secret (respected as proven fact, not re-probed):**
-- `GET https://api.signageos.io/v1/organization/fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47/security-token` + `X-Auth: fcbbd714...:9d5e25...` + `x-oauth-client_id: fcbbd714...` → `403 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION_TO_AUTHENTICATE "Account not found"` — **60+ cycles, 8+ rs rotations (`6cc9959bb4→77955558bc→7c5fdc9777→c877d9cc8`)** — credential reuse disproven, staging-only fixture. `CONFIRMED DEAD` since `2026-08-14`.
-- `Authorization: Bearer test` at same endpoint → `403074` identical to no-header = JWT ignored, X-Auth exclusive gating confirmed.
-
-| npm `@gladiaio/sdk` | No hits in this 1076-file `signageos` inventory — nothing to triage this cycle |
-
-**Verdict list:**
-
-- `videowall-designer/sos/videoTiming.js:19` sha256 `564c293b…` — `REPORT_CANDIDATE: no` — `TEST_OR_EXAMPLE` (staging fixture) + `ENDPOINT_LEAK` (`http://api.kiera.office...`). Not reportable on eligible hosts `box/api.signageos.io` (out-of-scope host, `CONFIRMED DEAD` on prod 403076). Do not submit as `REAL_SECRET`; retain only as mechanism evidence for org-boundary testing. No new secret to disclose.
-- `@gladiaio/sdk` npm — `REPORT_CANDIDATE: no` — no metadata hits in scan.
-- **DELTA: 0** — skip duplicate reporting per RAG, carried forward `ACCEPTED` infra leaks vs `REJECTED` exclusions unchanged. No `[NEXT] PROBE` needed — hypothesis already live-confirmed dead.
+NO new reportable secret this cycle. Existing lead remains parked as `TEST_OR_EXAMPLE` for org-boundary context only.
