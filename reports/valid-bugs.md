@@ -1510,3 +1510,12 @@
   - | 5 | `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant **mint** `POST {name}` → `201 {securityToken}` | YES api In | YES low-priv **AUTH_HELPED** any free account `X-Auth: orgUid:s
   - | 6 | `api.signageos.io/v1/organization` **superset** `GET` lists **ALL orgs platform-wide** with `oauthClientId`+`oauthClientSecret` inline | YES | YES low-priv AUTH_HELPED `GET /v1/organization` wit
   - **VALID reporting package**
+
+- 7 lead(s) marked VALID at 2026-09-17 01:33:35 UTC
+  - | Q5 Novel/unreported? | NO — DUPLICATE, already accepted 15+ triage cycles (`reports/valid-bugs.md:4`) — reconfirmation only, do not re-report |
+  - | Q6 Not rejected list? | YES — not `scope.yml:13-14` descriptive error or `robots.txt`; infra info disclosure is not listed exclusion; `reports/valid-bugs.md:4` accepted as VALID Low |
+  - **Verdict: VALID (Low, DUPLICATE reconfirmed) — do not re-submit.** Proof: `curl -s https://box.signageos.io/status | jq .hostname,.process.uid,.nodeVersion` + `curl -sI` check `secgrep=0`. CVSS 3.1 `
+  - **Verdict: VALID (Low, DUPLICATE reconfirmed, hardened headers `HSTS/xfo/xcto/no-store` do not mitigate body leak).** CVSS 3.1 `4.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N`. Proof: `curl -s https://api.si
+  - **Verdict: VALID (Low, borderline, DUPLICATE reconfirmed).** Proof: `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/ | grep -i access-control-allow-origin`.
+  - **Verdict: VALID (Info, DUPLICATE reconfirmed).**
+  - | Q2 | **NO under passive-first** — requires valid account-tier `X-Auth: id:secret` ( `scope.yml:41` `passive_first:true`, `scope.yml:44` `no_account_creation:true` ). All passive probes `probe-result
