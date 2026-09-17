@@ -1522,3 +1522,7 @@
 
 - 1 lead(s) marked VALID at 2026-09-17 12:25:16 UTC
   - **NO LEADS TO VERDICT** — hunt slate empty `2026-08-08 17:04` → `2026-08-13 21:58` all probes `200` status leak or `403` JWT-gated — no new finding meets Q1-Q7. Prior `17 leads triaged 2026-08-11 12:3
+
+- 2 lead(s) marked VALID at 2026-09-17 20:28:43 UTC
+  - |5| `api /v1/organization/{uid}` OAuth `secret` disclosure |IDOR|`**HOLD**`|`AUTH_HELPED — 403-gated needs JWT+2nd tenant` `reports/valid-bugs.md:9`|
+  - |10| `api /v1/device/*` weaker auth|AUTH|`**HOLD**`|No passive evidence `reports/valid-bugs.md:14`|
