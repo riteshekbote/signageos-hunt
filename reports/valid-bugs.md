@@ -1541,3 +1541,10 @@
   - * **Verdict: VALID (DUPLICATE) — Low** CVSS 3.1: `4.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` (or `5.3` per earlier `valid-bugs`). Proof: `GET /status` passive. Channel: `scope.yml:4` TBD — `security@sig
   - * **Verdict: VALID (DUPLICATE) — Low** CVSS 3.1 `4.3`. Same proof/channel.
   - * **Verdict: HOLD (AUTH_HELPED, DO-NOT-REDO) — would be VALID Critical CVSS 9.1 `AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:L` if live POC re-confirmed on own assets only**. Minimal read-only (post-fix check, 
+
+- 5 lead(s) marked VALID at 2026-09-18 06:13:09 UTC
+  - | 1 | `box.signageos.io/status` infra leak `reports/valid-bugs.md:4` | Y In | Y unauth `200` | Y K8s topology + Node `v20.20.2` recon | Y `curl -s https://box.signageos.io/status` | N duplicate reconf
+  - | 2 | `api.signageos.io/status` infra leak `reports/valid-bugs.md:5` | Y In | Y unauth `200` | Y topology | Y `curl -s https://api.signageos.io/status` | N duplicate | Y | Y | **VALID Low 4.3** — same
+  - | 3 | `box CORS ACAO` 18 static `http://` + `*.zdusercontent.com` `reports/valid-bugs.md:6` | Y In | Y unauth `200` on `/` `/login/` | Y trust-boundary expansion (no `allow-credentials`) | Y `curl -sI
+  - | 4 | `box CSP` 40+ origins `reports/valid-bugs.md:7` | Y In | Y | Y defense-in-depth | Y `curl -sI https://box.signageos.io/login/` → CSP | N duplicate | Y | MARGINAL Info | **VALID Info 3.1** |
+  - | 5-11 | `security-token` mint, org secret, device peer-recovery, `v2/*`, `/settings`, `device/*`, `account/security-token` `reports/valid-bugs.md:8-11` | Y | **N** `403` without JWT (`passive_first`)
