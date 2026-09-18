@@ -1588,3 +1588,8 @@
   - | **E `POST /v1/organization/{uid}/security-token` cross-tenant mint** `reports/security-token-idor-report.md:22` `lead-human.md:1-3` | YES | YES low-priv free account `X-Auth: id:secret` `reports/sec
   - | **SUPERSET `GET /v1/organization` platform-wide secret leak** `reports/security-token-idor-report.md:203` `lead-human.md:4` | YES | YES low-priv account `X-Auth` | YES `oauthClientId/oauthClientSecr
   - | **F `GET /v1/organization/{uid}` OAuth secret disclosure** `lead-bigpickle.md:151` | YES | NO passive — `GET /v1/organization/<foreign> →403` `probe-results.md:48` requires `X-Auth` account token (A
+
+- 3 lead(s) marked VALID at 2026-09-18 21:21:34 UTC
+  - - **Verdict:** **VALID (Low, DUPLICATE)** — CVSS3.1 `4.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)` (5.3 if counting missing HSTS differential). One-line: unauth infra disclosure reconfirmed.
+  - - **Verdict:** **VALID (Low, DUPLICATE)** — CVSS3.1 `4.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)`. One-line: hardened but still leaks.
+  - - **Verdict:** **VALID (Low borderline Info, DUPLICATE)** — CVSS3.1 `3.1 (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)` CORS, `3.1 (AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N)` CSP. One-line: static whitelist + broa
