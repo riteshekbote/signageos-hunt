@@ -1536,3 +1536,8 @@
   - **Verdict: VALID (Informational, 3.1).** Same gate as LEAD-3; defense-in-depth.
   - **Verdict: VALID-CRITICAL (upgraded from HOLD).** Prior `reports/valid-bugs.md:5` HOLD `AUTH_HELPED` was correct per `passive_first:true` — **now VALID after live proof** `leads/lead-human.md:1-6` + `
   - **Verdict: VALID-HIGH (upgraded from HOLD, superset of LEAD-5).** Proof: `GET /v1/organization -H "X-Auth: <ownId>:<ownSecret>"` → verify `oauthClientSecret` present; `GET /v1/organization/<victimUid>
+
+- 3 lead(s) marked VALID at 2026-09-18 01:20:47 UTC
+  - * **Verdict: VALID (DUPLICATE) — Low** CVSS 3.1: `4.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` (or `5.3` per earlier `valid-bugs`). Proof: `GET /status` passive. Channel: `scope.yml:4` TBD — `security@sig
+  - * **Verdict: VALID (DUPLICATE) — Low** CVSS 3.1 `4.3`. Same proof/channel.
+  - * **Verdict: HOLD (AUTH_HELPED, DO-NOT-REDO) — would be VALID Critical CVSS 9.1 `AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:L` if live POC re-confirmed on own assets only**. Minimal read-only (post-fix check, 
