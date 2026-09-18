@@ -1579,3 +1579,12 @@
   - | L5 | `api/v1/organization/{uid}/security-token` cross-tenant mint `leads/lead-mimo.md:6` `reports/security-token-idor-report.md:24` | YES | YES low-priv `X-Auth: id:secret` (403074 unauth → 200 with
   - | L6 | `GET /v1/organization` list ALL orgs + `oauthClientId/Secret` inline `leads/lead-human.md:4` SUPERTOP | YES | YES low-priv `X-Auth` | YES Critical platform-wide secret dump | NO auth needed | Y
   - **VALID to report (read-only):** L1-L4 are reconfirmed duplicates — 0 new VALID per `reports/valid-bugs.md:21` rule. Do not re-report; keep PoC archived.
+
+- 7 lead(s) marked VALID at 2026-09-18 18:37:26 UTC
+  - | **A `box.signageos.io/status` infra leak** | YES `scope.yml:6` | YES anonymous `GET /status →200 application/json` `probe-results.md:45` | YES pod hostname/Node `v20.20.2`/64-hex `process.uid`/9-svc
+  - | **B `api.signageos.io/status` infra leak** | YES `scope.yml:8` | YES anonymous `GET /status →200` `probe-results.md:314` | YES same class, hardened `HSTS/xfo/xcto` `lead-mimo.md:57` | YES `curl -s h
+  - | **C `box.signageos.io` CORS ACAO whitelist** `lead-laguna.md:23` | YES | YES `GET / -H Origin:https://evil.test →18 static ACAO` incl `http://box.signageos.io` + `https://*.zdusercontent.com` wildca
+  - | **D `box.signageos.io` CSP broad** `lead-laguna.md:202` | YES | YES `GET /login/%2F →CSP 40+ origins` triplicated Auth0 `oauth/token` + S3+APIGW+device APIs | YES defense-in-depth requires co-locate
+  - | **E `POST /v1/organization/{uid}/security-token` cross-tenant mint** `reports/security-token-idor-report.md:22` `lead-human.md:1-3` | YES | YES low-priv free account `X-Auth: id:secret` `reports/sec
+  - | **SUPERSET `GET /v1/organization` platform-wide secret leak** `reports/security-token-idor-report.md:203` `lead-human.md:4` | YES | YES low-priv account `X-Auth` | YES `oauthClientId/oauthClientSecr
+  - | **F `GET /v1/organization/{uid}` OAuth secret disclosure** `lead-bigpickle.md:151` | YES | NO passive — `GET /v1/organization/<foreign> →403` `probe-results.md:48` requires `X-Auth` account token (A
