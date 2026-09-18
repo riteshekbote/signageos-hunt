@@ -1570,3 +1570,12 @@
   - - **Verdict: VALID (Low, borderline)** | CVSS 3.1: 3.7 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
   - - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant
   - - VERDICT: VALID (MISCONFIG — Infrastructure Information Disclosure)
+
+- 7 lead(s) marked VALID at 2026-09-18 15:21:11 UTC
+  - | L1 | `box.signageos.io/status` infra leak `inventory/signageos.md:36` | YES `scope.yml:6` | YES unauth `probe-results.md:3` 200 JSON | YES Low recon | YES `GET /status` | NO duplicate `reports/valid
+  - | L2 | `api.signageos.io/status` same `inventory/signageos.md:37` | YES | YES unauth 200 `probe-results.md:314` | YES Low | YES | NO duplicate `reports/valid-bugs.md:5` | YES | YES | **VALID (DUPLICAT
+  - | L3 | `box` CORS 17-18 static ACAO `http://`+wildcard `inventory/signageos.md:39` | YES | YES public headers `probe-results.md:45` | MARGINAL Low, no `ACAC` | YES `GET -H Origin: evil.test` | NO dupl
+  - | L4 | `box` CSP 40+ origins triplicated Auth0 `inventory/signageos.md:40` | YES | YES | INFO | YES | NO duplicate | YES (not rejected, but best-practice-adjacent) | MARGINAL | **VALID (Info border, D
+  - | L5 | `api/v1/organization/{uid}/security-token` cross-tenant mint `leads/lead-mimo.md:6` `reports/security-token-idor-report.md:24` | YES | YES low-priv `X-Auth: id:secret` (403074 unauth → 200 with
+  - | L6 | `GET /v1/organization` list ALL orgs + `oauthClientId/Secret` inline `leads/lead-human.md:4` SUPERTOP | YES | YES low-priv `X-Auth` | YES Critical platform-wide secret dump | NO auth needed | Y
+  - **VALID to report (read-only):** L1-L4 are reconfirmed duplicates — 0 new VALID per `reports/valid-bugs.md:21` rule. Do not re-report; keep PoC archived.
