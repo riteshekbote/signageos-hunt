@@ -1548,3 +1548,25 @@
   - | 3 | `box CORS ACAO` 18 static `http://` + `*.zdusercontent.com` `reports/valid-bugs.md:6` | Y In | Y unauth `200` on `/` `/login/` | Y trust-boundary expansion (no `allow-credentials`) | Y `curl -sI
   - | 4 | `box CSP` 40+ origins `reports/valid-bugs.md:7` | Y In | Y | Y defense-in-depth | Y `curl -sI https://box.signageos.io/login/` → CSP | N duplicate | Y | MARGINAL Info | **VALID Info 3.1** |
   - | 5-11 | `security-token` mint, org secret, device peer-recovery, `v2/*`, `/settings`, `device/*`, `account/security-token` `reports/valid-bugs.md:8-11` | Y | **N** `403` without JWT (`passive_first`)
+
+- 80 lead(s) marked VALID at 2026-09-18 11:32:17 UTC
+  - - **Verdict: VALID** — Unauthenticated JSON health endpoint disclosing internal infrastructure.
+  - - **Verdict: VALID** — Unauthenticated JSON health endpoint disclosing internal infrastructure.
+  - - **Verdict: VALID** (borderline) — Static ACAO whitelist includes HTTP variant + literal wildcard, expanding trust boundary.
+  - - **Verdict: VALID (Low)**
+  - - **Verdict: VALID** — Unauthenticated JSON health endpoint disclosing internal infrastructure topology.
+  - - **Verdict: VALID** — Unauthenticated JSON health endpoint disclosing internal infrastructure.
+  - - **Verdict: VALID (borderline)** — Static ACAO whitelist includes HTTP variant + literal wildcard, expanding trust boundary.
+  - - **Verdict: VALID (Low)**
+  - - **Verdict: VALID (Low)**
+  - - **Verdict: VALID (Low)**
+  - - **Verdict: VALID (Low)**
+  - - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant to prove. Code-verified via SDK/CLI (`getOrganization()` sends `GET /v1/organization/{uid}` with `X-Auth: <JWT>`, ret
+  - - 4. **Prior triage consistency:** LEADs 1-3 were previously marked VALID in `valid-bugs.md`. This triage confirms those verdicts with full 7-Question Gate analysis.
+  - - - 4. **Prior triage consistency:** LEADs 1-3 were previously marked VALID in `valid-bugs.md`. This triage confirms those verdicts with full 7-Question Gate analysis.
+  - - **Verdict: VALID (Low)** | CVSS 3.1: 3.7 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - - **Verdict: VALID (Low)** | CVSS 3.1: 3.7 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - - **Verdict: VALID (Low, borderline)** | CVSS 3.1: 3.7 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - - **Verdict: VALID (Low, borderline)** | CVSS 3.1: 3.7 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
+  - - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant
+  - - VERDICT: VALID (MISCONFIG — Infrastructure Information Disclosure)
