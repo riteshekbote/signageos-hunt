@@ -1604,3 +1604,10 @@
   - - **Verdict: VALID (Info/Low borderline, 3.1)** — CVSS 3.1 `AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N` 3.1. Proof: `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/login/%2F | grep -i acces
   - - **Verdict: VALID (Informational, 3.1)** — Proof: `curl -sI https://box.signageos.io/login/ | grep -i content-security-policy`. Same channel.
   - - **Verdict: HOLD (AUTH_HELPED, high-value chain)** — credible code-verified split-brain (`errorDetail` says identity from `X-Auth` first part before `:` while path `{uid}` client-supplied) but **unpr
+
+- 5 lead(s) marked VALID at 2026-09-19 16:01:31 UTC
+  - | **A** | `GET https://box.signageos.io/status` — `inventory/signageos.md:36` leaks `hostname, process.uid (40-hex), Node v20.20.2, succeededServices amqp0/redis0-3/mongoDB0-3, cpu/memory` — header `s
+  - | **B** | `GET https://api.signageos.io/status` — `inventory/signageos.md:37` leaks same + `Node v24.19.0` `probe-results.md:314` `200 len~1328` but `HSTS+xfo+xcto+no-store` present | YES `scope.yml:8
+  - | **C** | `GET https://box.signageos.io/` + `GET https://box.signageos.io/login/` CORS `access-control-allow-origin: 17x static` incl `http://box.signageos.io` + `https://*.zdusercontent.com` wildcard
+  - | **D** | `GET https://box.signageos.io/login/` CSP `connect-src/frame-src 40+ origins` triplicated `oauth/token` `inventory/signageos.md:40` | YES | YES | MARGINAL defense-in-depth (needs XSS) | YES 
+  - | **E-HUMAN** | *Same as E but human-executed* `leads/lead-human.md:3` `POST A->B =>201 {securityToken}` + `GET /v1/organization => ALL orgs + oauthClientSecret` | YES | YES (low-priv free account `re
