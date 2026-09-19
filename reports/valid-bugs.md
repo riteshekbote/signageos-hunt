@@ -1596,3 +1596,11 @@
 
 - 1 lead(s) marked VALID at 2026-09-19 02:00:51 UTC
   - * **HUMAN PoC exception:** `lead-human.md:3-5` researcher executed `POST /v1/organization/{victimUid}/security-token` with account-tier `X-Auth` → `201` + `securityToken bec343d38d9123cd8d53` on victi
+
+- 6 lead(s) marked VALID at 2026-09-19 07:26:36 UTC
+  - - **Verdict: VALID (reconfirmation, Low)** — dupe of accepted finding. **Proof (read-only):** `GET https://box.signageos.io/status -H 'Accept: application/json'` → 200 JSON with `hostname`, `process.u
+  - - **Verdict: VALID (reconfirmation, Low, hardened variant)** — CVSS 3.1 4.3/5.3. Proof: `GET https://api.signageos.io/status` → 200 JSON; headers grep `HSTS/xfo/xcto/no-store` =4 confirms hardening di
+  - - Q1 YES, Q2 YES (`GET https://box.signageos.io/ + /login/` → `200` with `access-control-allow-origin: http://box.signageos.io, https://*.zdusercontent.com, https://api.signageos.io ...` x18, probe `c
+  - - **Verdict: VALID (Info/Low borderline, 3.1)** — CVSS 3.1 `AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N` 3.1. Proof: `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/login/%2F | grep -i acces
+  - - **Verdict: VALID (Informational, 3.1)** — Proof: `curl -sI https://box.signageos.io/login/ | grep -i content-security-policy`. Same channel.
+  - - **Verdict: HOLD (AUTH_HELPED, high-value chain)** — credible code-verified split-brain (`errorDetail` says identity from `X-Auth` first part before `:` while path `{uid}` client-supplied) but **unpr
