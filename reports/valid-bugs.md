@@ -1618,3 +1618,9 @@
   - | **A4 CORS ACAO whitelist** | YES `box` | YES static headers, no creds | NO trivial `http://`+wildcard w/o `ACAC` | YES `curl -sI -H Origin:https://evil.test https://box.signageos.io/` | NO duplicate
   - | **A5 CSP 40+ origins** | YES `box/login/` | YES header present | NO requires XSS co-factor | YES `curl -sI https://box.signageos.io/login/` | NO duplicate | YES | MARGINAL | **VALID (Info border, du
   - **Summary:** This cycle 0 new VALID. 4 reconfirmed VALID duplicates (status×2, CORS, CSP) Low/Info. 3 high-value IDOR held AUTH_HELPED; H2 superset already **CONFIRMED Critical 201** and submitted — t
+
+- 4 lead(s) marked VALID at 2026-09-19 21:10:36 UTC
+  - **Verdict: VALID — CRITICAL (but HOLD for bots; UPGRADED to VALID via human AUTH_HELPED proof, duplicate — do not re-probe).**
+  - **Verdict: VALID — CRITICAL (duplicate mechanism, UPGRADED via Family A human proof) — HOLD for passive bots**
+  - **Verdict: VALID — LOW (borderline informational, DUPLICATE reconfirmation)** — previously accepted `reports/valid-bugs.md:4` `CVSS 4.3 Low (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)` or `5.3 Medium` per o
+  - **Verdict: VALID — LOW (DUPLICATE, lower severity than box due to hardening `reports/valid-bugs.md:5`) CVSS 4.3**
