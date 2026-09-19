@@ -1,72 +1,121 @@
 [0m
 > build · muse-spark-1.2-contributor-free
 [0m
-Triaging 1-hit scan against 60-cycle baseline — single staging fixture, checking liveness and deltas.
+Deep-sweep triage on the single stale hit — verifying if that videowall secret is still live or already dead.
+[0m→ [0mRead .
 [0m→ [0mRead reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
+[0m→ [0mRead scope.yml
 [0m
 [0m$ [0mpython3 -c "
 import hashlib
 secret='9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'
-clientId='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'
-pair=clientId+':'+secret
-print('secret sha256:', hashlib.sha256(secret.encode()).hexdigest())
-print('pair sha256:', hashlib.sha256(pair.encode()).hexdigest())
-# also from KB: 564c293b...
-print('KB pair sha256 expected: 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e')
-# compute sha256 of pair as KB does?
-# KB says secret leak sha256 564c...
-# check secret alone vs pair
-import hashlib as h
-print('clientId sha256:', h.sha256(clientId.encode()).hexdigest())
+print(hashlib.sha256(secret.encode()).hexdigest())
+# also clientId
+cid='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'
+print(hashlib.sha256(cid.encode()).hexdigest())
+# combined?
+combo=cid+':'+secret
+print(hashlib.sha256(combo.encode()).hexdigest())
 "
 
-secret sha256: 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
-pair sha256: 4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
-KB pair sha256 expected: 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
-clientId sha256: efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
+564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
+efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
+4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
 [0m
-[0m$ [0mgrep -rn "kiera\|api\.signageos\|gladia" reposcan-raw/signageos/videowall-designer/sos/videoTiming.js 2>/dev/null; echo "---"; ls -l reposcan-raw/signageos/videowall-designer/ 2>&1 | head -n 50; echo "---"; grep -R "secret" reposcan-raw/ --include="*.js" --include="*.ts" --include="*.json" -n | head -n 20
-23:        apiUrl = 'http://api.kiera.office.signageos.io',
----
-total 12
--rw-r--r-- 1 runner runner   21 Sep 18 23:51 README.md
-drwxr-xr-x 3 runner runner 4096 Sep 18 23:51 server
-drwxr-xr-x 2 runner runner 4096 Sep 18 23:51 sos
----
-reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:7: * @param {String} [auth].secret
-reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19:            secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
-reposcan-raw/signageos/cli/tests/unit/Development/developmentFactory.spec.ts:31:			secret: 'organization-secret',
-reposcan-raw/signageos/cli/tests/unit/Development/developmentFactory.spec.ts:36:			secret: 'organization-secret',
-reposcan-raw/signageos/cli/tests/unit/Organization/organizationFacade.spec.ts:38:		const oauthClientSecret = 'sensitive-client-secret';
-reposcan-raw/signageos/cli/tests/unit/Organization/organizationRestApi.spec.ts:47:			oauthClientSecret: 'organization-client-secret',
-reposcan-raw/signageos/cli/tests/unit/Device/Connect/connectCommand.spec.ts:46:		apiSecurityToken: 'organization-secret',
-reposcan-raw/signageos/cli/tests/unit/Device/Connect/connectCommand.spec.ts:109:				secret: 'organization-secret',
-reposcan-raw/signageos/cli/src/Applet/Start/appletStartCommand.ts:120:			secret: config.apiSecurityToken,
-reposcan-raw/signageos/cli/src/Applet/Build/appletBuildCommand.ts:63:			secret: config.apiSecurityToken,
-reposcan-raw/signageos/cli/src/Development/developmentFactory.ts:12:	secret?: string;
-reposcan-raw/signageos/cli/src/Development/developmentFactory.ts:22:	const auth = opts.accessToken ? { accessToken: opts.accessToken } : { clientId: opts.clientId || '', secret: opts.secret || '' };
-reposcan-raw/signageos/cli/src/Emulator/emulatorFacade.ts:22:		: { clientId: config.identification ?? '', secret: config.apiSecurityToken ?? '' };
-reposcan-raw/signageos/cli/src/Organization/organizationFacade.ts:144:			secret: config.apiSecurityToken,
-reposcan-raw/signageos/cli/src/Device/deviceFacade.ts:104:			secret: organization.oauthClientSecret,
-reposcan-raw/signageos/cli/src/Device/Connect/connectCommand.ts:116:			secret: config.apiSecurityToken,
-reposcan-raw/signageos/cli/src/helper.ts:61:		: { clientId: config.identification ?? '', secret: config.apiSecurityToken ?? '' };
-reposcan-raw/signageos/cli/src/helper.ts:78:			? { clientId: config.identification, secret: config.apiSecurityToken }
-reposcan-raw/signageos/cli/src/helper.ts:79:			: { clientId: credentials?.oauthClientId ?? '', secret: credentials?.oauthClientSecret ?? '' };
-reposcan-raw/signageos/cli/src/helper.ts:107:		secret: string | undefined;
+[0m→ [0mRead knowledge
 [0m
-**STATIC TRIAGE — 2026-08-07 / 2026-09-17 — DELTA: 0 new hits — 1076 files, 1 hit (KNOWN DUPLICATE)**
+[0m$ [0mgrep -r "videowall" /home/runner/work/signageos-hunt/signageos-hunt/knowledge --include="*.md" -n | head -20
+cat /home/runner/work/signageos-hunt/signageos-hunt/cands-signageos.txt 2>/dev/null | head -50
+ls -la /home/runner/work/signageos-hunt/signageos-hunt/leads/ 2>/dev/null | head -30
 
-Inventory mismatch: scan `reposcan-raw/signageos/` = signageos org (59 repos) not `gladiaio/`; @gladiaio/sdk not in scan path — no data to triage for that org. Triage limited to returned grep hits.
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:14:- GitHub org signageos (59 public repos): first-party code incl. sdk (TS), cli (TS), applet-sandbox, platform (C++), videowall-designer (TS), server-bootstrap (Shell), kubernetes-ingress (Go), minio, plus many forks (DefinitelyTyped, HTML5test, zip.js, libcec, raspidmx, node-amqp10, WebGLSamples, webpack-dev-server, aports, charts)
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:41:- 2026-08-07 ACCEPTED SECRET_LEAK @ github.com/signageos/videowall-designer: Hardcoded clientId/secret (SHA256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e`) in `sos/videoTiming.js` targeting internal staging `http://api.kiera.office.signageos.io` over HTTP — credential reuse risk; not directly reportable (out-of-scope host) but informs prod org-boundary testing.
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:211:- 2026-08-09 REJECTED class @ lead: I  videowall-designer videoTiming.js:19 — hardcoded staging secret (out-of-scope host)
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:550:- 2026-08-14 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret 9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9 tested as X-Auth: <cid>:<sec> on GET /v1/organization/{cid}/security-token → 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION_TO_AUTHENTICATE "Account not found" — pair parsed past missing-header gate, account does NOT exist on prod (staging-only test fixture, credential reuse disproven)
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:558:- 2026-08-14 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — pair parsed past missing-header gate, account does NOT exist on prod (staging-only test fixture, credential reuse disproven)
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:575:- 2026-08-14 REJECTED class @ videowall-designer leaked clientId/secret on PROD: Confirmed DEAD — `fcbbd714b3f794…:secret` tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; credential reuse disproven (staging-only fixture).
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:585:- 2026-08-15 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — pair parsed past missing-header gate, account does NOT exist on prod (staging-only test fixture, credential reuse disproven)
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:608:- 2026-08-15 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: pair tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — staging-only fixture, credential reuse disproven.
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:622:- 2026-08-15 CONFIRMED DEAD @ videowall-designer leaked clientId/secret on PROD: clientId fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47 + secret tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — staging-only fixture, credential reuse disproven
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:658:- 2026-08-15 REJECTED: videowall-designer leaked clientId/secret on PROD — staging-only fixture, credential reuse disproven (403076 WRONG_ACCOUNT_SECRET on prod)
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:681:- 2026-08-15 REJECTED: videowall-designer leaked clientId/secret on PROD — testing X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only fixture, credential reuse disproven (CONFIRMED DEAD).
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:702:- 2026-08-15 REJECTED class @ videowall-designer leaked clientId/secret: Testing X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only fixture, credential reuse disproven (CONFIRMED DEAD).
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:719:- 2026-08-15 REJECTED class @ videowall-designer leaked clientId/secret: testing X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only fixture, credential reuse disproven (CONFIRMED DEAD) — unchanged.
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:726:- 2026-08-15 REJECTED class @ videowall-designer leaked clientId/secret: X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET — staging-only fixture, credential reuse disproven.
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:742:- 2026-08-15 REJECTED class @ videowall-designer leaked clientId/secret: X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found" — staging-only fixture, credential reuse disproven — CONFIRMED DEAD.
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:751:- 2026-08-15 REJECTED class @ videowall-designer leaked clientId/secret on PROD: X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; staging-only fixture, credential reuse disproven — CONFIRMED DEAD — unchanged.
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:759:- 2026-08-15 CONFIRMED DEAD @ github.com/signageos/videowall-designer: leaked clientId/secret tested as X-Auth on prod → 403076 WRONG_ACCOUNT_SECRET "Account not found"; credential reuse disproven (staging-only test fixture).
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:764:- 2026-08-15 ACCEPTED IDOR @ api.signageos.io/v1/organization/{uid}/security-token: 403074 errorDetail byte-identical across rs rotations 77955558bc confirms org identity derived from X-Auth header first-part before `:`, path `{uid}` client-supplied → cross-tenant mint mechanism CONFIRMED (conf 86, AUTH_HELPED); videowall-designer prod secret reuse CONFIRMED DEAD (403076 WRONG_ACCOUNT_SECRET on prod).
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:783:- 2026-08-15 REJECTED class @ videowall-designer leaked clientId/secret on PROD: Staging-only fixture, credential reuse disproven (403076 WRONG_ACCOUNT_SECRET on prod) — CONFIRMED DEAD
+/home/runner/work/signageos-hunt/signageos-hunt/knowledge/index.md:809:- 2026-08-15 REJECTED class @ videowall-designer leaked clientId/secret on PROD: confirmed staging-only fixture, credential reuse disproven (403076 WRONG_ACCOUNT_SECRET "Account not found" on prod X-Auth test) — CONFIRMED DEAD.
+https://github.com/signageos/smil-player.git
+https://github.com/signageos/vscode-sops.git
+https://github.com/signageos/applet-examples.git
+https://github.com/signageos/cli.git
+https://github.com/signageos/sdk.git
+https://github.com/signageos/applet-sandbox.git
+https://github.com/signageos/server-bootstrap.git
+https://github.com/signageos/platform.git
+https://github.com/signageos/videowall-designer.git
+total 12080
+drwxr-xr-x  2 runner runner   69632 Sep 19 01:48 .
+drwxr-xr-x 11 runner runner    4096 Sep 19 01:48 ..
+-rw-r--r--  1 runner runner 1249083 Sep 19 01:48 lead-bigpickle.md
+-rw-r--r--  1 runner runner    3408 Sep 19 01:48 lead-human.md
+-rw-r--r--  1 runner runner 2162095 Sep 19 01:48 lead-laguna.md
+-rw-r--r--  1 runner runner   21435 Sep 19 01:48 lead-ling3.md
+-rw-r--r--  1 runner runner   85529 Sep 19 01:48 lead-longcat.md
+-rw-r--r--  1 runner runner   77420 Sep 19 01:48 lead-mimo.md
+-rw-r--r--  1 runner runner 2751753 Sep 19 01:48 lead-nemotron3.md
+-rw-r--r--  1 runner runner    1412 Sep 19 01:48 reposcan-2026-08-07-18-57.md
+-rw-r--r--  1 runner runner    1523 Sep 19 01:48 reposcan-2026-08-07-19-27.md
+-rw-r--r--  1 runner runner    1889 Sep 19 01:48 reposcan-2026-08-07-19-37.md
+-rw-r--r--  1 runner runner    1180 Sep 19 01:48 reposcan-2026-08-07-20-04.md
+-rw-r--r--  1 runner runner    1125 Sep 19 01:48 reposcan-2026-08-07-20-16.md
+-rw-r--r--  1 runner runner    1229 Sep 19 01:48 reposcan-2026-08-07-21-07.md
+-rw-r--r--  1 runner runner    1623 Sep 19 01:48 reposcan-2026-08-07-21-35.md
+-rw-r--r--  1 runner runner    1368 Sep 19 01:48 reposcan-2026-08-07-22-03.md
+-rw-r--r--  1 runner runner    1472 Sep 19 01:48 reposcan-2026-08-07-22-08.md
+-rw-r--r--  1 runner runner    1595 Sep 19 01:48 reposcan-2026-08-07-22-52.md
+-rw-r--r--  1 runner runner    1601 Sep 19 01:48 reposcan-2026-08-07-23-01.md
+-rw-r--r--  1 runner runner    1151 Sep 19 01:48 reposcan-2026-08-07-23-29.md
+-rw-r--r--  1 runner runner    1501 Sep 19 01:48 reposcan-2026-08-07-23-55.md
+-rw-r--r--  1 runner runner    1256 Sep 19 01:48 reposcan-2026-08-08-00-43.md
+-rw-r--r--  1 runner runner    1236 Sep 19 01:48 reposcan-2026-08-08-00-51.md
+-rw-r--r--  1 runner runner    1533 Sep 19 01:48 reposcan-2026-08-08-02-39.md
+-rw-r--r--  1 runner runner    1793 Sep 19 01:48 reposcan-2026-08-08-02-51.md
+-rw-r--r--  1 runner runner    1439 Sep 19 01:48 reposcan-2026-08-08-03-57.md
+-rw-r--r--  1 runner runner    1219 Sep 19 01:48 reposcan-2026-08-08-04-02.md
+-rw-r--r--  1 runner runner    1439 Sep 19 01:48 reposcan-2026-08-08-04-48.md
+[0m
+**Reposcan Triage — `signageos` org (gladiaio refs in prompt are template noise; workspace is `signageos-hunt`)**
 
-| Category | File | Line | Value (sha256 only) | Context |
+`1076 files scanned | 1 raw hit | DELTA: 0 new` — duplicate of known 2026-08-07 hit. Passive-only.
+
+File inspected: `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` (context `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18-23`)
+
+```js
+// reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18
+clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47' // sha256 efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
+// reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19
+secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9' // sha256 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
+// reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23
+apiUrl = 'http://api.kiera.office.signageos.io' // HTTP plaintext + internal staging
+```
+
+### Classification
+
+| Category | Count | File:Line | sha256 (secret) | Notes |
 |---|---|---|---|---|
-| **TEST_OR_EXAMPLE** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` | 19 | `sha256:564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | `auth = { clientId: 'fcbbd714...' , secret: '...' }` default param to `setupVideoTimings(videos, auth, appletUid, apiUrl='http://api.kiera.office.signageos.io', ...)` — test helper using `@signageos/test/dist/RestApi/RestApi`. |
-| **ENDPOINT_LEAK** | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | 23 | `http://api.kiera.office.signageos.io` | Internal staging `apiUrl` default (HTTP plaintext, `kiera.office.signageos.io` — out-of-scope host, not `box.signageos.io`/`api.signageos.io`). |
-| **REAL_SECRET** | — | — | — | 0 hits after verification — see verdict. |
-| **INTERESTING** | — | — | — | 0 hits. No `169.254.169.254`/SSRF, no `id/uid/email/user_id` param anomaly, no `*.gladia.io` refs, no debug flags in this file. Other `secret:` occurrences in `reposcan-raw/signageos/cli/` are placeholders (`'organization-secret'`, `'sensitive-client-secret'`) not flagged by scanner — correctly ignored. |
+| **REAL_SECRET** | 0 | - | - | No novel/prod-valid credential. Known pair tested as `X-Auth: <cid>:<sec>` on eligible `api.signageos.io` prod → `403076 WRONG_ACCOUNT_SECRET "Account not found"` (60+ cycles, `knowledge/index.md:550,575,759`). Passes `MISSING_ACCOUNT_ID` gate → parseable but account absent on prod. |
+| **TEST_OR_EXAMPLE** | 1 | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18-19` | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` (secret) / `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b` (clientId) | Default arg `auth = {clientId, secret}` in `setupVideoTimings()` test helper `knowledge/index.md:41`. Pattern `TEST_OR_EXAMPLE` — staging fixture for `@signageos/test/dist/RestApi/RestApi`. |
+| **ENDPOINT_LEAK** | 1 | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | - | `http://api.kiera.office.signageos.io` — internal staging/kiera office host, HTTP (not HTTPS) `knowledge/index.md:41`. Out-of-scope per `scope.yml:5-9` (eligible ONLY `box.signageos.io`, `api.signageos.io`). |
+| **INTERESTING** | 1 | `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | - | `http://` plaintext for API auth (credential sent over HTTP) — historic but confined to staging fixture; no prod reuse. No `169.254.169.254`, no JWT alg confusion, no SSRF, no GraphQL, no file-upload, no npm `@gladiaio/sdk` metadata in this repo. |
 
-**Verdict:**
+### Verdict — `REPORT_CANDIDATE`
 
-* `videowall-designer/sos/videoTiming.js:19` — **REPORT_CANDIDATE: no** — CONFIRMED DEAD, KNOWN DUPLICATE (30+ cycles, 6+ rs rotations). Mechanism: staging-only test fixture. Live proof `GET https://api.signageos.io/v1/organization/{uid}/security-token` with `X-Auth: fcbbd714...:9d5e257e...` → `403 403076 WRONG_ACCOUNT_SECRET "Account not found"` (vs `403074` no-header). Credential reuse disproven prod — not reportable. Class: `TEST_OR_EXAMPLE` + `ENDPOINT_LEAK` (out-of-scope `kiera.office`), park per `scope.yml` + 2026-09-16 directive: do not re-probe unauth/POST, do not auto-probe foreign tenant. Disclosure channel: none — sha256 only per program rules.
+* `videowall-designer/sos/videoTiming.js:19` (sha256 `564c293b…`) — **REPORT_CANDIDATE: no**
+  * Reason: Out-of-scope host (`api.kiera.office.signageos.io` != eligible `api.signageos.io`/`box.signageos.io` `scope.yml:5-9`). CONFIRMED DEAD on prod via `Auth: X-Auth` probe `knowledge/index.md:550` — `403076 WRONG_ACCOUNT_SECRET` proves no credential reuse. Class `TEST_OR_EXAMPLE`+`ENDPOINT_LEAK`, not `REAL_SECRET` for reportable hosts. Matches prior `REJECTED class @ lead: I videowall-designer videoTiming.js:19 — hardcoded staging secret (out-of-scope host)` `knowledge/index.md:211` and 30+ cycle `CONFIRMED DEAD`.
+  * Action: No new report. Retain sha256 in knowledge for rotation tracking. No `[NEXT] PROBE` — delta zero, surface unchanged.
 
-**No new probes this cycle — DELTA 0, surface closed.**
+No other high-value primitives (IDOR/BOLA/SSRF/JWT/OAuth/business-logic/file-upload/GraphQL) surfaced in this static scan.
