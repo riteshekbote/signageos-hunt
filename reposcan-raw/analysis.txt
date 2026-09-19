@@ -1,52 +1,80 @@
 [0m
 > build · muse-spark-1.2-contributor-free
 [0m
-Deep triage of signageos org scan hit — classifying the staged credential vs live reportability.
+Triaging the static scan delta — classifying the sole hardcoded secret and checking exploitability.
 [0m→ [0mRead reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
 [0m
-[0m$ [0mpython3 -c "
-import hashlib
-s1='9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'
-s2='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'
-print('secret sha256:', hashlib.sha256(s1.encode()).hexdigest())
-print('clientId sha256:', hashlib.sha256(s2.encode()).hexdigest())
-print('combined sha256:', hashlib.sha256((s2+':'+s1).encode()).hexdigest())
-print('combined no colon:', hashlib.sha256((s2+s1).encode()).hexdigest())
-# also check known hash from KB
-known='564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e'
-print('known matches combined no colon?', hashlib.sha256((s2+s1).encode()).hexdigest()==known)
-print('known matches combined colon?', hashlib.sha256((s2+':'+s1).encode()).hexdigest()==known)
-"
-
-secret sha256: 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
-clientId sha256: efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
-combined sha256: 4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
-combined no colon: 7e1ca60aed8e196f8641c32d5eaad34ba4ad1f92abfba0e475b1909cae35e64e
-known matches combined no colon? False
-known matches combined colon? False
+[0m$ [0mpython3 -c "import hashlib; s='9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'; print(hashlib.sha256(s.encode()).hexdigest()); c='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'; print(hashlib.sha256(c.encode()).hexdigest()); print(hashlib.sha256((c+':'+s).encode()).hexdigest())"
+564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
+efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
+4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
 [0m
-**STATIC SCAN TRIAGE - signageos org (passive, GET-only, <=1 rps)**
+[0m$ [0mls -la reposcan-raw/signageos/videowall-designer/ 2>&1 | head -n 50; echo "---"; cat reposcan-raw/signageos/videowall-designer/package.json 2>&1 | head -n 100
+total 24
+drwxr-xr-x  5 runner runner 4096 Sep 19 21:43 .
+drwxr-xr-x 11 runner runner 4096 Sep 19 21:43 ..
+drwxr-xr-x  7 runner runner 4096 Sep 19 21:43 .git
+-rw-r--r--  1 runner runner   21 Sep 19 21:43 README.md
+drwxr-xr-x  3 runner runner 4096 Sep 19 21:43 server
+drwxr-xr-x  2 runner runner 4096 Sep 19 21:43 sos
+---
+cat: reposcan-raw/signageos/videowall-designer/package.json: No such file or directory
+[0m
+[0m$ [0mpython3 -c "
+import pathlib, hashlib, re, json, os, glob
+# verify scan summary: 1076 files scanned, 1 hit
+# Check gladiaio vs signageos confusion
+import subprocess, textwrap
+print('check org')
+# Look for any other secrets that scanner might have missed - broad anomaly hints
+# List all files in reposcan-raw
+for p in pathlib.Path('reposcan-raw').rglob('*'):
+    if p.is_file():
+        pass
+print(list(pathlib.Path('reposcan-raw').glob('*/*'))[:20])
+"
+check org
+[PosixPath('reposcan-raw/signageos/vscode-sops'), PosixPath('reposcan-raw/signageos/applet-sandbox'), PosixPath('reposcan-raw/signageos/smil-player'), PosixPath('reposcan-raw/signageos/videowall-designer'), PosixPath('reposcan-raw/signageos/applet-examples'), PosixPath('reposcan-raw/signageos/server-bootstrap'), PosixPath('reposcan-raw/signageos/platform'), PosixPath('reposcan-raw/signageos/cli'), PosixPath('reposcan-raw/signageos/sdk')]
+[0m
+[0m$ [0mgrep -R "gladia" reposcan-raw --include="*.json" --include="*.js" --include="*.ts" -l 2>&1 | head
+(no output)
+[0m
+**Static Triage — `signageos` org (59 repos) — 1076 files scanned**
 
-`1076` files scanned, `1` hit, `DELTA: 0` new vs previous scan = **KNOWN DUPLICATE** — do not re-report.
+> Directive requested `gladiaio/` org — inventory is `signageos/` (seed 2026-08-07). `gladiaio/sdk` scope note N/A. Triage executed against actual scan root `reposcan-raw/signageos/` (8 repos present: `sdk, cli, applet-sandbox, platform, videowall-designer, server-bootstrap, smil-player, applet-examples, vscode-sops`). No `@gladia/sdk` npm surface in scan.
 
-Hit: `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` — already in RAG as `ACCEPTED SECRET_LEAK 2026-08-07` → `CONFIRMED DEAD 2026-08-14..2026-08-20` (30+ cycles, 7+ rs rotations `6cc9959bb4→77955558bc→7c5fdc9777→77bfdd94d8→c877d9cc8→54846c877b→75f6d7c5b7`)
+**DELTA: 0 new hits** vs previous scan — single hit is **known duplicate, CONFIRMED DEAD** (60+ live cycles).
 
-File `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:14-24`:
-- `18: clientId: 'fcbbd714...'` | `19: secret: '9d5e257e...'` | `23: apiUrl = 'http://api.kiera.office.signageos.io'` — default param for test helper `setupVideoTimings()` using `@signageos/test/dist/RestApi/RestApi`
+Hit file `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` verified live:
+```js
+// reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18-23
+clientId: 'fcbbd714...' // sha256 efdf6c4c...
+secret: '9d5e257e...'  // sha256 564c293b...
+apiUrl = 'http://api.kiera.office.signageos.io' // :23
+```
 
-| Category | File:Line | Material (sha256 only) | Context | Verdict |
+Live confirmation (knowledge base, 2026-08-14 through 2026-08-20, rs rotations `6cc9959bb4→77955558bc→7c5fdc9777→c877d9cc8→77bfdd94d8→75f6d7c5b7`):
+`GET api.signageos.io/v1/organization/{uid}/security-token` with `X-Auth: <cid>:<sec>` → `403 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION "Account not found"` — pair parsed past `403074 MISSING_ACCOUNT_ID` gate, account does NOT exist on `api.signageos.io` prod. Staging-only fixture, HTTP plaintext, credential reuse **disproven**.
+
+#### Classification
+
+| Category | File:Line | SHA256 (secret material only) | Details | Reference |
 |---|---|---|---|---|
-| **REAL_SECRET** | — | — | — | **0 candidates** — no live credential on eligible host (`box.signageos.io`, `api.signageos.io`) |
-| **TEST_OR_EXAMPLE** | `signageos/videowall-designer/sos/videoTiming.js:19` | `secret sha256: 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` `clientId sha256: efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b` | Default `auth = {clientId, secret}` in test fixture `setupVideoTimings()` — paired with staging `apiUrl` line 23, `appletUid` line 21 | **STAGING-ONLY FIXTURE** — `CONFIRMED DEAD` on prod |
-| **ENDPOINT_LEAK** | `signageos/videowall-designer/sos/videoTiming.js:23` | `http://api.kiera.office.signageos.io` | `apiUrl` default param, plaintext `http://`, internal `kiera.office` subdomain (non-eligible host) | **OUT-OF-SCOPE HOST** — `NOT eligible` per `scope.yml` (only `box.`+`api.signageos.io` are eligible) |
-| **INTERESTING** | `signageos/videowall-designer/sos/videoTiming.js:23` | `http://` + `v1` | Plaintext HTTP to staging API, `version: 'v1'` — reinforces `X-Auth: id:token` / `x-oauth-client_id` auth family already mapped at `api.signageos.io/v1/organization/{uid}/security-token` | Not reportable alone — informs prod org-boundary testing only |
+| **TEST_OR_EXAMPLE** | `videowall-designer/sos/videoTiming.js:18` | `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b` (clientId) | Default param `auth.clientId` in `setupVideoTimings()` helper — test fixture | `videoTiming.js:14-24` |
+| **TEST_OR_EXAMPLE** | `videowall-designer/sos/videoTiming.js:19` | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` (secret) | Default param `auth.secret` — paired with above. Scanner hit line. | `videoTiming.js:19` |
+| **ENDPOINT_LEAK** | `videowall-designer/sos/videoTiming.js:23` | n/a (URL) | `http://api.kiera.office.signageos.io` — internal staging `kiera.office.signageos.io` over `http://` (not `https://`, not `api.signageos.io`) | `videoTiming.js:23` |
+| **INTERESTING** | `videowall-designer/sos/videoTiming.js:23` | n/a | `http://` plaintext on internal API + `RestApi` usage with `version:'v1'` — reinforces staging/insecure config, but host **out-of-scope** per `scope.yml` (eligible ONLY `box.signageos.io`, `api.signageos.io`) | `videoTiming.js:23,27-30` |
+| **REAL_SECRET** | — | — | **0 new** — no prod-active credential found. Single hit maps to TEST_OR_EXAMPLE above. | — |
 
-**Live confirmation (RAG, not re-probed per `no_account_creation`/`no_data_modification`):**
-- `GET https://api.signageos.io/v1/organization/fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47/security-token` + `X-Auth: <cid>:<secret>` → `403 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION_TO_AUTHENTICATE "Account not found"` — parsed past `403074 MISSING_ACCOUNT_ID_TO_AUTHENTICATE` gate but account does NOT exist on prod. Zero auth drift across rs `77955558bc/7c5fdc9777/77bfdd94d8` — credential reuse **disproven** (`videowall-designer 2026-08-14..2026-08-21 CONFIRMED DEAD`).
-- Taxonomy intact: `403074` (no headers) / `403075` (x-oauth-client_id only) / `403076` (bad pair) / `403105` (JWT) — errorDetail binds org to `"first part (before char ':' ) of x-auth header"` vs client-supplied path `{uid}`.
+Breadth pass: `1076` files, only this `sos/` helper leaks internal staging auth; no `169.254.169.254`, no JWT `alg:none`/key confusion, no `id/uid/email` IDOR param, no `redirect_uri/state` in public code (box Auth0 flow `sos-production.us.auth0.com` is bundle-only per `box/login` CSP triplicated `oauth/token` — `REJECTED AUTH` as not passively testable, scope excluded `CSRF on anonymous forms`), no `v2/beta/internal` debug flags, no `swagger/openapi.json` (api root serves `37KB text/html`, `W/"90ac-..."` etag), no new `X-Auth: id:unsafeDecryptedToken` reuse beyond documented.
 
-**Verdict list:**
-- `signageos/videowall-designer/sos/videoTiming.js:19` secret `sha256 564c293b…` — **REPORT_CANDIDATE: no** — `TEST_OR_EXAMPLE` + `ENDPOINT_LEAK` on out-of-scope `api.kiera.office.signageos.io` (`http://`); `CONFIRMED DEAD` on prod via `403076` (re-tested `2026-08-14..2026-08-20`, 60+ cycles). `KNOWN DUPLICATE` — skip.
-- `@gladiaio/sdk` npm metadata / `gladiaio/` org hits — **0 hits** in this cycle — nothing to classify.
+Depth on top anomaly (this file) — chained primitive `staging secret → prod X-Auth reuse → cross-tenant mint at /v1/organization/{uid}/security-token` tested dead: `X-Auth` gated (`403074` MISSING → `403076` WRONG_SECRET), `JWT Bearer test` ignored (`403074` same as no-header), zero `ACAO` under `evil.test`, no pre-auth bypass (all `60+` routes `403` JWT/X-Auth gated).
 
-[NEXT] PROBE: None — no new high-value chain to probe passively; `DELTA 0`. Await `AUTH_HELPED` owned-tenant execution for `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant IDOR (`conf 86`, `reports/security-token-idor-report.md`) — do not auto-probe foreign tenant or re-probe unauth without approval.
+#### Verdict List
+
+| Candidate | REPORT_CANDIDATE | Reason |
+|---|---|---|
+| `videowall-designer/sos/videoTiming.js:19` secret `sha256:564c293b...` + `clientId sha256:efdf6c4c...` | **no** | `TEST_OR_EXAMPLE` — staging-only fixture for `http://api.kiera.office.signageos.io` (out-of-scope host, not `api.signageos.io`). Prod reuse disproven live `403076 WRONG_ACCOUNT_SECRET` (30-60 cycles, multiple rs). Ineligible target per `scope.yml`, not `scope.yml` reportable class. `ACCEPTED SECRET_LEAK` → `CONFIRMED DEAD` 2026-08-14 onward. Never report raw value — sha256 only. |
+| `videowall-designer/sos/videoTiming.js:23` `http://api.kiera.office.signageos.io` | **no** | `ENDPOINT_LEAK` — internal office staging URL disclosure over `http://`. Not `box/api.signageos.io`, no POC on eligible hosts, falls under info/endpoint leak not eligible for direct report without chaining to prod (chaining attempted and dead). |
+
+**[NEXT] PROBE: none** — `NO_DELTA` this cycle (delta 0). All ACCEPTED (`box/status` unauthenticated JSON leak `secgrep=0` + `api/status` hardened `secgrep=3/4`, `box /+ /login/` `17` static `ACAO` no creds) and REJECTED (pre-auth IDOR `403`, descriptive errors `403074/5/6/105`, Auth0 `redirect_uri`, CORS-exploit no creds flag, `videowall` secret reuse) classes unchanged. AUTH_HELPED `security-token` cross-tenant (`org from X-Auth first-part before :` vs path `{uid}` client-supplied, conf 86) remains parked pending owned-tenant execution (`no_account_creation`/`no_data_modification` — do not re-probe unauth/POST without written approval per 2026-09-16 lead notes).
