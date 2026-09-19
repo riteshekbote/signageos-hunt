@@ -1593,3 +1593,6 @@
   - - **Verdict:** **VALID (Low, DUPLICATE)** — CVSS3.1 `4.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)` (5.3 if counting missing HSTS differential). One-line: unauth infra disclosure reconfirmed.
   - - **Verdict:** **VALID (Low, DUPLICATE)** — CVSS3.1 `4.3 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)`. One-line: hardened but still leaks.
   - - **Verdict:** **VALID (Low borderline Info, DUPLICATE)** — CVSS3.1 `3.1 (AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N)` CORS, `3.1 (AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N)` CSP. One-line: static whitelist + broa
+
+- 1 lead(s) marked VALID at 2026-09-19 02:00:51 UTC
+  - * **HUMAN PoC exception:** `lead-human.md:3-5` researcher executed `POST /v1/organization/{victimUid}/security-token` with account-tier `X-Auth` → `201` + `securityToken bec343d38d9123cd8d53` on victi
