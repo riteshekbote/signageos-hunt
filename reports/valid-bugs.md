@@ -1611,3 +1611,10 @@
   - | **C** | `GET https://box.signageos.io/` + `GET https://box.signageos.io/login/` CORS `access-control-allow-origin: 17x static` incl `http://box.signageos.io` + `https://*.zdusercontent.com` wildcard
   - | **D** | `GET https://box.signageos.io/login/` CSP `connect-src/frame-src 40+ origins` triplicated `oauth/token` `inventory/signageos.md:40` | YES | YES | MARGINAL defense-in-depth (needs XSS) | YES 
   - | **E-HUMAN** | *Same as E but human-executed* `leads/lead-human.md:3` `POST A->B =>201 {securityToken}` + `GET /v1/organization => ALL orgs + oauthClientSecret` | YES | YES (low-priv free account `re
+
+- 5 lead(s) marked VALID at 2026-09-19 18:40:47 UTC
+  - | **A1 box/status infra leak** | YES `box.signageos.io` | YES anonymous `GET /status` 200 | YES recon `hostname+uid+Node+topology` LOW | YES `curl -s https://box.signageos.io/status` | NO duplicate `v
+  - | **A2 api/status infra leak** | YES `api.signageos.io` | YES anonymous `GET /status` 200 | YES recon LOW | YES `curl -s https://api.signageos.io/status` | NO duplicate | YES | YES (hardened, border) 
+  - | **A4 CORS ACAO whitelist** | YES `box` | YES static headers, no creds | NO trivial `http://`+wildcard w/o `ACAC` | YES `curl -sI -H Origin:https://evil.test https://box.signageos.io/` | NO duplicate
+  - | **A5 CSP 40+ origins** | YES `box/login/` | YES header present | NO requires XSS co-factor | YES `curl -sI https://box.signageos.io/login/` | NO duplicate | YES | MARGINAL | **VALID (Info border, du
+  - **Summary:** This cycle 0 new VALID. 4 reconfirmed VALID duplicates (status×2, CORS, CSP) Low/Info. 3 high-value IDOR held AUTH_HELPED; H2 superset already **CONFIRMED Critical 201** and submitted — t
