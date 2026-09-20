@@ -1624,3 +1624,10 @@
   - **Verdict: VALID — CRITICAL (duplicate mechanism, UPGRADED via Family A human proof) — HOLD for passive bots**
   - **Verdict: VALID — LOW (borderline informational, DUPLICATE reconfirmation)** — previously accepted `reports/valid-bugs.md:4` `CVSS 4.3 Low (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)` or `5.3 Medium` per o
   - **Verdict: VALID — LOW (DUPLICATE, lower severity than box due to hardening `reports/valid-bugs.md:5`) CVSS 4.3**
+
+- 5 lead(s) marked VALID at 2026-09-20 01:20:16 UTC
+  - |1| `box.signageos.io/status` infra leak `lead-mimo.md:15-22` | Y `scope.yml:6` | Y `PR:N` `GET /status` 200 | Y `C:L` topology aids targeted infra attack | Y `curl -s https://box.signageos.io/status`
+  - |2| `api.signageos.io/status` leak `lead-mimo.md:112-118` | Y `scope.yml:8` | Y `PR:N` 200 despite `HSTS/xfo/xcto` | Y `C:L` | Y `GET https://api.signageos.io/status` | N duplicate | Y not rejected | 
+  - |3| `box CORS` static ACAO `inventory/signageos.md:39` | Y box | Y unauth `GET / + Origin:evil.test` → static 17 ACAO 200 | N `AC:H/UI:R` no creds → only unauth HTML readable | Y `curl -sI -H Origin:h
+  - |4| `box CSP` broad `inventory/signageos.md:24` | Y box | Y | N — needs XSS co-location | Y | N duplicate | Y not rejected but best-practice | MARGINAL | **VALID (Info) DUPLICATE** — `2.7-3.1` |
+  - |5-7| `api v1/organization/{uid}/security-token` cross-tenant mint `lead-mimo.md:6-13` + `v1/organization/{uid} oauthSecret` + `v1/device/{uid}/peer-recovery` `lead-bigpickle.md:335-361` | Y api | **N
