@@ -1654,3 +1654,12 @@
   - | 3 | `box CORS 17 ACAO http+wildcard` `reports/valid-bugs.md:6` | YES box | YES public but `ACAC` absent — only unauth HTML | Marginal L — trust boundary expansion, no cred theft | YES `curl -sI -H '
   - | 4 | `box CSP 40+ origins triplicated Auth0` `reports/valid-bugs.md:7` | YES box | YES public | Info — overly broad `connect-src/frame-src` | YES `curl -sI https://box.signageos.io/login/ \| grep -i 
   - | 5 | `api /v1/organization/{uid}/security-token` cross-tenant mint `leads/lead-mimo.md:6` / `reports/security-token-idor-report.md:1` | YES `api.signageos.io` In | NO unauth — needs `X-Auth low-priv 
+
+- 7 lead(s) marked VALID at 2026-09-20 21:41:53 UTC
+  - | **A** | `box.signageos.io/status` unauth K8s leak `leads/lead-mimo.md:15-22` | Y api:8/box:7 | Y public GET 200 `probe-results.md:45` | Y infra recon aids SSRF chain, not just weirdness | Y GET only
+  - | **B** | `api.signageos.io/status` same `inventory/signageos.md:37` | Y | Y public GET 200 len 1323-1334 `probe-results.md:314` | Y topology leak | Y GET only | N duplicate | Y | Y | **VALID (Low)** 
+  - | **C** | `box.signageos.io` CORS 17-18 static ACAO `http://box.signageos.io` + `https://*.zdusercontent.com` wildcard `leads/lead-laguna.md:8` | Y | Y public `GET / -H Origin:evil.test` 200 static li
+  - | **D** | `box.signageos.io` CSP 40+ origins triplicated Auth0 `oauth/token` `leads/lead-laguna.md:77` | Y | Y public CSP header | Y defense-in-depth (needs XSS to exploit) | Y GET | N duplicate | Y n
+  - | **E** | `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant mint (GET list + POST create + DELETE) `reports/security-token-idor-report.md:24-30` `leads/lead-human.md:1-6` | Y | Y lo
+  - | **E-superset** | `GET /v1/organization` list ALL orgs + `oauthClientId/Secret` | Y | Y same `X-Auth` low-priv | Y superset of E - steal any org credential without token creation | Y same two-tenant 
+  - | **F** | `api.signageos.io/v1/organization/{uid}` oauth secret disclosure `leads/lead-bigpickle.md:152-158` | Y | N requires valid `X-Auth: acctId:token` `AUTH_HELPED` 403 without | Y critical if pro
