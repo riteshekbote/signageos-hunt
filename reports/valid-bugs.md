@@ -1639,3 +1639,11 @@
   - | **4 `box` CSP 40+ origins triplicated Auth0** | Y | Y via header inspect | Y informational defense-in-depth | Y `curl -I https://box.signageos.io/login/` → CSP | N duplicate | Y | MARGINAL | **VALID
   - | **5 `api/v1/organization/{uid}/security-token` cross-tenant mint (BOLA/IDOR)** `reports/security-token-idor-report.md:22-28` `leads/lead-mimo.md:6` | Y `api.signageos.io` | N unauth (403074) / **Y l
   - | **6 `api/v1/organization/{uid}` OAuth secret disclosure** | Y | N (403) / Y AUTH_HELPED | Y High | N | Y | Y | HOLD | **HOLD** — same gate as #5, needs JWT+2nd tenant `reports/valid-bugs.md:9-10` |
+
+- 6 lead(s) marked VALID at 2026-09-20 16:20:43 UTC
+  - | **A box/status K8s topo leak `lead-mimo.md:15`** `GET https://box.signageos.io/status` → `200 application/json` hostname `box-8676fb5f57-*` + `process.uid` 64-hex + `Node v20.20.2` + 9-svc `amqp0/re
+  - | **B api/status infra leak `lead-mimo.md:24` analog** `GET https://api.signageos.io/status` → `200` `Node v24.19.0` 8-svc (mongo3 absent) hardened `HSTS/xfo/xcto` `secgrep=4` | YES | YES PR:N `200` |
+  - | **C box CORS `box:/+/login/` 17 ACAO incl `http://box.signageos.io` + `*.zdusercontent.com` `inventory/signageos.md:39`** | YES | YES PR:N static whitelist `evil.test` NOT reflected | YES border tru
+  - | **D box CSP overly broad 40+ connect-src `inventory/signageos.md:24`** | YES | YES PR:N | YES info — needs co-located XSS | YES `curl -sI https://box.signageos.io/login/` CSP | NO DUPLICATE | YES | 
+  - | **E `api/v1/organization/{uid}/security-token` cross-tenant mint `lead-mimo.md:6`, `lead-human.md:8`, `reports/security-token-idor-report.md:28`** `GET/POST /v1/organization/{victimUid}/security-tok
+  - | **F SUPERSET `GET /v1/organization` list-all `lead-human.md:4`** returns ALL orgs platform-wide with `oauthClientId/oauthClientSecret`; stolen pair auths `GET /v1/device` as victim | YES | YES PR:L 
