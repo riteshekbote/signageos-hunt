@@ -1647,3 +1647,10 @@
   - | **D box CSP overly broad 40+ connect-src `inventory/signageos.md:24`** | YES | YES PR:N | YES info — needs co-located XSS | YES `curl -sI https://box.signageos.io/login/` CSP | NO DUPLICATE | YES | 
   - | **E `api/v1/organization/{uid}/security-token` cross-tenant mint `lead-mimo.md:6`, `lead-human.md:8`, `reports/security-token-idor-report.md:28`** `GET/POST /v1/organization/{victimUid}/security-tok
   - | **F SUPERSET `GET /v1/organization` list-all `lead-human.md:4`** returns ALL orgs platform-wide with `oauthClientId/oauthClientSecret`; stolen pair auths `GET /v1/device` as victim | YES | YES PR:L 
+
+- 5 lead(s) marked VALID at 2026-09-20 18:56:27 UTC
+  - | 1 | `box.signageos.io/status` unauth K8s leak `reports/valid-bugs.md:4` | YES `scope.yml:7` In | YES unauth `200` `probe-results.md:45` | YES recon + version leak | YES `GET https://box.signageos.io
+  - | 2 | `api.signageos.io/status` unauth K8s leak `reports/valid-bugs.md:5` | YES `scope.yml:8` In | YES unauth `200` | YES same class, hardened but still leak | YES `GET https://api.signageos.io/status
+  - | 3 | `box CORS 17 ACAO http+wildcard` `reports/valid-bugs.md:6` | YES box | YES public but `ACAC` absent — only unauth HTML | Marginal L — trust boundary expansion, no cred theft | YES `curl -sI -H '
+  - | 4 | `box CSP 40+ origins triplicated Auth0` `reports/valid-bugs.md:7` | YES box | YES public | Info — overly broad `connect-src/frame-src` | YES `curl -sI https://box.signageos.io/login/ \| grep -i 
+  - | 5 | `api /v1/organization/{uid}/security-token` cross-tenant mint `leads/lead-mimo.md:6` / `reports/security-token-idor-report.md:1` | YES `api.signageos.io` In | NO unauth — needs `X-Auth low-priv 
