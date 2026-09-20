@@ -1631,3 +1631,11 @@
   - |3| `box CORS` static ACAO `inventory/signageos.md:39` | Y box | Y unauth `GET / + Origin:evil.test` → static 17 ACAO 200 | N `AC:H/UI:R` no creds → only unauth HTML readable | Y `curl -sI -H Origin:h
   - |4| `box CSP` broad `inventory/signageos.md:24` | Y box | Y | N — needs XSS co-location | Y | N duplicate | Y not rejected but best-practice | MARGINAL | **VALID (Info) DUPLICATE** — `2.7-3.1` |
   - |5-7| `api v1/organization/{uid}/security-token` cross-tenant mint `lead-mimo.md:6-13` + `v1/organization/{uid} oauthSecret` + `v1/device/{uid}/peer-recovery` `lead-bigpickle.md:335-361` | Y api | **N
+
+- 6 lead(s) marked VALID at 2026-09-20 11:54:23 UTC
+  - | **1 `box/status` infra disclosure** `reports/valid-bugs.md:4` | Y api=box in | Y PR:N unauth 200 | Y L recon (pod/version/topology) | Y `curl https://box.signageos.io/status` | N duplicate 60+ cycle
+  - | **2 `api/status` infra disclosure** | Y | Y | Y L | Y `curl https://api.signageos.io/status` | N duplicate | Y | Y border | **VALID (Low) DUPLICATE** CVSS3.1 `4.3` |
+  - | **3 `box` CORS `http://` + `*.zdusercontent.com` wildcard** `scope.yml:5-9` | Y | Y static ACAO, no `Allow-Credentials` | Y border trust boundary | Y `curl -I -H 'Origin:https://evil.test' https://b
+  - | **4 `box` CSP 40+ origins triplicated Auth0** | Y | Y via header inspect | Y informational defense-in-depth | Y `curl -I https://box.signageos.io/login/` → CSP | N duplicate | Y | MARGINAL | **VALID
+  - | **5 `api/v1/organization/{uid}/security-token` cross-tenant mint (BOLA/IDOR)** `reports/security-token-idor-report.md:22-28` `leads/lead-mimo.md:6` | Y `api.signageos.io` | N unauth (403074) / **Y l
+  - | **6 `api/v1/organization/{uid}` OAuth secret disclosure** | Y | N (403) / Y AUTH_HELPED | Y High | N | Y | Y | HOLD | **HOLD** — same gate as #5, needs JWT+2nd tenant `reports/valid-bugs.md:9-10` |
