@@ -1663,3 +1663,8 @@
   - | **E** | `api.signageos.io/v1/organization/{uid}/security-token` cross-tenant mint (GET list + POST create + DELETE) `reports/security-token-idor-report.md:24-30` `leads/lead-human.md:1-6` | Y | Y lo
   - | **E-superset** | `GET /v1/organization` list ALL orgs + `oauthClientId/Secret` | Y | Y same `X-Auth` low-priv | Y superset of E - steal any org credential without token creation | Y same two-tenant 
   - | **F** | `api.signageos.io/v1/organization/{uid}` oauth secret disclosure `leads/lead-bigpickle.md:152-158` | Y | N requires valid `X-Auth: acctId:token` `AUTH_HELPED` 403 without | Y critical if pro
+
+- 3 lead(s) marked VALID at 2026-09-20 23:40:50 UTC
+  - **Verdict: VALID — Informational/Misconfig**
+  - **Verdict: VALID — CRITICAL IDOR/BOLA — but `HOLD` for passive hunter; requires `AUTH_HELPED` to prove. Do not re-probe unauth.**
+  - **Verdict: VALID CRITICAL — same AUTH_HELPED proof as L3, include in same report (L3 is mint leg, L4 is credential leg). CVSS 9.1 same. Channel `security@signageos.io`.**
