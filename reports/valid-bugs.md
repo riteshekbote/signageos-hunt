@@ -1668,3 +1668,13 @@
   - **Verdict: VALID — Informational/Misconfig**
   - **Verdict: VALID — CRITICAL IDOR/BOLA — but `HOLD` for passive hunter; requires `AUTH_HELPED` to prove. Do not re-probe unauth.**
   - **Verdict: VALID CRITICAL — same AUTH_HELPED proof as L3, include in same report (L3 is mint leg, L4 is credential leg). CVSS 9.1 same. Channel `security@signageos.io`.**
+
+- 8 lead(s) marked VALID at 2026-09-21 02:05:19 UTC
+  - | Q5 Novel? | NO (duplicate) — already in `reports/valid-bugs.md` but still live |
+  - **Verdict: VALID (LOW)** — duplicate reconfirmation. **Proof:** `GET https://box.signageos.io/status` → 200. **Impact:** infra recon. **CVSS 3.1:** `AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` **5.3 Medium**
+  - **Verdict: VALID (LOW)** duplicate. **CVSS 5.3** same vector, accepted as border VALID lower than box due to `secgrep=4`.
+  - | Q7 | MARGINAL → YES as informational (prior triage kept VALID info/low CVSS 3.1) |
+  - **Verdict: VALID (INFO/LOW, border)** — `CVSS 3.1` CORS 3.1 `AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N`, CSP 3.1 `AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N`. Do not chain to ATO without XSS on listed origin.
+  - **Verdict: VALID (CRITICAL) — upgraded from HOLD by live end-to-end POC; HOLD if strictly passive-only without owned-asset POST.** **Minimal proof (owned assets only, read-mostly):** 1) `GET /v1/organ
+  - | Q2 | NO (passive) — requires valid X-Auth/account JWT + 2nd tenant |
+  - **Verdict: HOLD (AUTH_HELPED)** — code-verified via SDK but all passive probes 403 probe-results.md. Carry, do not submit as VALID without owned-asset matrix identical to LEAD 4.
