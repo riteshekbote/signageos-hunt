@@ -1678,3 +1678,12 @@
   - **Verdict: VALID (CRITICAL) — upgraded from HOLD by live end-to-end POC; HOLD if strictly passive-only without owned-asset POST.** **Minimal proof (owned assets only, read-mostly):** 1) `GET /v1/organ
   - | Q2 | NO (passive) — requires valid X-Auth/account JWT + 2nd tenant |
   - **Verdict: HOLD (AUTH_HELPED)** — code-verified via SDK but all passive probes 403 probe-results.md. Carry, do not submit as VALID without owned-asset matrix identical to LEAD 4.
+
+- 7 lead(s) marked VALID at 2026-09-21 20:03:17 UTC
+  - | Q5 | Novel/unreported? | **NO** - `reports/valid-bugs.md:4` already VALID duplicate (60+ reconfirmations) |
+  - | Q7 | Triager accept? | **YES marginal** - informational Low; every prior triage VALID |
+  - **Verdict: VALID (duplicate, Low)** - Do not re-report. Minimal proof: `GET https://box.signageos.io/status` -> `200` JSON `hostname:"box-..."` + `succeededServices`. Impact: recon. **CVSS 3.1: 4.3** 
+  - | Q5 | Novel | **NO** duplicate `reports/valid-bugs.md:5` |
+  - **Verdict: VALID (duplicate, Low)** - same proof as A on `api` host. **CVSS 3.1: 4.3**.
+  - | Q3 | Real impact | **YES Critical** - `POST` mints `OrganizationFullToken {id,name,securityToken}` valid as `X-Auth: {victimUid}:{mintedSecret}` on `api.signageos.io/v1/device` -> full fleet/content
+  - | Q7 | Triager accept | **YES if proven, but HOLD under passive constraint** - `reports/valid-bugs.md:9` `HOLD` x6 cycles; with live proof would be **VALID Critical CVSS 9.8** `AV:N/AC:L/PR:L/UI:N/S:C
