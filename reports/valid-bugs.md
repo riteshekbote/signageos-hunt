@@ -1695,3 +1695,10 @@
   - | 3 | `box CORS` 17-18 static `ACA-Origin` on `/` + `/login/` incl `http://box.signageos.io` + `https://*.zdusercontent.com` + `api.signageos.io`, `evil.test` NOT reflected, no `Allow-Credentials` | Y
   - | 4 | `box CSP` `connect-src/frame-src` 40+ origins triplicated `auth0.signageos.io/oauth/token` | YES box | YES unauth | Low defense-in-depth | YES `curl -sI https://box.signageos.io/login/%2F` → CSP
   - | 5 | `api/v1/organization/{uid}/security-token` cross-tenant mint `IDOR/BOLA` (`reports/security-token-idor-report.md:24-28`, `lead-mimo.md:6-13`) `POST /v1/organization/{victimUid}/security-token` w
+
+- 5 lead(s) marked VALID at 2026-09-22 12:57:16 UTC
+  - | **A** `box.signageos.io/status` MISCONFIG | Q1 Y in-scope `scope.yml:6` / Q2 Y public `probe-results.md:3` 200 / Q3 Y Low recon (pod/topology/Node) / Q4 Y `GET /status` passive PoC `curl -s https://
+  - | **B** `api.signageos.io/status` MISCONFIG | Same Y/Y/Y/Y/N/Y/Y → **VALID Low duplicate — CVSS 4.3 — `curl -s https://api.signageos.io/status` → `api-6f69db97d5-*` 8 svc** |
+  - | **C** `box` CORS 17-18 ACAO | Q1 Y / Q2 Y public / Q3 Y Low border (no ACAC) / Q4 Y `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/` → static list / Q5 N dup / Q6 Y / Q7 Y border 
+  - | **D** `box` CSP 40+ origins | Same → **VALID Info border — CVSS 3.1** |
+  - | **E** `api /v1/organization/{uid}/security-token` IDOR | Q1 Y / Q2 **PARTIAL** low-priv `X-Auth accountId:apiSecurityToken` required (`scope.yml:44` no account creation — needs existing tenant) / Q3
