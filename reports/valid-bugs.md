@@ -1709,3 +1709,8 @@
   - | **C `box` CORS 18-origin ACAO (`http://` + `*.zdusercontent.com` wildcard)** | YES | YES unauth (static whitelist) `leads/lead-mimo.md:27` | Low border — trust-boundary expansion, no `Allow-Credenti
   - | **D `box` CSP 40+ origins** | YES | YES unauth | Info — overly broad `connect-src/frame-src` | YES `curl -sI https://box.signageos.io/login/` | NO duplicate | YES | MARGINAL | **VALID (Info)** 3.1 |
   - | **E `api/v1/org/{uid}/security-token` cross-tenant mint** | YES `scope.yml:8` | YES low-priv account-tier `X-Auth` | **Critical** — mint working victim tenant creds → full device/applet/content cont
+
+- 3 lead(s) marked VALID at 2026-09-22 20:37:11 UTC
+  - **Verdict: VALID (DUPLICATE RECONFIRMED) — not novel**
+  - **Verdict: VALID (DUPLICATE RECONFIRMED)**
+  - **Verdict: VALID (CONFIRMED — supersedes HOLD, already submitted, do not re-report)**
