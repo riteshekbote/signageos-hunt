@@ -1687,3 +1687,11 @@
   - **Verdict: VALID (duplicate, Low)** - same proof as A on `api` host. **CVSS 3.1: 4.3**.
   - | Q3 | Real impact | **YES Critical** - `POST` mints `OrganizationFullToken {id,name,securityToken}` valid as `X-Auth: {victimUid}:{mintedSecret}` on `api.signageos.io/v1/device` -> full fleet/content
   - | Q7 | Triager accept | **YES if proven, but HOLD under passive constraint** - `reports/valid-bugs.md:9` `HOLD` x6 cycles; with live proof would be **VALID Critical CVSS 9.8** `AV:N/AC:L/PR:L/UI:N/S:C
+
+- 6 lead(s) marked VALID at 2026-09-22 02:11:18 UTC
+  - | # | Lead (from `leads/lead-mimo.md`, `reports/valid-bugs.md`) | Q1 Scope | Q2 Reach | Q3 Impact | Q4 GET/HEAD proof | Q5 Novel | Q6 Not rejected | Q7 Triager accept | Verdict |
+  - | 1 | `GET https://box.signageos.io/status` unauth K8s leak (`inventory/signageos.md:36-38` pod hostname `box-7c8c...`, `process.uid` 40-hex, Node `v20.20.2`, `succeededServices: amqp0,redis0-3,mongo0
+  - | 2 | `GET https://api.signageos.io/status` same class (`probe-results.md:314`) Node `v24.19.0`, `secgrep=3` HSTS/xfo/xcto | YES api | YES unauth | YES low | YES `curl -s https://api.signageos.io/stat
+  - | 3 | `box CORS` 17-18 static `ACA-Origin` on `/` + `/login/` incl `http://box.signageos.io` + `https://*.zdusercontent.com` + `api.signageos.io`, `evil.test` NOT reflected, no `Allow-Credentials` | Y
+  - | 4 | `box CSP` `connect-src/frame-src` 40+ origins triplicated `auth0.signageos.io/oauth/token` | YES box | YES unauth | Low defense-in-depth | YES `curl -sI https://box.signageos.io/login/%2F` → CSP
+  - | 5 | `api/v1/organization/{uid}/security-token` cross-tenant mint `IDOR/BOLA` (`reports/security-token-idor-report.md:24-28`, `lead-mimo.md:6-13`) `POST /v1/organization/{victimUid}/security-token` w
