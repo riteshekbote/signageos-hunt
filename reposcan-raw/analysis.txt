@@ -1,113 +1,96 @@
 [0m
 > build · muse-spark-1.2-contributor-free
 [0m
-Triageing single static hit — verifying credential context and prior prod-reuse tests.
+Deep triage of your Gladia static hit in progress — confirming secret class vs signageOS noise.
 [0m→ [0mRead reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
 [0m
-[0m$ [0msha256sum reposcan-raw/signageos/videowall-designer/sos/videoTiming.js 2>/dev/null | head; echo "---"; grep -n "secret\|clientId\|kiera" reposcan-raw/signageos/videowall-designer/sos/videoTiming.js 2>/dev/null | head -n 50; echo "---LINE19---"; sed -n '1,40p' reposcan-raw/signageos/videowall-designer/sos/videoTiming.js 2>/dev/null | cat -A | head -n 50
-05e7a6b337a66e346575d096086712163419f6db63014fb6e85e90bacefe8719  reposcan-raw/signageos/videowall-designer/sos/videoTiming.js
----
-6: * @param {String} [auth].clientId
-7: * @param {String} [auth].secret
-18:            clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47',
-19:            secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
-23:        apiUrl = 'http://api.kiera.office.signageos.io',
----LINE19---
-const RestApi = require('@signageos/test/dist/RestApi/RestApi').default;$
-$
-/**$
- * @param {Array.<{ index: Number, deviceUid: String, uri: String }>} videos$
- * @param {Object} [auth]$
- * @param {String} [auth].clientId$
- * @param {String} [auth].secret$
- * @param {String} [appletUid]$
- * @param {String} [appletVersion]$
- * @param {String} [apiUrl]$
- * @param {String} [syncGroup]$
- * @param {String} [syncServer]$
- */$
-module.exports = exports = {$
-    async setupVideoTimings($
-        videos,$
-        auth = {$
-            clientId: 'fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47',$
-            secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',$
-        },$
-        appletUid = 'c790b56805154b80e12309453ee2c387511179106563165848',$
-        appletVersion = '1.0.0',$
-        apiUrl = 'http://api.kiera.office.signageos.io',$
-        syncGroup = 'video-' + Math.random(),$
-        syncServer,$
-    ) {$
-        const sos = new RestApi({$
-            url: apiUrl,$
-            version: 'v1',$
-            auth,$
-        });$
-        const nowDate = new Date();$
-        for (const video of videos) {$
-            await sos.timing.create({$
-                deviceUid: video.deviceUid,$
-                appletUid,$
-                appletVersion,$
-                configuration: {$
-                    identification: 'video-' + video.index,$
-                    sync_server: syncServer,$
+[0m$ [0mpython3 -c "import hashlib; s='9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'; print(hashlib.sha256(s.encode()).hexdigest()); c='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'; print(hashlib.sha256(c.encode()).hexdigest()); import hashlib as h; combo=f'{c}:{s}'; print(h.sha256(combo.encode()).hexdigest())"
+
+564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
+efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
+4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
 [0m
 [0m$ [0mpython3 -c "
 import hashlib
-secret='9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9'
-print('secret sha256', hashlib.sha256(secret.encode()).hexdigest())
-clientId='fcbbd714b3f794987b1f1a730d52fa31ddbcb51a087919ea47'
-print('clientId sha256', hashlib.sha256(clientId.encode()).hexdigest())
-pair=f'{clientId}:{secret}'
-print('pair sha256', hashlib.sha256(pair.encode()).hexdigest())
-combined=clientId+secret
-print('combined sha256', hashlib.sha256(combined.encode()).hexdigest())
-# known hash from KB:
-print('KB hash 564c293b... matches pair?', hashlib.sha256(pair.encode()).hexdigest()[:8])
-# also check raw secret hash matches known?
+# verify what knowledge base says: sha256 of combined clientId:secret or just secret?
+# Knowledge base says sha256 564c293b... is for secret? Let's check.
+# Actually first hash we computed was for secret alone = 564c293b...
+# That matches KB: 'sha256 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e' in sos/videoTiming.js
+# So KB tracks secret alone.
+print('matches KB secret sha')
+# Also check api.kiera host
+print('apiUrl http://api.kiera.office.signageos.io - internal staging')
 "
-echo "---"
-grep -r "kiera\|office.signageos" reposcan-raw/signageos/videowall-designer/ 2>/dev/null | head
-secret sha256 564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e
-clientId sha256 efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b
-pair sha256 4be647e56d85d9db35ba73b61819fc44a50d588456212c39d5bccb5a7cf15ebe
-combined sha256 7e1ca60aed8e196f8641c32d5eaad34ba4ad1f92abfba0e475b1909cae35e64e
-KB hash 564c293b... matches pair? 4be647e5
----
-reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:        apiUrl = 'http://api.kiera.office.signageos.io',
+matches KB secret sha
+apiUrl http://api.kiera.office.signageos.io - internal staging
 [0m
-**Triage - signageos static scan - DELTA 0 (KNOWN DUPLICATE)**
+[0m$ [0mgrep -r "api.kiera" /home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw --include="*.js" --include="*.ts" --include="*.json" -n 2>/dev/null | head -20; echo "---"; ls -la /home/runner/work/signageos-hunt/signageos-hunt/ 2>&1 | head -50
+/home/runner/work/signageos-hunt/signageos-hunt/reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23:        apiUrl = 'http://api.kiera.office.signageos.io',
+---
+total 1184
+drwxr-xr-x 11 runner runner   4096 Sep 22 06:54 .
+drwxr-xr-x  3 runner runner   4096 Sep 22 06:54 ..
+drwxr-xr-x  7 runner runner   4096 Sep 22 06:54 .git
+drwxr-xr-x  3 runner runner   4096 Sep 22 06:54 .github
+-rw-r--r--  1 runner runner    944 Sep 22 06:54 README.md
+-rw-r--r--  1 runner runner    405 Sep 22 06:54 cands-signageos.txt
+drwxr-xr-x  2 runner runner   4096 Sep 22 06:54 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 22 06:54 knowledge
+drwxr-xr-x  2 runner runner  69632 Sep 22 06:54 leads
+-rw-r--r--  1 runner runner 230626 Sep 22 06:54 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 22 06:54 reports
+-rw-r--r--  1 runner runner 366420 Sep 22 06:54 repos-signageos.json
+drwxr-xr-x  3 runner runner   4096 Sep 22 06:54 reposcan-raw
+-rw-r--r--  1 runner runner 432392 Sep 22 06:54 scan-prompt.txt
+-rw-r--r--  1 runner runner   2865 Sep 22 06:54 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 22 06:54 scripts
+-rw-r--r--  1 runner runner     33 Sep 22 06:54 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 22 06:54 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 22 06:54 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 22 06:54 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 22 06:54 state_nemotron3.json
+drwxr-xr-x  2 runner runner  36864 Sep 22 06:54 triage
+[0m
+[0m→ [0mRead scope.yml
+[0m→ [0mRead cands-signageos.txt
+[0m
+[0m$ [0mcat /home/runner/work/signageos-hunt/signageos-hunt/repos-signageos.json | python3 -c "import json; d=json.load(open('/home/runner/work/signageos-hunt/signageos-hunt/repos-signageos.json')); print(len(d)); print([x for x in d][:3])" 2>&1 | head -100
+59
+[{'id': 81386512, 'node_id': 'MDEwOlJlcG9zaXRvcnk4MTM4NjUxMg==', 'name': 'applet-examples', 'full_name': 'signageos/applet-examples', 'private': False, 'owner': {'login': 'signageos', 'id': 25649660, 'node_id': 'MDEyOk9yZ2FuaXphdGlvbjI1NjQ5NjYw', 'avatar_url': 'https://avatars.githubusercontent.com/u/25649660?v=4', 'gravatar_id': '', 'url': 'https://api.github.com/users/signageos', 'html_url': 'https://github.com/signageos', 'followers_url': 'https://api.github.com/users/signageos/followers', 'following_url': 'https://api.github.com/users/signageos/following{/other_user}', 'gists_url': 'https://api.github.com/users/signageos/gists{/gist_id}', 'starred_url': 'https://api.github.com/users/signageos/starred{/owner}{/repo}', 'subscriptions_url': 'https://api.github.com/users/signageos/subscriptions', 'organizations_url': 'https://api.github.com/users/signageos/orgs', 'repos_url': 'https://api.github.com/users/signageos/repos', 'events_url': 'https://api.github.com/users/signageos/events{/privacy}', 'received_events_url': 'https://api.github.com/users/signageos/received_events', 'type': 'Organization', 'user_view_type': 'public', 'site_admin': False}, 'html_url': 'https://github.com/signageos/applet-examples', 'description': None, 'fork': False, 'url': 'https://api.github.com/repos/signageos/applet-examples', 'forks_url': 'https://api.github.com/repos/signageos/applet-examples/forks', 'keys_url': 'https://api.github.com/repos/signageos/applet-examples/keys{/key_id}', 'collaborators_url': 'https://api.github.com/repos/signageos/applet-examples/collaborators{/collaborator}', 'teams_url': 'https://api.github.com/repos/signageos/applet-examples/teams', 'hooks_url': 'https://api.github.com/repos/signageos/applet-examples/hooks', 'issue_events_url': 'https://api.github.com/repos/signageos/applet-examples/issues/events{/number}', 'events_url': 'https://api.github.com/repos/signageos/applet-examples/events', 'assignees_url': 'https://api.github.com/repos/signageos/applet-examples/assignees{/user}', 'branches_url': 'https://api.github.com/repos/signageos/applet-examples/branches{/branch}', 'tags_url': 'https://api.github.com/repos/signageos/applet-examples/tags', 'blobs_url': 'https://api.github.com/repos/signageos/applet-examples/git/blobs{/sha}', 'git_tags_url': 'https://api.github.com/repos/signageos/applet-examples/git/tags{/sha}', 'git_refs_url': 'https://api.github.com/repos/signageos/applet-examples/git/refs{/sha}', 'trees_url': 'https://api.github.com/repos/signageos/applet-examples/git/trees{/sha}', 'statuses_url': 'https://api.github.com/repos/signageos/applet-examples/statuses/{sha}', 'languages_url': 'https://api.github.com/repos/signageos/applet-examples/languages', 'stargazers_url': 'https://api.github.com/repos/signageos/applet-examples/stargazers', 'contributors_url': 'https://api.github.com/repos/signageos/applet-examples/contributors', 'subscribers_url': 'https://api.github.com/repos/signageos/applet-examples/subscribers', 'subscription_url': 'https://api.github.com/repos/signageos/applet-examples/subscription', 'commits_url': 'https://api.github.com/repos/signageos/applet-examples/commits{/sha}', 'git_commits_url': 'https://api.github.com/repos/signageos/applet-examples/git/commits{/sha}', 'comments_url': 'https://api.github.com/repos/signageos/applet-examples/comments{/number}', 'issue_comment_url': 'https://api.github.com/repos/signageos/applet-examples/issues/comments{/number}', 'contents_url': 'https://api.github.com/repos/signageos/applet-examples/contents/{+path}', 'compare_url': 'https://api.github.com/repos/signageos/applet-examples/compare/{base}...{head}', 'merges_url': 'https://api.github.com/repos/signageos/applet-examples/merges', 'archive_url': 'https://api.github.com/repos/signageos/applet-examples/{archive_format}{/ref}', 'downloads_url': 'https://api.github.com/repos/signageos/applet-examples/downloads', 'issues_url': 'https://api.github.com/repos/signageos/applet-examples/issues{/number}', 'pulls_url': 'https://api.github.com/repos/signageos/applet-examples/pulls{/number}', 'milestones_url': 'https://api.github.com/repos/signageos/applet-examples/milestones{/number}', 'notifications_url': 'https://api.github.com/repos/signageos/applet-examples/notifications{?since,all,participating}', 'labels_url': 'https://api.github.com/repos/signageos/applet-examples/labels{/name}', 'releases_url': 'https://api.github.com/repos/signageos/applet-examples/releases{/id}', 'deployments_url': 'https://api.github.com/repos/signageos/applet-examples/deployments', 'created_at': '2017-02-08T23:23:26Z', 'updated_at': '2026-09-21T10:04:42Z', 'pushed_at': '2026-09-21T10:04:37Z', 'git_url': 'git://github.com/signageos/applet-examples.git', 'ssh_url': 'git@github.com:signageos/applet-examples.git', 'clone_url': 'https://github.com/signageos/applet-examples.git', 'svn_url': 'https://github.com/signageos/applet-examples', 'homepage': '', 'size': 16913, 'stargazers_count': 9, 'watchers_count': 9, 'language': 'HTML', 'has_issues': False, 'has_projects': False, 'has_downloads': False, 'has_wiki': False, 'has_pages': False, 'has_discussions': False, 'forks_count': 9, 'mirror_url': None, 'archived': False, 'disabled': False, 'open_issues_count': 18, 'license': None, 'allow_forking': True, 'is_template': False, 'web_commit_signoff_required': False, 'has_pull_requests': True, 'pull_request_creation_policy': 'all', 'topics': [], 'visibility': 'public', 'forks': 9, 'open_issues': 18, 'watchers': 9, 'default_branch': 'master', 'permissions': {'admin': False, 'maintain': False, 'push': False, 'triage': False, 'pull': False}, 'custom_properties': {}}, {'id': 291735436, 'node_id': 'MDEwOlJlcG9zaXRvcnkyOTE3MzU0MzY=', 'name': 'smil-player', 'full_name': 'signageos/smil-player', 'private': False, 'owner': {'login': 'signageos', 'id': 25649660, 'node_id': 'MDEyOk9yZ2FuaXphdGlvbjI1NjQ5NjYw', 'avatar_url': 'https://avatars.githubusercontent.com/u/25649660?v=4', 'gravatar_id': '', 'url': 'https://api.github.com/users/signageos', 'html_url': 'https://github.com/signageos', 'followers_url': 'https://api.github.com/users/signageos/followers', 'following_url': 'https://api.github.com/users/signageos/following{/other_user}', 'gists_url': 'https://api.github.com/users/signageos/gists{/gist_id}', 'starred_url': 'https://api.github.com/users/signageos/starred{/owner}{/repo}', 'subscriptions_url': 'https://api.github.com/users/signageos/subscriptions', 'organizations_url': 'https://api.github.com/users/signageos/orgs', 'repos_url': 'https://api.github.com/users/signageos/repos', 'events_url': 'https://api.github.com/users/signageos/events{/privacy}', 'received_events_url': 'https://api.github.com/users/signageos/received_events', 'type': 'Organization', 'user_view_type': 'public', 'site_admin': False}, 'html_url': 'https://github.com/signageos/smil-player', 'description': None, 'fork': False, 'url': 'https://api.github.com/repos/signageos/smil-player', 'forks_url': 'https://api.github.com/repos/signageos/smil-player/forks', 'keys_url': 'https://api.github.com/repos/signageos/smil-player/keys{/key_id}', 'collaborators_url': 'https://api.github.com/repos/signageos/smil-player/collaborators{/collaborator}', 'teams_url': 'https://api.github.com/repos/signageos/smil-player/teams', 'hooks_url': 'https://api.github.com/repos/signageos/smil-player/hooks', 'issue_events_url': 'https://api.github.com/repos/signageos/smil-player/issues/events{/number}', 'events_url': 'https://api.github.com/repos/signageos/smil-player/events', 'assignees_url': 'https://api.github.com/repos/signageos/smil-player/assignees{/user}', 'branches_url': 'https://api.github.com/repos/signageos/smil-player/branches{/branch}', 'tags_url': 'https://api.github.com/repos/signageos/smil-player/tags', 'blobs_url': 'https://api.github.com/repos/signageos/smil-player/git/blobs{/sha}', 'git_tags_url': 'https://api.github.com/repos/signageos/smil-player/git/tags{/sha}', 'git_refs_url': 'https://api.github.com/repos/signageos/smil-player/git/refs{/sha}', 'trees_url': 'https://api.github.com/repos/signageos/smil-player/git/trees{/sha}', 'statuses_url': 'https://api.github.com/repos/signageos/smil-player/statuses/{sha}', 'languages_url': 'https://api.github.com/repos/signageos/smil-player/languages', 'stargazers_url': 'https://api.github.com/repos/signageos/smil-player/stargazers', 'contributors_url': 'https://api.github.com/repos/signageos/smil-player/contributors', 'subscribers_url': 'https://api.github.com/repos/signageos/smil-player/subscribers', 'subscription_url': 'https://api.github.com/repos/signageos/smil-player/subscription', 'commits_url': 'https://api.github.com/repos/signageos/smil-player/commits{/sha}', 'git_commits_url': 'https://api.github.com/repos/signageos/smil-player/git/commits{/sha}', 'comments_url': 'https://api.github.com/repos/signageos/smil-player/comments{/number}', 'issue_comment_url': 'https://api.github.com/repos/signageos/smil-player/issues/comments{/number}', 'contents_url': 'https://api.github.com/repos/signageos/smil-player/contents/{+path}', 'compare_url': 'https://api.github.com/repos/signageos/smil-player/compare/{base}...{head}', 'merges_url': 'https://api.github.com/repos/signageos/smil-player/merges', 'archive_url': 'https://api.github.com/repos/signageos/smil-player/{archive_format}{/ref}', 'downloads_url': 'https://api.github.com/repos/signageos/smil-player/downloads', 'issues_url': 'https://api.github.com/repos/signageos/smil-player/issues{/number}', 'pulls_url': 'https://api.github.com/repos/signageos/smil-player/pulls{/number}', 'milestones_url': 'https://api.github.com/repos/signageos/smil-player/milestones{/number}', 'notifications_url': 'https://api.github.com/repos/signageos/smil-player/notifications{?since,all,participating}', 'labels_url': 'https://api.github.com/repos/signageos/smil-player/labels{/name}', 'releases_url': 'https://api.github.com/repos/signageos/smil-player/releases{/id}', 'deployments_url': 'https://api.github.com/repos/signageos/smil-player/deployments', 'created_at': '2020-08-31T14:19:36Z', 'updated_at': '2026-09-18T13:23:52Z', 'pushed_at': '2026-09-18T13:23:44Z', 'git_url': 'git://github.com/signageos/smil-player.git', 'ssh_url': 'git@github.com:signageos/smil-player.git', 'clone_url': 'https://github.com/signageos/smil-player.git', 'svn_url': 'https://github.com/signageos/smil-player', 'homepage': '', 'size': 63393, 'stargazers_count': 19, 'watchers_count': 19, 'language': 'HTML', 'has_issues': False, 'has_projects': False, 'has_downloads': False, 'has_wiki': False, 'has_pages': False, 'has_discussions': False, 'forks_count': 10, 'mirror_url': None, 'archived': False, 'disabled': False, 'open_issues_count': 6, 'license': {'key': 'mit', 'name': 'MIT License', 'spdx_id': 'MIT', 'url': 'https://api.github.com/licenses/mit', 'node_id': 'MDc6TGljZW5zZTEz'}, 'allow_forking': True, 'is_template': False, 'web_commit_signoff_required': False, 'has_pull_requests': True, 'pull_request_creation_policy': 'all', 'topics': [], 'visibility': 'public', 'forks': 10, 'open_issues': 6, 'watchers': 19, 'default_branch': 'master', 'permissions': {'admin': False, 'maintain': False, 'push': False, 'triage': False, 'pull': False}, 'custom_properties': {}}, {'id': 200294940, 'node_id': 'MDEwOlJlcG9zaXRvcnkyMDAyOTQ5NDA=', 'name': 'cli', 'full_name': 'signageos/cli', 'private': False, 'owner': {'login': 'signageos', 'id': 25649660, 'node_id': 'MDEyOk9yZ2FuaXphdGlvbjI1NjQ5NjYw', 'avatar_url': 'https://avatars.githubusercontent.com/u/25649660?v=4', 'gravatar_id': '', 'url': 'https://api.github.com/users/signageos', 'html_url': 'https://github.com/signageos', 'followers_url': 'https://api.github.com/users/signageos/followers', 'following_url': 'https://api.github.com/users/signageos/following{/other_user}', 'gists_url': 'https://api.github.com/users/signageos/gists{/gist_id}', 'starred_url': 'https://api.github.com/users/signageos/starred{/owner}{/repo}', 'subscriptions_url': 'https://api.github.com/users/signageos/subscriptions', 'organizations_url': 'https://api.github.com/users/signageos/orgs', 'repos_url': 'https://api.github.com/users/signageos/repos', 'events_url': 'https://api.github.com/users/signageos/events{/privacy}', 'received_events_url': 'https://api.github.com/users/signageos/received_events', 'type': 'Organization', 'user_view_type': 'public', 'site_admin': False}, 'html_url': 'https://github.com/signageos/cli', 'description': None, 'fork': False, 'url': 'https://api.github.com/repos/signageos/cli', 'forks_url': 'https://api.github.com/repos/signageos/cli/forks', 'keys_url': 'https://api.github.com/repos/signageos/cli/keys{/key_id}', 'collaborators_url': 'https://api.github.com/repos/signageos/cli/collaborators{/collaborator}', 'teams_url': 'https://api.github.com/repos/signageos/cli/teams', 'hooks_url': 'https://api.github.com/repos/signageos/cli/hooks', 'issue_events_url': 'https://api.github.com/repos/signageos/cli/issues/events{/number}', 'events_url': 'https://api.github.com/repos/signageos/cli/events', 'assignees_url': 'https://api.github.com/repos/signageos/cli/assignees{/user}', 'branches_url': 'https://api.github.com/repos/signageos/cli/branches{/branch}', 'tags_url': 'https://api.github.com/repos/signageos/cli/tags', 'blobs_url': 'https://api.github.com/repos/signageos/cli/git/blobs{/sha}', 'git_tags_url': 'https://api.github.com/repos/signageos/cli/git/tags{/sha}', 'git_refs_url': 'https://api.github.com/repos/signageos/cli/git/refs{/sha}', 'trees_url': 'https://api.github.com/repos/signageos/cli/git/trees{/sha}', 'statuses_url': 'https://api.github.com/repos/signageos/cli/statuses/{sha}', 'languages_url': 'https://api.github.com/repos/signageos/cli/languages', 'stargazers_url': 'https://api.github.com/repos/signageos/cli/stargazers', 'contributors_url': 'https://api.github.com/repos/signageos/cli/contributors', 'subscribers_url': 'https://api.github.com/repos/signageos/cli/subscribers', 'subscription_url': 'https://api.github.com/repos/signageos/cli/subscription', 'commits_url': 'https://api.github.com/repos/signageos/cli/commits{/sha}', 'git_commits_url': 'https://api.github.com/repos/signageos/cli/git/commits{/sha}', 'comments_url': 'https://api.github.com/repos/signageos/cli/comments{/number}', 'issue_comment_url': 'https://api.github.com/repos/signageos/cli/issues/comments{/number}', 'contents_url': 'https://api.github.com/repos/signageos/cli/contents/{+path}', 'compare_url': 'https://api.github.com/repos/signageos/cli/compare/{base}...{head}', 'merges_url': 'https://api.github.com/repos/signageos/cli/merges', 'archive_url': 'https://api.github.com/repos/signageos/cli/{archive_format}{/ref}', 'downloads_url': 'https://api.github.com/repos/signageos/cli/downloads', 'issues_url': 'https://api.github.com/repos/signageos/cli/issues{/number}', 'pulls_url': 'https://api.github.com/repos/signageos/cli/pulls{/number}', 'milestones_url': 'https://api.github.com/repos/signageos/cli/milestones{/number}', 'notifications_url': 'https://api.github.com/repos/signageos/cli/notifications{?since,all,participating}', 'labels_url': 'https://api.github.com/repos/signageos/cli/labels{/name}', 'releases_url': 'https://api.github.com/repos/signageos/cli/releases{/id}', 'deployments_url': 'https://api.github.com/repos/signageos/cli/deployments', 'created_at': '2019-08-02T20:36:56Z', 'updated_at': '2026-09-17T10:17:33Z', 'pushed_at': '2026-09-17T10:17:29Z', 'git_url': 'git://github.com/signageos/cli.git', 'ssh_url': 'git@github.com:signageos/cli.git', 'clone_url': 'https://github.com/signageos/cli.git', 'svn_url': 'https://github.com/signageos/cli', 'homepage': '', 'size': 2130, 'stargazers_count': 2, 'watchers_count': 2, 'language': 'TypeScript', 'has_issues': False, 'has_projects': False, 'has_downloads': False, 'has_wiki': False, 'has_pages': False, 'has_discussions': False, 'forks_count': 1, 'mirror_url': None, 'archived': False, 'disabled': False, 'open_issues_count': 26, 'license': None, 'allow_forking': True, 'is_template': False, 'web_commit_signoff_required': False, 'has_pull_requests': True, 'pull_request_creation_policy': 'all', 'topics': [], 'visibility': 'public', 'forks': 1, 'open_issues': 26, 'watchers': 2, 'default_branch': 'master', 'permissions': {'admin': False, 'maintain': False, 'push': False, 'triage': False, 'pull': False}, 'custom_properties': {}}]
+[0m
+Triaged `signageos` scan (gladiaio org = 0 hits this cycle; delta 0). Scan: 1100 files, 1 hit — KNOWN DUPLICATE, no new surface.
 
-Scan: `1100` files, `1` hits total. No new hits vs previous cycle.
+**File:** `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` (`sos/videoTiming.js:14-24`)
 
-### Classification
+```js
+auth = { clientId: 'fcbbd...', secret: '9d5e...' }, apiUrl = 'http://api.kiera.office.signageos.io' // test helper default param
+```
 
-**REAL_SECRET** — 0 candidates
-| File | Line | SHA256 | Status |
-|------|------|--------|--------|
-| - | - | - | - |
+Secret sha256 `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` (secret-only). clientId sha256 `efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b` at `sos/videoTiming.js:18`.
 
-**TEST_OR_EXAMPLE** — 1 hit (duplicate, CONFIRMED DEAD 30+ cycles)
-| File | Line | Param | SHA256 (secret) | Context |
-|------|------|-------|-----------------|---------|
-| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` | 19 | `secret` default param in `setupVideoTimings(auth={clientId,secret})` | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | Paired with `clientId` at `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18` (`efdf6c4c00650f3ee6e8e0f1889b843cea34693979eb41c006f9c474d443a49b`), `appletUid` at `:21`, targeting staging `apiUrl` at `:23`. Function wrapper for `@signageos/test/dist/RestApi/RestApi`. Not env-provisioned, not prod credential. |
+#### REAL_SECRET — 0 candidates
+| file:line | sha256 | status | evidence |
+|---|---|---|---|
+| - | - | - | No live prod credential. This hit is staging fixture (see TEST_OR_EXAMPLE). |
 
-**ENDPOINT_LEAK** — 1 hit (same file, out-of-scope host)
-| File | Line | Value | Note |
-|------|------|-------|------|
-| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` | 23 | `http://api.kiera.office.signageos.io` | Internal staging over plaintext HTTP. Host `api.kiera.office.signageos.io` NOT in `scope.yml` eligible targets (`box.signageos.io`, `api.signageos.io` only). |
+#### TEST_OR_EXAMPLE — 1 hit
+| file:line | sha256 | classification | reason |
+|---|---|---|---|
+| `signageos/videowall-designer/sos/videoTiming.js:19` | `564c293ba2a1d60dd6e8f508a7ef65400424ae42b80be0ae04498d528a8a774e` | TEST_OR_EXAMPLE (staging fixture) | Default param in `setupVideoTimings()` test helper, paired with `clientId fcbbd714...` (`sos/videoTiming.js:18`) and `apiUrl http://api.kiera.office.signageos.io` (`sos/videoTiming.js:23`). Not env/config/secret-store. |
 
-**INTERESTING** — 0 new
-| File | Line | Detail |
-|------|------|--------|
-| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:18-23` | 18-23 | Full default fixture bundle: staging `http://` + test appletUid + static clientId/secret. No `*.gladia.io` refs. scangrep `kiera|office.signageos` confirms single occurrence. No npm `@gladiaio/sdk` hits in this inventory (mismatch vs directive org `gladiaio/` - inventory is `signageos/` 59 repos). |
+Confirmed DEAD on prod via live probe (knowledge base `2026-08-14 CONFIRMED DEAD`, reconfirmed 60+ cycles to `2026-08-20`):
+`GET https://api.signageos.io/v1/organization/{uid}/security-token` with `X-Auth: <clientId>:<secret>` → `403 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION_TO_AUTHENTICATE "Account not found"` — parsed past `403074 MISSING_ACCOUNT_ID` gate, account does NOT exist on prod. `2026-08-07 ACCEPTED SECRET_LEAK` originally flagged same pair as out-of-scope staging `http://api.kiera.office.signageos.io`. Credential reuse disproven.
 
-### Verdict List
-| Candidate | REPORT_CANDIDATE | Reason |
-|-----------|------------------|--------|
-| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19` secret (`sha256:564c293b...`) + `videoTiming.js:18` clientId | **no** | Staging-only test fixture - `2026-08-14` to `2026-08-20` live prod reuse probe already executed: `GET https://api.signageos.io/v1/organization/{uid}/security-token` with `X-Auth: <clientId>:<secret>` -> `403 403076 WRONG_ACCOUNT_SECRET_OR_ACCOUNT_IDENTIFICATION_TO_AUTHENTICATE "Account not found"` and `403074 MISSING_ACCOUNT_ID` family. Proves pair parses past missing-header gate but account absent on prod. `CONFIRMED DEAD` across `6+` rs rotations (`7c5fdc9777`/`c877d9cc8` etc) for `60+` cycles. Out-of-scope host (`api.kiera.office.signageos.io`) per `scope.yml`. Duplicate of `2026-08-07 ACCEPTED SECRET_LEAK` -> now `DEAD`. Do NOT re-report. No reportable prod secret, no chain to eligible hosts. |
-| `reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:23` endpoint | **no** | Out-of-scope staging URL only. No unauthenticated surface on eligible hosts. |
+#### ENDPOINT_LEAK — 1 hit
+| file:line | value | classification |
+|---|---|---|
+| `signageos/videowall-designer/sos/videoTiming.js:23` | `http://api.kiera.office.signageos.io` | Internal staging API URL over plaintext HTTP (internal office host, not eligible `box`/`api.signageos.io`). |
 
-**Summary:** `DELTA:0` - no new reportable secret. Prior lead exhausted and `CONFIRMED DEAD` via exact request-level proof. Passive inventory remains at `NO_DELTA` (box `*/status` infra-leak + api `security-token` AUTH_HELPED mechanism unchanged). No `[NEXT] PROBE` warranted for this hit - do not re-probe with `POST` or foreign `X-Auth` without program written approval per `2026-09-16` park directive.
+#### INTERESTING — 0 new
+| finding | notes |
+|---|---|
+| Plain HTTP staging URL | Reinforces TEST context; no `gladia.io`/`*.signageos.io` prod leak, no cloud metadata `169.254.169.254`, no JWT/OAuth logic. |
+
+#### Verdict
+* `videowall-designer/sos/videoTiming.js:19` secret `564c293b...` — **REPORT_CANDIDATE: no** — duplicate of `2026-08-07 ACCEPTED SECRET_LEAK` / `2026-08-14 CONFIRMED DEAD`; staging-only fixture (`api.kiera.office.signageos.io` out-of-scope per `scope.yml:5-9` eligible `box`/`api.signageos.io` only), prod test returns `403076 Account not found` (no signs of life), plaintext HTTP. Do not report. No disclosure needed; redact with sha256 only per `scope.yml:48`.
+* Delta 0 — no new hits to escalate. No `[NEXT] PROBE` required; surface unchanged.
