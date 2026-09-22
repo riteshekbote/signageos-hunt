@@ -1702,3 +1702,10 @@
   - | **C** `box` CORS 17-18 ACAO | Q1 Y / Q2 Y public / Q3 Y Low border (no ACAC) / Q4 Y `curl -sI -H 'Origin: https://evil.test' https://box.signageos.io/` → static list / Q5 N dup / Q6 Y / Q7 Y border 
   - | **D** `box` CSP 40+ origins | Same → **VALID Info border — CVSS 3.1** |
   - | **E** `api /v1/organization/{uid}/security-token` IDOR | Q1 Y / Q2 **PARTIAL** low-priv `X-Auth accountId:apiSecurityToken` required (`scope.yml:44` no account creation — needs existing tenant) / Q3
+
+- 5 lead(s) marked VALID at 2026-09-22 17:41:34 UTC
+  - | **A `box/status` infra leak** | YES `scope.yml:6` | YES unauth | YES recon + infra targeting | YES `curl -s https://box.signageos.io/status` → 200 JSON | NO — duplicate `reports/valid-bugs.md:4` rec
+  - | **B `api/status` infra leak** | YES `scope.yml:8` | YES unauth | YES same class | YES `curl -s https://api.signageos.io/status` | NO duplicate | YES | YES Low | **VALID (Low)** 4.3 |
+  - | **C `box` CORS 18-origin ACAO (`http://` + `*.zdusercontent.com` wildcard)** | YES | YES unauth (static whitelist) `leads/lead-mimo.md:27` | Low border — trust-boundary expansion, no `Allow-Credenti
+  - | **D `box` CSP 40+ origins** | YES | YES unauth | Info — overly broad `connect-src/frame-src` | YES `curl -sI https://box.signageos.io/login/` | NO duplicate | YES | MARGINAL | **VALID (Info)** 3.1 |
+  - | **E `api/v1/org/{uid}/security-token` cross-tenant mint** | YES `scope.yml:8` | YES low-priv account-tier `X-Auth` | **Critical** — mint working victim tenant creds → full device/applet/content cont
