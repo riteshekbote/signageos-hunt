@@ -1740,3 +1740,12 @@
   - **Verdict: VALID (Low, border) — DUPLICATE**
   - **Verdict: VALID (Info, border) — DUPLICATE**
   - **Verdict: HOLD under strict `passive_first` → VALID Critical with human PoC**
+
+- 7 lead(s) marked VALID at 2026-09-23 20:47:08 UTC
+  - | 1 | `box.signageos.io/status` MISCONFIG `leads/lead-mimo.md:15-22` | Y `scope.yml:6` | Y public unauth `probe-results.md:3` `200` | Y recon-enabling K8s pod `box-7c8c876945-*`/`box-8676fb5f57-*`, 64
+  - | 2 | `api.signageos.io/status` MISCONFIG `leads/lead-mimo.md:112-119` | Y `scope.yml:8` | Y public `probe-results.md:92` `200` | Y same class (Node `v24.19.0`, `api-6f69db97d5-*`/`api-86db648db5-*`/`
+  - | 3 | `box CORS` 17-18 static ACAO `leads/lead-mimo.md:5` | Y `box` | Y public `probe-results.md:45` `200` | MARGINAL no `allow-credentials` `inventory/signageos.md:156` -> only anon HTML readable | Y
+  - | 4 | `box CSP` 40-59 origins `leads/lead-mimo.md:5` | Y | Y public | MARGINAL defense-in-depth only, needs co-located XSS `inventory/signageos.md:602` | Y `GET https://box.signageos.io/login/` CSP `t
+  - | 5 | `api GET/POST /v1/organization/{uid}/security-token` IDOR cross-tenant mint `leads/lead-mimo.md:6-13` `reports/security-token-idor-report.md:1-5` | Y `api` | **CONDITIONAL Y** low-priv only (`X-
+  - | 6 | `GET /v1/organization` superset `GET /v1/organization/{uid}` OAuth `oauthClientId/Secret` leak `reports/security-token-idor-report.md:198-203` + `lead-human.md:4` | Y `api` | CONDITIONAL Y low-p
+  - **VALID proof / impact / CVSS / channel:**
