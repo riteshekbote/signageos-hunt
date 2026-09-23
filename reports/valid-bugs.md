@@ -1720,3 +1720,10 @@
   - * **Verdict: VALID (Low) — DUPLICATE** `CVSS 4.3` same proof vs `https://api.signageos.io/status` `Channel: as above`
   - * **Verdict: VALID (Low, borderline) — DUPLICATE** `CVSS 3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N` `Channel: as above`
   - * **Verdict: VALID (Info, border) — DUPLICATE** `CVSS 3.1 AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N`
+
+- 5 lead(s) marked VALID at 2026-09-23 06:53:27 UTC
+  - | A | `box/status` infra leak | `GET https://box.signageos.io/status` | 401/404 vs `200 len~1437 application/json` leak pod `box-8676fb5f57-*`, `process.uid` 40-hex, `Node v20.20.2`, `amqp0/redis0-3/m
+  - | B | `api/status` infra leak | `GET https://api.signageos.io/status` | 401/404 vs `200 len~1330 application/json` leak pod `api-6cc9959bb4-*`/`api-7676fc7c89-*`, `Node v24.19.0`, `+ strict-transport-
+  - | C | `box /`+`/login/` static CORS | `GET https://box.signageos.io/ -H Origin:https://evil.test` + `GET https://box.signageos.io/login/` | dynamic/reflect vs `17-18 static access-control-allow-origin
+  - | D | `box` CSP over-broad | `GET https://box.signageos.io/login/` | tight CSP vs `~60 connect-src + triplicated Auth0 oauth/token + mapbox/sentry/S3/moodmedia/broadsign/sony` (probe `inventory/signag
+  - | F | `api/v1/org/{uid}/security-token` org derivation bug (HIGH-VALUE) | `GET https://api.signageos.io/v1/organization/{any-uid}/security-token` unauth | 404 vs `403074` errorDetail: `"organizationUi
