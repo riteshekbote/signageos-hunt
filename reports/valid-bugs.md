@@ -1727,3 +1727,9 @@
   - | C | `box /`+`/login/` static CORS | `GET https://box.signageos.io/ -H Origin:https://evil.test` + `GET https://box.signageos.io/login/` | dynamic/reflect vs `17-18 static access-control-allow-origin
   - | D | `box` CSP over-broad | `GET https://box.signageos.io/login/` | tight CSP vs `~60 connect-src + triplicated Auth0 oauth/token + mapbox/sentry/S3/moodmedia/broadsign/sony` (probe `inventory/signag
   - | F | `api/v1/org/{uid}/security-token` org derivation bug (HIGH-VALUE) | `GET https://api.signageos.io/v1/organization/{any-uid}/security-token` unauth | 404 vs `403074` errorDetail: `"organizationUi
+
+- 4 lead(s) marked VALID at 2026-09-23 12:35:57 UTC
+  - | `box.signageos.io/status` infra leak (`inventory/signageos.md:37`) | YES `scope.yml:6` | YES public `200` `probe-results.md:3` | YES Low (recon `topology+pod+Node`) | YES `GET https://box.signageos.
+  - | `api.signageos.io/status` infra leak | YES `scope.yml:8` | YES public `200` | YES Low | YES `GET https://api.signageos.io/status` | NO duplicate `reports/valid-bugs.md:5` | YES | YES | **VALID-DUPLI
+  - | `box` CORS 17-18 static ACAO `http://box + *.zdusercontent.com` + CSP 40+ origins (`inventory/signageos.md:39-40`) | YES box | YES public `200` on `/` `/login/` | YES Info | YES `curl -sI -H Origin:
+  - | `api/v1/organization/{uid}/security-token` cross-tenant mint (`leads/lead-mimo.md:6`, `leads/lead-human.md:3`) | YES api | NO `403074` without `X-Auth`, needs `account-tier X-Auth` (low-priv but aut
