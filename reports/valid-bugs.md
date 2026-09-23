@@ -1733,3 +1733,10 @@
   - | `api.signageos.io/status` infra leak | YES `scope.yml:8` | YES public `200` | YES Low | YES `GET https://api.signageos.io/status` | NO duplicate `reports/valid-bugs.md:5` | YES | YES | **VALID-DUPLI
   - | `box` CORS 17-18 static ACAO `http://box + *.zdusercontent.com` + CSP 40+ origins (`inventory/signageos.md:39-40`) | YES box | YES public `200` on `/` `/login/` | YES Info | YES `curl -sI -H Origin:
   - | `api/v1/organization/{uid}/security-token` cross-tenant mint (`leads/lead-mimo.md:6`, `leads/lead-human.md:3`) | YES api | NO `403074` without `X-Auth`, needs `account-tier X-Auth` (low-priv but aut
+
+- 5 lead(s) marked VALID at 2026-09-23 17:32:44 UTC
+  - **Verdict: VALID (Low) — DUPLICATE reconfirmation**
+  - **Verdict: VALID (Low) — DUPLICATE reconfirmation**
+  - **Verdict: VALID (Low, border) — DUPLICATE**
+  - **Verdict: VALID (Info, border) — DUPLICATE**
+  - **Verdict: HOLD under strict `passive_first` → VALID Critical with human PoC**
