@@ -1714,3 +1714,9 @@
   - **Verdict: VALID (DUPLICATE RECONFIRMED) — not novel**
   - **Verdict: VALID (DUPLICATE RECONFIRMED)**
   - **Verdict: VALID (CONFIRMED — supersedes HOLD, already submitted, do not re-report)**
+
+- 4 lead(s) marked VALID at 2026-09-23 01:39:17 UTC
+  - * **Verdict: VALID (Low) — DUPLICATE reconfirmation** `CVSS 4.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` `Proof: GET https://box.signageos.io/status` `Channel: signageOS security channel per scope.yml (di
+  - * **Verdict: VALID (Low) — DUPLICATE** `CVSS 4.3` same proof vs `https://api.signageos.io/status` `Channel: as above`
+  - * **Verdict: VALID (Low, borderline) — DUPLICATE** `CVSS 3.1 AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N` `Channel: as above`
+  - * **Verdict: VALID (Info, border) — DUPLICATE** `CVSS 3.1 AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N`
