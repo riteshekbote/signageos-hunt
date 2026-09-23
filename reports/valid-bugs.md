@@ -1749,3 +1749,10 @@
   - | 5 | `api GET/POST /v1/organization/{uid}/security-token` IDOR cross-tenant mint `leads/lead-mimo.md:6-13` `reports/security-token-idor-report.md:1-5` | Y `api` | **CONDITIONAL Y** low-priv only (`X-
   - | 6 | `GET /v1/organization` superset `GET /v1/organization/{uid}` OAuth `oauthClientId/Secret` leak `reports/security-token-idor-report.md:198-203` + `lead-human.md:4` | Y `api` | CONDITIONAL Y low-p
   - **VALID proof / impact / CVSS / channel:**
+
+- 5 lead(s) marked VALID at 2026-09-23 23:17:02 UTC
+  - | **box.signageos.io/status** infra leak `leads/lead-mimo.md:15` `inventory/signageos.md:37` | YES `scope.yml:6` | YES public `GET 200` `probe-results.md:3` | YES Low recon (pod+Node+topology) | YES `
+  - | **api.signageos.io/status** infra leak `leads/lead-mimo.md:114` | YES `scope.yml:8` | YES public `200` `probe-results.md:314` | YES Low | YES `GET https://api.signageos.io/status` | NO duplicate `re
+  - | **box CORS 17-18 static ACAO + CSP 40+ origins** `leads/lead-mimo.md:5` `inventory/signageos.md:39` | YES box | YES public `200` `/`, `/login/` | YES Info | YES `curl -sI -H Origin:https://evil.test
+  - | **api/v1/organization/{uid}/security-token cross-tenant mint** `leads/lead-mimo.md:6` `leads/lead-human.md:10` IDOR | YES api | NO `403074` unauth; needs `account-tier X-Auth` (low-priv authenticate
+  - **VALID proofs (read-only, do not re-report):**
