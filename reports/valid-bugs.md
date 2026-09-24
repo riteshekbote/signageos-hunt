@@ -1756,3 +1756,7 @@
   - | **box CORS 17-18 static ACAO + CSP 40+ origins** `leads/lead-mimo.md:5` `inventory/signageos.md:39` | YES box | YES public `200` `/`, `/login/` | YES Info | YES `curl -sI -H Origin:https://evil.test
   - | **api/v1/organization/{uid}/security-token cross-tenant mint** `leads/lead-mimo.md:6` `leads/lead-human.md:10` IDOR | YES api | NO `403074` unauth; needs `account-tier X-Auth` (low-priv authenticate
   - **VALID proofs (read-only, do not re-report):**
+
+- 2 lead(s) marked VALID at 2026-09-24 01:32:00 UTC
+  - **Verdict: VALID — Critical IDOR/BOLA — account-bound auth vs client-supplied path UID decoupling**
+  - **Verdict: VALID (LOW) / HOLD — informational misconfig — do not report alone unless chained to SSRF/auth**
