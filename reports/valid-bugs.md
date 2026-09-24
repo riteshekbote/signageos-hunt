@@ -1778,3 +1778,12 @@
   - **Verdict: HOLD (AUTH_HELPED) — VALID on READ leg, Critical on MINT if confirmed — reason: requires valid account X-Auth + 2nd tenant UID, all passive probes `probe-results.md:48-49` `GET /v1/organiza
   - #### L-D: `api/v1/organization/{uid}` Cross-tenant `oauthClientId/oauthClientSecret` disclosure `leads/lead-bigpickle.md:152-157` — sibling to L-C, same gate table (Q2 low-priv, Q4 GET only YES, Q3 Cr
   - Q1 YES, Q2 YES (static headers on `GET /` 302 `probe-results.md:45` + `GET /login/ 200`), Q3 NO-MARGINAL (no `Access-Control-Allow-Credentials`, evil.test NOT reflected `inventory/signageos.md:41`), Q
+
+- 7 lead(s) marked VALID at 2026-09-24 17:38:30 UTC
+  - |1| `box.signageos.io/status` unauth K8s leak (`box-7c8c876945-*`, Node v20.20.2, amqp0/redis0-3/mongoDB0-3, 40-hex uid) `inventory/signageos.md:36` `probe-results.md:3` | YES `scope.yml:6` | YES unau
+  - |2| `api.signageos.io/status` same class (Node v24.19.0, hardened HSTS/xfo/xcto) `inventory/signageos.md:37` | YES `scope.yml:8` | YES unauth 200 | YES Low | YES `GET https://api.signageos.io/status` 
+  - |3| `box CORS` 17-18 static ACAO incl `http://box.signageos.io` + `https://*.zdusercontent.com` wildcard, no `Allow-Credentials` `inventory/signageos.md:156` | YES | YES public `GET /` 200 with header
+  - |4| `box CSP` /login/ 40+ `connect-src`/`frame-src` triplicated Auth0 oauth/token `inventory/signageos.md:42` | YES | YES 200 | MARGINAL Info requires co-located XSS | YES `curl -sI https://box.signag
+  - |5| `api /v1/organization/{uid}/security-token` cross-tenant mint `leads/lead-human.md:3` `reports/security-token-idor-report.md:24` | YES `api.signageos.io` | YES low-priv account-tier `X-Auth: id:se
+  - |6| Superset `GET /v1/organization` lists ALL orgs platform-wide with `oauthClientId/oauthClientSecret` inline `leads/lead-human.md:4` | YES | YES low-priv account-tier | YES Critical – stolen pair `X
+  - |9| `api /v2/*` authz drift, `box/settings` over-scope, `/v1/account/security-token?identification&password` query-creds `reports/valid-bugs.md:10` | YES | PARTIAL | CONDITIONAL | NO no passive eviden
