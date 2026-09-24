@@ -1760,3 +1760,10 @@
 - 2 lead(s) marked VALID at 2026-09-24 01:32:00 UTC
   - **Verdict: VALID — Critical IDOR/BOLA — account-bound auth vs client-supplied path UID decoupling**
   - **Verdict: VALID (LOW) / HOLD — informational misconfig — do not report alone unless chained to SSRF/auth**
+
+- 5 lead(s) marked VALID at 2026-09-24 06:53:17 UTC
+  - - **Verdict: VALID (Low-Medium)** duplicate
+  - - **Verdict: VALID (Low)** duplicate
+  - - **Verdict: VALID (Info, border) 3.1** `AV:N/AC:H/PR:N/UI:R/S:U/C:L` `reports/valid-bugs.md:6`
+  - - **Verdict: VALID (Info, border) 3.1**
+  - - **Verdict: HOLD (no passive evidence)** `reports/valid-bugs.md:9-11`
