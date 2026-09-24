@@ -1792,3 +1792,11 @@
   - **Verdict: VALID (Low) DUPLICATE** `CVSS3.1: 5.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` Proof: `curl -s https://box.signageos.io/status | jq .hostname,.process` Channel: signageOS security channel per `
   - **Verdict: VALID (Low) DUPLICATE** `CVSS3.1: 5.3` (same vector, hardened headers lower exploitability) Proof: `curl -s https://api.signageos.io/status` + `curl -sI` check `strict-transport-security, x
   - **Verdict: HOLD (AUTH_HELPED)** One-line: plausible CRITICAL BOLA but 403-gated, needs valid account + second tenant to prove, violates `scope.yml:41 passive_first`. CVSS if proven `9.1 AV:N/AC:L/PR:L
+
+- 6 lead(s) marked VALID at 2026-09-24 23:46:38 UTC
+  - | A | `box.signageos.io/status` `inventory/signageos.md:36` `probe-results.md:3` | YES `scope.yml:6` In | YES public unauth `GET 200` | YES Low-Medium recon pod/host+Node+topology aids targeting, not 
+  - | B | `api.signageos.io/status` `inventory/signageos.md:37` `probe-results.md:314` | YES `scope.yml:8` In | YES public unauth `GET 200` | YES Low (same class, hardened `HSTS/xfo/xcto/no-store` but hos
+  - | C | `box` CORS 17-18× static ACAO `inventory/signageos.md:39` `probe-results.md:39` | YES | YES public `GET / -H Origin:https://evil.test` → static 302+ACAO, evil NOT reflected | WEAK Low border — n
+  - | D | `box` CSP 40+ origins triplicated Auth0 `inventory/signageos.md:40` | YES | YES public `GET /login/%2F` | WEAK Info — defense-depth widens XSS blast radius, needs co-located XSS | YES `GET https
+  - | E | `api` `POST /v1/organization/{uid}/security-token` cross-tenant mint `reports/security-token-idor-report.md:24-28` `leads/lead-human.md:3` | YES `api` In | NO under passive — requires low-priv a
+  - | F | `GET /v1/organization/{uid}` OAuth secret `oauthClientSecret` disclosure + `v1/device/{uid}/peer-recovery` cross-tenant `reports/valid-bugs.md:6-7` `leads/lead-human.md:4` | YES | NO — `403` gat
