@@ -1787,3 +1787,8 @@
   - |5| `api /v1/organization/{uid}/security-token` cross-tenant mint `leads/lead-human.md:3` `reports/security-token-idor-report.md:24` | YES `api.signageos.io` | YES low-priv account-tier `X-Auth: id:se
   - |6| Superset `GET /v1/organization` lists ALL orgs platform-wide with `oauthClientId/oauthClientSecret` inline `leads/lead-human.md:4` | YES | YES low-priv account-tier | YES Critical – stolen pair `X
   - |9| `api /v2/*` authz drift, `box/settings` over-scope, `/v1/account/security-token?identification&password` query-creds `reports/valid-bugs.md:10` | YES | PARTIAL | CONDITIONAL | NO no passive eviden
+
+- 3 lead(s) marked VALID at 2026-09-24 20:52:56 UTC
+  - **Verdict: VALID (Low) DUPLICATE** `CVSS3.1: 5.3 AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` Proof: `curl -s https://box.signageos.io/status | jq .hostname,.process` Channel: signageOS security channel per `
+  - **Verdict: VALID (Low) DUPLICATE** `CVSS3.1: 5.3` (same vector, hardened headers lower exploitability) Proof: `curl -s https://api.signageos.io/status` + `curl -sI` check `strict-transport-security, x
+  - **Verdict: HOLD (AUTH_HELPED)** One-line: plausible CRITICAL BOLA but 403-gated, needs valid account + second tenant to prove, violates `scope.yml:41 passive_first`. CVSS if proven `9.1 AV:N/AC:L/PR:L
