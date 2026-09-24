@@ -1767,3 +1767,14 @@
   - - **Verdict: VALID (Info, border) 3.1** `AV:N/AC:H/PR:N/UI:R/S:U/C:L` `reports/valid-bugs.md:6`
   - - **Verdict: VALID (Info, border) 3.1**
   - - **Verdict: HOLD (no passive evidence)** `reports/valid-bugs.md:9-11`
+
+- 9 lead(s) marked VALID at 2026-09-24 12:35:21 UTC
+  - valid-bugs.md
+  - |5 Novel?|NO|Reconfirmed 60+ cycles `reports/valid-bugs.md:4` → DUPLICATE but still gate-pass|
+  - |7 Reasonable triager accept?|YES (Low)|`reports/security-token-idor-report.md:191` gate-pending but `valid-bugs.md:4` accepted Low persistently|
+  - **Verdict: VALID (DUPLICATE RECONFIRMATION) — Low** — one-line: passive infra info-disclosure, not new.
+  - Same 7 answers except Q7 MARGINAL (hardened `HSTS max-age=31536000 x-frame-options:DENY x-content-type-options:nosniff` `probe-results.md:92`). **Verdict: VALID (DUPLICATE RECONFIRMATION) — Low** `GET
+  - |7 Triager accept?|CONDITIONAL — READ leg YES as Valid if live GET returns 200 with foreign `organizationUid`; MINT leg HOLD pending authorized `POST` per report `§6` decision table `reports/security-
+  - **Verdict: HOLD (AUTH_HELPED) — VALID on READ leg, Critical on MINT if confirmed — reason: requires valid account X-Auth + 2nd tenant UID, all passive probes `probe-results.md:48-49` `GET /v1/organiza
+  - #### L-D: `api/v1/organization/{uid}` Cross-tenant `oauthClientId/oauthClientSecret` disclosure `leads/lead-bigpickle.md:152-157` — sibling to L-C, same gate table (Q2 low-priv, Q4 GET only YES, Q3 Cr
+  - Q1 YES, Q2 YES (static headers on `GET /` 302 `probe-results.md:45` + `GET /login/ 200`), Q3 NO-MARGINAL (no `Access-Control-Allow-Credentials`, evil.test NOT reflected `inventory/signageos.md:41`), Q
