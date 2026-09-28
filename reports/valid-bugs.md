@@ -1822,3 +1822,12 @@
   - - **Verdict: VALID (Low, borderline)** | CVSS 3.1: 3.7 (AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N)
   - - **Verdict: HOLD** — AUTH_HELPED only; requires valid account JWT + second tenant
   - - VERDICT: VALID (MISCONFIG — Infrastructure Information Disclosure)
+
+- 7 lead(s) marked VALID at 2026-09-28 00:07:04 UTC
+  - | 1 | `box.signageos.io/status` `GET /status` ->200 `application/json` leak `box-7c8c876945-*` `process.uid` `v20.20.2` `amqp0/redis0-3/mongoDB0-3` `probe-results.md:43-45` `inventory/signageos.md:36`
+  - | 2 | `api.signageos.io/status` `GET /status` ->200 json same topology `api-6f69db97d5-*` `v24.19.0` `probe-results.md:314` | Y `scope.yml:8` In | Y public unauth | Y same class, hardened w/ HSTS/xfo/
+  - | 3 | `box CORS ACAO 17-18 static origins` `GET /` `GET /login/` -> `access-control-allow-origin: http://box.signageos.io` + `https://*.zdusercontent.com` wildcard + `api.signageos.io` static, no `All
+  - | 4 | `box CSP 40+ origins` `GET /login/%2F` -> `content-security-policy: connect-src ... sos-production.us.auth0.com ...` triplicated `inventory/signageos.md:24` | Y | Y | Y broad CSP requires XSS to
+  - | 5 | `api/v1/organization/{uid}/security-token` cross-tenant mint `IDOR` `GET/POST /v1/organization/{victimUid}/security-token` `H `X-Auth: {id}:{secret}`` `reasoning: errorDetail 403074 states ident
+  - | 7 | `api/v1/device/{uid}/peer-recovery GET/PUT` legacy `X-Auth: clientId:secret` not bound to deviceUid `lead-bigpickle.md:69-76` | Y | N requires org X-Auth | Y High device takeover | N requires va
+  - **VALID detail (read-only proof):**
