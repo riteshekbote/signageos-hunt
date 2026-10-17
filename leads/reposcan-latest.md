@@ -1,5 +1,5 @@
 
-===== REPOSCAN 2026-10-17 06:08:44 UTC =====
+===== REPOSCAN 2026-10-17 10:34:47 UTC =====
 ## Grep hits:
 SCAN SUMMARY: 1093 code/config files scanned, 1 hits
 reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19: secret: '9d5e257e02691412fa83eb3c256910609ba62fa68df0117479a4865e36bfe1c9',
@@ -9,6 +9,6 @@ reposcan-raw/signageos/videowall-designer/sos/videoTiming.js:19: secret: '9d5e25
   "name": "UnknownError",
   "data": {
     "message": "Unexpected server error. Check server logs for details.",
-    "ref": "err_27a83b55"
+    "ref": "err_23d03db0"
   }
 }
